@@ -32,6 +32,7 @@ export { CoValueBase } from "./coValues/interfaces.js";
 export { ImageDefinition } from "./coValues/extensions/imageDef.js";
 export { Profile } from "./coValues/profile.js";
 export { SchemaUnion } from "./coValues/schemaUnion.js";
+export { CoRichText } from "./coValues/coRichText.js";
 
 export type { CoValueClass, DeeplyLoaded, DepthsIn } from "./internal.js";
 
