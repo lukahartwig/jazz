@@ -6,13 +6,14 @@ import {
   MAX_RECOMMENDED_TX_SIZE,
   idforHeader,
 } from "./coValueCore.js";
-import { ControlledAgent, RawControlledAccount } from "./coValues/account.js";
 import {
+  ControlledAgent,
   RawAccount,
+  RawControlledAccount,
   RawProfile,
   accountHeaderForInitialAgentSecret,
 } from "./coValues/account.js";
-import { RawCoList } from "./coValues/coList.js";
+import { OpID, RawCoList } from "./coValues/coList.js";
 import { RawCoMap } from "./coValues/coMap.js";
 import {
   CoStreamItem,
@@ -20,6 +21,7 @@ import {
   RawCoStream,
 } from "./coValues/coStream.js";
 import { EVERYONE, RawGroup } from "./coValues/group.js";
+import { RawCoPlainText, stringifyOpID } from "./coValues/coPlainText.js";
 import type { Everyone } from "./coValues/group.js";
 import {
   CryptoProvider,
@@ -117,40 +119,43 @@ export {
   RawAccount,
   RawAccountID,
   AccountMeta,
-  RawAccountMigration,
-  RawProfile as Profile,
-  SessionID,
-  Media,
-  CoValueCore,
-  ControlledAgent,
-  RawControlledAccount,
-  MAX_RECOMMENDED_TX_SIZE,
-  JsonValue,
-  Peer,
-  BinaryStreamInfo,
-  BinaryCoStreamMeta,
   AgentID,
   AgentSecret,
-  InviteSecret,
+  BinaryCoStreamMeta,
+  BinaryStreamInfo,
+  CoValueCore,
+  ControlledAgent,
   CryptoProvider,
+  InviteSecret,
+  JsonValue,
+  LSMStorage,
+  MAX_RECOMMENDED_TX_SIZE,
+  Media,
+  Peer,
+  RawProfile as Profile,
+  RawAccountMigration,
+  RawCoPlainText,
+  RawControlledAccount,
+  SessionID,
   SyncMessage,
   isRawCoID,
-  LSMStorage,
   emptyKnownState,
+  stringifyOpID,
 };
 
 export type {
-  Value,
-  FileSystem,
   BlockFilename,
-  WalFilename,
-  IncomingSyncStream,
-  OutgoingSyncQueue,
-  DisconnectedError,
-  PingTimeoutError,
   CoValueUniqueness,
   Stringified,
   CoStreamItem,
+  DisconnectedError,
+  FileSystem,
+  IncomingSyncStream,
+  OpID,
+  OutgoingSyncQueue,
+  PingTimeoutError,
+  Value,
+  WalFilename,
 };
 
 // eslint-disable-next-line @typescript-eslint/no-namespace
