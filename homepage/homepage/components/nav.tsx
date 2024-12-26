@@ -1,12 +1,11 @@
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { socials } from "@/lib/socials";
 import { JazzLogo } from "gcmp-design-system/src/app/components/atoms/logos/JazzLogo";
-import { Nav } from "gcmp-design-system/src/app/components/organisms/Nav";
-import { DocNav } from "./docs/nav";
+import { Navigation } from "gcmp-design-system/src/app/components/organisms/navigation";
 
 export function JazzNav() {
   return (
-    <Nav
+    <Navigation
       mainLogo={<JazzLogo className="w-20 md:w-24" />}
       themeToggle={ThemeToggle}
       items={[
