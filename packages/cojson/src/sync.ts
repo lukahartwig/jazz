@@ -3,12 +3,14 @@ import { CoValueEntry } from "./coValueEntry.js";
 import { RawCoID } from "./ids.js";
 import { LocalNode } from "./localNode.js";
 import { PeerEntry, PeerID } from "./peer/PeerEntry.js";
-import { AckResponseHandler } from "./sync/AckResponseHandler.js";
-import { DataResponseHandler } from "./sync/DataResponseHandler.js";
-import { LoadService } from "./sync/LoadService.js";
-import { PullRequestHandler } from "./sync/PullRequestHandler.js";
-import { PushRequestHandler } from "./sync/PushRequestHandler.js";
-import { SyncService } from "./sync/SyncService.js";
+import {
+  AckResponseHandler,
+  DataResponseHandler,
+  LoadService,
+  PullRequestHandler,
+  PushRequestHandler,
+  SyncService,
+} from "./sync/index.js";
 import {
   CoValueKnownState,
   MessageHandlerInterface,
@@ -18,20 +20,6 @@ import {
 export type DisconnectedError = "Disconnected";
 
 export type PingTimeoutError = "PingTimeout";
-
-const setUploadStarted = ({
-  entry,
-  peerId,
-}: { entry: CoValueEntry; peerId: PeerID }) => {
-  entry.uploadState.setPendingForPeer(peerId);
-};
-
-const setUploadFinished = ({
-  entry,
-  peerId,
-}: { entry: CoValueEntry; peerId: PeerID }) => {
-  entry.uploadState.setCompletedForPeer(peerId);
-};
 
 export class SyncManager {
   local: LocalNode;
@@ -57,7 +45,10 @@ export class SyncManager {
     this.syncService = new SyncService(
       this.local.coValuesStore,
       this.local.peers,
-      setUploadStarted,
+      // onPushContent callback
+      ({ entry, peerId }: { entry: CoValueEntry; peerId: PeerID }) => {
+        entry.uploadState.setPendingForPeer(peerId);
+      },
     );
 
     this.loadService = new LoadService(this.local.peers);
@@ -65,13 +56,23 @@ export class SyncManager {
     this.pushRequestHandler = new PushRequestHandler(
       this.syncService,
       this.local.peers,
+      // The reason for this ugly callback here is to avoid having the local node as a dependency in the handler,
+      // This should be removed after CoValueCore is decoupled from the local node instance
       createCoValue,
     );
 
-    this.ackResponseHandler = new AckResponseHandler(setUploadFinished);
+    this.ackResponseHandler = new AckResponseHandler(
+      // onPushContentAcknowledged callback
+      ({ entry, peerId }: { entry: CoValueEntry; peerId: PeerID }) => {
+        entry.uploadState.setCompletedForPeer(peerId);
+      },
+    );
+
     this.dataResponseHandler = new DataResponseHandler(
       this.syncService,
       this.local.peers,
+      // The reason for this ugly callback here is to avoid having the local node as a dependency in the handler,
+      // This should be removed after CoValueCore is decoupled from the local node instance
       createCoValue,
     );
   }
@@ -159,4 +160,3 @@ export class SyncManager {
     return entry.uploadState.waitForPeer(peerId);
   }
 }
-export { SyncMessage };

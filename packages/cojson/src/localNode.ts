@@ -77,21 +77,6 @@ export class LocalNode {
     this.crypto = crypto;
   }
 
-  // peersInPriorityOrder(): PeerEntry[] {
-  //   return Object.values(this.peers).sort((a, b) => {
-  //     const aPriority = a.priority || 0;
-  //     const bPriority = b.priority || 0;
-  //
-  //     return bPriority - aPriority;
-  //   });
-  // }
-  //
-  // getServerAndStoragePeers(excludePeerId?: PeerID): PeerEntry[] {
-  //   return this.peersInPriorityOrder().filter(
-  //     (peer) => peer.isServerOrStoragePeer() && peer.id !== excludePeerId,
-  //   );
-  // }
-
   async processMessages(peer: PeerEntry) {
     for await (const msg of peer.incoming) {
       if (msg === "Disconnected") {

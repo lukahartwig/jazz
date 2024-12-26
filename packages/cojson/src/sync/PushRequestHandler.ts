@@ -19,6 +19,8 @@ export class PushRequestHandler extends BaseMessageHandler {
   constructor(
     protected readonly syncService: SyncService,
     protected readonly peers: Peers,
+    // The reason for this ugly callback here is to avoid having the local node as a dependency in this service,
+    // This should be removed after CoValueCore is decoupled from the local node instance
     private readonly createCoValue: (header: CoValueHeader) => CoValueCore,
   ) {
     super();
@@ -31,13 +33,14 @@ export class PushRequestHandler extends BaseMessageHandler {
   }
 
   async handleUnavailable(input: PushMessageHandlerInput) {
-    const { entry, msg } = input;
+    const { msg } = input;
     if (!msg.header) {
       console.error(`Unexpected unavailable state for coValue ${input.msg.id}`);
       return;
     }
 
     this.makeCoValueAvailable(input);
+
     return this.handle(input);
   }
 
@@ -65,7 +68,7 @@ export class PushRequestHandler extends BaseMessageHandler {
   }
 
   private async addData(coValue: CoValueCore, input: PushMessageHandlerInput) {
-    const { msg, peer, entry } = input;
+    const { msg, peer } = input;
 
     const peerKnownState = { ...coValue.knownState() };
     try {
@@ -92,45 +95,3 @@ export class PushRequestHandler extends BaseMessageHandler {
     await this.syncService.syncCoValue(coValue, peerKnownState, peers);
   }
 }
-
-/*
-
-  // async handlePush(msg: PushMessage, peer: PeerEntry) {
-  //   const entry = this.local.coValuesStore.get(msg.id);
-  //
-  //   let coValue: CoValueCore;
-  //
-  //   if (entry.state.type !== "available") {
-  //     if (!msg.header) {
-  //       console.error("Expected header to be sent in first message");
-  //       return;
-  //     }
-  //
-  //     coValue = new CoValueCore(msg.header, this.local);
-  //
-  //     this.local.coValuesStore.setAsAvailable(msg.id, coValue);
-  //   } else {
-  //     coValue = entry.state.coValue;
-  //   }
-  //
-  //   const peerKnownState = { ...coValue.knownState() };
-  //   try {
-  //     const anyMissedTransaction = coValue.addNewContent(msg);
-  //
-  //     anyMissedTransaction
-  //       ? void peer.send.pull({ knownState: coValue.knownState() })
-  //       : void peer.send.ack({ knownState: coValue.knownState() });
-  //   } catch (e) {
-  //     if (isTryAddTransactionsException(e)) {
-  //       const { message, error } = e;
-  //       console.error(peer.id, message, error);
-  //
-  //       peer.erroredCoValues.set(msg.id, error);
-  //     } else {
-  //       console.error("Unknown error", peer.id, e);
-  //     }
-  //
-  //     return;
-  //   }
-
- */

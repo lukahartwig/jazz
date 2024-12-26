@@ -9,7 +9,7 @@ export class SyncService {
   constructor(
     private readonly coValuesStore: CoValuesStore,
     private readonly peers: Peers,
-    private readonly onPush?: ({
+    private readonly onPushContent?: ({
       entry,
       peerId,
     }: { entry: CoValueEntry; peerId: PeerID }) => void,
@@ -29,8 +29,8 @@ export class SyncService {
         coValue,
       });
 
-      if (this.onPush) {
-        this.onPush({ entry, peerId: peer.id });
+      if (this.onPushContent) {
+        this.onPushContent({ entry, peerId: peer.id });
       }
     }
   }
@@ -54,8 +54,8 @@ export class SyncService {
         coValue,
       });
 
-      if (this.onPush) {
-        this.onPush({ entry, peerId: peer.id });
+      if (this.onPushContent) {
+        this.onPushContent({ entry, peerId: peer.id });
       }
     }
   }

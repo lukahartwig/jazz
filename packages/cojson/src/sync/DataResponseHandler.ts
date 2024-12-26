@@ -28,6 +28,8 @@ export class DataResponseHandler extends BaseMessageHandler {
   constructor(
     private syncService: SyncService,
     private peers: Peers,
+    // The reason for this ugly callback here is to avoid having the local node as a dependency in this service,
+    // This should be removed after CoValueCore is decoupled from the local node instance
     private createCoValue: (header: CoValueHeader) => CoValueCore,
   ) {
     super();
