@@ -69,7 +69,11 @@ export class SyncManager {
     );
 
     this.ackResponseHandler = new AckResponseHandler(setUploadFinished);
-    this.dataResponseHandler = new DataResponseHandler(createCoValue);
+    this.dataResponseHandler = new DataResponseHandler(
+      this.syncService,
+      this.local.peers,
+      createCoValue,
+    );
   }
 
   async initialSync(peer: PeerEntry) {
@@ -155,3 +159,4 @@ export class SyncManager {
     return entry.uploadState.waitForPeer(peerId);
   }
 }
+export { SyncMessage };

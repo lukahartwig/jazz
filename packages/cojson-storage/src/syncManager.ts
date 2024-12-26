@@ -49,8 +49,6 @@ export class SyncManager {
         return this.handlePush(msg);
       case "known":
         return this.handleKnown(msg);
-      case "done":
-        return this.handleDone(msg);
     }
   }
 
@@ -384,8 +382,6 @@ export class SyncManager {
   handleKnown(_msg: CojsonInternalTypes.KnownStateMessage) {
     // We don't intend to use the storage (SQLite,IDB,etc.) itself as a synchronisation mechanism, so we can ignore the known messages
   }
-
-  handleDone(_msg: CojsonInternalTypes.DoneMessage) {}
 
   async sendStateMessage(msg: any): Promise<unknown> {
     return this.toLocalNode
