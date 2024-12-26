@@ -1,23 +1,17 @@
-import {
-  CoValueCore,
-  CoValueHeader,
-  isTryAddTransactionsException,
-} from "./coValueCore.js";
+import { CoValueCore, CoValueHeader } from "./coValueCore.js";
 import { CoValueEntry } from "./coValueEntry.js";
 import { RawCoID } from "./ids.js";
 import { LocalNode } from "./localNode.js";
-import { Peer, PeerEntry, PeerID } from "./peer/PeerEntry.js";
+import { PeerEntry, PeerID } from "./peer/PeerEntry.js";
+import { AckResponseHandler } from "./sync/AckResponseHandler.js";
+import { DataResponseHandler } from "./sync/DataResponseHandler.js";
 import { LoadService } from "./sync/LoadService.js";
 import { PullRequestHandler } from "./sync/PullRequestHandler.js";
 import { PushRequestHandler } from "./sync/PushRequestHandler.js";
 import { SyncService } from "./sync/SyncService.js";
 import {
-  AckMessage,
   CoValueKnownState,
-  DataMessage,
   MessageHandlerInterface,
-  PullMessage,
-  PushMessage,
   SyncMessage,
 } from "./sync/types.js";
 
@@ -51,9 +45,14 @@ export class SyncManager {
   private readonly syncService: SyncService;
   private readonly pullRequestHandler: PullRequestHandler;
   private readonly pushRequestHandler: PushRequestHandler;
+  private readonly ackResponseHandler: AckResponseHandler;
+  private readonly dataResponseHandler: DataResponseHandler;
 
   constructor(local: LocalNode) {
     this.local = local;
+
+    const createCoValue = (header: CoValueHeader) =>
+      new CoValueCore(header, this.local);
 
     this.syncService = new SyncService(
       this.local.coValuesStore,
@@ -66,11 +65,15 @@ export class SyncManager {
     this.pushRequestHandler = new PushRequestHandler(
       this.syncService,
       this.local.peers,
+      createCoValue,
     );
+
+    this.ackResponseHandler = new AckResponseHandler(setUploadFinished);
+    this.dataResponseHandler = new DataResponseHandler(createCoValue);
   }
 
-  async initialSync(peerData: Peer, peer: PeerEntry) {
-    return this.syncService.initialSync(peerData, peer);
+  async initialSync(peer: PeerEntry) {
+    return this.syncService.initialSync(peer);
   }
 
   async syncCoValue(
@@ -117,163 +120,26 @@ export class SyncManager {
     }
     const entry = this.local.coValuesStore.get(msg.id);
 
-    const actualizeCoValueEntry = (msg: PushMessage) => {
-      if (entry.state.type !== "available") {
-        if (!msg.header) {
-          console.error(
-            "Expected header to be sent in first message",
-            msg.id,
-            peer.id,
-          );
-          return false;
-        }
-
-        const coValue = new CoValueCore(msg.header, this.local);
-
-        this.local.coValuesStore.setAsAvailable(msg.id, coValue);
-      }
-
-      return true;
-    };
-
     let handler: MessageHandlerInterface;
     switch (msg.action) {
       case "data":
-        return this.handleData(msg, peer);
+        handler = this.dataResponseHandler;
+        break;
       case "push":
-        if (!actualizeCoValueEntry(msg)) return;
-
         handler = this.pushRequestHandler;
         break;
       case "pull":
         handler = this.pullRequestHandler;
         break;
       case "ack":
-        return this.handleAck(msg, peer);
-
+        handler = this.ackResponseHandler;
+        break;
       default:
         throw new Error(
           `Unknown message type ${(msg as unknown as { action: "string" }).action}`,
         );
     }
     return handler.handle({ msg, peer, entry });
-  }
-
-  /**
-   * "Data" is a response to our "pull" message. It's a terminal message which must not be responded to.
-   * At this stage the coValue state is considered synced between the peer and the node.
-   */
-  async handleData(msg: DataMessage, peer: PeerEntry) {
-    const entry = this.local.coValuesStore.get(msg.id);
-
-    if (!msg.known) {
-      entry.markAsNotFoundInPeer(peer.id);
-      return;
-    }
-
-    if (!msg.header && entry.state.type !== "available") {
-      console.error(
-        peer.id,
-        msg.id,
-        '!!! We should never be here. "Data" action is a response to our specific request.',
-      );
-      return;
-    }
-
-    let coValue: CoValueCore;
-    if (entry.state.type !== "available") {
-      coValue = new CoValueCore(msg.header as CoValueHeader, this.local);
-
-      this.local.coValuesStore.setAsAvailable(msg.id, coValue);
-    } else {
-      coValue = entry.state.coValue;
-    }
-
-    const peerKnownState = { ...coValue.knownState() };
-
-    try {
-      const anyMissedTransaction = coValue.addNewContent(msg);
-
-      if (anyMissedTransaction) {
-        console.error(
-          peer.id,
-          msg.id,
-          '!!! We should never be here. "Data" action is a response to our specific request.',
-        );
-        return;
-      }
-    } catch (e) {
-      if (isTryAddTransactionsException(e)) {
-        const { message, error } = e;
-        console.error(peer.id, message, error);
-
-        peer.erroredCoValues.set(msg.id, error);
-      } else {
-        console.error("Unknown error", peer.id, e);
-      }
-
-      return;
-    }
-
-    const peers = this.local.peers.getInPriorityOrder({ excludedId: peer.id });
-
-    return this.syncCoValue(coValue, peerKnownState, peers);
-  }
-
-  async handlePush(msg: PushMessage, peer: PeerEntry) {
-    const entry = this.local.coValuesStore.get(msg.id);
-
-    let coValue: CoValueCore;
-
-    if (entry.state.type !== "available") {
-      if (!msg.header) {
-        console.error("Expected header to be sent in first message");
-        return;
-      }
-
-      coValue = new CoValueCore(msg.header, this.local);
-
-      this.local.coValuesStore.setAsAvailable(msg.id, coValue);
-    } else {
-      coValue = entry.state.coValue;
-    }
-
-    const peerKnownState = { ...coValue.knownState() };
-    try {
-      const anyMissedTransaction = coValue.addNewContent(msg);
-
-      anyMissedTransaction
-        ? void peer.send.pull({ knownState: coValue.knownState() })
-        : void peer.send.ack({ knownState: coValue.knownState() });
-    } catch (e) {
-      if (isTryAddTransactionsException(e)) {
-        const { message, error } = e;
-        console.error(peer.id, message, error);
-
-        peer.erroredCoValues.set(msg.id, error);
-      } else {
-        console.error("Unknown error", peer.id, e);
-      }
-
-      return;
-    }
-
-    const peers = this.local.peers.getInPriorityOrder({ excludedId: peer.id });
-
-    await this.syncCoValue(coValue, peerKnownState, peers);
-  }
-
-  async handleAck(msg: AckMessage, peer: PeerEntry) {
-    const entry = this.local.coValuesStore.get(msg.id);
-
-    if (entry.state.type !== "available") {
-      console.error(
-        '!!! We should never be here. "Ack" action is a response to our specific request.',
-      );
-      return;
-    }
-
-    entry.uploadState.setCompletedForPeer(peer.id);
   }
 
   async waitForUploadIntoPeer(peerId: PeerID, id: RawCoID) {

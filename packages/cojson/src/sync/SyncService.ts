@@ -19,7 +19,7 @@ export class SyncService {
    * Sends "push" request to peers to broadcast all known coValues state
    * and request to subscribe to those coValues updates (if have not)
    */
-  async initialSync(peerData: Peer, peer: PeerEntry) {
+  async initialSync(peer: PeerEntry) {
     for (const entry of this.coValuesStore.getValues()) {
       const coValue = this.coValuesStore.expectCoValueLoaded(entry.id);
       // TODO does it make sense to additionally pull dependencies now that we're sending all that we know from here ?

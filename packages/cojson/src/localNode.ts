@@ -126,7 +126,7 @@ export class LocalNode {
     const peer: PeerEntry = this.peers.add(peerData);
 
     if (peer.isServerOrStoragePeer()) {
-      void this.syncManager.initialSync(peerData, peer);
+      void this.syncManager.initialSync(peer);
     }
 
     this.processMessages(peer)

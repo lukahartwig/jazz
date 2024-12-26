@@ -1,9 +1,13 @@
-import { CoValueCore, isTryAddTransactionsException } from "../coValueCore.js";
+import {
+  CoValueCore,
+  CoValueHeader,
+  isTryAddTransactionsException,
+} from "../coValueCore.js";
 import { CoValueAvailableState, CoValueEntry } from "../coValueEntry.js";
 import { PeerEntry } from "../peer/PeerEntry.js";
 import { Peers } from "../peer/Peers.js";
 import { SyncService } from "./SyncService.js";
-import { BaseRequestHandler, PushMessage } from "./types.js";
+import { BaseMessageHandler, PushMessage } from "./types.js";
 
 export type PushMessageHandlerInput = {
   msg: PushMessage;
@@ -11,10 +15,11 @@ export type PushMessageHandlerInput = {
   entry: CoValueEntry;
 };
 
-export class PushRequestHandler extends BaseRequestHandler {
+export class PushRequestHandler extends BaseMessageHandler {
   constructor(
     protected readonly syncService: SyncService,
     protected readonly peers: Peers,
+    private readonly createCoValue: (header: CoValueHeader) => CoValueCore,
   ) {
     super();
   }
@@ -26,11 +31,37 @@ export class PushRequestHandler extends BaseRequestHandler {
   }
 
   async handleUnavailable(input: PushMessageHandlerInput) {
-    console.error(`Unexpected unavailable state for coValue ${input.msg.id}`);
+    const { entry, msg } = input;
+    if (!msg.header) {
+      console.error(`Unexpected unavailable state for coValue ${input.msg.id}`);
+      return;
+    }
+
+    this.makeCoValueAvailable(input);
+    return this.handle(input);
   }
 
   async handleLoading(input: PushMessageHandlerInput) {
-    console.error(`Unexpected loading state for coValue ${input.msg.id}`);
+    if (!input.msg.header) {
+      console.error(`Unexpected loading state for coValue ${input.msg.id}`);
+      return;
+    }
+
+    this.makeCoValueAvailable(input);
+
+    return this.handle(input);
+  }
+
+  private makeCoValueAvailable(input: PushMessageHandlerInput) {
+    if (!input.msg.header) {
+      throw new Error(`Empty header for ${input.msg.id}`);
+    }
+
+    const coValue = this.createCoValue(input.msg.header);
+    input.entry.dispatch({
+      type: "available",
+      coValue,
+    });
   }
 
   private async addData(coValue: CoValueCore, input: PushMessageHandlerInput) {
@@ -61,3 +92,45 @@ export class PushRequestHandler extends BaseRequestHandler {
     await this.syncService.syncCoValue(coValue, peerKnownState, peers);
   }
 }
+
+/*
+
+  // async handlePush(msg: PushMessage, peer: PeerEntry) {
+  //   const entry = this.local.coValuesStore.get(msg.id);
+  //
+  //   let coValue: CoValueCore;
+  //
+  //   if (entry.state.type !== "available") {
+  //     if (!msg.header) {
+  //       console.error("Expected header to be sent in first message");
+  //       return;
+  //     }
+  //
+  //     coValue = new CoValueCore(msg.header, this.local);
+  //
+  //     this.local.coValuesStore.setAsAvailable(msg.id, coValue);
+  //   } else {
+  //     coValue = entry.state.coValue;
+  //   }
+  //
+  //   const peerKnownState = { ...coValue.knownState() };
+  //   try {
+  //     const anyMissedTransaction = coValue.addNewContent(msg);
+  //
+  //     anyMissedTransaction
+  //       ? void peer.send.pull({ knownState: coValue.knownState() })
+  //       : void peer.send.ack({ knownState: coValue.knownState() });
+  //   } catch (e) {
+  //     if (isTryAddTransactionsException(e)) {
+  //       const { message, error } = e;
+  //       console.error(peer.id, message, error);
+  //
+  //       peer.erroredCoValues.set(msg.id, error);
+  //     } else {
+  //       console.error("Unknown error", peer.id, e);
+  //     }
+  //
+  //     return;
+  //   }
+
+ */

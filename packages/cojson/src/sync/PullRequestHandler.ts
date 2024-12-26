@@ -1,7 +1,7 @@
 import { CoValueAvailableState, CoValueEntry } from "../coValueEntry.js";
 import { PeerEntry } from "../peer/PeerEntry.js";
 import { LoadService } from "./LoadService.js";
-import { BaseRequestHandler, PullMessage } from "./types.js";
+import { BaseMessageHandler, PullMessage } from "./types.js";
 
 export type PullMessageHandlerInput = {
   msg: PullMessage;
@@ -17,7 +17,7 @@ export type PullMessageHandlerInput = {
  *
  * Handler initiates a new "pull" requests to load the coValue from peers if it is not known by the node.
  */
-export class PullRequestHandler extends BaseRequestHandler {
+export class PullRequestHandler extends BaseMessageHandler {
   constructor(private readonly loadService: LoadService) {
     super();
   }
