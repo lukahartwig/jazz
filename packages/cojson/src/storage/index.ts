@@ -1,11 +1,11 @@
-import { Peer } from "../PeerEntry.js";
 import { CoID, RawCoValue } from "../coValue.js";
 import { CoValueHeader, Transaction } from "../coValueCore.js";
 import { Signature } from "../crypto/crypto.js";
 import { RawCoID } from "../ids.js";
 import { IncomingSyncStream, OutgoingSyncQueue } from "../localNode.js";
+import { Peer } from "../peer/PeerEntry.js";
 import { connectedPeers } from "../streamUtils.js";
-import { CoValueKnownState, NewContentMessage } from "../sync.js";
+import { CoValueKnownState, NewContentMessage } from "../sync/types.js";
 import {
   BlockFilename,
   FileSystem,

@@ -1,7 +1,5 @@
 import { Result, err, ok } from "neverthrow";
 import { CoValuesStore } from "./CoValuesStore.js";
-import { Peer, PeerEntry, PeerID } from "./PeerEntry.js";
-import { Peers } from "./Peers.js";
 import { CoID, RawCoValue } from "./coValue.js";
 import {
   CoValueCore,
@@ -28,14 +26,11 @@ import {
 } from "./coValues/group.js";
 import { AgentSecret, CryptoProvider } from "./crypto/crypto.js";
 import { AgentID, RawCoID, SessionID, isAgentID } from "./ids.js";
-import {
-  DisconnectedError,
-  PingTimeoutError,
-  SyncManager,
-  SyncMessage,
-  emptyKnownState,
-} from "./sync.js";
-import { transformIncomingMessageFromPeer } from "./transformers.js";
+import { Peer, PeerEntry, PeerID } from "./peer/PeerEntry.js";
+import { Peers } from "./peer/Peers.js";
+import { transformIncomingMessageFromPeer } from "./peer/transformers.js";
+import { DisconnectedError, PingTimeoutError, SyncManager } from "./sync.js";
+import { SyncMessage, emptyKnownState } from "./sync/types.js";
 import { expectGroup } from "./typeUtils/expectGroup.js";
 
 export type IncomingSyncStream = AsyncIterable<
@@ -513,14 +508,7 @@ export class LocalNode {
 
   /** @internal */
   expectCoValueLoaded(id: RawCoID, expectation?: string): CoValueCore {
-    const entry = this.coValuesStore.get(id);
-
-    if (entry.state.type !== "available") {
-      throw new Error(
-        `${expectation ? expectation + ": " : ""}CoValue ${id} not yet loaded. Current state: ${entry.state.type}`,
-      );
-    }
-    return entry.state.coValue;
+    return this.coValuesStore.expectCoValueLoaded(id, expectation);
   }
 
   /** @internal */

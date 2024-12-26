@@ -1,5 +1,5 @@
-import type { Peer } from "./PeerEntry.js";
 import { base64URLtoBytes, bytesToBase64url } from "./base64url.js";
+import type { AnyRawCoValue, CoID } from "./coValue.js";
 import { type RawCoValue } from "./coValue.js";
 import {
   CoValueCore,
@@ -7,23 +7,35 @@ import {
   MAX_RECOMMENDED_TX_SIZE,
   idforHeader,
 } from "./coValueCore.js";
-import { ControlledAgent, RawControlledAccount } from "./coValues/account.js";
+import type {
+  AccountMeta,
+  RawAccountID,
+  RawAccountMigration,
+} from "./coValues/account.js";
 import {
+  ControlledAgent,
   RawAccount,
+  RawControlledAccount,
   RawProfile,
   accountHeaderForInitialAgentSecret,
 } from "./coValues/account.js";
 import { RawCoList } from "./coValues/coList.js";
 import { RawCoMap } from "./coValues/coMap.js";
+import type {
+  BinaryCoStreamMeta,
+  BinaryStreamInfo,
+} from "./coValues/coStream.js";
 import { RawBinaryCoStream, RawCoStream } from "./coValues/coStream.js";
+import type { Everyone, InviteSecret } from "./coValues/group.js";
 import { EVERYONE, RawGroup } from "./coValues/group.js";
-import type { Everyone } from "./coValues/group.js";
+import type { AgentSecret } from "./crypto/crypto.js";
 import {
   CryptoProvider,
   StreamingHash,
   secretSeedLength,
   shortHashLength,
 } from "./crypto/crypto.js";
+import type { AgentID, SessionID } from "./ids.js";
 import {
   getGroupDependentKey,
   getGroupDependentKeyList,
@@ -32,45 +44,31 @@ import {
   rawCoIDtoBytes,
 } from "./ids.js";
 import { Stringified, parseJSON } from "./jsonStringify.js";
+import type { JsonValue } from "./jsonValue.js";
 import {
   IncomingSyncStream,
   LocalNode,
   OutgoingSyncQueue,
 } from "./localNode.js";
-import type { Role } from "./permissions.js";
-import { Channel, connectedPeers } from "./streamUtils.js";
-import { accountOrAgentIDfromSessionID } from "./typeUtils/accountOrAgentIDfromSessionID.js";
-import { expectGroup } from "./typeUtils/expectGroup.js";
-import { isAccountID } from "./typeUtils/isAccountID.js";
-
-import { emptyDataMessage, unknownDataMessage } from "./PeerOperations.js";
-import type { AnyRawCoValue, CoID } from "./coValue.js";
-import type {
-  AccountMeta,
-  RawAccountID,
-  RawAccountMigration,
-} from "./coValues/account.js";
-import type {
-  BinaryCoStreamMeta,
-  BinaryStreamInfo,
-} from "./coValues/coStream.js";
-import type { InviteSecret } from "./coValues/group.js";
-import type { AgentSecret } from "./crypto/crypto.js";
-import type { AgentID, SessionID } from "./ids.js";
-import type { JsonValue } from "./jsonValue.js";
 import type * as Media from "./media.js";
+import type { Peer } from "./peer/PeerEntry.js";
+import { emptyDataMessage, unknownDataMessage } from "./peer/PeerOperations.js";
+import type { Role } from "./permissions.js";
+import { getPriorityFromHeader } from "./priority.js";
+import { FileSystem } from "./storage/FileSystem.js";
+import { BlockFilename, LSMStorage, WalFilename } from "./storage/index.js";
+import { Channel, connectedPeers } from "./streamUtils.js";
 import type { SyncMessage } from "./sync.js";
 import {
   DisconnectedError,
   PingTimeoutError,
   emptyKnownState,
 } from "./sync.js";
+import { accountOrAgentIDfromSessionID } from "./typeUtils/accountOrAgentIDfromSessionID.js";
+import { expectGroup } from "./typeUtils/expectGroup.js";
+import { isAccountID } from "./typeUtils/isAccountID.js";
 
 type Value = JsonValue | AnyRawCoValue;
-
-import { getPriorityFromHeader } from "./priority.js";
-import { FileSystem } from "./storage/FileSystem.js";
-import { BlockFilename, LSMStorage, WalFilename } from "./storage/index.js";
 
 /** @hidden */
 export const cojsonInternals = {
@@ -149,13 +147,13 @@ export type {
 
 // eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace CojsonInternalTypes {
-  export type CoValueKnownState = import("./sync.js").CoValueKnownState;
-  export type CoValueContent = import("./sync.js").CoValueContent;
-  export type NewContentMessage = import("./sync.js").NewContentMessage;
-  export type PullMessage = import("./sync.js").PullMessage;
-  export type PushMessage = import("./sync.js").PushMessage;
-  export type DataMessage = import("./sync.js").DataMessage;
-  export type AckMessage = import("./sync.js").AckMessage;
+  export type CoValueKnownState = CoValueKnownState;
+  export type CoValueContent = CoValueContent;
+  export type NewContentMessage = NewContentMessage;
+  export type PullMessage = PullMessage;
+  export type PushMessage = PushMessage;
+  export type DataMessage = DataMessage;
+  export type AckMessage = AckMessage;
   export type SessionNewContent = import("./coValueCore.js").SessionNewContent;
   export type CoValueHeader = import("./coValueCore.js").CoValueHeader;
   export type Transaction = import("./coValueCore.js").Transaction;

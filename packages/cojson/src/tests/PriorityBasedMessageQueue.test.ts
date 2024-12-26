@@ -1,7 +1,8 @@
 import { describe, expect, test } from "vitest";
 import { PriorityBasedMessageQueue } from "../PriorityBasedMessageQueue.js";
 import { CO_VALUE_PRIORITY } from "../priority.js";
-import { SyncMessage } from "../sync.js";
+
+import { SyncMessage } from "../sync/types.js";
 
 function setup() {
   const queue = new PriorityBasedMessageQueue(CO_VALUE_PRIORITY.MEDIUM);

@@ -35,4 +35,15 @@ export class CoValuesStore {
   getKeys() {
     return this.coValues.keys();
   }
+
+  expectCoValueLoaded(id: RawCoID, expectation?: string): CoValueCore {
+    const entry = this.get(id);
+
+    if (entry.state.type !== "available") {
+      throw new Error(
+        `${expectation ? expectation + ": " : ""}CoValue ${id} not yet loaded. Current state: ${entry.state.type}`,
+      );
+    }
+    return entry.state.coValue;
+  }
 }

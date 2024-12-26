@@ -1,7 +1,7 @@
+import { CoValueCore } from "../coValueCore.js";
+import { RawCoID } from "../ids.js";
+import { CoValueKnownState, DataMessage, SyncMessage } from "../sync/types.js";
 import { PeerEntry } from "./PeerEntry.js";
-import { CoValueCore } from "./coValueCore.js";
-import { RawCoID } from "./ids.js";
-import { CoValueKnownState, DataMessage, SyncMessage } from "./sync.js";
 
 export function emptyDataMessage(
   id: RawCoID,

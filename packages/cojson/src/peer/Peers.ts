@@ -1,3 +1,4 @@
+import { RawCoID } from "../ids.js";
 import { Peer, PeerEntry, PeerID } from "./PeerEntry.js";
 
 export class Peers {
@@ -54,19 +55,17 @@ export class Peers {
         (includedId ? peer.id === includedId : false),
     );
   }
+}
 
-  // peersInPriorityOrder(): PeerEntry[] {
-  //   return Object.values(this.peers).sort((a, b) => {
-  //     const aPriority = a.priority || 0;
-  //     const bPriority = b.priority || 0;
-  //
-  //     return bPriority - aPriority;
-  //   });
-  // }
+export function getPeersWithoutErrors(peers: PeerEntry[], coValueId: RawCoID) {
+  return peers.filter((p) => {
+    if (p.erroredCoValues.has(coValueId)) {
+      console.error(
+        `Skipping load on errored coValue ${coValueId} from peer ${p.id}`,
+      );
+      return false;
+    }
 
-  // getServerAndStoragePeers(excludePeerId?: PeerID): PeerEntry[] {
-  //   return this.getInPriorityOrder().filter(
-  //     (peer) => peer.isServerOrStoragePeer() && peer.id !== excludePeerId,
-  //   );
-  // }
+    return true;
+  });
 }

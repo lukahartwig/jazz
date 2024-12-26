@@ -9,7 +9,7 @@ import { stableStringify } from "../jsonStringify.js";
 import { LocalNode } from "../localNode.js";
 import { getPriorityFromHeader } from "../priority.js";
 import { connectedPeers, newQueuePair } from "../streamUtils.js";
-import { SyncMessage } from "../sync.js";
+import { SyncMessage } from "../sync/types.js";
 import {
   createTestNode,
   randomAnonymousAccountAndSessionID,

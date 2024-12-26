@@ -1,13 +1,13 @@
-import { PeerOperations } from "./PeerOperations.js";
 import {
   PriorityBasedMessageQueue,
   QueueEntry,
-} from "./PriorityBasedMessageQueue.js";
-import { TryAddTransactionsError } from "./coValueCore.js";
-import { RawCoID } from "./ids.js";
-import { IncomingSyncStream, OutgoingSyncQueue } from "./localNode.js";
-import { CO_VALUE_PRIORITY } from "./priority.js";
-import { SyncMessage } from "./sync.js";
+} from "../PriorityBasedMessageQueue.js";
+import { TryAddTransactionsError } from "../coValueCore.js";
+import { RawCoID } from "../ids.js";
+import { IncomingSyncStream, OutgoingSyncQueue } from "../localNode.js";
+import { CO_VALUE_PRIORITY } from "../priority.js";
+import { SyncMessage } from "../sync/types.js";
+import { PeerOperations } from "./PeerOperations.js";
 import { transformOutgoingMessageToPeer } from "./transformers.js";
 
 export type PeerID = string;

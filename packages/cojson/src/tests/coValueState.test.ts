@@ -1,8 +1,8 @@
 import { describe, expect, test, vi } from "vitest";
-import { PeerEntry } from "../PeerEntry.js";
 import { CoValueCore } from "../coValueCore";
 import { CO_VALUE_LOADING_MAX_RETRIES, CoValueEntry } from "../coValueEntry.js";
 import { RawCoID } from "../ids";
+import { PeerEntry } from "../peer/PeerEntry.js";
 
 import { Peer } from "../localNode.js";
 

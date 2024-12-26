@@ -4,7 +4,7 @@ import {
   PeerSyncStateListenerCallback,
 } from "../SyncStateSubscriptionManager.js";
 import { connectedPeers } from "../streamUtils.js";
-import { emptyKnownState } from "../sync.js";
+import { emptyKnownState } from "../sync/types.js";
 import { createTestNode, waitFor } from "./testUtils.js";
 
 describe("SyncStateSubscriptionManager", () => {

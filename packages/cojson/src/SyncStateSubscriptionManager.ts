@@ -1,5 +1,6 @@
-import { PeerID } from "./PeerEntry.js";
-import { CoValueKnownState, SyncManager, emptyKnownState } from "./sync.js";
+import { PeerID } from "./peer/PeerEntry.js";
+import { SyncManager } from "./sync.js";
+import { CoValueKnownState, emptyKnownState } from "./sync/types.js";
 
 export type SyncStateGetter = {
   isUploaded: boolean;

@@ -1,0 +1,71 @@
+import { CoValueCore } from "../coValueCore.js";
+import { CO_VALUE_LOADING_TIMEOUT, CoValueEntry } from "../coValueEntry.js";
+import { PeerEntry, PeerID } from "../peer/PeerEntry.js";
+import { Peers, getPeersWithoutErrors } from "../peer/Peers.js";
+import { emptyKnownState } from "./types.js";
+
+export class LoadService {
+  constructor(private readonly peers: Peers) {}
+
+  /**
+   * Sends "pull" request to peers to load/update the coValue state and request to subscribe to peer's updates if have not
+   *
+   * @param entry
+   * @param peerIdToInclude - Required peer to send the request to
+   */
+  async loadCoValue(
+    entry: CoValueEntry,
+    peerIdToInclude?: PeerID,
+  ): Promise<CoValueCore | "unavailable"> {
+    const peers = this.peers.getServerAndStorage({
+      includedId: peerIdToInclude,
+    });
+
+    try {
+      await entry.loadFromPeers(
+        getPeersWithoutErrors(peers, entry.id),
+        loadCoValueFromPeers,
+      );
+    } catch (e) {
+      console.error("Error loading from peers", entry.id, e);
+    }
+
+    return entry.getCoValue();
+  }
+
+  // async pullIncludingDependencies(coValue: CoValueCore, peer: PeerEntry) {
+  //   for (const id of coValue.getDependedOnCoValues()) {
+  //     const dependentCoValue = this.local.expectCoValueLoaded(id);
+  //     await this.pullIncludingDependencies(dependentCoValue, peer);
+  //   }
+  //
+  //   void peer.send.pull({ coValue });
+  // }
+  //
+}
+
+async function loadCoValueFromPeers(
+  coValueEntry: CoValueEntry,
+  peers: PeerEntry[],
+) {
+  for (const peer of peers) {
+    if (coValueEntry.state.type === "available") {
+      void peer.send.pull({
+        knownState: coValueEntry.state.coValue.knownState(),
+      });
+    } else {
+      void peer.send.pull({ knownState: emptyKnownState(coValueEntry.id) });
+    }
+
+    if (coValueEntry.state.type === "loading") {
+      const timeout = setTimeout(() => {
+        if (coValueEntry.state.type === "loading") {
+          console.error("Failed to load coValue from peer", peer.id);
+          coValueEntry.markAsNotFoundInPeer(peer.id);
+        }
+      }, CO_VALUE_LOADING_TIMEOUT);
+      await coValueEntry.state.waitForPeer(peer.id);
+      clearTimeout(timeout);
+    }
+  }
+}

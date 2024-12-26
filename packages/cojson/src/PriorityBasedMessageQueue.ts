@@ -1,5 +1,6 @@
 import { CoValuePriority } from "./priority.js";
-import { SyncMessage } from "./sync.js";
+
+import { SyncMessage } from "./sync/types.js";
 
 function promiseWithResolvers<R>() {
   let resolve = (_: R) => {};

@@ -31,11 +31,11 @@ import {
   isKeyForKeyField,
 } from "./permissions.js";
 import { getPriorityFromHeader } from "./priority.js";
-import { CoValueKnownState } from "./sync.js";
 import { accountOrAgentIDfromSessionID } from "./typeUtils/accountOrAgentIDfromSessionID.js";
 import { expectGroup } from "./typeUtils/expectGroup.js";
 import { isAccountID } from "./typeUtils/isAccountID.js";
 import CoValueContent = CojsonInternalTypes.CoValueContent;
+import { CoValueKnownState } from "./sync/types.js";
 
 /**
     In order to not block other concurrently syncing CoValues we introduce a maximum size of transactions,
