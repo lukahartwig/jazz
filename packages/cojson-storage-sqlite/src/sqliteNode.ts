@@ -3,10 +3,40 @@ import {
   IncomingSyncStream,
   OutgoingSyncQueue,
   Peer,
+  SyncMessage,
   cojsonInternals,
 } from "cojson";
 import { SyncManager, TransactionRow } from "cojson-storage";
 import { SQLiteClient } from "./sqliteClient.js";
+import {
+  transformIncomingMessageFromPeer,
+  transformOutgoingMessageToPeer,
+} from "./transformers.js";
+
+/**
+ * This is to transform outgoing message into older protocol message(s) for backward compatibility
+ * TODO To be removed after the protocol is updated in the sync server
+ */
+class LocalNodeWrapper {
+  constructor(private queue: OutgoingSyncQueue) {}
+
+  push(msg: SyncMessage): Promise<unknown> {
+    const transformedMessages = transformOutgoingMessageToPeer(msg);
+    transformedMessages.map((transformedMessage) => {
+      console.log("🟢 <<<=== Sending to peer", transformedMessage);
+    });
+
+    return Promise.all(
+      transformedMessages.map((transformedMessage) => {
+        return this.queue.push(transformedMessage);
+      }),
+    );
+  }
+
+  close() {
+    return this.queue.close();
+  }
+}
 
 export class SQLiteNode {
   private readonly syncManager: SyncManager;
@@ -17,8 +47,11 @@ export class SQLiteNode {
     fromLocalNode: IncomingSyncStream,
     toLocalNode: OutgoingSyncQueue,
   ) {
-    this.dbClient = new SQLiteClient(db, toLocalNode);
-    this.syncManager = new SyncManager(this.dbClient, toLocalNode);
+    this.dbClient = new SQLiteClient(db);
+    this.syncManager = new SyncManager(
+      this.dbClient,
+      new LocalNodeWrapper(toLocalNode),
+    );
 
     const processMessages = async () => {
       for await (const msg of fromLocalNode) {
@@ -26,7 +59,9 @@ export class SQLiteNode {
           if (msg === "Disconnected" || msg === "PingTimeout") {
             throw new Error("Unexpected Disconnected message");
           }
-          await this.syncManager.handleSyncMessage(msg);
+          await this.syncManager.handleSyncMessage(
+            transformIncomingMessageFromPeer(msg),
+          );
         } catch (e) {
           console.error(
             new Error(

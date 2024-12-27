@@ -2,20 +2,18 @@ import { CoValueCore, CoValueHeader } from "./coValueCore.js";
 import { CoValueEntry } from "./coValueEntry.js";
 import { RawCoID } from "./ids.js";
 import { LocalNode } from "./localNode.js";
-import { PeerEntry, PeerID } from "./peer/PeerEntry.js";
+import { PeerEntry, PeerID } from "./peer/index.js";
 import {
   AckResponseHandler,
+  CoValueKnownState,
   DataResponseHandler,
   LoadService,
+  MessageHandlerInterface,
   PullRequestHandler,
   PushRequestHandler,
+  SyncMessage,
   SyncService,
 } from "./sync/index.js";
-import {
-  CoValueKnownState,
-  MessageHandlerInterface,
-  SyncMessage,
-} from "./sync/types.js";
 
 export type DisconnectedError = "Disconnected";
 

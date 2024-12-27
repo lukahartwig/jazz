@@ -5,7 +5,6 @@ import {
   SessionID,
   SyncMessage,
   cojsonInternals,
-  emptyDataMessage,
   emptyKnownState,
   unknownDataMessage,
 } from "cojson";
@@ -15,7 +14,6 @@ import {
   StoredCoValueRow,
   StoredSessionRow,
 } from "./types.js";
-import NewContentMessage = CojsonInternalTypes.NewContentMessage;
 import KnownStateMessage = CojsonInternalTypes.KnownStateMessage;
 import DataMessage = CojsonInternalTypes.DataMessage;
 import PushMessage = CojsonInternalTypes.PushMessage;
@@ -24,9 +22,7 @@ import RawCoID = CojsonInternalTypes.RawCoID;
 type OutputMessageMap = Record<
   RawCoID,
   {
-    knownMessage: KnownStateMessage;
-    contentMessages?: NewContentMessage[];
-    dataMessages?: DataMessage[];
+    dataMessages: DataMessage[];
   }
 >;
 
@@ -55,11 +51,11 @@ export class SyncManager {
   async handleSessionUpdate({
     sessionRow,
     peerKnownState,
-    newContentMessages,
+    newDataMessages,
   }: {
     sessionRow: StoredSessionRow;
     peerKnownState: CojsonInternalTypes.CoValueKnownState;
-    newContentMessages: CojsonInternalTypes.NewContentMessage[];
+    newDataMessages: CojsonInternalTypes.DataMessage[];
   }) {
     if (
       sessionRow.lastIdx <= (peerKnownState.sessions[sessionRow.sessionID] || 0)
@@ -80,7 +76,7 @@ export class SyncManager {
 
     collectNewTxs({
       newTxsInSession,
-      newContentMessages,
+      newDataMessages,
       sessionRow,
       signaturesAndIdxs,
       peerKnownState,
@@ -97,32 +93,9 @@ export class SyncManager {
 
     // reverse it to send the top level id the last in the order
     const collectedMessages = Object.values(outputMessages).reverse();
-    collectedMessages.forEach(({ knownMessage, contentMessages }) => {
-      // this.sendStateMessage(knownMessage);
-      // temporary ugly patch to make it work with "data" and "pull" actions
-      if (!knownMessage.header) {
-        this.sendStateMessage(unknownDataMessage(knownMessage.id));
-
-        if (coValueKnownState.header) {
-          this.sendStateMessage({ ...knownMessage, action: "pull" });
-        }
-
-        return;
-      }
-
-      const dataMsg = contentMessages?.length
-        ? {
-            ...contentMessages[0],
-            action: "data",
-            asDependencyOf: knownMessage.asDependencyOf,
-          }
-        : { ...emptyDataMessage(knownMessage.id) };
-
-      this.sendStateMessage(dataMsg);
-      // contentMessages?.length &&
-      //   contentMessages.forEach((msg) => {
-      //     this.sendStateMessage(msg);
-      //   });
+    collectedMessages.forEach(({ dataMessages }) => {
+      dataMessages?.length &&
+        dataMessages.forEach((msg) => this.sendStateMessage(msg));
     });
   }
 
@@ -138,12 +111,9 @@ export class SyncManager {
     const coValueRow = await this.dbClient.getCoValue(peerKnownState.id);
 
     if (!coValueRow) {
-      const emptyKnownMessage: KnownStateMessage = {
-        action: "known",
-        ...emptyKnownState(peerKnownState.id),
+      messageMap[peerKnownState.id] = {
+        dataMessages: [unknownDataMessage(peerKnownState.id, asDependencyOf)],
       };
-      asDependencyOf && (emptyKnownMessage.asDependencyOf = asDependencyOf);
-      messageMap[peerKnownState.id] = { knownMessage: emptyKnownMessage };
       return messageMap;
     }
 
@@ -157,9 +127,10 @@ export class SyncManager {
       sessions: {},
     };
 
-    const newContentMessages: CojsonInternalTypes.NewContentMessage[] = [
+    const newDataMessages: CojsonInternalTypes.DataMessage[] = [
       {
-        action: "content",
+        action: "data",
+        known: true,
         id: coValueRow.id,
         header: coValueRow.header,
         new: {},
@@ -175,14 +146,14 @@ export class SyncManager {
         return this.handleSessionUpdate({
           sessionRow,
           peerKnownState,
-          newContentMessages,
+          newDataMessages,
         });
       }),
     );
 
     const dependedOnCoValuesList = getDependedOnCoValues({
       coValueRow,
-      newContentMessages,
+      newDataMessages,
     });
 
     const knownMessage: KnownStateMessage = {
@@ -191,8 +162,7 @@ export class SyncManager {
     };
     asDependencyOf && (knownMessage.asDependencyOf = asDependencyOf);
     messageMap[newCoValueKnownState.id] = {
-      knownMessage: knownMessage,
-      contentMessages: newContentMessages,
+      dataMessages: newDataMessages,
     };
 
     await Promise.all(

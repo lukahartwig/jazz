@@ -140,8 +140,8 @@ describe("DB sync manager", () => {
 
       // mock content data combined with session updates
       syncManager.handleSessionUpdate = vi.fn(
-        async ({ sessionRow, newContentMessages }) => {
-          newContentMessages[0]!.new[sessionRow.sessionID] = newTxData;
+        async ({ sessionRow, newDataMessages }) => {
+          newDataMessages[0]!.new[sessionRow.sessionID] = newTxData;
         },
       );
 

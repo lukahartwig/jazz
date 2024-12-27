@@ -14,14 +14,14 @@ import {
 
 export function collectNewTxs({
   newTxsInSession,
-  newContentMessages,
+  newDataMessages,
   sessionRow,
   signaturesAndIdxs,
   peerKnownState,
   firstNewTxIdx,
 }: {
   newTxsInSession: TransactionRow[];
-  newContentMessages: CojsonInternalTypes.NewContentMessage[];
+  newDataMessages: CojsonInternalTypes.DataMessage[];
   sessionRow: StoredSessionRow;
   signaturesAndIdxs: SignatureAfterRow[];
   peerKnownState: CojsonInternalTypes.CoValueKnownState;
@@ -31,18 +31,15 @@ export function collectNewTxs({
 
   for (const tx of newTxsInSession) {
     let sessionEntry =
-      newContentMessages[newContentMessages.length - 1]!.new[
-        sessionRow.sessionID
-      ];
+      newDataMessages[newDataMessages.length - 1]!.new[sessionRow.sessionID];
     if (!sessionEntry) {
       sessionEntry = {
         after: idx,
         lastSignature: "WILL_BE_REPLACED" as CojsonInternalTypes.Signature,
         newTransactions: [],
       };
-      newContentMessages[newContentMessages.length - 1]!.new[
-        sessionRow.sessionID
-      ] = sessionEntry;
+      newDataMessages[newDataMessages.length - 1]!.new[sessionRow.sessionID] =
+        sessionEntry;
     }
 
     sessionEntry.newTransactions.push(tx.tx);
@@ -50,8 +47,9 @@ export function collectNewTxs({
     if (signaturesAndIdxs[0] && idx === signaturesAndIdxs[0].idx) {
       sessionEntry.lastSignature = signaturesAndIdxs[0].signature;
       signaturesAndIdxs.shift();
-      newContentMessages.push({
-        action: "content",
+      newDataMessages.push({
+        action: "data",
+        known: true,
         id: peerKnownState.id,
         new: {},
         priority: cojsonInternals.getPriorityFromHeader(undefined),
@@ -65,20 +63,20 @@ export function collectNewTxs({
 
 export function getDependedOnCoValues({
   coValueRow,
-  newContentMessages,
+  newDataMessages,
 }: {
   coValueRow: StoredCoValueRow;
-  newContentMessages: CojsonInternalTypes.NewContentMessage[];
+  newDataMessages: CojsonInternalTypes.DataMessage[];
 }) {
   return coValueRow.header.ruleset.type === "group"
-    ? getGroupDependedOnCoValues(newContentMessages)
+    ? getGroupDependedOnCoValues(newDataMessages)
     : coValueRow.header.ruleset.type === "ownedByGroup"
-      ? getOwnedByGroupDependedOnCoValues(coValueRow, newContentMessages)
+      ? getOwnedByGroupDependedOnCoValues(coValueRow, newDataMessages)
       : [];
 }
 
 function getGroupDependedOnCoValues(
-  newContentMessages: CojsonInternalTypes.NewContentMessage[],
+  newDataMessages: CojsonInternalTypes.DataMessage[],
 ) {
   const keys: CojsonInternalTypes.RawCoID[] = [];
 
@@ -86,7 +84,7 @@ function getGroupDependedOnCoValues(
    * Collect all the signing keys inside the transactions to list all the
    * dependencies required to correctly access the CoValue.
    */
-  for (const piece of newContentMessages) {
+  for (const piece of newDataMessages) {
     for (const sessionEntry of Object.values(piece.new)) {
       for (const tx of sessionEntry.newTransactions) {
         if (tx.privacy !== "trusting") continue;
@@ -117,7 +115,7 @@ function getGroupDependedOnCoValues(
 
 function getOwnedByGroupDependedOnCoValues(
   coValueRow: StoredCoValueRow,
-  newContentMessages: CojsonInternalTypes.NewContentMessage[],
+  newDataMessages: CojsonInternalTypes.DataMessage[],
 ) {
   if (coValueRow.header.ruleset.type !== "ownedByGroup") return [];
 
@@ -127,7 +125,7 @@ function getOwnedByGroupDependedOnCoValues(
    * Collect all the signing keys inside the transactions to list all the
    * dependencies required to correctly access the CoValue.
    */
-  for (const piece of newContentMessages) {
+  for (const piece of newDataMessages) {
     for (const sessionID of Object.keys(piece.new) as SessionID[]) {
       const accountId =
         cojsonInternals.accountOrAgentIDfromSessionID(sessionID);
