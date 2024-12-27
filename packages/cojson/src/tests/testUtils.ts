@@ -97,12 +97,12 @@ export function createThreeConnectedNodes(
     },
   );
 
-  node1.syncManager.addPeer(node1ToNode2Peer);
-  node1.syncManager.addPeer(node1ToNode3Peer);
-  node2.syncManager.addPeer(node2ToNode1Peer);
-  node2.syncManager.addPeer(node2ToNode3Peer);
-  node3.syncManager.addPeer(node3ToNode1Peer);
-  node3.syncManager.addPeer(node3ToNode2Peer);
+  node1.addPeer(node1ToNode2Peer);
+  node1.addPeer(node1ToNode3Peer);
+  node2.addPeer(node2ToNode1Peer);
+  node2.addPeer(node2ToNode3Peer);
+  node3.addPeer(node3ToNode1Peer);
+  node3.addPeer(node3ToNode2Peer);
 
   return {
     node1,

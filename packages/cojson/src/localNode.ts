@@ -26,7 +26,7 @@ import {
 } from "./coValues/group.js";
 import { AgentSecret, CryptoProvider } from "./crypto/crypto.js";
 import { AgentID, RawCoID, SessionID, isAgentID } from "./ids.js";
-import { Peer, PeerEntry, PeerID } from "./peer/PeerEntry.js";
+import { Peer, PeerEntry } from "./peer/PeerEntry.js";
 import { Peers } from "./peer/Peers.js";
 import { transformIncomingMessageFromPeer } from "./peer/transformers.js";
 import { DisconnectedError, PingTimeoutError, SyncManager } from "./sync.js";

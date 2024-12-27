@@ -92,7 +92,7 @@ describe("CoFeed resolution", async () => {
     if (!isControlledAccount(me)) {
       throw "me is not a controlled account";
     }
-    me._raw.core.node.syncManager.addPeer(secondPeer);
+    me._raw.core.node.addPeer(secondPeer);
     const { account: meOnSecondPeer } = await createJazzContext({
       auth: fixedCredentialsAuth({
         accountID: me.id,
@@ -174,7 +174,7 @@ describe("CoFeed resolution", async () => {
       peer2role: "client",
     });
 
-    me._raw.core.node.syncManager.addPeer(secondAsPeer);
+    me._raw.core.node.addPeer(secondAsPeer);
     if (!isControlledAccount(me)) {
       throw "me is not a controlled account";
     }
@@ -305,7 +305,7 @@ describe("FileStream loading & Subscription", async () => {
     if (!isControlledAccount(me)) {
       throw "me is not a controlled account";
     }
-    me._raw.core.node.syncManager.addPeer(secondAsPeer);
+    me._raw.core.node.addPeer(secondAsPeer);
     const { account: meOnSecondPeer } = await createJazzContext({
       auth: fixedCredentialsAuth({
         accountID: me.id,
@@ -333,7 +333,7 @@ describe("FileStream loading & Subscription", async () => {
       peer1role: "server",
       peer2role: "client",
     });
-    me._raw.core.node.syncManager.addPeer(secondAsPeer);
+    me._raw.core.node.addPeer(secondAsPeer);
     if (!isControlledAccount(me)) {
       throw "me is not a controlled account";
     }

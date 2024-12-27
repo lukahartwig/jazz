@@ -52,6 +52,7 @@ export class SyncManager {
     );
 
     this.loadService = new LoadService(this.local.peers);
+
     this.pullRequestHandler = new PullRequestHandler(this.loadService);
     this.pushRequestHandler = new PushRequestHandler(
       this.syncService,

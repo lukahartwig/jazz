@@ -1,4 +1,4 @@
-import { CoID, CoValueCore, RawCoValue } from "cojson";
+import { RawCoValue } from "cojson";
 import type {
   Account,
   AnonymousJazzAgent,

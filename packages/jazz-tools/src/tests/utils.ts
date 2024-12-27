@@ -25,7 +25,7 @@ export async function setupAccount() {
   if (!isControlledAccount(me)) {
     throw "me is not a controlled account";
   }
-  me._raw.core.node.syncManager.addPeer(secondPeer);
+  me._raw.core.node.addPeer(secondPeer);
   const { account: meOnSecondPeer } = await createJazzContext({
     auth: fixedCredentialsAuth({
       accountID: me.id,

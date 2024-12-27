@@ -6,7 +6,7 @@ import { Account, CoValue, ID } from "jazz-tools";
 
 export function waitForUpload(id: ID<CoValue>, me: Account) {
   const syncManager = me._raw.core.node.syncManager;
-  const peers = syncManager.getPeers();
+  const peers = me._raw.core.node.peers.getAll();
 
   return Promise.all(
     peers.map((peer) => syncManager.waitForUploadIntoPeer(peer.id, id)),

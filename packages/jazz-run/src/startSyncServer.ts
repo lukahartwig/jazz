@@ -40,7 +40,7 @@ export const startSyncServer = async ({
 
     const storage = await SQLiteStorage.asPeer({ filename: db });
 
-    localNode.syncManager.addPeer(storage);
+    localNode.addPeer(storage);
   }
 
   wss.on("connection", function connection(ws, req) {
@@ -66,7 +66,7 @@ export const startSyncServer = async ({
 
     const clientId = clientAddress + "@" + new Date().toISOString();
 
-    localNode.syncManager.addPeer(
+    localNode.addPeer(
       createWebSocketPeer({
         id: clientId,
         role: "client",

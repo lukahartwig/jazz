@@ -102,9 +102,7 @@ export async function createJazzRNContext<Acc extends Account>(
   async function websocketReconnectLoop() {
     while (shouldTryToReconnect) {
       if (
-        Object.keys(node.syncManager.peers).some((peerId) =>
-          peerId.includes(options.peer),
-        )
+        Object.keys(node.peers).some((peerId) => peerId.includes(options.peer))
       ) {
         // TODO: this might drain battery, use listeners instead
         await new Promise((resolve) => setTimeout(resolve, 100));
@@ -130,7 +128,7 @@ export async function createJazzRNContext<Acc extends Account>(
           );
         });
 
-        node.syncManager.addPeer(
+        node.addPeer(
           createWebSocketPeer({
             websocket: new WebSocket(options.peer),
             id: options.peer + "@" + new Date().toISOString(),

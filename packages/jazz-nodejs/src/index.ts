@@ -54,7 +54,7 @@ export async function startWorker<Acc extends Account>({
   });
 
   setInterval(async () => {
-    if (!worker._raw.core.node.syncManager.peers["upstream"]) {
+    if (!worker._raw.core.node.peers.get("upstream")) {
       console.log(new Date(), "Reconnecting to upstream " + peer);
 
       const wsPeer: Peer = createWebSocketPeer({
@@ -63,7 +63,7 @@ export async function startWorker<Acc extends Account>({
         role: "server",
       });
 
-      worker._raw.core.node.syncManager.addPeer(wsPeer);
+      worker._raw.core.node.addPeer(wsPeer);
     }
   }, 5000);
 

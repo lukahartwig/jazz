@@ -6,13 +6,8 @@ import {
 import { CoValueAvailableState, CoValueEntry } from "../coValueEntry.js";
 import { PeerEntry } from "../peer/PeerEntry.js";
 import { Peers } from "../peer/Peers.js";
-import { PushMessageHandlerInput } from "./PushRequestHandler.js";
 import { SyncService } from "./SyncService.js";
-import {
-  BaseMessageHandler,
-  DataMessage,
-  MessageHandlerInput,
-} from "./types.js";
+import { BaseMessageHandler, DataMessage } from "./types.js";
 
 export type DataMessageHandlerInput = {
   msg: DataMessage;
@@ -36,7 +31,7 @@ export class DataResponseHandler extends BaseMessageHandler {
   }
 
   async handle(input: DataMessageHandlerInput): Promise<unknown> {
-    const { msg, peer, entry } = input;
+    const { msg, peer } = input;
     if (!msg.known) {
       input.entry.dispatch({
         type: "not-found-in-peer",
@@ -82,7 +77,7 @@ export class DataResponseHandler extends BaseMessageHandler {
   }
 
   async handleUnavailable(input: DataMessageHandlerInput) {
-    const { peer, entry, msg } = input;
+    const { peer, msg } = input;
     if (!msg.header) {
       console.error(
         "Unexpected empty header in message. Data message is a response to a pull request and should be received for available coValue or include the full header.",

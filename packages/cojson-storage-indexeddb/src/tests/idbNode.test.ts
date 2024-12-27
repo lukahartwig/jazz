@@ -15,7 +15,7 @@ test("Should be able to initialize and load from empty DB", async () => {
     Crypto,
   );
 
-  node.syncManager.addPeer(await IDBStorage.asPeer({ trace: true }));
+  node.addPeer(await IDBStorage.asPeer({ trace: true }));
 
   console.log("yay!");
 
@@ -23,7 +23,7 @@ test("Should be able to initialize and load from empty DB", async () => {
 
   await new Promise((resolve) => setTimeout(resolve, 200));
 
-  expect(node.syncManager.peers["indexedDB"]).toBeDefined();
+  expect(node.peers.get("indexedDB")).toBeDefined();
 });
 
 test("Should be able to sync data to database and then load that from a new node", async () => {
@@ -35,7 +35,7 @@ test("Should be able to sync data to database and then load that from a new node
     Crypto,
   );
 
-  node1.syncManager.addPeer(
+  node1.addPeer(
     await IDBStorage.asPeer({ trace: true, localNodeName: "node1" }),
   );
 
@@ -55,7 +55,7 @@ test("Should be able to sync data to database and then load that from a new node
     Crypto,
   );
 
-  node2.syncManager.addPeer(
+  node2.addPeer(
     await IDBStorage.asPeer({ trace: true, localNodeName: "node2" }),
   );
 
@@ -63,6 +63,7 @@ test("Should be able to sync data to database and then load that from a new node
   if (map2 === "unavailable") {
     throw new Error("Map is unavailable");
   }
-
-  expect(map2.get("hello")).toBe("world");
+  // TODO fixme
+  //   expect(map2.get("hello")).toBe("world");
+  expect(false).toBeTruthy();
 });

@@ -1,7 +1,7 @@
 import { CoValueHeader, SessionNewContent } from "../coValueCore.js";
 import { CoValueEntry } from "../coValueEntry.js";
 import { RawCoID, SessionID } from "../ids.js";
-import { PeerEntry, PeerID } from "../peer/PeerEntry.js";
+import { PeerEntry } from "../peer/PeerEntry.js";
 import { CoValuePriority } from "../priority.js";
 
 export type CoValueKnownState = {
