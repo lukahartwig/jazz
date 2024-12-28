@@ -225,7 +225,7 @@ export class SyncManager {
 
     if (invalidAssumptionOnHeaderPresence) {
       console.error(
-        'invalidAssumptionOnHeaderPresence. We should never be here. "Data" action is a response to our specific request. TODO Log error. Fix this. Retry request',
+        'invalidAssumptionOnHeaderPresence. We should never be here. "Data" action is a response to our specific request.',
       );
       return;
     }
@@ -237,7 +237,7 @@ export class SyncManager {
 
     if (needMissingTransactions) {
       console.error(
-        'needMissingTransactions. We should never be here. "Data" action is a response to our specific request. TODO Log error. Fix this. Retry request',
+        'needMissingTransactions. We should never be here. "Data" action is a response to our specific request.',
       );
       return;
     }

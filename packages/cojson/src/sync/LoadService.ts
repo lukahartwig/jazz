@@ -1,7 +1,11 @@
 import { CoValueCore } from "../coValueCore.js";
 import { CO_VALUE_LOADING_TIMEOUT, CoValueEntry } from "../coValueEntry.js";
-import { PeerEntry, PeerID } from "../peer/PeerEntry.js";
-import { Peers, getPeersWithoutErrors } from "../peer/Peers.js";
+import {
+  PeerEntry,
+  PeerID,
+  Peers,
+  getPeersWithoutErrors,
+} from "../peer/index.js";
 import { emptyKnownState } from "./types.js";
 
 export class LoadService {
@@ -60,7 +64,11 @@ async function loadCoValueFromPeers(
     if (coValueEntry.state.type === "loading") {
       const timeout = setTimeout(() => {
         if (coValueEntry.state.type === "loading") {
-          console.error("Failed to load coValue from peer", peer.id);
+          console.error(
+            "Failed to load coValue from peer",
+            peer.id,
+            coValueEntry.id,
+          );
           coValueEntry.markAsNotFoundInPeer(peer.id);
         }
       }, CO_VALUE_LOADING_TIMEOUT);

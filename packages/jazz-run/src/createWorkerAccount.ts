@@ -1,9 +1,7 @@
-import { CoValueCore, Profile, emptyKnownState } from "cojson";
+import { emptyKnownState } from "cojson";
 import { createWebSocketPeer } from "cojson-transport-ws";
 import {
   Account,
-  CoMap,
-  Peer,
   WasmCrypto,
   createJazzContext,
   isControlledAccount,

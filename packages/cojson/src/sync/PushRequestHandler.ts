@@ -68,7 +68,7 @@ export class PushRequestHandler extends BaseMessageHandler {
   }
 
   private async addData(coValue: CoValueCore, input: PushMessageHandlerInput) {
-    const { msg, peer } = input;
+    const { msg, peer, entry } = input;
 
     const peerKnownState = { ...coValue.knownState() };
     try {
@@ -92,6 +92,6 @@ export class PushRequestHandler extends BaseMessageHandler {
 
     const peers = this.peers.getInPriorityOrder({ excludedId: peer.id });
 
-    await this.syncService.syncCoValue(coValue, peerKnownState, peers);
+    await this.syncService.syncCoValue(entry, peerKnownState, peers);
   }
 }

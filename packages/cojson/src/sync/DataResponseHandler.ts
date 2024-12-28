@@ -4,10 +4,9 @@ import {
   isTryAddTransactionsException,
 } from "../coValueCore.js";
 import { CoValueAvailableState, CoValueEntry } from "../coValueEntry.js";
-import { PeerEntry } from "../peer/PeerEntry.js";
-import { Peers } from "../peer/Peers.js";
+import { PeerEntry, Peers } from "../peer/index.js";
 import { SyncService } from "./SyncService.js";
-import { BaseMessageHandler, DataMessage } from "./types.js";
+import { BaseMessageHandler, DataMessage, emptyKnownState } from "./types.js";
 
 export type DataMessageHandlerInput = {
   msg: DataMessage;
@@ -30,8 +29,27 @@ export class DataResponseHandler extends BaseMessageHandler {
     super();
   }
 
-  async handle(input: DataMessageHandlerInput): Promise<unknown> {
-    const { msg, peer } = input;
+  async handleAvailable(input: DataMessageHandlerInput): Promise<unknown> {
+    const { peer, entry, msg } = input;
+
+    const { coValue } = entry.state as CoValueAvailableState;
+
+    const peerKnownState = { ...coValue.knownState() };
+
+    if (!this.addData(input)) {
+      return;
+    }
+
+    // Exclude peer that sent us data from sync.
+    const peers = this.peers.getInPriorityOrder({ excludedId: peer.id });
+    // Assumption - the other peers state is we same as we had
+    return this.syncService.syncCoValue(entry, peerKnownState, peers);
+  }
+
+  async handleLoading(input: DataMessageHandlerInput) {
+    const { peer, msg, entry } = input;
+
+    // not known by peer
     if (!msg.known) {
       input.entry.dispatch({
         type: "not-found-in-peer",
@@ -40,23 +58,51 @@ export class DataResponseHandler extends BaseMessageHandler {
       return;
     }
 
-    return super.handle(input);
+    if (!msg.header) {
+      console.error(
+        "Unexpected empty header in message. Data message is a response to a pull request and should be received for available coValue or include the full header.",
+        msg.id,
+        peer.id,
+      );
+
+      return;
+    }
+
+    const coValue = this.makeCoValueAvailable(input);
+
+    if (!this.addData(input)) {
+      return;
+    }
+
+    // Exclude peer that sent us data from sync.
+    const peers = this.peers.getInPriorityOrder({ excludedId: peer.id });
+    //  Assumption - the other peers state is unavailable - the same as we had
+    return this.syncService.syncCoValue(entry, emptyKnownState(msg.id), peers);
   }
 
-  async handleAvailable(input: DataMessageHandlerInput): Promise<unknown> {
-    const { peer, entry, msg } = input;
+  async handleUnavailable(input: DataMessageHandlerInput) {
+    console.error(
+      "Unexpected coValue unavailable state in DataResponseHandler",
+      input.peer.id,
+      input.msg.id,
+    );
+  }
 
+  addData(input: DataMessageHandlerInput) {
+    const { peer, msg, entry } = input;
     const { coValue } = entry.state as CoValueAvailableState;
-
-    const peerKnownState = { ...coValue.knownState() };
 
     try {
       const anyMissedTransaction = coValue.addNewContent(msg);
 
       if (anyMissedTransaction) {
-        console.error();
+        console.error(
+          "Unexpected missed transactions in data message",
+          peer.id,
+          msg,
+        );
 
-        return;
+        return false;
       }
     } catch (e) {
       if (isTryAddTransactionsException(e)) {
@@ -68,36 +114,12 @@ export class DataResponseHandler extends BaseMessageHandler {
         console.error("Unknown error", peer.id, e);
       }
 
-      return;
+      return false;
     }
-
-    const peers = this.peers.getInPriorityOrder({ excludedId: peer.id });
-
-    return this.syncService.syncCoValue(coValue, peerKnownState, peers);
+    return true;
   }
 
-  async handleUnavailable(input: DataMessageHandlerInput) {
-    const { peer, msg } = input;
-    if (!msg.header) {
-      console.error(
-        "Unexpected empty header in message. Data message is a response to a pull request and should be received for available coValue or include the full header.",
-        msg.id,
-        peer.id,
-      );
-
-      return;
-    }
-
-    this.makeCoValueAvailable(input);
-
-    return this.handle(input);
-  }
-
-  async handleLoading(input: DataMessageHandlerInput) {
-    return this.handleUnavailable(input);
-  }
-
-  private makeCoValueAvailable(input: DataMessageHandlerInput) {
+  private makeCoValueAvailable(input: DataMessageHandlerInput): CoValueCore {
     if (!input.msg.header) {
       throw new Error(`Empty header for ${input.msg.id}`);
     }
@@ -107,5 +129,7 @@ export class DataResponseHandler extends BaseMessageHandler {
       type: "available",
       coValue,
     });
+
+    return coValue;
   }
 }

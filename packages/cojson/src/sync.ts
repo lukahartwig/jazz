@@ -41,7 +41,6 @@ export class SyncManager {
       new CoValueCore(header, this.local);
 
     this.syncService = new SyncService(
-      this.local.coValuesStore,
       this.local.peers,
       // onPushContent callback
       ({ entry, peerId }: { entry: CoValueEntry; peerId: PeerID }) => {
@@ -77,7 +76,7 @@ export class SyncManager {
   }
 
   async initialSync(peer: PeerEntry) {
-    return this.syncService.initialSync(peer);
+    return this.syncService.initialSync(peer, this.local.coValuesStore);
   }
 
   async syncCoValue(
@@ -92,8 +91,8 @@ export class SyncManager {
       const done = new Promise<void>((resolve) => {
         queueMicrotask(async () => {
           delete this.requestedSyncs[coValue.id];
-
-          await this.syncService.syncCoValue(coValue, peersKnownState, peers);
+          const entry = this.local.coValuesStore.get(coValue.id);
+          await this.syncService.syncCoValue(entry, peersKnownState, peers);
           resolve();
         });
       });

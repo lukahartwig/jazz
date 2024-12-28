@@ -23,7 +23,7 @@ class LocalNodeWrapper {
   push(msg: SyncMessage): Promise<unknown> {
     const transformedMessages = transformOutgoingMessageToPeer(msg);
     transformedMessages.map((transformedMessage) => {
-      console.log("🟢 <<<=== Sending to peer", transformedMessage);
+      console.log("🔴 <<<=== SQLite is sending", transformedMessage);
     });
 
     return Promise.all(
@@ -59,6 +59,8 @@ export class SQLiteNode {
           if (msg === "Disconnected" || msg === "PingTimeout") {
             throw new Error("Unexpected Disconnected message");
           }
+          console.log("🟡 <<<=== SQLite is getting", msg);
+
           await this.syncManager.handleSyncMessage(
             transformIncomingMessageFromPeer(msg),
           );

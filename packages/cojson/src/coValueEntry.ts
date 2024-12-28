@@ -112,7 +112,7 @@ class UploadState {
   setPendingForPeer(peerId: PeerID) {
     if (!(this.coValueEntry.state.type === "available")) {
       console.error(
-        "Trying to set pending download for a coValue that is not available",
+        "Trying to set pending upload for a coValue that is not available",
         this.coValueEntry.id,
       );
 
