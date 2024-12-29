@@ -1,5 +1,6 @@
 "use client";
 
+import { clsx } from "clsx";
 import React, { useEffect, useState } from "react";
 
 export const FloatingNav = ({
@@ -30,18 +31,15 @@ export const FloatingNav = ({
   return (
     <div
       style={{
-        transform: `translateY(${visible ? "0" : "-100px"})`,
-        opacity: visible ? "1" : "0",
         transition: "transform 0.2s, opacity 0.2s",
-        position: "fixed",
-        top: "0",
-        left: "0",
-        right: "0",
-        zIndex: 40,
-        margin: "0 auto",
-        width: "100%",
       }}
-      className={className}
+      className={clsx(
+        className,
+        "fixed top-0 left-0 right-0 z-[35] m-auto w-full",
+        visible
+          ? "opacity-100 translate-y-0"
+          : "opacity-0 translate-y-[-100px]",
+      )}
     >
       {children}
     </div>
