@@ -100,7 +100,7 @@ type CoValueStateType =
   | CoValueUnavailableState;
 
 class UploadState {
-  private peers = new Map<
+  protected peers = new Map<
     PeerID,
     ReturnType<typeof createResolvablePromise<void>> & { completed?: boolean }
   >();
@@ -118,7 +118,6 @@ class UploadState {
 
       return;
     }
-
     const peerUploadState = this.peers.get(peerId);
     if (!peerUploadState) {
       this.peers.set(peerId, createResolvablePromise<void>());
@@ -160,6 +159,15 @@ class UploadState {
     const peerUploadState = this.peers.get(peerId);
 
     return !!peerUploadState?.completed;
+  }
+
+  copyFrom(otherUploadState: UploadState) {
+    for (let [peerId] of otherUploadState.peers) {
+      this.setPendingForPeer(peerId);
+      if (otherUploadState.isCoValueFullyUploadedIntoPeer(peerId)) {
+        this.setCompletedForPeer(peerId);
+      }
+    }
   }
 }
 

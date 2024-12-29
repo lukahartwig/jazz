@@ -1,5 +1,5 @@
 import { CoValueAvailableState, CoValueEntry } from "../coValueEntry.js";
-import { PeerEntry } from "../peer/PeerEntry.js";
+import { PeerEntry } from "../peer/index.js";
 import { LoadService } from "./LoadService.js";
 import { BaseMessageHandler, PullMessage } from "./types.js";
 

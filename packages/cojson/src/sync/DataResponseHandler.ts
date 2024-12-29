@@ -68,7 +68,7 @@ export class DataResponseHandler extends BaseMessageHandler {
       return;
     }
 
-    const coValue = this.makeCoValueAvailable(input);
+    this.makeCoValueAvailable(input);
 
     if (!this.addData(input)) {
       return;

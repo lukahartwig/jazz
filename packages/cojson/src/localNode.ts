@@ -666,7 +666,11 @@ export class LocalNode {
           new Map(entry.state.coValue.sessionLogs),
         );
 
-        newNode.coValuesStore.setAsAvailable(coValueID, newCoValue);
+        const newEntry = newNode.coValuesStore.setAsAvailable(
+          coValueID,
+          newCoValue,
+        );
+        newEntry.uploadState.copyFrom(entry.uploadState);
 
         coValuesToCopy.pop();
       }

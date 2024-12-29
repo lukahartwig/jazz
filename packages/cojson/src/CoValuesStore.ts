@@ -22,6 +22,8 @@ export class CoValuesStore {
       type: "available",
       coValue,
     });
+
+    return entry;
   }
 
   getEntries() {

@@ -4,8 +4,7 @@ import {
   isTryAddTransactionsException,
 } from "../coValueCore.js";
 import { CoValueAvailableState, CoValueEntry } from "../coValueEntry.js";
-import { PeerEntry } from "../peer/PeerEntry.js";
-import { Peers } from "../peer/Peers.js";
+import { PeerEntry, Peers } from "../peer/index.js";
 import { SyncService } from "./SyncService.js";
 import { BaseMessageHandler, PushMessage } from "./types.js";
 
