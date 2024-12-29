@@ -5,7 +5,6 @@ import clsx from "clsx";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Icon } from "../../atoms/Icon";
-import { NavigationDrawer } from "../NavigationDrawer";
 import { SocialLinks } from "../SocialLinks";
 import { NavLink } from "./NavLink";
 import { NavLinkLogo } from "./NavLinkLogo";
@@ -37,17 +36,13 @@ function MobileNavItem({
   );
 }
 
-interface MobileNavProps extends NavProps {
-  className?: string;
-}
-
 export function MobileNav({
   className,
   mainLogo,
   items,
   socials,
   themeToggle: ThemeToggle,
-}: MobileNavProps) {
+}: NavProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const pathname = usePathname();
 

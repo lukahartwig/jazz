@@ -5,22 +5,11 @@ import { NavItem } from "./NavItem";
 import { NavLinkLogo } from "./NavLinkLogo";
 import { NavProps } from "./types";
 
-interface NavBarProps extends NavProps {
-  className?: string;
-}
-
-export function NavBar({
-  className,
-  mainLogo,
-  items,
-  cta,
-  socials,
-  themeToggle: ThemeToggle,
-}: NavBarProps) {
+export function NavBar({ className, mainLogo, items, cta, socials }: NavProps) {
   return (
     <nav
       className={clsx(
-        "flex items-center px-4 border-b sticky top-0 z-50 bg-white dark:bg-stone-950",
+        "flex items-center px-4 container sticky top-0 z-50 bg-white dark:bg-stone-950",
         className,
       )}
     >
@@ -33,7 +22,6 @@ export function NavBar({
         ))}
       </PopoverGroup>
       {socials && <SocialLinks className="gap-2 mx-2" {...socials} />}
-      <ThemeToggle className="ml-2" />
       {cta}
     </nav>
   );

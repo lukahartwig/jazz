@@ -17,4 +17,5 @@ export interface NavProps {
   cta?: ReactNode;
   socials?: SocialLinksProps;
   themeToggle: ComponentType<{ className?: string }>;
+  className?: string;
 }
