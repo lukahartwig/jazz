@@ -30,7 +30,7 @@ export function NavigationDrawer({
       className={clsx(
         "fixed top-0 w-screen h-screen z-50 overflow-y-auto",
         "p-4 pb-32 bg-white dark:bg-stone-950 shadow-lg",
-        "transition-all duration-500",
+        "transition-all duration-300",
         isOpen ? positionClasses.active : positionClasses.inactive,
       )}
     >

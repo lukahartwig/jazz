@@ -70,7 +70,7 @@ export function MobileNav({
       <nav
         className={clsx(
           "border-b -mt-px transition-all overflow-hidden",
-          menuOpen ? "max-h-screen duration-1000" : "max-h-0 duration-500",
+          menuOpen ? "max-h-screen duration-500" : "max-h-0 duration-800",
         )}
       >
         <div className="flex flex-col p-3">
