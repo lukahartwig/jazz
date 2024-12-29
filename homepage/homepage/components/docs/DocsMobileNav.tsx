@@ -1,12 +1,10 @@
 import { TableOfContents } from "@/components/docs/TableOfContents";
-import { DocNav } from "@/components/docs/nav";
-import { Dialog, DialogBackdrop, DialogPanel } from "@headlessui/react";
 import { Toc } from "@stefanprobst/rehype-extract-toc";
 import { Icon } from "gcmp-design-system/src/app/components/atoms/Icon";
-import { NavigationDrawer } from "gcmp-design-system/src/app/components/organisms/NavigationDrawer";
+import { NavDrawer } from "gcmp-design-system/src/app/components/organisms/navigation/NavDrawer";
 import { useState } from "react";
 
-export function MobileNavigation({
+export function DocsMobileNav({
   tableOfContents,
   children,
 }: { tableOfContents?: Toc; children: React.ReactNode }) {
@@ -35,23 +33,23 @@ export function MobileNavigation({
         )}
       </div>
 
-      <NavigationDrawer
+      <NavDrawer
         from="left"
         isOpen={active === "main"}
         onClose={() => setActive(null)}
         title="Documentation"
       >
         {children}
-      </NavigationDrawer>
+      </NavDrawer>
 
-      <NavigationDrawer
+      <NavDrawer
         from="right"
         isOpen={active === "toc"}
         onClose={() => setActive(null)}
         title="Table of contents"
       >
         {tableOfContents && <TableOfContents items={tableOfContents} />}
-      </NavigationDrawer>
+      </NavDrawer>
     </div>
   );
 }

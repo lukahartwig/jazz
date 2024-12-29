@@ -71,10 +71,10 @@ export function MobileNav({
           className="fixed inset-0 top-[55.26px] z-40 bg-zinc-400/20 backdrop-blur-sm data-[closed]:opacity-0 data-[enter]:duration-300 data-[leave]:duration-200 data-[enter]:ease-out data-[leave]:ease-in dark:bg-black/40"
         />
 
-        <div className="fixed left-0 w-full p-3 shadow-lg top-[55.26px] z-50 h-auto bg-white dark:bg-stone-950 overflow-y-auto">
+        <div className="fixed left-0 w-full top-[55.26px] z-50 h-auto  overflow-y-auto">
           <DialogPanel
             transition
-            className="duration-200 data-[enter]:ease-out data-[leave]:ease-in data-[closed]:translate-y-[-100%]"
+            className="p-3 shadow-lg bg-white dark:bg-stone-950 duration-200 data-[enter]:ease-out data-[leave]:ease-in data-[closed]:translate-y-[-100%]"
           >
             <div className="flex flex-col">
               {items

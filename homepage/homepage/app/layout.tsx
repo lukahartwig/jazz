@@ -7,7 +7,6 @@ import localFont from "next/font/local";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { JazzFooter } from "@/components/footer";
 import { JazzNav } from "@/components/nav";
-import { NavigationProvider } from "@/components/navigation-context";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 
@@ -90,20 +89,18 @@ export default function RootLayout({
       >
         <SpeedInsights />
         <Analytics />
-        <NavigationProvider>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-          >
-            <div className="flex-1 w-full">
-              <JazzNav />
-              <main>{children}</main>
-            </div>
-            <JazzFooter />
-          </ThemeProvider>
-        </NavigationProvider>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <div className="flex-1 w-full">
+            <JazzNav />
+            <main>{children}</main>
+          </div>
+          <JazzFooter />
+        </ThemeProvider>
       </body>
     </html>
   );

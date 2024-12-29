@@ -1,6 +1,6 @@
 "use client";
 
-import { MobileNavigation } from "@/components/docs/MobileNavigation";
+import { DocsMobileNav } from "@/components/docs/DocsMobileNav";
 import { TableOfContents } from "@/components/docs/TableOfContents";
 import { Toc } from "@stefanprobst/rehype-extract-toc";
 import { clsx } from "clsx";
@@ -17,9 +17,7 @@ export function DocsLayout({
 }) {
   return (
     <>
-      <MobileNavigation tableOfContents={tableOfContents}>
-        {nav}
-      </MobileNavigation>
+      <DocsMobileNav tableOfContents={tableOfContents}>{nav}</DocsMobileNav>
 
       <div className="container relative grid grid-cols-12 gap-5">
         <div

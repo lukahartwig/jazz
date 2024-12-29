@@ -1,8 +1,8 @@
 import { Dialog, DialogBackdrop, DialogPanel } from "@headlessui/react";
 import { clsx } from "clsx";
-import { Icon } from "../atoms/Icon";
+import { Icon } from "../../atoms/Icon";
 
-export function NavigationDrawer({
+export function NavDrawer({
   children,
   from,
   isOpen,
