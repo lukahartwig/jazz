@@ -9,14 +9,14 @@ export function NavBar({ className, mainLogo, items, cta, socials }: NavProps) {
   return (
     <nav
       className={clsx(
-        "flex items-center px-4 container sticky top-0 z-50 bg-white dark:bg-stone-950",
+        "flex items-center gap-3 container sticky top-0 z-50 bg-white dark:bg-stone-950",
         className,
       )}
     >
-      <NavLinkLogo prominent href="/" className="mr-6">
+      <NavLinkLogo prominent href="/">
         {mainLogo}
       </NavLinkLogo>
-      <PopoverGroup className="flex items-center flex-auto">
+      <PopoverGroup className="flex items-center flex-auto gap-3">
         {items.map((item, i) => (
           <NavItem key={i} item={item} />
         ))}
