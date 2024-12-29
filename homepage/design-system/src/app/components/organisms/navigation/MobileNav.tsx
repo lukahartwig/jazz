@@ -47,8 +47,6 @@ export function MobileNav({
   items,
   socials,
   themeToggle: ThemeToggle,
-  onNavOpen,
-  onClose,
 }: MobileNavProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const pathname = usePathname();

@@ -17,6 +17,4 @@ export interface NavProps {
   cta?: ReactNode;
   socials?: SocialLinksProps;
   themeToggle: ComponentType<{ className?: string }>;
-  onNavOpen: () => void;
-  onClose: () => void;
 }

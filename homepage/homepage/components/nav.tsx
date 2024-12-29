@@ -1,17 +1,12 @@
 "use client";
 
-import { FloatingNav } from "@/components/FloatingNav";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { MobileNavigation } from "@/components/docs/MobileNavigation";
-import { useNavigation } from "@/components/navigation-context";
 import { socials } from "@/lib/socials";
 import { JazzLogo } from "gcmp-design-system/src/app/components/atoms/logos/JazzLogo";
 import { Navigation } from "gcmp-design-system/src/app/components/organisms/navigation";
 import React from "react";
 
 export function JazzNav() {
-  const { setActiveMenu, toc, isDocs } = useNavigation();
-
   return (
     <>
       <Navigation
@@ -63,8 +58,6 @@ export function JazzNav() {
           },
         ]}
         socials={socials}
-        onNavOpen={() => setActiveMenu("main")}
-        onClose={() => setActiveMenu(null)}
       />
     </>
   );
