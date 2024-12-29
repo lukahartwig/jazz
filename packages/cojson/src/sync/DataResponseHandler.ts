@@ -34,16 +34,20 @@ export class DataResponseHandler extends BaseMessageHandler {
 
     const { coValue } = entry.state as CoValueAvailableState;
 
-    const peerKnownState = { ...coValue.knownState() };
+    // TODO commented out syncService.syncCoValue as we don't send any message back following the terminal "data" action
+    // uncomment all below if it doesn't work
+    // const peerKnownState = { ...coValue.knownState() };
 
-    if (!this.addData(input)) {
-      return;
-    }
+    return this.addData(input);
+
+    // if (!this.addData(input)) {
+    //   return;
+    // }
 
     // Exclude peer that sent us data from sync.
-    const peers = this.peers.getInPriorityOrder({ excludedId: peer.id });
+    // const peers = this.peers.getInPriorityOrder({ excludedId: peer.id });
     // Assumption - the other peers state is we same as we had
-    return this.syncService.syncCoValue(entry, peerKnownState, peers);
+    // return this.syncService.syncCoValue(entry, peerKnownState, peers);
   }
 
   async handleLoading(input: DataMessageHandlerInput) {
@@ -70,14 +74,19 @@ export class DataResponseHandler extends BaseMessageHandler {
 
     this.makeCoValueAvailable(input);
 
-    if (!this.addData(input)) {
-      return;
-    }
+    return this.handleAvailable(input);
+
+    // TODO commented out syncService.syncCoValue as we don't send any message back following the terminal "data" action
+    // uncomment all below if it doesn't work
+
+    // if (!this.addData(input)) {
+    //   return;
+    // }
 
     // Exclude peer that sent us data from sync.
-    const peers = this.peers.getInPriorityOrder({ excludedId: peer.id });
+    // const peers = this.peers.getInPriorityOrder({ excludedId: peer.id });
     //  Assumption - the other peers state is unavailable - the same as we had
-    return this.syncService.syncCoValue(entry, emptyKnownState(msg.id), peers);
+    // return this.syncService.syncCoValue(entry, emptyKnownState(msg.id), peers);
   }
 
   async handleUnavailable(input: DataMessageHandlerInput) {
