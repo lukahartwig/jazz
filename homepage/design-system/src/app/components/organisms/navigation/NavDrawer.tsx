@@ -25,7 +25,7 @@ export function NavDrawer({
       <div className="fixed inset-0 overflow-y-auto z-50">
         <DialogPanel
           className={clsx(
-            "max-w-lg min-h-screen p-4 pb-32 bg-white dark:bg-stone-950 shadow-lg",
+            "max-w-xs min-h-screen p-4 pb-32 bg-white dark:bg-stone-950 shadow-lg",
             "duration-200 data-[enter]:ease-out data-[leave]:ease-in",
             { "data-[closed]:translate-x-full  ml-auto": from === "right" },
             { "data-[closed]:translate-x-[-100%] ": from === "left" },
