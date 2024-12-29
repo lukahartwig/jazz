@@ -86,6 +86,8 @@ export class DataResponseHandler extends BaseMessageHandler {
       input.peer.id,
       input.msg.id,
     );
+
+    return this.handleLoading(input);
   }
 
   addData(input: DataMessageHandlerInput) {

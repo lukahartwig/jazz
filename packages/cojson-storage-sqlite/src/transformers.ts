@@ -5,10 +5,15 @@ import {
   unknownDataMessage,
 } from "cojson";
 import CoValueContent = CojsonInternalTypes.CoValueContent;
+import { SQLiteNode } from "./sqliteNode.js";
 
 export const transformOutgoingMessageToPeer = (
   msg: SyncMessage,
 ): SyncMessage[] => {
+  if (SQLiteNode.USE_PROTOCOL2) {
+    return [msg];
+  }
+
   const getSessionsObj = (msg: CoValueContent) =>
     Object.entries(msg.new).reduce<{ [sessionID: SessionID]: number }>(
       (acc, [session, content]) => {
@@ -58,6 +63,10 @@ export const transformOutgoingMessageToPeer = (
 export const transformIncomingMessageFromPeer = (
   msg: SyncMessage,
 ): SyncMessage => {
+  if (SQLiteNode.USE_PROTOCOL2) {
+    return msg;
+  }
+
   switch (msg.action) {
     case "load":
       return { ...msg, action: "pull" };

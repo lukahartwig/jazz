@@ -7,7 +7,7 @@ export const transformOutgoingMessageToPeer = (
   msg: SyncMessage,
   id: string,
 ): SyncMessage[] => {
-  if (id.includes("indexedDB")) {
+  if (!id.includes("cloud")) {
     return [msg];
   }
 
@@ -61,7 +61,7 @@ export const transformIncomingMessageFromPeer = (
   msg: SyncMessage,
   id: string,
 ): SyncMessage => {
-  if (id.includes("indexedDB")) {
+  if (!id.includes("cloud")) {
     return msg;
   }
 

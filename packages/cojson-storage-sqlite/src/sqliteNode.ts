@@ -39,6 +39,9 @@ class LocalNodeWrapper {
 }
 
 export class SQLiteNode {
+  // ugly public static var to be deleted after new protocol is in effect on all peers
+  public static USE_PROTOCOL2 = false;
+
   private readonly syncManager: SyncManager;
   private readonly dbClient: SQLiteClient;
 
