@@ -45,6 +45,8 @@ export function MobileNav({
   items,
   socials,
   themeToggle: ThemeToggle,
+  onNavOpen,
+  onClose,
 }: MobileNavProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const pathname = usePathname();
@@ -53,8 +55,16 @@ export function MobileNav({
     setMenuOpen(false);
   }, [pathname]);
 
+  useEffect(() => {
+    if (menuOpen) {
+      onNavOpen();
+    } else {
+      onClose();
+    }
+  }, [menuOpen]);
+
   return (
-    <div className={className}>
+    <div className={clsx(className, "bg-white dark:bg-stone-950")}>
       <div className="flex items-center self-stretch dark:text-white border-b px-4">
         <NavLinkLogo prominent href="/" className="mr-auto">
           {mainLogo}
