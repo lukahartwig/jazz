@@ -9,7 +9,6 @@ import { HowJazzWorksSection } from "@/components/home/HowJazzWorksSection";
 import { LocalFirstFeaturesSection } from "@/components/home/LocalFirstFeaturesSection";
 import ProblemStatementSection from "@/components/home/ProblemStatementSection";
 import { SupportedEnvironmentsSection } from "@/components/home/SupportedEnvironmentsSection";
-import { useNavigation } from "@/components/navigation-context";
 import { Testimonial } from "gcmp-design-system/src/app/components/molecules/Testimonial";
 
 export default function Home() {

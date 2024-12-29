@@ -37,7 +37,7 @@ export const FloatingNav = ({
         top: "0",
         left: "0",
         right: "0",
-        zIndex: 5000,
+        zIndex: 40,
         margin: "0 auto",
         width: "100%",
       }}

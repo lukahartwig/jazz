@@ -1,5 +1,6 @@
 import { TableOfContents } from "@/components/docs/TableOfContents";
 import { DocNav } from "@/components/docs/nav";
+import { Dialog, DialogBackdrop, DialogPanel } from "@headlessui/react";
 import { Toc } from "@stefanprobst/rehype-extract-toc";
 import { Icon } from "gcmp-design-system/src/app/components/atoms/Icon";
 import { NavigationDrawer } from "gcmp-design-system/src/app/components/organisms/NavigationDrawer";

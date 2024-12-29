@@ -19,6 +19,7 @@ interface NavigationContextType {
   setActiveMenu: Dispatch<SetStateAction<NavigationState>>;
   toc: Toc | null;
   setToc: Dispatch<SetStateAction<Toc | null>>;
+  isDocs: boolean;
 }
 
 export const NavigationContext = createContext<NavigationContextType>({
@@ -26,6 +27,7 @@ export const NavigationContext = createContext<NavigationContextType>({
   setActiveMenu: () => {},
   toc: null,
   setToc: () => {},
+  isDocs: false,
 });
 
 export function NavigationProvider({ children }: { children: ReactNode }) {
