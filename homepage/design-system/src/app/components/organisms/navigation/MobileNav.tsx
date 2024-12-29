@@ -1,9 +1,11 @@
 "use client";
 
+import { Dialog, DialogBackdrop, DialogPanel } from "@headlessui/react";
 import clsx from "clsx";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Icon } from "../../atoms/Icon";
+import { NavigationDrawer } from "../NavigationDrawer";
 import { SocialLinks } from "../SocialLinks";
 import { NavLink } from "./NavLink";
 import { NavLinkLogo } from "./NavLinkLogo";
@@ -55,14 +57,6 @@ export function MobileNav({
     setMenuOpen(false);
   }, [pathname]);
 
-  useEffect(() => {
-    if (menuOpen) {
-      onNavOpen();
-    } else {
-      onClose();
-    }
-  }, [menuOpen]);
-
   return (
     <div className={clsx(className, "bg-white dark:bg-stone-950")}>
       <div className="flex items-center self-stretch dark:text-white border-b px-4">
@@ -77,28 +71,33 @@ export function MobileNav({
           <Icon name="menu" size="lg" />
         </button>
       </div>
-      <nav
-        className={clsx(
-          "border-b -mt-px transition-all overflow-hidden",
-          menuOpen ? "max-h-screen duration-500" : "max-h-0 duration-800",
-        )}
-      >
-        <div className="flex flex-col p-3">
-          {items
-            .filter((item) => !("icon" in item))
-            .map((item, i) => (
-              <MobileNavItem
-                key={i}
-                onClick={() => setMenuOpen(false)}
-                item={item}
-              />
-            ))}
+
+      <Dialog open={menuOpen} onClose={() => setMenuOpen(false)} title="Menu">
+        <DialogBackdrop
+          transition
+          className="fixed inset-0 top-[55.26px] bg-zinc-400/20 backdrop-blur-sm data-[closed]:opacity-0 data-[enter]:duration-300 data-[leave]:duration-200 data-[enter]:ease-out data-[leave]:ease-in dark:bg-black/40"
+        />
+
+        <div className="fixed left-0 w-full p-3 border-b shadow-lg top-[55.26px] h-auto bg-white dark:bg-stone-950 overflow-y-auto">
+          <DialogPanel>
+            <div className="flex flex-col">
+              {items
+                .filter((item) => !("icon" in item))
+                .map((item, i) => (
+                  <MobileNavItem
+                    key={i}
+                    onClick={() => setMenuOpen(false)}
+                    item={item}
+                  />
+                ))}
+            </div>
+            <div className="flex items-center justify-between px-1 py-3">
+              <SocialLinks className="gap-2" {...socials} />
+              <ThemeToggle />
+            </div>
+          </DialogPanel>
         </div>
-        <div className="flex items-center justify-between px-5 pb-5">
-          <SocialLinks className="gap-2" {...socials} />
-          <ThemeToggle />
-        </div>
-      </nav>
+      </Dialog>
     </div>
   );
 }

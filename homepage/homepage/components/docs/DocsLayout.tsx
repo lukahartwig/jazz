@@ -28,7 +28,7 @@ export function DocsLayout({
           className={clsx(
             "py-8",
             "pr-3 md:col-span-4 lg:col-span-3",
-            "sticky align-start top-[61px] h-[calc(100vh-65px)] overflow-y-auto overflow-x-hidden",
+            "sticky align-start top-[61px] h-[calc(100vh-61px)] overflow-y-auto overflow-x-hidden",
             "hidden md:block",
           )}
         >

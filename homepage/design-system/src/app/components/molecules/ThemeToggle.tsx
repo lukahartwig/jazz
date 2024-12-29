@@ -22,9 +22,9 @@ export function ThemeToggle({
       type="button"
       className={clsx(
         className,
-        "md:p-1.5 md:rounded-full md:border",
+        "p-1.5 rounded-full border",
         "text-stone-400 hover:text-stone-900 dark:text-stone-400 dark:hover:text-white",
-        "md:hover:bg-stone-200 md:dark:hover:bg-stone-900",
+        "hover:bg-stone-200 dark:hover:bg-stone-900",
         "transition-colors",
       )}
       aria-label={mounted ? `Switch to ${otherTheme} theme` : "Toggle theme"}
