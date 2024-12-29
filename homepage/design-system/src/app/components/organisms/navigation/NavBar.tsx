@@ -18,7 +18,12 @@ export function NavBar({
   themeToggle: ThemeToggle,
 }: NavBarProps) {
   return (
-    <nav className={clsx("flex items-center px-4 border-b", className)}>
+    <nav
+      className={clsx(
+        "flex items-center px-4 border-b sticky top-0 z-50 bg-white dark:bg-stone-950",
+        className,
+      )}
+    >
       <NavLinkLogo prominent href="/" className="mr-6">
         {mainLogo}
       </NavLinkLogo>
