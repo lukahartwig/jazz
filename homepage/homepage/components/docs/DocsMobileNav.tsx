@@ -11,7 +11,7 @@ export function DocsMobileNav({
   const [active, setActive] = useState<"main" | "toc" | null>(null);
 
   return (
-    <div className="md:hidden w-full border-b bg-white dark:bg-stone-950">
+    <div className="md:hidden sticky top-0 z-30 w-full border-b bg-white dark:bg-stone-950">
       <div className="container px-0 flex justify-between text-stone-900 dark:text-white">
         <button
           type="button"
