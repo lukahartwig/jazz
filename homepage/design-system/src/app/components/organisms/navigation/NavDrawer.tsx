@@ -33,7 +33,7 @@ export function NavDrawer({
           transition
         >
           <div className="flex justify-between items-center mb-4">
-            <p className="text-lg font-medium text-stone-900 dark:text-white">
+            <p className="font-medium text-stone-900 dark:text-white">
               {title}
             </p>
             <button type="button" onClick={onClose}>

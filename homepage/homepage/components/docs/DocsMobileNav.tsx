@@ -48,7 +48,9 @@ export function DocsMobileNav({
         onClose={() => setActive(null)}
         title="Table of contents"
       >
-        {tableOfContents && <TableOfContents items={tableOfContents} />}
+        {tableOfContents && (
+          <TableOfContents className="text-sm" items={tableOfContents} />
+        )}
       </NavDrawer>
     </div>
   );
