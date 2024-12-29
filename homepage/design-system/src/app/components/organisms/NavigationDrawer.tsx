@@ -26,8 +26,11 @@ export function NavigationDrawer({
         <DialogPanel
           className={clsx(
             "max-w-lg min-h-screen p-4 pb-32 bg-white dark:bg-stone-950 shadow-lg",
-            { "ml-auto": from === "right" },
+            "duration-200 data-[enter]:ease-out data-[leave]:ease-in",
+            { "data-[closed]:translate-x-full  ml-auto": from === "right" },
+            { "data-[closed]:translate-x-[-100%] ": from === "left" },
           )}
+          transition
         >
           <div className="flex justify-between items-center mb-4">
             <p className="text-lg font-medium text-stone-900 dark:text-white">
