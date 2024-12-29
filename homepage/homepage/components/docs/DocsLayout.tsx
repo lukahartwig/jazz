@@ -1,10 +1,10 @@
 "use client";
 
+import { MobileNavigation } from "@/components/docs/MobileNavigation";
 import { TableOfContents } from "@/components/docs/TableOfContents";
-import { useNavigation } from "@/components/navigation-context";
 import { Toc } from "@stefanprobst/rehype-extract-toc";
 import { clsx } from "clsx";
-import { useEffect } from "react";
+import React from "react";
 
 export function DocsLayout({
   children,
@@ -15,14 +15,12 @@ export function DocsLayout({
   nav?: React.ReactNode;
   tableOfContents?: Toc;
 }) {
-  const { setToc } = useNavigation();
-
-  useEffect(() => {
-    setToc(tableOfContents || null);
-  }, [tableOfContents]);
-
   return (
     <>
+      <MobileNavigation tableOfContents={tableOfContents}>
+        {nav}
+      </MobileNavigation>
+
       <div className="container relative grid grid-cols-12 gap-5">
         <div
           className={clsx(

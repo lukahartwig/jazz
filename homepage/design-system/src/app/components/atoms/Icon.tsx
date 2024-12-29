@@ -1,6 +1,7 @@
 import {
   ArrowDownIcon,
   ArrowRightIcon,
+  ArrowUpIcon,
   BookTextIcon,
   BoxIcon,
   CheckIcon,
@@ -41,6 +42,7 @@ const icons = {
   addUser: UserPlusIcon,
   arrowDown: ArrowDownIcon,
   arrowRight: ArrowRightIcon,
+  arrowUp: ArrowUpIcon,
   auth: UserIcon,
   browser: GlobeIcon,
   check: CheckIcon,

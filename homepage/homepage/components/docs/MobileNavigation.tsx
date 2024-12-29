@@ -8,7 +8,8 @@ import { useState } from "react";
 
 export function MobileNavigation({
   tableOfContents,
-}: { tableOfContents?: Toc }) {
+  children,
+}: { tableOfContents?: Toc; children: React.ReactNode }) {
   const [active, setActive] = useState<"main" | "toc" | null>(null);
 
   return (
@@ -40,7 +41,7 @@ export function MobileNavigation({
         onClose={() => setActive(null)}
         title="Documentation"
       >
-        <DocNav />
+        {children}
       </NavigationDrawer>
 
       <NavigationDrawer

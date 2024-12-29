@@ -66,7 +66,6 @@ export function JazzNav() {
         onNavOpen={() => setActiveMenu("main")}
         onClose={() => setActiveMenu(null)}
       />
-      {isDocs && <MobileNavigation tableOfContents={toc || undefined} />}
     </>
   );
 }
