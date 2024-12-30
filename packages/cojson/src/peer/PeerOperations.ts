@@ -1,6 +1,13 @@
 import { CoValueCore } from "../coValueCore.js";
 import { RawCoID } from "../ids.js";
-import { CoValueKnownState, DataMessage, SyncMessage } from "../sync/types.js";
+import {
+  CoValueContent,
+  CoValueKnownState,
+  DataMessage,
+  PushMessage,
+  SyncMessage,
+  emptyKnownState,
+} from "../sync/types.js";
 import { PeerEntry } from "./PeerEntry.js";
 
 export function emptyDataMessage(
@@ -65,7 +72,7 @@ export class PeerOperations {
   }: { peerKnownState: CoValueKnownState; coValue: CoValueCore }) {
     if (this.peer.closed) return;
 
-    return this.sendContentIncludingDependencies({
+    return this.sendContent({
       peerKnownState,
       coValue,
       action: "push",
@@ -75,9 +82,11 @@ export class PeerOperations {
   async data({
     peerKnownState,
     coValue,
+    dependencies = [],
   }: {
     peerKnownState: CoValueKnownState;
     coValue: CoValueCore | "empty" | "unknown";
+    dependencies?: CoValueCore[];
   }) {
     if (this.peer.closed) return;
 
@@ -91,40 +100,52 @@ export class PeerOperations {
     }
 
     // Send new content pieces (possibly, in chunks) created after peerKnownState that passed in
-    return this.sendContentIncludingDependencies({
-      peerKnownState,
-      coValue,
-      action: "data",
-    }).then((newContentPiecesNumber) => {
-      // We send an empty data message
-      // if number of new content pieces is 0
-      if (!newContentPiecesNumber) {
-        void this.data({ peerKnownState, coValue: "empty" });
-      }
-    });
+    await Promise.all(
+      dependencies.map((coValue) =>
+        this.sendContent({
+          peerKnownState,
+          coValue,
+          action: "data",
+          asDependencyOf: coValue.id,
+        }).then((newContentPiecesNumber) => {
+          // We send an empty data message
+          // if number of new content pieces is 0
+          if (!newContentPiecesNumber) {
+            void this.data({ peerKnownState, coValue: "empty" });
+          }
+        }),
+      ),
+    );
+
+    return this.sendContent({ peerKnownState, coValue, action: "data" });
   }
 
-  private async sendContentIncludingDependencies({
+  private async sendContent({
     peerKnownState,
     coValue,
     action,
+    asDependencyOf,
   }: {
     peerKnownState: CoValueKnownState;
     coValue: CoValueCore;
     action: "push" | "data";
+    asDependencyOf?: RawCoID;
   }): Promise<number> {
-    // TODO probably, dependencies don't provide any new data? Do we really need it within the new algorythm
-    // await Promise.all(
-    //   coValue
-    //     .getDependedOnCoValues()
-    //     .map((id) => this.sendNewContentIncludingDependencies(id, peer)),
-    // );
-
     const newContentPieces = coValue.newContentSince(peerKnownState);
 
     if (newContentPieces) {
       for (const [_i, piece] of newContentPieces.entries()) {
-        void this.peer.pushOutgoingMessage({ ...piece, action } as SyncMessage);
+        let msg: SyncMessage;
+
+        if (action === "data") {
+          msg = { ...piece, action, known: true } as DataMessage;
+        } else {
+          msg = { ...piece, action } as PushMessage;
+        }
+
+        if (asDependencyOf) msg = { ...msg, asDependencyOf };
+
+        void this.peer.pushOutgoingMessage(msg);
       }
     }
 

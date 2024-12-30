@@ -34,7 +34,8 @@ export class DataResponseHandler extends BaseMessageHandler {
 
     const { coValue } = entry.state as CoValueAvailableState;
 
-    // TODO commented out syncService.syncCoValue as we don't send any message back following the terminal "data" action
+    // TODO send syncService.syncCoValue to peers where it was not found in
+
     // uncomment all below if it doesn't work
     // const peerKnownState = { ...coValue.knownState() };
 
@@ -76,7 +77,7 @@ export class DataResponseHandler extends BaseMessageHandler {
 
     return this.handleAvailable(input);
 
-    // TODO commented out syncService.syncCoValue as we don't send any message back following the terminal "data" action
+    // TODO send syncService.syncCoValue to peers where it was not found in
     // uncomment all below if it doesn't work
 
     // if (!this.addData(input)) {

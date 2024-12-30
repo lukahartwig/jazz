@@ -1,7 +1,9 @@
+import { CoValueCore } from "../coValueCore.js";
 import { CoValueAvailableState, CoValueEntry } from "../coValueEntry.js";
+import { LocalNode } from "../localNode.js";
 import { PeerEntry } from "../peer/index.js";
 import { LoadService } from "./LoadService.js";
-import { BaseMessageHandler, PullMessage } from "./types.js";
+import { BaseMessageHandler, PullMessage, emptyKnownState } from "./types.js";
 
 export type PullMessageHandlerInput = {
   msg: PullMessage;
@@ -18,7 +20,10 @@ export type PullMessageHandlerInput = {
  * Handler initiates a new "pull" requests to load the coValue from peers if it is not known by the node.
  */
 export class PullRequestHandler extends BaseMessageHandler {
-  constructor(private readonly loadService: LoadService) {
+  constructor(
+    private readonly loadService: LoadService,
+    private readonly node: LocalNode,
+  ) {
     super();
   }
 
@@ -26,9 +31,21 @@ export class PullRequestHandler extends BaseMessageHandler {
     const { msg, peer, entry } = input;
     const { coValue } = entry.state as CoValueAvailableState;
 
+    const dependencies: CoValueCore[] = [];
+    if (!msg.header) {
+      // if coValue is not known by peer, the dependencies have to be sent first send
+      coValue.getDependedOnCoValues().map((id) => {
+        const coValue = this.node.coValuesStore.get(id);
+        if (coValue.state.type === "available") {
+          dependencies.push(coValue.state.coValue);
+        }
+      });
+    }
+    console.log("sending dependencies", dependencies);
     return peer.send.data({
       peerKnownState: msg,
-      coValue: coValue,
+      coValue,
+      dependencies,
     });
   }
 
