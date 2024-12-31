@@ -31,21 +31,9 @@ export class PullRequestHandler extends BaseMessageHandler {
     const { msg, peer, entry } = input;
     const { coValue } = entry.state as CoValueAvailableState;
 
-    const dependencies: CoValueCore[] = [];
-    if (!msg.header) {
-      // if coValue is not known by peer, the dependencies should be sent first
-      coValue.getDependedOnCoValues().map((id) => {
-        const coValue = this.node.coValuesStore.get(id);
-        if (coValue.state.type === "available") {
-          dependencies.push(coValue.state.coValue);
-        }
-      });
-    }
-
     return peer.send.data({
       peerKnownState: msg,
       coValue,
-      dependencies,
     });
   }
 
@@ -56,13 +44,14 @@ export class PullRequestHandler extends BaseMessageHandler {
     return this.handle(input);
   }
 
-  async handleUnavailable(input: PullMessageHandlerInput): Promise<unknown> {
+  async handleUnknown(input: PullMessageHandlerInput): Promise<unknown> {
     const { msg, peer, entry } = input;
 
     // Initiate a new PULL flow
     // If the coValue is known by peer then we try to load it from the sender as well
-    const peerToInclude = msg.header ? peer : null;
-    void this.loadService.loadCoValue(entry, peerToInclude?.id);
+    if (msg.header) {
+      void this.loadService.loadCoValue(entry, peer);
+    }
 
     return peer.send.data({
       peerKnownState: msg,

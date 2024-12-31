@@ -313,6 +313,18 @@ export class CoValueEntry {
     }
   }
 
+  moveToLoadingState(peers: PeerEntry[]) {
+    if (this.state.type !== "unknown") {
+      console.error(
+        "Cannot move to loading state from",
+        this.state.type,
+        this.id,
+      );
+    } else {
+      this.moveToState(new CoValueLoadingState(peers.map((p) => p.id)));
+    }
+  }
+
   dispatch(action: CoValueStateAction) {
     const currentState = this.state;
 

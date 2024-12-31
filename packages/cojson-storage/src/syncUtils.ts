@@ -75,7 +75,7 @@ export function getDependedOnCoValues({
       : [];
 }
 
-function getGroupDependedOnCoValues(
+export function getGroupDependedOnCoValues(
   newDataMessages: CojsonInternalTypes.DataMessage[],
 ) {
   const keys: CojsonInternalTypes.RawCoID[] = [];

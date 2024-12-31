@@ -1,18 +1,23 @@
 import {
   CoValueCore,
   CoValueHeader,
+  getDependedOnFromContent,
   isTryAddTransactionsException,
 } from "../coValueCore.js";
 import { CoValueAvailableState, CoValueEntry } from "../coValueEntry.js";
+import { LocalNode } from "../localNode.js";
 import { PeerEntry, Peers } from "../peer/index.js";
+import { SyncManager } from "../sync.js";
+import { DependencyService } from "./DependencyService.js";
+import { LoadService } from "./LoadService.js";
 import { SyncService } from "./SyncService.js";
-import { BaseMessageHandler, DataMessage, emptyKnownState } from "./types.js";
-
-export type DataMessageHandlerInput = {
-  msg: DataMessage;
-  peer: PeerEntry;
-  entry: CoValueEntry;
-};
+import {
+  BaseMessageHandler,
+  CoValueContent,
+  DataMessage,
+  DataMessageHandlerInput,
+  emptyKnownState,
+} from "./types.js";
 
 /**
  * "Data" is a response to our "pull" message. It's a terminal message which must not be responded to.
@@ -20,17 +25,16 @@ export type DataMessageHandlerInput = {
  */
 export class DataResponseHandler extends BaseMessageHandler {
   constructor(
-    private syncService: SyncService,
-    private peers: Peers,
-    // The reason for this ugly callback here is to avoid having the local node as a dependency in this service,
-    // This should be removed after CoValueCore is decoupled from the local node instance
-    private createCoValue: (header: CoValueHeader) => CoValueCore,
+    private readonly syncService: SyncService,
+    private readonly peers: Peers,
+    private readonly dependencyService: DependencyService,
   ) {
     super();
   }
 
   async handleAvailable(input: DataMessageHandlerInput): Promise<unknown> {
     const { peer, entry, msg } = input;
+    await this.dependencyService.loadUnknownDependencies(input);
 
     const { coValue } = entry.state as CoValueAvailableState;
 
@@ -73,9 +77,9 @@ export class DataResponseHandler extends BaseMessageHandler {
       return;
     }
 
-    this.makeCoValueAvailable(input);
+    await this.dependencyService.MakeAvailableWithDependencies(input);
 
-    return this.handleAvailable(input);
+    return this.handle(input);
 
     // TODO send syncService.syncCoValue to peers where it was not found in
     // uncomment all below if it doesn't work
@@ -90,15 +94,18 @@ export class DataResponseHandler extends BaseMessageHandler {
     // return this.syncService.syncCoValue(entry, emptyKnownState(msg.id), peers);
   }
 
-  async handleUnavailable(input: DataMessageHandlerInput) {
-    if (input.msg.asDependencyOf) {
-      return this.handleLoading(input);
+  async handleUnknown(input: DataMessageHandlerInput) {
+    const { peer, msg, entry } = input;
+
+    if (msg.asDependencyOf) {
+      entry.moveToLoadingState([peer]);
+      return this.handle(input);
     }
 
     console.error(
       "Unexpected coValue unavailable state in DataResponseHandler",
-      input.peer.id,
-      input.msg.id,
+      peer.id,
+      msg.id,
     );
   }
 
@@ -131,19 +138,5 @@ export class DataResponseHandler extends BaseMessageHandler {
       return false;
     }
     return true;
-  }
-
-  private makeCoValueAvailable(input: DataMessageHandlerInput): CoValueCore {
-    if (!input.msg.header) {
-      throw new Error(`Empty header for ${input.msg.id}`);
-    }
-
-    const coValue = this.createCoValue(input.msg.header);
-    input.entry.dispatch({
-      type: "available",
-      coValue,
-    });
-
-    return coValue;
   }
 }

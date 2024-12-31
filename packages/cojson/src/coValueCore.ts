@@ -13,7 +13,7 @@ import {
   SignerID,
   StreamingHash,
 } from "./crypto/crypto.js";
-import { CojsonInternalTypes } from "./exports.js";
+import { CojsonInternalTypes, cojsonInternals } from "./exports.js";
 import {
   RawCoID,
   SessionID,
@@ -1149,4 +1149,70 @@ export function isTryAddTransactionsException(
     typeof e.message === "string" &&
     e.error !== undefined
   );
+}
+
+export function getDependedOnFromContent(msg: Required<CoValueContent>) {
+  if (!msg.header) {
+    throw new Error(`Header is required for getting dependencies ${msg.id}`);
+  }
+
+  return msg.header.ruleset.type === "group"
+    ? getGroupDependedOnCoValues(msg)
+    : msg.header.ruleset.type === "ownedByGroup"
+      ? [
+          msg.header.ruleset.group,
+          ...new Set(
+            [...Object.keys(msg.new)]
+              .map((sessionID) =>
+                accountOrAgentIDfromSessionID(sessionID as SessionID),
+              )
+              .filter(
+                (session): session is RawAccountID =>
+                  isAccountID(session) && session !== msg.id,
+              ),
+          ),
+        ]
+      : [];
+}
+
+function getGroupDependedOnCoValues(content: CoValueContent) {
+  const keys: CojsonInternalTypes.RawCoID[] = [];
+
+  /**
+   * Collect all the signing keys inside the transactions to list all the
+   * dependencies required to correctly access the CoValue.
+   */
+  for (const sessionEntry of Object.values(content.new)) {
+    for (const tx of sessionEntry.newTransactions) {
+      if (tx.privacy !== "trusting") continue;
+
+      const changes = safeParseChanges(tx.changes);
+      for (const change of changes) {
+        if (
+          change &&
+          typeof change === "object" &&
+          "op" in change &&
+          change.op === "set" &&
+          "key" in change &&
+          change.key
+        ) {
+          const key = cojsonInternals.getGroupDependentKey(change.key);
+
+          if (key) {
+            keys.push(key);
+          }
+        }
+      }
+    }
+  }
+
+  return keys;
+}
+
+function safeParseChanges(changes: Stringified<JsonValue[]>) {
+  try {
+    return cojsonInternals.parseJSON(changes);
+  } catch (e) {
+    return [];
+  }
 }

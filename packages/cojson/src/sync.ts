@@ -3,6 +3,7 @@ import { CoValueEntry } from "./coValueEntry.js";
 import { RawCoID } from "./ids.js";
 import { LocalNode } from "./localNode.js";
 import { PeerEntry, PeerID } from "./peer/index.js";
+import { DependencyService } from "./sync/DependencyService.js";
 import {
   AckResponseHandler,
   CoValueKnownState,
@@ -33,12 +34,10 @@ export class SyncManager {
   private readonly pushRequestHandler: PushRequestHandler;
   private readonly ackResponseHandler: AckResponseHandler;
   private readonly dataResponseHandler: DataResponseHandler;
+  private readonly dependencyService: DependencyService;
 
   constructor(local: LocalNode) {
     this.local = local;
-
-    const createCoValue = (header: CoValueHeader) =>
-      new CoValueCore(header, this.local);
 
     this.syncService = new SyncService(
       this.local.peers,
@@ -49,6 +48,7 @@ export class SyncManager {
     );
 
     this.loadService = new LoadService(this.local.peers);
+    this.dependencyService = new DependencyService(this, this.loadService);
 
     this.pullRequestHandler = new PullRequestHandler(
       this.loadService,
@@ -59,7 +59,7 @@ export class SyncManager {
       this.local.peers,
       // The reason for this ugly callback here is to avoid having the local node as a dependency in the handler,
       // This should be removed after CoValueCore is decoupled from the local node instance
-      createCoValue,
+      this.dependencyService,
     );
 
     this.ackResponseHandler = new AckResponseHandler(
@@ -74,7 +74,7 @@ export class SyncManager {
       this.local.peers,
       // The reason for this ugly callback here is to avoid having the local node as a dependency in the handler,
       // This should be removed after CoValueCore is decoupled from the local node instance
-      createCoValue,
+      this.dependencyService,
     );
   }
 
@@ -108,12 +108,9 @@ export class SyncManager {
     }
   }
 
-  async loadCoValue(
-    id: RawCoID,
-    peerIdToInclude?: PeerID,
-  ): Promise<CoValueCore | "unavailable"> {
+  async loadCoValue(id: RawCoID): Promise<CoValueCore | "unavailable"> {
     const entry = this.local.coValuesStore.get(id);
-    return this.loadService.loadCoValue(entry, peerIdToInclude);
+    return this.loadService.loadCoValue(entry);
   }
 
   async handleSyncMessage(msg: SyncMessage, peer: PeerEntry) {

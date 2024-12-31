@@ -1,44 +1,33 @@
-import {
-  CoValueCore,
-  CoValueHeader,
-  isTryAddTransactionsException,
-} from "../coValueCore.js";
-import { CoValueAvailableState, CoValueEntry } from "../coValueEntry.js";
-import { PeerEntry, Peers } from "../peer/index.js";
+import { CoValueCore, isTryAddTransactionsException } from "../coValueCore.js";
+import { CoValueAvailableState } from "../coValueEntry.js";
+import { Peers } from "../peer/index.js";
+import { DependencyService } from "./DependencyService.js";
 import { SyncService } from "./SyncService.js";
-import { BaseMessageHandler, PushMessage } from "./types.js";
-
-export type PushMessageHandlerInput = {
-  msg: PushMessage;
-  peer: PeerEntry;
-  entry: CoValueEntry;
-};
+import { BaseMessageHandler, PushMessageHandlerInput } from "./types.js";
 
 export class PushRequestHandler extends BaseMessageHandler {
   constructor(
     protected readonly syncService: SyncService,
     protected readonly peers: Peers,
-    // The reason for this ugly callback here is to avoid having the local node as a dependency in this service,
-    // This should be removed after CoValueCore is decoupled from the local node instance
-    private readonly createCoValue: (header: CoValueHeader) => CoValueCore,
+    protected readonly dependencyService: DependencyService,
   ) {
     super();
   }
 
   async handleAvailable(input: PushMessageHandlerInput): Promise<unknown> {
     const { coValue } = input.entry.state as CoValueAvailableState;
+    await this.dependencyService.loadUnknownDependencies(input);
 
     return this.addData(coValue, input);
   }
 
-  async handleUnavailable(input: PushMessageHandlerInput) {
-    const { msg } = input;
+  async handleUnknown(input: PushMessageHandlerInput) {
+    const { msg, entry, peer } = input;
     if (!msg.header) {
       console.error(`Unexpected unavailable state for coValue ${input.msg.id}`);
       return;
     }
-
-    this.makeCoValueAvailable(input);
+    entry.moveToLoadingState([peer]);
 
     return this.handle(input);
   }
@@ -49,21 +38,9 @@ export class PushRequestHandler extends BaseMessageHandler {
       return;
     }
 
-    this.makeCoValueAvailable(input);
+    await this.dependencyService.MakeAvailableWithDependencies(input);
 
     return this.handle(input);
-  }
-
-  private makeCoValueAvailable(input: PushMessageHandlerInput) {
-    if (!input.msg.header) {
-      throw new Error(`Empty header for ${input.msg.id}`);
-    }
-
-    const coValue = this.createCoValue(input.msg.header);
-    input.entry.dispatch({
-      type: "available",
-      coValue,
-    });
   }
 
   private async addData(coValue: CoValueCore, input: PushMessageHandlerInput) {

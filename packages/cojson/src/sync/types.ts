@@ -77,6 +77,18 @@ export type MessageHandlerInput = {
   entry: CoValueEntry;
 };
 
+export type PushMessageHandlerInput = {
+  msg: PushMessage;
+  peer: PeerEntry;
+  entry: CoValueEntry;
+};
+
+export type DataMessageHandlerInput = {
+  msg: DataMessage;
+  peer: PeerEntry;
+  entry: CoValueEntry;
+};
+
 export interface MessageHandlerInterface {
   handle({ msg, peer, entry }: MessageHandlerInput): Promise<unknown>;
 }
@@ -91,11 +103,11 @@ export abstract class BaseMessageHandler implements MessageHandlerInterface {
         return this.handleLoading({ msg, peer, entry });
       case "unknown":
       case "unavailable":
-        return this.handleUnavailable({ msg, peer, entry });
+        return this.handleUnknown({ msg, peer, entry });
     }
   }
 
   abstract handleAvailable(input: MessageHandlerInput): Promise<unknown>;
   abstract handleLoading(input: MessageHandlerInput): Promise<unknown>;
-  abstract handleUnavailable(input: MessageHandlerInput): Promise<unknown>;
+  abstract handleUnknown(input: MessageHandlerInput): Promise<unknown>;
 }

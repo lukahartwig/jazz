@@ -21,11 +21,6 @@ export class SyncService {
     coValuesStore: CoValuesStore,
   ): Promise<void> {
     const ids = coValuesStore.getOrderedIds();
-    console.log(
-      "initialSync",
-      { ids },
-      { unordered: Array.from(coValuesStore.getValues()) },
-    );
 
     for (const id of ids) {
       const coValue = coValuesStore.expectCoValueLoaded(id);

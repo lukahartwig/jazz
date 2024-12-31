@@ -15,15 +15,15 @@ export class LoadService {
    * Sends "pull" request to peers to load/update the coValue state and request to subscribe to peer's updates if have not
    *
    * @param entry
-   * @param peerIdToInclude - Required peer to send the request to
+   * @param peerToLoadFrom - Required peer to send the request to
    */
   async loadCoValue(
     entry: CoValueEntry,
-    peerIdToInclude?: PeerID,
+    peerToLoadFrom?: PeerEntry,
   ): Promise<CoValueCore | "unavailable"> {
-    const peers = this.peers.getServerAndStorage({
-      includedId: peerIdToInclude,
-    });
+    const peers = peerToLoadFrom
+      ? [peerToLoadFrom]
+      : this.peers.getServerAndStorage();
 
     try {
       await entry.loadFromPeers(
@@ -36,16 +36,6 @@ export class LoadService {
 
     return entry.getCoValue();
   }
-
-  // async pullIncludingDependencies(coValue: CoValueCore, peer: PeerEntry) {
-  //   for (const id of coValue.getDependedOnCoValues()) {
-  //     const dependentCoValue = this.local.expectCoValueLoaded(id);
-  //     await this.pullIncludingDependencies(dependentCoValue, peer);
-  //   }
-  //
-  //   void peer.send.pull({ coValue });
-  // }
-  //
 }
 
 async function loadCoValueFromPeers(

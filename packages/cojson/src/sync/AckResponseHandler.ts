@@ -35,7 +35,7 @@ export class AckResponseHandler extends BaseMessageHandler {
     );
   }
 
-  async handleUnavailable(input: AckMessageHandlerInput) {
+  async handleUnknown(input: AckMessageHandlerInput) {
     console.error(
       "Unexpected unavailable state. Ack message is a response to a push request and should not be received for unavailable coValue.",
       input.msg.id,
