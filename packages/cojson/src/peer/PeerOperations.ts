@@ -99,25 +99,31 @@ export class PeerOperations {
       );
     }
 
-    // Send new content pieces (possibly, in chunks) created after peerKnownState that passed in
+    const sendContentOrEmptyMessage = async (params: SendContentParamsType) => {
+      const sentContentPiecesNumber = await this.sendContent(params);
+      if (!sentContentPiecesNumber) {
+        void this.data({ peerKnownState, coValue: "empty" });
+      }
+    };
+
+    // send dependencies first
     await Promise.all(
-      dependencies.map((coValue) =>
-        this.sendContent({
+      dependencies.map((depCoValue) =>
+        sendContentOrEmptyMessage({
           peerKnownState,
-          coValue,
+          coValue: depCoValue,
           action: "data",
           asDependencyOf: coValue.id,
-        }).then((newContentPiecesNumber) => {
-          // We send an empty data message
-          // if number of new content pieces is 0
-          if (!newContentPiecesNumber) {
-            void this.data({ peerKnownState, coValue: "empty" });
-          }
         }),
       ),
     );
 
-    return this.sendContent({ peerKnownState, coValue, action: "data" });
+    // Send new content pieces (possibly, in chunks) created after peerKnownState that passed in
+    return sendContentOrEmptyMessage({
+      peerKnownState,
+      coValue,
+      action: "data",
+    });
   }
 
   private async sendContent({
@@ -125,12 +131,7 @@ export class PeerOperations {
     coValue,
     action,
     asDependencyOf,
-  }: {
-    peerKnownState: CoValueKnownState;
-    coValue: CoValueCore;
-    action: "push" | "data";
-    asDependencyOf?: RawCoID;
-  }): Promise<number> {
+  }: SendContentParamsType): Promise<number> {
     const newContentPieces = coValue.newContentSince(peerKnownState);
 
     if (newContentPieces) {
@@ -152,3 +153,10 @@ export class PeerOperations {
     return newContentPieces?.length || 0;
   }
 }
+
+type SendContentParamsType = {
+  peerKnownState: CoValueKnownState;
+  coValue: CoValueCore;
+  action: "push" | "data";
+  asDependencyOf?: RawCoID;
+};

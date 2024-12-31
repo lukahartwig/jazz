@@ -1,7 +1,5 @@
 import { CoValuesStore } from "../CoValuesStore.js";
-import { CoValueCore } from "../coValueCore.js";
 import { CoValueEntry } from "../coValueEntry.js";
-import { RawCoID } from "../ids.js";
 import { PeerEntry, PeerID, Peers } from "../peer/index.js";
 import { CoValueKnownState, emptyKnownState } from "./types.js";
 

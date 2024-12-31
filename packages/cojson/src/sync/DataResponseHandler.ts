@@ -91,13 +91,15 @@ export class DataResponseHandler extends BaseMessageHandler {
   }
 
   async handleUnavailable(input: DataMessageHandlerInput) {
+    if (input.msg.asDependencyOf) {
+      return this.handleLoading(input);
+    }
+
     console.error(
       "Unexpected coValue unavailable state in DataResponseHandler",
       input.peer.id,
       input.msg.id,
     );
-
-    return this.handleLoading(input);
   }
 
   addData(input: DataMessageHandlerInput) {

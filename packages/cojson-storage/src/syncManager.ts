@@ -135,6 +135,7 @@ export class SyncManager {
         header: coValueRow.header,
         new: {},
         priority: cojsonInternals.getPriorityFromHeader(coValueRow.header),
+        asDependencyOf,
       },
     ];
 
@@ -156,11 +157,11 @@ export class SyncManager {
       newDataMessages,
     });
 
-    const knownMessage: KnownStateMessage = {
-      action: "known",
-      ...newCoValueKnownState,
-    };
-    asDependencyOf && (knownMessage.asDependencyOf = asDependencyOf);
+    // const knownMessage: KnownStateMessage = {
+    //   action: "known",
+    //   ...newCoValueKnownState,
+    // };
+    // asDependencyOf && (knownMessage.asDependencyOf = asDependencyOf);
     messageMap[newCoValueKnownState.id] = {
       dataMessages: newDataMessages,
     };

@@ -33,7 +33,7 @@ export class PullRequestHandler extends BaseMessageHandler {
 
     const dependencies: CoValueCore[] = [];
     if (!msg.header) {
-      // if coValue is not known by peer, the dependencies have to be sent first send
+      // if coValue is not known by peer, the dependencies should be sent first
       coValue.getDependedOnCoValues().map((id) => {
         const coValue = this.node.coValuesStore.get(id);
         if (coValue.state.type === "available") {
@@ -41,7 +41,7 @@ export class PullRequestHandler extends BaseMessageHandler {
         }
       });
     }
-    console.log("sending dependencies", dependencies);
+
     return peer.send.data({
       peerKnownState: msg,
       coValue,
