@@ -1,6 +1,7 @@
 import { CoValuesStore } from "../CoValuesStore.js";
 import { CoValueCore } from "../coValueCore.js";
 import { CoValueEntry } from "../coValueEntry.js";
+import { RawCoID } from "../ids.js";
 import { PeerEntry, PeerID, Peers } from "../peer/index.js";
 import { CoValueKnownState, emptyKnownState } from "./types.js";
 
@@ -21,17 +22,24 @@ export class SyncService {
     peer: PeerEntry,
     coValuesStore: CoValuesStore,
   ): Promise<void> {
-    for (const entry of coValuesStore.getValues()) {
-      const coValue = coValuesStore.expectCoValueLoaded(entry.id);
-      // TODO does it make sense to additionally pull dependencies now that we're sending all that we know from here ?
+    const ids = coValuesStore.getOrderedIds();
+    console.log(
+      "initialSync",
+      { ids },
+      { unordered: Array.from(coValuesStore.getValues()) },
+    );
+
+    for (const id of ids) {
+      const coValue = coValuesStore.expectCoValueLoaded(id);
       // Previously we used to send load + content,  see transformOutgoingMessageToPeer()
       await peer.send.push({
-        peerKnownState: emptyKnownState(entry.id),
+        peerKnownState: emptyKnownState(id),
         coValue,
       });
 
       // TODO should be moved inside peer.send.push
       if (this.onPushContent) {
+        const entry = coValuesStore.get(coValue.id);
         this.onPushContent({ entry, peerId: peer.id });
       }
     }
