@@ -75,8 +75,8 @@ export const frameworkToAuthExamples: Partial<
   Record<FrameworkAuthPair, { name: string; repo: string | undefined }>
 > = {
   "react-demo-auth": {
-    name: "React + Jazz + Demo Auth",
-    repo: "garden-co/jazz/examples/chat",
+    name: "React + Jazz + Demo Auth + Tailwind",
+    repo: "garden-co/jazz/starters/react-tailwind-demo-auth",
   },
   "react-passkey-auth": {
     name: "React + Jazz + Passkey Auth",
