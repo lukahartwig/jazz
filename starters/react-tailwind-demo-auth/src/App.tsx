@@ -1,3 +1,4 @@
+import { Logo } from "./Logo.tsx";
 import { useAccount } from "./main";
 
 function App() {
@@ -6,14 +7,21 @@ function App() {
   return (
     <>
       <header>
-        <nav className="container">
+        <nav className="container flex justify-between items-center py-3">
           <span>
             You're logged in as <strong>{me?.profile?.name}</strong>
           </span>
-          <button onClick={() => logOut()}>Log out</button>
+          <button
+            className="bg-stone-100 py-1.5 px-3 text-sm rounded-md"
+            onClick={() => logOut()}
+          >
+            Log out
+          </button>
         </nav>
       </header>
-      <main className="container">Welcome to your Jazz app!</main>
+      <main className="container mt-16">
+        <Logo />
+      </main>
     </>
   );
 }
