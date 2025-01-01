@@ -10,7 +10,7 @@ jobs:
     strategy:
       matrix:
         starter: [
-          "react-tailwind-demo-auth",
+          "react-demo-auth-tailwind",
         ]
 
     steps:

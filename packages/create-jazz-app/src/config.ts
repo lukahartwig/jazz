@@ -76,7 +76,7 @@ export const frameworkToAuthExamples: Partial<
 > = {
   "react-demo-auth": {
     name: "React + Jazz + Demo Auth + Tailwind",
-    repo: "garden-co/jazz/starters/react-tailwind-demo-auth",
+    repo: "garden-co/jazz/starters/react-demo-auth-tailwind",
   },
   "react-demo-auth-tailwind-chat": {
     name: "React + Jazz + Demo Auth + Tailwind + Chat",
