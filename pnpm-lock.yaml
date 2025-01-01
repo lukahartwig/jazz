@@ -1929,7 +1929,7 @@ importers:
         specifier: ^2.1.6
         version: 2.1.10(typescript@5.6.3)
 
-  starters/react-tailwind-demo-auth:
+  starters/react-demo-auth-tailwind:
     dependencies:
       jazz-react:
         specifier: workspace:*
