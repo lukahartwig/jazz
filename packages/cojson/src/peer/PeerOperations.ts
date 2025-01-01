@@ -137,7 +137,6 @@ export class PeerOperations {
     if (newContentPieces) {
       for (const [_i, piece] of newContentPieces.entries()) {
         let msg: SyncMessage;
-
         if (action === "data") {
           msg = { ...piece, action, known: true } as DataMessage;
         } else {

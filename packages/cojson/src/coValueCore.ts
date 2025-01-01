@@ -899,18 +899,16 @@ export class CoValueCore {
     return this.sessionLogs.get(txID.sessionID)?.transactions[txID.txIndex];
   }
 
-  newContentSince(
-    knownState: CoValueKnownState | undefined,
-  ): CoValueContent[] | undefined {
-    const isKnownStateEmpty = !knownState?.header && !knownState?.sessions;
+  newContentSince(knownState: CoValueKnownState): CoValueContent[] | undefined {
+    const isUnknown = !knownState.header;
 
-    if (isKnownStateEmpty && this._cachedNewContentSinceEmpty) {
+    if (isUnknown && this._cachedNewContentSinceEmpty) {
       return this._cachedNewContentSinceEmpty;
     }
 
     let currentPiece: CoValueContent = {
       id: this.id,
-      header: knownState?.header ? undefined : this.header,
+      header: isUnknown ? this.header : undefined,
       priority: getPriorityFromHeader(this.header),
       new: {},
     };
@@ -1014,7 +1012,7 @@ export class CoValueCore {
       return undefined;
     }
 
-    if (isKnownStateEmpty) {
+    if (isUnknown) {
       this._cachedNewContentSinceEmpty = piecesWithContent;
     }
 

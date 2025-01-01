@@ -39,6 +39,7 @@ export class DataResponseHandler extends BaseMessageHandler {
     const { coValue } = entry.state as CoValueAvailableState;
 
     // TODO send syncService.syncCoValue to peers where it was not found in
+    // TODO broadcast syncService.syncCoValue with new pieces for available
 
     // uncomment all below if it doesn't work
     // const peerKnownState = { ...coValue.knownState() };
@@ -97,16 +98,16 @@ export class DataResponseHandler extends BaseMessageHandler {
   async handleUnknown(input: DataMessageHandlerInput) {
     const { peer, msg, entry } = input;
 
-    if (msg.asDependencyOf) {
-      entry.moveToLoadingState([peer]);
-      return this.handle(input);
+    if (!msg.asDependencyOf) {
+      console.error(
+        "Unexpected coValue unavailable state in DataResponseHandler",
+        peer.id,
+        msg.id,
+      );
     }
+    entry.moveToLoadingState([peer]);
 
-    console.error(
-      "Unexpected coValue unavailable state in DataResponseHandler",
-      peer.id,
-      msg.id,
-    );
+    return this.handle(input);
   }
 
   addData(input: DataMessageHandlerInput) {

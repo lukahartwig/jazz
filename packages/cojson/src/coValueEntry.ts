@@ -1,6 +1,6 @@
 import { CoValueCore } from "./coValueCore.js";
 import { RawCoID } from "./ids.js";
-import { PeerEntry, PeerID } from "./peer/PeerEntry.js";
+import { PeerEntry, PeerID } from "./peer/index.js";
 
 export const CO_VALUE_LOADING_MAX_RETRIES = 5;
 export const CO_VALUE_LOADING_TIMEOUT = 30_000;

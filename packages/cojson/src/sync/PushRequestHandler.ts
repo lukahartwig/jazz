@@ -25,7 +25,6 @@ export class PushRequestHandler extends BaseMessageHandler {
     const { msg, entry, peer } = input;
     if (!msg.header) {
       console.error(`Unexpected unavailable state for coValue ${input.msg.id}`);
-      return;
     }
     entry.moveToLoadingState([peer]);
 
