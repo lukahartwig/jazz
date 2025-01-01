@@ -26,7 +26,7 @@ function App() {
         <Form />
 
         <p className="text-center">
-          Edit your first name, {""}
+          Edit your first name,{" "}
           <button
             type="button"
             onClick={() => window.location.reload()}

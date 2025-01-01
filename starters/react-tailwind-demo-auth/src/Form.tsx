@@ -13,9 +13,12 @@ export function Form() {
           className="border border-stone-300 rounded shadow-sm py-1 px-2 flex-1"
           type="text"
           id="firstName"
+          placeholder="Enter your first name here..."
           value={me.profile.firstName}
           onChange={(e) => (me.profile.firstName = e.target.value)}
         />
+
+        {/*Add more fields here*/}
       </div>
     </form>
   );

@@ -9,7 +9,8 @@ import { Account, Profile, co } from "jazz-tools";
  *  where you can store top-level objects for that user */
 export class JazzProfile extends Profile {
   firstName = co.string;
-  // lastName = co.string;
+
+  // Add more fields here
 }
 
 export class JazzAccount extends Account {
