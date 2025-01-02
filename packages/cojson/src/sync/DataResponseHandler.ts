@@ -1,59 +1,21 @@
-import {
-  CoValueCore,
-  CoValueHeader,
-  getDependedOnFromContent,
-  isTryAddTransactionsException,
-} from "../coValueCore.js";
-import { CoValueAvailableState, CoValueEntry } from "../coValueEntry.js";
-import { LocalNode } from "../localNode.js";
-import { PeerEntry, Peers } from "../peer/index.js";
-import { SyncManager } from "../sync.js";
+import { isTryAddTransactionsException } from "../coValueCore.js";
+import { CoValueAvailableState } from "../coValueEntry.js";
 import { DependencyService } from "./DependencyService.js";
-import { LoadService } from "./LoadService.js";
-import { SyncService } from "./SyncService.js";
-import {
-  BaseMessageHandler,
-  CoValueContent,
-  DataMessage,
-  DataMessageHandlerInput,
-  emptyKnownState,
-} from "./types.js";
+import { BaseMessageHandler, DataMessageHandlerInput } from "./types.js";
 
 /**
  * "Data" is a response to our "pull" message. It's a terminal message which must not be responded to.
  * At this stage the coValue state is considered synced between the peer and the node.
  */
 export class DataResponseHandler extends BaseMessageHandler {
-  constructor(
-    private readonly syncService: SyncService,
-    private readonly peers: Peers,
-    private readonly dependencyService: DependencyService,
-  ) {
+  constructor(private readonly dependencyService: DependencyService) {
     super();
   }
 
   async handleAvailable(input: DataMessageHandlerInput): Promise<unknown> {
-    const { peer, entry, msg } = input;
     await this.dependencyService.loadUnknownDependencies(input);
 
-    const { coValue } = entry.state as CoValueAvailableState;
-
-    // TODO send syncService.syncCoValue to peers where it was not found in
-    // TODO broadcast syncService.syncCoValue with new pieces for available
-
-    // uncomment all below if it doesn't work
-    // const peerKnownState = { ...coValue.knownState() };
-
     return this.addData(input);
-
-    // if (!this.addData(input)) {
-    //   return;
-    // }
-
-    // Exclude peer that sent us data from sync.
-    // const peers = this.peers.getInPriorityOrder({ excludedId: peer.id });
-    // Assumption - the other peers state is we same as we had
-    // return this.syncService.syncCoValue(entry, peerKnownState, peers);
   }
 
   async handleLoading(input: DataMessageHandlerInput) {
@@ -81,18 +43,6 @@ export class DataResponseHandler extends BaseMessageHandler {
     await this.dependencyService.MakeAvailableWithDependencies(input);
 
     return this.handle(input);
-
-    // TODO send syncService.syncCoValue to peers where it was not found in
-    // uncomment all below if it doesn't work
-
-    // if (!this.addData(input)) {
-    //   return;
-    // }
-
-    // Exclude peer that sent us data from sync.
-    // const peers = this.peers.getInPriorityOrder({ excludedId: peer.id });
-    //  Assumption - the other peers state is unavailable - the same as we had
-    // return this.syncService.syncCoValue(entry, emptyKnownState(msg.id), peers);
   }
 
   async handleUnknown(input: DataMessageHandlerInput) {

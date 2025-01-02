@@ -900,15 +900,18 @@ export class CoValueCore {
   }
 
   newContentSince(knownState: CoValueKnownState): CoValueContent[] | undefined {
-    const isUnknown = !knownState.header;
+    const shouldSendEverything =
+      !knownState.header ||
+      !knownState.sessions ||
+      !Object.keys(knownState.sessions).length;
 
-    if (isUnknown && this._cachedNewContentSinceEmpty) {
+    if (shouldSendEverything && this._cachedNewContentSinceEmpty) {
       return this._cachedNewContentSinceEmpty;
     }
 
     let currentPiece: CoValueContent = {
       id: this.id,
-      header: isUnknown ? this.header : undefined,
+      header: shouldSendEverything ? this.header : undefined,
       priority: getPriorityFromHeader(this.header),
       new: {},
     };
@@ -1012,7 +1015,7 @@ export class CoValueCore {
       return undefined;
     }
 
-    if (isUnknown) {
+    if (shouldSendEverything) {
       this._cachedNewContentSinceEmpty = piecesWithContent;
     }
 

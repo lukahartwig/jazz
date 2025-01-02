@@ -51,8 +51,8 @@ import {
   OutgoingSyncQueue,
 } from "./localNode.js";
 import type * as Media from "./media.js";
-import type { Peer } from "./peer/PeerEntry.js";
 import { emptyDataMessage, unknownDataMessage } from "./peer/PeerOperations.js";
+import type { Peer } from "./peer/index.js";
 import type { Role } from "./permissions.js";
 import { getPriorityFromHeader } from "./priority.js";
 import { FileSystem } from "./storage/FileSystem.js";

@@ -69,13 +69,7 @@ export class SyncManager {
       },
     );
 
-    this.dataResponseHandler = new DataResponseHandler(
-      this.syncService,
-      this.local.peers,
-      // The reason for this ugly callback here is to avoid having the local node as a dependency in the handler,
-      // This should be removed after CoValueCore is decoupled from the local node instance
-      this.dependencyService,
-    );
+    this.dataResponseHandler = new DataResponseHandler(this.dependencyService);
   }
 
   async initialSync(peer: PeerEntry) {

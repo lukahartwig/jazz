@@ -3,7 +3,11 @@ import { CoValueAvailableState } from "../coValueEntry.js";
 import { Peers } from "../peer/index.js";
 import { DependencyService } from "./DependencyService.js";
 import { SyncService } from "./SyncService.js";
-import { BaseMessageHandler, PushMessageHandlerInput } from "./types.js";
+import {
+  BaseMessageHandler,
+  PushMessageHandlerInput,
+  emptyKnownState,
+} from "./types.js";
 
 export class PushRequestHandler extends BaseMessageHandler {
   constructor(
@@ -45,7 +49,16 @@ export class PushRequestHandler extends BaseMessageHandler {
   private async addData(coValue: CoValueCore, input: PushMessageHandlerInput) {
     const { msg, peer, entry } = input;
 
-    const peerKnownState = { ...coValue.knownState() };
+    const knownState = coValue.knownState();
+    const isEmptyKnownState =
+      !knownState.header ||
+      !knownState.sessions ||
+      !Object.keys(knownState.sessions).length;
+
+    const assumedPeerKnownState = isEmptyKnownState
+      ? emptyKnownState(knownState.id)
+      : { ...knownState };
+
     try {
       const anyMissedTransaction = coValue.addNewContent(msg);
 
@@ -67,6 +80,6 @@ export class PushRequestHandler extends BaseMessageHandler {
 
     const peers = this.peers.getInPriorityOrder({ excludedId: peer.id });
 
-    await this.syncService.syncCoValue(entry, peerKnownState, peers);
+    await this.syncService.syncCoValue(entry, assumedPeerKnownState, peers);
   }
 }

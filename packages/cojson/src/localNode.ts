@@ -87,7 +87,7 @@ export class LocalNode {
       }
       try {
         console.log("🔵 ===>>> Received from", peer.id, msg);
-        await this.syncManager.handleSyncMessage(
+        void this.syncManager.handleSyncMessage(
           transformIncomingMessageFromPeer(msg, peer.id),
           peer,
         );
