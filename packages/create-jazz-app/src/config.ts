@@ -78,10 +78,6 @@ export const frameworkToAuthExamples: Partial<
     name: "React + Jazz + Demo Auth + Tailwind",
     repo: "garden-co/jazz/starters/react-demo-auth-tailwind",
   },
-  "react-demo-auth-tailwind-chat": {
-    name: "React + Jazz + Demo Auth + Tailwind + Chat",
-    repo: "garden-co/jazz/examples/chat",
-  },
   "react-passkey-auth": {
     name: "React + Jazz + Passkey Auth",
     repo: "garden-co/jazz/examples/passkey",
