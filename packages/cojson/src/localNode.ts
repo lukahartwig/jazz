@@ -87,7 +87,7 @@ export class LocalNode {
       }
       try {
         console.log("🔵 ===>>> Received from", peer.id, msg);
-        void this.syncManager.handleSyncMessage(
+        this.syncManager.handleSyncMessage(
           transformIncomingMessageFromPeer(msg, peer.id),
           peer,
         );
@@ -106,11 +106,11 @@ export class LocalNode {
     }
   }
 
-  addPeer(peerData: Peer) {
+  async addPeer(peerData: Peer) {
     const peer: PeerEntry = this.peers.add(peerData);
 
     if (peer.isServerOrStoragePeer()) {
-      void this.syncManager.initialSync(peer);
+      await this.syncManager.initialSync(peer);
     }
 
     this.processMessages(peer)
@@ -176,7 +176,7 @@ export class LocalNode {
 
     if (peersToLoadFrom) {
       for (const peer of peersToLoadFrom) {
-        nodeWithAccount.addPeer(peer);
+        await nodeWithAccount.addPeer(peer);
       }
     }
 
@@ -255,12 +255,10 @@ export class LocalNode {
       );
 
       for (const peer of peersToLoadFrom) {
-        loadingNode.addPeer(peer);
+        await loadingNode.addPeer(peer);
       }
 
-      const accountPromise = loadingNode.load<RawAccount>(accountID);
-
-      const account = await accountPromise;
+      const account = await loadingNode.load<RawAccount>(accountID);
 
       if (account === "unavailable") {
         throw new Error("Account unavailable from all peers");

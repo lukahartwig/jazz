@@ -6,6 +6,7 @@ import {
   Peers,
   getPeersWithoutErrors,
 } from "../peer/index.js";
+import { DependencyService } from "./DependencyService.js";
 import { emptyKnownState } from "./types.js";
 
 export class LoadService {
@@ -42,13 +43,13 @@ async function loadCoValueFromPeers(
   coValueEntry: CoValueEntry,
   peers: PeerEntry[],
 ) {
-  for (const peer of peers) {
+  for await (const peer of peers) {
     if (coValueEntry.state.type === "available") {
-      void peer.send.pull({
+      await peer.send.pull({
         knownState: coValueEntry.state.coValue.knownState(),
       });
     } else {
-      void peer.send.pull({ knownState: emptyKnownState(coValueEntry.id) });
+      await peer.send.pull({ knownState: emptyKnownState(coValueEntry.id) });
     }
 
     if (coValueEntry.state.type === "loading") {
@@ -62,6 +63,8 @@ async function loadCoValueFromPeers(
           coValueEntry.markAsNotFoundInPeer(peer.id);
         }
       }, CO_VALUE_LOADING_TIMEOUT);
+      //TODO 25
+      // await coValueEntry.getCoValue();
       await coValueEntry.state.waitForPeer(peer.id);
       clearTimeout(timeout);
     }

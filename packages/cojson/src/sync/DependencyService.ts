@@ -18,13 +18,9 @@ export class DependencyService {
     private loadService: LoadService,
   ) {}
 
-  private async getUnknownDependencies({
-    input,
-    waitForLoading = true,
-  }: {
-    input: DataMessageHandlerInput | PushMessageHandlerInput;
-    waitForLoading?: boolean;
-  }) {
+  private async getUnknownDependencies(
+    input: DataMessageHandlerInput | PushMessageHandlerInput,
+  ) {
     const { msg, entry } = input;
     const isAvailable = entry.state.type === "available";
     if (!msg.header && !isAvailable) {
@@ -47,7 +43,7 @@ export class DependencyService {
     const unknownDependencies: CoValueEntry[] = [];
     for (const id of dependencies) {
       const entry = this.syncManager.local.coValuesStore.get(id);
-      if (waitForLoading && entry.state.type === "loading") {
+      if (entry.state.type === "loading") {
         await entry.getCoValue();
       }
       if (entry.state.type !== "available") {
@@ -61,15 +57,12 @@ export class DependencyService {
   async loadUnknownDependencies(
     input: DataMessageHandlerInput | PushMessageHandlerInput,
   ) {
-    const unknownDependencies = await this.getUnknownDependencies({
-      input,
-    });
+    const unknownDependencies = await this.getUnknownDependencies(input);
 
-    await Promise.all(
-      unknownDependencies.map((entry) => {
-        return this.loadService.loadCoValue(entry, input.peer);
-      }),
-    );
+    // load dependencies one by one as they can depend on each other
+    for await (const dependency of unknownDependencies) {
+      await this.loadService.loadCoValue(dependency);
+    }
   }
 
   private createCoValue(header: CoValueHeader) {

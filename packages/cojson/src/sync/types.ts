@@ -94,7 +94,7 @@ export interface MessageHandlerInterface {
 }
 
 export abstract class BaseMessageHandler implements MessageHandlerInterface {
-  handle({ msg, peer, entry }: MessageHandlerInput): Promise<unknown> {
+  async handle({ msg, peer, entry }: MessageHandlerInput): Promise<unknown> {
     // we don't await for handlers to be resolved to not block the execution
     switch (entry.state.type) {
       case "available":

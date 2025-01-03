@@ -31,13 +31,9 @@ export class DataResponseHandler extends BaseMessageHandler {
     }
 
     if (!msg.header) {
-      console.error(
-        "Unexpected empty header in message. Data message is a response to a pull request and should be received for available coValue or include the full header.",
-        msg.id,
-        peer.id,
-      );
-
-      return;
+      await entry.getCoValue();
+      // TODO 25 figure out streaming
+      return this.handle(input);
     }
 
     await this.dependencyService.MakeAvailableWithDependencies(input);
@@ -48,6 +44,14 @@ export class DataResponseHandler extends BaseMessageHandler {
   async handleUnknown(input: DataMessageHandlerInput) {
     const { peer, msg, entry } = input;
 
+    if (!msg.known) {
+      input.entry.dispatch({
+        type: "not-found-in-peer",
+        peerId: peer.id,
+      });
+      return;
+    }
+
     if (!msg.asDependencyOf) {
       console.error(
         "Unexpected coValue unavailable state in DataResponseHandler",
@@ -55,6 +59,7 @@ export class DataResponseHandler extends BaseMessageHandler {
         msg.id,
       );
     }
+
     entry.moveToLoadingState([peer]);
 
     return this.handle(input);
