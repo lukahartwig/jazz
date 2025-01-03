@@ -137,6 +137,7 @@ function resolveMemberStateFromParentReference(
   coValue: CoValueCore,
   memberState: MemberState,
   parentReference: ParentGroupReference,
+  extendChain: Set<CoValueCore["id"]>,
 ) {
   const parentGroup = coValue.node.expectCoValueLoaded(
     getParentGroupId(parentReference),
@@ -147,14 +148,21 @@ function resolveMemberStateFromParentReference(
     return;
   }
 
+  // Skip circular references
+  if (extendChain.has(parentGroup.id)) {
+    return;
+  }
+
   const initialAdmin = parentGroup.header.ruleset.initialAdmin;
 
   if (!initialAdmin) {
     throw new Error("Group must have initialAdmin");
   }
 
+  extendChain.add(parentGroup.id);
+
   const { memberState: parentGroupMemberState } =
-    determineValidTransactionsForGroup(parentGroup, initialAdmin);
+    determineValidTransactionsForGroup(parentGroup, initialAdmin, extendChain);
 
   for (const agent of Object.keys(parentGroupMemberState) as Array<
     keyof MemberState
@@ -171,20 +179,19 @@ function resolveMemberStateFromParentReference(
 function determineValidTransactionsForGroup(
   coValue: CoValueCore,
   initialAdmin: RawAccountID | AgentID,
+  extendChain?: Set<CoValueCore["id"]>,
 ): { validTransactions: ValidTransactionsResult[]; memberState: MemberState } {
-  const allTransactionsSorted = [...coValue.sessionLogs.entries()].flatMap(
-    ([sessionID, sessionLog]) => {
-      return sessionLog.transactions.map((tx, txIndex) => ({
-        sessionID,
-        txIndex,
-        tx,
-      })) as {
-        sessionID: SessionID;
-        txIndex: number;
-        tx: Transaction;
-      }[];
-    },
-  );
+  const allTransactionsSorted: {
+    sessionID: SessionID;
+    txIndex: number;
+    tx: Transaction;
+  }[] = [];
+
+  for (const [sessionID, sessionLog] of coValue.sessionLogs.entries()) {
+    sessionLog.transactions.forEach((tx, txIndex) => {
+      allTransactionsSorted.push({ sessionID, txIndex, tx });
+    });
+  }
 
   allTransactionsSorted.sort((a, b) => {
     return a.tx.madeAt - b.tx.madeAt;
@@ -307,14 +314,39 @@ function determineValidTransactionsForGroup(
         logPermissionError("Only admins can set parent extensions");
         continue;
       }
-      resolveMemberStateFromParentReference(coValue, memberState, change.key);
+
+      extendChain = extendChain ?? new Set([]);
+
+      resolveMemberStateFromParentReference(
+        coValue,
+        memberState,
+        change.key,
+        extendChain,
+      );
+
+      // Circular reference detected, drop all the transactions involved
+      if (extendChain.has(coValue.id)) {
+        logPermissionError(
+          "Circular extend detected, dropping the transaction",
+        );
+        continue;
+      }
+
       validTransactions.push({ txID: { sessionID, txIndex }, tx });
       continue;
     } else if (isChildExtension(change.key)) {
-      if (memberState[transactor] !== "admin") {
-        logPermissionError("Only admins can set child extensions");
+      if (
+        memberState[transactor] !== "admin" &&
+        memberState[transactor] !== "writer" &&
+        memberState[transactor] !== "reader" &&
+        memberState[transactor] !== "writeOnly"
+      ) {
+        logPermissionError(
+          "Only admins, writers, readers and writeOnly can set child extensions",
+        );
         continue;
       }
+
       validTransactions.push({ txID: { sessionID, txIndex }, tx });
       continue;
     } else if (isWriteKeyForMember(change.key)) {

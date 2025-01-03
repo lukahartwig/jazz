@@ -4,6 +4,7 @@ import {
   Account,
   CoFeed,
   FileStream,
+  Group,
   ID,
   WasmCrypto,
   co,
@@ -30,6 +31,21 @@ describe("Simple CoFeed operations", async () => {
   const stream = TestStream.create(["milk"], { owner: me });
 
   test("Construction", () => {
+    expect(stream[me.id]?.value).toEqual("milk");
+    expect(stream.perSession[me.sessionID]?.value).toEqual("milk");
+  });
+
+  test("Construction with an Account", () => {
+    const stream = TestStream.create(["milk"], me);
+
+    expect(stream[me.id]?.value).toEqual("milk");
+    expect(stream.perSession[me.sessionID]?.value).toEqual("milk");
+  });
+
+  test("Construction with a Group", () => {
+    const group = Group.create(me);
+    const stream = TestStream.create(["milk"], group);
+
     expect(stream[me.id]?.value).toEqual("milk");
     expect(stream.perSession[me.sessionID]?.value).toEqual("milk");
   });
@@ -192,15 +208,6 @@ describe("CoFeed resolution", async () => {
     const queue = new cojsonInternals.Channel();
 
     TestStream.subscribe(stream.id, meOnSecondPeer, [], (subscribedStream) => {
-      console.log("subscribedStream[me.id]", subscribedStream[me.id]);
-      console.log(
-        "subscribedStream[me.id]?.value?.[me.id]?.value",
-        subscribedStream[me.id]?.value?.[me.id]?.value,
-      );
-      console.log(
-        "subscribedStream[me.id]?.value?.[me.id]?.value?.[me.id]?.value",
-        subscribedStream[me.id]?.value?.[me.id]?.value?.[me.id]?.value,
-      );
       void queue.push(subscribedStream);
     });
 

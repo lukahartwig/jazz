@@ -57,7 +57,10 @@ export const metadata: Metadata = {
   applicationName: "Jazz",
   description: metaTags.description,
   openGraph: {
-    title: metaTags.title,
+    title: {
+      template: "%s | Jazz",
+      default: metaTags.title,
+    },
     description: metaTags.description,
     url: metaTags.url,
     siteName: "Jazz",

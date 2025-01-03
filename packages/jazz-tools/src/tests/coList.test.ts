@@ -3,6 +3,7 @@ import { describe, expect, test } from "vitest";
 import {
   Account,
   CoList,
+  Group,
   WasmCrypto,
   co,
   cojsonInternals,
@@ -35,6 +36,19 @@ describe("Simple CoList operations", async () => {
       "BUTTER",
       "ONION",
     ]);
+  });
+
+  test("Construction with an Account", () => {
+    const list = TestList.create(["milk"], me);
+
+    expect(list[0]).toEqual("milk");
+  });
+
+  test("Construction with a Group", () => {
+    const group = Group.create(me);
+    const list = TestList.create(["milk"], group);
+
+    expect(list[0]).toEqual("milk");
   });
 
   describe("Mutation", () => {

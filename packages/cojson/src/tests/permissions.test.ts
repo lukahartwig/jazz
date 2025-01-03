@@ -2157,21 +2157,17 @@ test("Admins can set child extensions when the admin role is inherited", async (
   );
 });
 
-test("Writers, readers and invitees can not set child extensions", () => {
+test("Writers, readers and writeOnly can set child extensions", () => {
   const { group, node } = newGroupHighLevel();
   const childGroup = node.createGroup();
 
   const writer = node.createAccount();
   const reader = node.createAccount();
-  const adminInvite = node.createAccount();
-  const writerInvite = node.createAccount();
-  const readerInvite = node.createAccount();
+  const writeOnly = node.createAccount();
 
   group.addMember(writer, "writer");
   group.addMember(reader, "reader");
-  group.addMember(adminInvite, "adminInvite");
-  group.addMember(writerInvite, "writerInvite");
-  group.addMember(readerInvite, "readerInvite");
+  group.addMember(writeOnly, "writeOnly");
 
   const groupAsWriter = expectGroup(
     group.core
@@ -2180,7 +2176,7 @@ test("Writers, readers and invitees can not set child extensions", () => {
   );
 
   groupAsWriter.set(`child_${childGroup.id}`, "extend", "trusting");
-  expect(groupAsWriter.get(`child_${childGroup.id}`)).toBeUndefined();
+  expect(groupAsWriter.get(`child_${childGroup.id}`)).toEqual("extend");
 
   const groupAsReader = expectGroup(
     group.core
@@ -2189,7 +2185,20 @@ test("Writers, readers and invitees can not set child extensions", () => {
   );
 
   groupAsReader.set(`child_${childGroup.id}`, "extend", "trusting");
-  expect(groupAsReader.get(`child_${childGroup.id}`)).toBeUndefined();
+  expect(groupAsReader.get(`child_${childGroup.id}`)).toEqual("extend");
+});
+
+test("Invitees can not set child extensions", () => {
+  const { group, node } = newGroupHighLevel();
+  const childGroup = node.createGroup();
+
+  const adminInvite = node.createAccount();
+  const writerInvite = node.createAccount();
+  const readerInvite = node.createAccount();
+
+  group.addMember(adminInvite, "adminInvite");
+  group.addMember(writerInvite, "writerInvite");
+  group.addMember(readerInvite, "readerInvite");
 
   const groupAsAdminInvite = expectGroup(
     group.core
@@ -2844,4 +2853,58 @@ test("High-level permissions work correctly when a group is extended", async () 
   );
 
   expect(mapAsReaderAfterRemove.get("foo")).not.toEqual("baz");
+});
+
+test("self-extensions should not break the permissions checks", () => {
+  const { group } = newGroupHighLevel();
+
+  group.set(`child_${group.id}`, "extend", "trusting");
+  group.set(`parent_${group.id}`, "extend", "trusting");
+
+  const map = group.createMap();
+  map.set("test", "Hello!");
+
+  expect(map.get("test")).toEqual("Hello!");
+});
+
+test("extend cycles should not break the permissions checks", () => {
+  const { group, node } = newGroupHighLevel();
+
+  const group2 = node.createGroup();
+  const group3 = node.createGroup();
+
+  group.set(`child_${group2.id}`, "extend", "trusting");
+  group2.set(`child_${group3.id}`, "extend", "trusting");
+  group3.set(`child_${group.id}`, "extend", "trusting");
+
+  group.set(`parent_${group2.id}`, "extend", "trusting");
+  group2.set(`parent_${group3.id}`, "extend", "trusting");
+  group3.set(`parent_${group.id}`, "extend", "trusting");
+
+  const map = group.createMap();
+  map.set("test", "Hello!");
+
+  expect(map.get("test")).toEqual("Hello!");
+});
+
+test("extend cycles should not break the keys rotation", () => {
+  const { group, node } = newGroupHighLevel();
+
+  const group2 = node.createGroup();
+  const group3 = node.createGroup();
+
+  group.set(`child_${group2.id}`, "extend", "trusting");
+  group2.set(`child_${group3.id}`, "extend", "trusting");
+  group3.set(`child_${group.id}`, "extend", "trusting");
+
+  group.set(`parent_${group2.id}`, "extend", "trusting");
+  group2.set(`parent_${group3.id}`, "extend", "trusting");
+  group3.set(`parent_${group.id}`, "extend", "trusting");
+
+  group.rotateReadKey();
+
+  const map = group.createMap();
+  map.set("test", "Hello!");
+
+  expect(map.get("test")).toEqual("Hello!");
 });

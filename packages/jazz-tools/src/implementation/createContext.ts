@@ -169,7 +169,7 @@ export async function createJazzContext<Acc extends Account>(
                 fromRaw: rawAccount,
               }) as Acc;
 
-              await account.migrate?.(creationProps);
+              await account.applyMigration(creationProps);
             },
           });
 
@@ -218,7 +218,7 @@ export async function createJazzContext<Acc extends Account>(
               fromRaw: rawAccount,
             }) as Acc;
 
-            await account.migrate?.(creationProps);
+            await account.applyMigration(creationProps);
           },
         });
 

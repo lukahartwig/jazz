@@ -29,25 +29,23 @@ export async function uploadMusicTracks(
   for (const file of files) {
     // The ownership object defines the user that owns the created coValues
     // We are creating a group for each CoValue in order to be able to share them via Playlist
-    const ownership = {
-      owner: Group.create({ owner: account }),
-    };
+    const group = Group.create(account);
 
     const data = await getAudioFileData(file);
 
     // We transform the file blob into a FileStream
     // making it a collaborative value that is encrypted, easy
     // to share across devices and users and available offline!
-    const fileStream = await FileStream.createFromBlob(file, ownership);
+    const fileStream = await FileStream.createFromBlob(file, group);
 
     const musicTrack = MusicTrack.create(
       {
         file: fileStream,
         duration: data.duration,
-        waveform: MusicTrackWaveform.create({ data: data.waveform }, ownership),
+        waveform: MusicTrackWaveform.create({ data: data.waveform }, group),
         title: file.name,
       },
-      ownership,
+      group,
     );
 
     // The newly created musicTrack can be associated to the
@@ -60,16 +58,14 @@ export async function createNewPlaylist(account: MusicaAccount) {
   // Since playlists are meant to be shared we associate them
   // to a group which will contain the keys required to get
   // access to the "owned" values
-  const playlistGroup = Group.create({ owner: account });
-
-  const ownership = { owner: playlistGroup };
+  const playlistGroup = Group.create(account);
 
   const playlist = Playlist.create(
     {
       title: "New Playlist",
-      tracks: ListOfTracks.create([], ownership),
+      tracks: ListOfTracks.create([], playlistGroup),
     },
-    ownership,
+    playlistGroup,
   );
 
   // Again, we associate the new playlist to the
@@ -112,7 +108,6 @@ export async function addTrackToPlaylist(
    *
    * Doing this for backwards compatibility for when the Group inheritance wasn't possible
    */
-  const ownership = { owner: playlist._owner };
   const blob = await FileStream.loadAsBlob(track._refs.file.id, account);
   const waveform = await MusicTrackWaveform.load(
     track._refs.waveform.id,
@@ -124,13 +119,16 @@ export async function addTrackToPlaylist(
 
   const trackClone = MusicTrack.create(
     {
-      file: await FileStream.createFromBlob(blob, ownership),
+      file: await FileStream.createFromBlob(blob, playlist._owner),
       duration: track.duration,
-      waveform: MusicTrackWaveform.create({ data: waveform.data }, ownership),
+      waveform: MusicTrackWaveform.create(
+        { data: waveform.data },
+        playlist._owner,
+      ),
       title: track.title,
       sourceTrack: track,
     },
-    ownership,
+    playlist._owner,
   );
 
   playlist.tracks?.push(trackClone);

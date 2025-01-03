@@ -36,6 +36,7 @@ import {
 import { coValuesCache } from "../lib/cache.js";
 import { type CoMap } from "./coMap.js";
 import { type Group } from "./group.js";
+import { createInboxRoot } from "./inbox.js";
 import { Profile } from "./profile.js";
 import { RegisteredSchemas } from "./registeredSchemas.js";
 
@@ -184,7 +185,7 @@ export class Account extends CoValueBase implements CoValue {
           fromRaw: rawAccount,
         }) as A;
 
-        await account.migrate?.(creationProps);
+        await account.applyMigration?.(creationProps);
       },
     });
 
@@ -235,10 +236,7 @@ export class Account extends CoValueBase implements CoValue {
     return this.toJSON();
   }
 
-  migrate(
-    this: Account,
-    creationProps?: { name: string },
-  ): void | Promise<void> {
+  async applyMigration(creationProps?: { name: string }) {
     if (creationProps) {
       const profileGroup = RegisteredSchemas["Group"].create({ owner: this });
       profileGroup.addMember("everyone", "reader");
@@ -247,6 +245,24 @@ export class Account extends CoValueBase implements CoValue {
         { owner: profileGroup },
       );
     }
+
+    const node = this._raw.core.node;
+    const profile = node
+      .expectCoValueLoaded(this._raw.get("profile")!)
+      .getCurrentContent() as RawCoMap;
+
+    if (!profile.get("inbox")) {
+      const inboxRoot = createInboxRoot(this);
+      profile.set("inbox", inboxRoot.id);
+      profile.set("inboxInvite", inboxRoot.inviteLink);
+    }
+
+    await this.migrate(creationProps);
+  }
+
+  // Placeholder method for subclasses to override
+  migrate(creationProps?: { name: string }) {
+    creationProps; // To avoid unused parameter warning
   }
 
   /** @category Subscription & Loading */

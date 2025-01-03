@@ -1,5 +1,48 @@
 # jazz-react
 
+## 0.8.50
+
+### Patch Changes
+
+- Updated dependencies [43378ef]
+  - cojson@0.8.50
+  - jazz-browser@0.8.50
+  - jazz-tools@0.8.50
+
+## 0.8.49
+
+### Patch Changes
+
+- Updated dependencies [25dfd90]
+  - cojson@0.8.49
+  - jazz-browser@0.8.49
+  - jazz-tools@0.8.49
+
+## 0.8.48
+
+### Patch Changes
+
+- Updated dependencies [635e824]
+- Updated dependencies [10ea733]
+- Updated dependencies [0a85982]
+  - jazz-tools@0.8.48
+  - cojson@0.8.48
+  - jazz-browser@0.8.48
+
+## 0.8.45
+
+### Patch Changes
+
+- 88d7d9a: Add Inbox a new experimental API to simplfy the initial handshake between accounts
+- Updated dependencies [6f0bd7f]
+- Updated dependencies [fca6a0b]
+- Updated dependencies [fa41f8e]
+- Updated dependencies [88d7d9a]
+- Updated dependencies [60e35ea]
+  - jazz-browser@0.8.45
+  - cojson@0.8.45
+  - jazz-tools@0.8.45
+
 ## 0.8.44
 
 ### Patch Changes

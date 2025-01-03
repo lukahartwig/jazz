@@ -1,5 +1,40 @@
 # jazz-tools
 
+## 0.8.50
+
+### Patch Changes
+
+- Updated dependencies [43378ef]
+  - cojson@0.8.50
+
+## 0.8.49
+
+### Patch Changes
+
+- Updated dependencies [25dfd90]
+  - cojson@0.8.49
+
+## 0.8.48
+
+### Patch Changes
+
+- 635e824: fix loading of CoMaps with an empty schema
+- 0a85982: Remove the requirement of calling super.migrate when defining the account migration
+- Updated dependencies [10ea733]
+  - cojson@0.8.48
+
+## 0.8.45
+
+### Patch Changes
+
+- fa41f8e: Add a bundle step to not expose the circular deps to the lib consumers
+- 88d7d9a: Add Inbox a new experimental API to simplfy the initial handshake between accounts
+- 60e35ea: Reduce the amount of circular deps
+- Updated dependencies [6f0bd7f]
+- Updated dependencies [fca6a0b]
+- Updated dependencies [88d7d9a]
+  - cojson@0.8.45
+
 ## 0.8.44
 
 ### Patch Changes

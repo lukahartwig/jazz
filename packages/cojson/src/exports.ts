@@ -14,7 +14,11 @@ import {
 } from "./coValues/account.js";
 import { RawCoList } from "./coValues/coList.js";
 import { RawCoMap } from "./coValues/coMap.js";
-import { RawBinaryCoStream, RawCoStream } from "./coValues/coStream.js";
+import {
+  CoStreamItem,
+  RawBinaryCoStream,
+  RawCoStream,
+} from "./coValues/coStream.js";
 import { EVERYONE, RawGroup } from "./coValues/group.js";
 import type { Everyone } from "./coValues/group.js";
 import {
@@ -30,7 +34,7 @@ import {
   rawCoIDfromBytes,
   rawCoIDtoBytes,
 } from "./ids.js";
-import { Stringified, parseJSON } from "./jsonStringify.js";
+import { Stringified, parseJSON, stableStringify } from "./jsonStringify.js";
 import { LocalNode } from "./localNode.js";
 import type { Role } from "./permissions.js";
 import { Channel, connectedPeers } from "./streamUtils.js";
@@ -83,6 +87,7 @@ export const cojsonInternals = {
   base64URLtoBytes,
   bytesToBase64url,
   parseJSON,
+  stableStringify,
   accountOrAgentIDfromSessionID,
   isAccountID,
   accountHeaderForInitialAgentSecret,
@@ -145,6 +150,7 @@ export type {
   PingTimeoutError,
   CoValueUniqueness,
   Stringified,
+  CoStreamItem,
 };
 
 // eslint-disable-next-line @typescript-eslint/no-namespace
@@ -162,6 +168,7 @@ export namespace CojsonInternalTypes {
   export type RawCoID = import("./ids.js").RawCoID;
   export type ProfileShape = import("./coValues/account.js").ProfileShape;
   export type SealerSecret = import("./crypto/crypto.js").SealerSecret;
+  export type SignerID = import("./crypto/crypto.js").SignerID;
   export type SignerSecret = import("./crypto/crypto.js").SignerSecret;
   export type JsonObject = import("./jsonValue.js").JsonObject;
 }

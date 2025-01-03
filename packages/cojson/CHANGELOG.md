@@ -1,5 +1,31 @@
 # cojson
 
+## 0.8.50
+
+### Patch Changes
+
+- 43378ef: Handle circular references in group inheritance
+
+## 0.8.49
+
+### Patch Changes
+
+- 25dfd90: Fixes the transactions collection on permissions to avoid RangeError issues
+
+## 0.8.48
+
+### Patch Changes
+
+- 10ea733: Give the ability to extend a group to accounts with reader, writer and writeOnly access level to the parent group and not only admins. The account still needs to be an admin on the child group to be able to extend it.
+
+## 0.8.45
+
+### Patch Changes
+
+- 6f0bd7f: Throw an error if an invite is created from an account owned coValue
+- fca6a0b: skip verify step when creating a new local transaction
+- 88d7d9a: Add Inbox a new experimental API to simplfy the initial handshake between accounts
+
 ## 0.8.44
 
 ### Patch Changes

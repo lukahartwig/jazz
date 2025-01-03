@@ -513,14 +513,53 @@ export class RawGroup<
     }
 
     for (const child of childGroups) {
+      // Since child references are mantained only for the key rotation,
+      // circular references are skipped here because it's more performant
+      // than always checking for circular references in childs inside the permission checks
+      if (child.isSelfExtension(this)) {
+        continue;
+      }
+
       child.rotateReadKey();
     }
   }
 
+  /** Detect circular references in group inheritance */
+  isSelfExtension(parent: RawGroup) {
+    if (parent.id === this.id) {
+      return true;
+    }
+
+    const childGroups = this.getChildGroups();
+
+    for (const child of childGroups) {
+      if (child.isSelfExtension(parent)) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
   extend(parent: RawGroup) {
-    if (parent.myRole() !== "admin" || this.myRole() !== "admin") {
+    if (this.isSelfExtension(parent)) {
+      return;
+    }
+
+    if (this.myRole() !== "admin") {
       throw new Error(
-        "To extend a group, the current account must have admin role in both groups",
+        "To extend a group, the current account must be an admin in the child group",
+      );
+    }
+
+    if (
+      parent.myRole() !== "admin" &&
+      parent.myRole() !== "writer" &&
+      parent.myRole() !== "reader" &&
+      parent.myRole() !== "writeOnly"
+    ) {
+      throw new Error(
+        "To extend a group, the current account must have access to the parent group",
       );
     }
 

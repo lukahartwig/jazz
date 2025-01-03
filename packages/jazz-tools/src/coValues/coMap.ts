@@ -30,6 +30,7 @@ import {
   isRefEncoded,
   loadCoValue,
   makeRefs,
+  parseCoValueCreateOptions,
   subscribeToCoValue,
   subscribeToExistingCoValue,
   subscriptionsScopes,
@@ -271,17 +272,19 @@ export class CoMap extends CoValueBase implements CoValue {
   static create<M extends CoMap>(
     this: CoValueClass<M>,
     init: Simplify<CoMapInit<M>>,
-    options: {
-      owner: Account | Group;
-      unique?: CoValueUniqueness["uniqueness"];
-    },
+    options:
+      | {
+          owner: Account | Group;
+          unique?: CoValueUniqueness["uniqueness"];
+        }
+      | Account
+      | Group,
   ) {
     const instance = new this();
-    const raw = instance.rawFromInit(
-      init,
-      options.owner,
-      options.unique === undefined ? undefined : { uniqueness: options.unique },
-    );
+
+    const { owner, uniqueness } = parseCoValueCreateOptions(options);
+    const raw = instance.rawFromInit(init, owner, uniqueness);
+
     Object.defineProperties(instance, {
       id: {
         value: raw.id,
@@ -617,8 +620,14 @@ const CoMapProxyHandler: ProxyHandler<CoMap> = {
     } else if (key in target) {
       return Reflect.get(target, key, receiver);
     } else {
-      const descriptor = (target._schema[key as keyof CoMap["_schema"]] ||
-        target._schema[ItemsSym]) as Schema;
+      const schema = target._schema;
+
+      if (!schema) {
+        return undefined;
+      }
+
+      const descriptor = (schema[key as keyof CoMap["_schema"]] ||
+        schema[ItemsSym]) as Schema;
       if (descriptor && typeof key === "string") {
         const raw = target._raw.get(key);
 

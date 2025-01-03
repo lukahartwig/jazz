@@ -15,6 +15,8 @@ which has the same structure as `BubbleTeaOrder`, but with all fields set to `op
 When the user is ready to submit the order, we treat `DraftBubbleTeaOrder` as a "real order" by
 converting it into a `BubbleTeaOrder`.
 
+[See the full guide here.](https://jazz.tools/docs/react/design-patterns/form)
+
 ## Installing & running the example locally
 
 (This requires `pnpm` to be installed, see [https://pnpm.io/installation](https://pnpm.io/installation))

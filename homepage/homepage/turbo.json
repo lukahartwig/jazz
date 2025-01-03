@@ -2,21 +2,12 @@
   "$schema": "https://turbo.build/schema.json",
   "tasks": {
     "build": {
-      "dependsOn": [
-        "^build",
-        "build:generate-docs",
-        "build:render-code-samples"
-      ],
+      "dependsOn": ["^build", "build:generate-docs"],
       "outputs": [".next/**", "!.next/cache/**"]
     },
     "build:generate-docs": {
       "inputs": ["../../../packages/*/src/**"],
       "outputs": ["typedoc/**"],
-      "dependsOn": ["^build"]
-    },
-    "build:render-code-samples": {
-      "inputs": ["../../../packages/*/src/**", "app/examples/page.tsx"],
-      "outputs": ["codeSamples/**"],
       "dependsOn": ["^build"]
     },
     "dev": {

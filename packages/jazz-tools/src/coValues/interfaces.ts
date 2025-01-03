@@ -1,4 +1,8 @@
-import type { CojsonInternalTypes, RawCoValue } from "cojson";
+import type {
+  CoValueUniqueness,
+  CojsonInternalTypes,
+  RawCoValue,
+} from "cojson";
 import { RawAccount } from "cojson";
 import { AnonymousJazzAgent } from "../implementation/anonymousJazzAgent.js";
 import type { DeeplyLoaded, DepthsIn } from "../internal.js";
@@ -284,4 +288,22 @@ export function subscribeToExistingCoValue<V extends CoValue, Depth>(
     depth,
     listener,
   );
+}
+
+export function parseCoValueCreateOptions(
+  options:
+    | {
+        owner: Account | Group;
+        unique?: CoValueUniqueness["uniqueness"];
+      }
+    | Account
+    | Group,
+) {
+  return "_type" in options &&
+    (options._type === "Account" || options._type === "Group")
+    ? { owner: options, uniqueness: undefined }
+    : {
+        owner: options.owner,
+        uniqueness: options.unique ? { uniqueness: options.unique } : undefined,
+      };
 }

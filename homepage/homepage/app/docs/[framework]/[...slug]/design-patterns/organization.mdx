@@ -1,3 +1,5 @@
+export const metadata = { title: "Organization design pattern" };
+
 import { CodeGroup } from "@/components/forMdx";
 
 # Sharing data through Organizations
@@ -6,6 +8,8 @@ Organizations are a way to share a set of data between users.
 Different apps have different names for this concept, such as "teams" or "workspaces".
 
 We'll use the term Organization.
+
+[See the full example here.](https://github.com/garden-co/jazz/tree/main/examples/organization)
 
 ## Defining the schema for an Organization
 
@@ -49,9 +53,7 @@ export class JazzAccountRoot extends CoMap {
 export class JazzAccount extends Account {
   root = co.ref(JazzAccountRoot);
 
-  async migrate(creationProps?: { name: string }) {
-    super.migrate(creationProps);
-
+  async migrate() {
     if (!this._refs.root) {
       // Using a Group as an owner allows you to give access to other users
       const initialOrganizationOwnership = {
@@ -83,6 +85,8 @@ export class JazzAccount extends Account {
 </CodeGroup>
 
 This schema now allows users to create `Organization`s and add `Project`s to them.
+
+[See the schema for the example app here.](https://github.com/garden-co/jazz/blob/main/examples/organization/src/schema.ts)
 
 ## Adding other users to an Organization
 

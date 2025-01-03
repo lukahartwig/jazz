@@ -1,5 +1,60 @@
 # jazz-browser
 
+## 0.8.50
+
+### Patch Changes
+
+- Updated dependencies [43378ef]
+  - cojson@0.8.50
+  - cojson-transport-ws@0.8.50
+  - jazz-tools@0.8.50
+
+## 0.8.49
+
+### Patch Changes
+
+- Updated dependencies [25dfd90]
+  - cojson@0.8.49
+  - cojson-transport-ws@0.8.49
+  - jazz-tools@0.8.49
+
+## 0.8.48
+
+### Patch Changes
+
+- Updated dependencies [635e824]
+- Updated dependencies [10ea733]
+- Updated dependencies [0a85982]
+  - jazz-tools@0.8.48
+  - cojson@0.8.48
+  - cojson-transport-ws@0.8.48
+
+## 0.8.47
+
+### Patch Changes
+
+- 33ef9c4: Bring Your Own Store to demo auth
+
+## 0.8.46
+
+### Patch Changes
+
+- ab4ffbd: Demo Auth: fix the user credentials storage when the username contains non aplhanumeric characters
+
+## 0.8.45
+
+### Patch Changes
+
+- 7701307: Added RNQuickCrypto, an optional crypto provider that provides faster signatures and removed expo-linking dependency
+- Updated dependencies [6f0bd7f]
+- Updated dependencies [fca6a0b]
+- Updated dependencies [fa41f8e]
+- Updated dependencies [88d7d9a]
+- Updated dependencies [60e35ea]
+  - cojson@0.8.45
+  - jazz-tools@0.8.45
+  - cojson-transport-ws@0.8.45
+
 ## 0.8.44
 
 ### Patch Changes

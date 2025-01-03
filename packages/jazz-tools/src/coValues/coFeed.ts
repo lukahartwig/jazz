@@ -32,6 +32,7 @@ import {
   inspect,
   isRefEncoded,
   loadCoValue,
+  parseCoValueCreateOptions,
   subscribeToCoValue,
   subscribeToExistingCoValue,
 } from "../internal.js";
@@ -204,10 +205,11 @@ export class CoFeed<Item = any> extends CoValueBase implements CoValue {
   static create<S extends CoFeed>(
     this: CoValueClass<S>,
     init: S extends CoFeed<infer Item> ? UnCo<Item>[] : never,
-    options: { owner: Account | Group },
+    options: { owner: Account | Group } | Account | Group,
   ) {
-    const instance = new this({ init, owner: options.owner });
-    const raw = options.owner._raw.createStream();
+    const { owner } = parseCoValueCreateOptions(options);
+    const instance = new this({ init, owner });
+    const raw = owner._raw.createStream();
 
     Object.defineProperties(instance, {
       id: {
@@ -673,9 +675,9 @@ export class FileStream extends CoValueBase implements CoValue {
 
   static create<S extends FileStream>(
     this: CoValueClass<S>,
-    options: { owner: Account | Group },
+    options: { owner: Account | Group } | Account | Group,
   ) {
-    return new this(options);
+    return new this(parseCoValueCreateOptions(options));
   }
 
   getChunks(options?: {
@@ -762,12 +764,16 @@ export class FileStream extends CoValueBase implements CoValue {
    */
   static async createFromBlob(
     blob: Blob | File,
-    options: {
-      owner: Group | Account;
-      onProgress?: (progress: number) => void;
-    },
+    options:
+      | {
+          owner: Group | Account;
+          onProgress?: (progress: number) => void;
+        }
+      | Account
+      | Group,
   ): Promise<FileStream> {
-    const stream = this.create({ owner: options.owner });
+    const stream = this.create(options);
+    const onProgress = "onProgress" in options ? options.onProgress : undefined;
 
     const start = Date.now();
 
@@ -785,7 +791,7 @@ export class FileStream extends CoValueBase implements CoValue {
       stream.push(data.slice(idx, idx + chunkSize));
 
       if (Date.now() - lastProgressUpdate > 100) {
-        options.onProgress?.(idx / data.length);
+        onProgress?.(idx / data.length);
         lastProgressUpdate = Date.now();
       }
 
@@ -800,7 +806,7 @@ export class FileStream extends CoValueBase implements CoValue {
       "s - Throughput in MB/s",
       (1000 * (blob.size / (end - start))) / (1024 * 1024),
     );
-    options.onProgress?.(1);
+    onProgress?.(1);
 
     return stream;
   }

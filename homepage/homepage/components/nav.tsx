@@ -12,31 +12,17 @@ export function JazzNav() {
       items={[
         { title: "Jazz Cloud", href: "/cloud" },
         {
-          title: "Documentation",
+          title: "Docs",
           href: "/docs",
-          items: [
-            {
-              icon: "docs",
-              title: "Documentation",
-              href: "/docs",
-              description:
-                "Get started with using Jazz by learning the core concepts, and going through guides.",
-            },
-            {
-              icon: "code",
-              title: "Example apps",
-              href: "/examples",
-              description:
-                "Demo and source code for example apps built with Jazz.",
-            },
-            {
-              icon: "package",
-              title: "API reference",
-              href: "/api-reference",
-              description:
-                "API references for packages like jazz-tools, jazz-react, and more.",
-            },
-          ],
+          items: [],
+        },
+        {
+          title: "Examples",
+          href: "/examples",
+        },
+        {
+          title: "API ref",
+          href: "/api-reference",
         },
         {
           title: "Built with Jazz",

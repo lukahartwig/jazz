@@ -22,8 +22,7 @@ export class ToDoAccount extends Account {
   profile = co.ref(Profile);
   root = co.ref(ToDoAccountRoot);
 
-  migrate(this: ToDoAccount, creationProps?: { name: string }) {
-    super.migrate(creationProps);
+  migrate() {
     if (!this._refs.root) {
       const group = Group.create({ owner: this });
       const exampleTodo = ToDoItem.create(

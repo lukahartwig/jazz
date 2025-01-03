@@ -15,15 +15,13 @@ import {
   createJazzContext,
 } from "jazz-tools";
 
-import NetInfo from "@react-native-community/netinfo";
 import { RawAccountID } from "cojson";
-import { createWebSocketPeer } from "cojson-transport-ws";
-import * as Linking from "expo-linking";
-import { PureJSCrypto } from "jazz-tools/native";
 
 export { RNDemoAuth } from "./auth/DemoAuthMethod.js";
 
+import { PureJSCrypto } from "cojson/native";
 import { createWebSocketPeerWithReconnection } from "./createWebSocketPeerWithReconnection.js";
+import type { RNQuickCrypto } from "./crypto/RNQuickCrypto.js";
 import { KvStoreContext } from "./storage/kv-store-context.js";
 
 /** @category Context Creation */
@@ -51,7 +49,7 @@ export type BaseReactNativeContextOptions = {
   peer: `wss://${string}` | `ws://${string}`;
   reconnectionTimeout?: number;
   storage?: "indexedDB" | "singleTabOPFS";
-  crypto?: CryptoProvider;
+  CryptoProvider?: typeof PureJSCrypto | typeof RNQuickCrypto;
 };
 
 /** @category Context Creation */
@@ -75,17 +73,19 @@ export async function createJazzRNContext<Acc extends Account>(
     },
   );
 
+  const CryptoProvider = options.CryptoProvider || PureJSCrypto;
+
   const context =
     "auth" in options
       ? await createJazzContext({
           AccountSchema: options.AccountSchema,
           auth: options.auth,
-          crypto: await PureJSCrypto.create(),
+          crypto: await CryptoProvider.create(),
           peersToLoadFrom: [websocketPeer.peer],
           sessionProvider: provideLockSession,
         })
       : await createJazzContext({
-          crypto: await PureJSCrypto.create(),
+          crypto: await CryptoProvider.create(),
           peersToLoadFrom: [websocketPeer.peer],
         });
 
@@ -165,6 +165,7 @@ export function createInviteLink<C extends CoValue>(
 }
 
 /** @category Invite Links */
+// TODO: copied from jazz-browser, should be shared
 export function parseInviteLink<C extends CoValue>(
   inviteURL: string,
 ):
@@ -174,32 +175,66 @@ export function parseInviteLink<C extends CoValue>(
       inviteSecret: InviteSecret;
     }
   | undefined {
-  const url = Linking.parse(inviteURL);
-  const parts = url.path?.split("/");
-
-  if (!parts || parts[0] !== "invite") {
-    return undefined;
-  }
+  const url = new URL(inviteURL);
+  const parts = url.hash.split("/");
 
   let valueHint: string | undefined;
   let valueID: ID<C> | undefined;
   let inviteSecret: InviteSecret | undefined;
 
-  if (parts.length === 4) {
-    valueHint = parts[1];
-    valueID = parts[2] as ID<C>;
-    inviteSecret = parts[3] as InviteSecret;
-  } else if (parts.length === 3) {
-    valueID = parts[1] as ID<C>;
-    inviteSecret = parts[2] as InviteSecret;
-  }
+  if (parts[0] === "#" && parts[1] === "invite") {
+    if (parts.length === 5) {
+      valueHint = parts[2];
+      valueID = parts[3] as ID<C>;
+      inviteSecret = parts[4] as InviteSecret;
+    } else if (parts.length === 4) {
+      valueID = parts[2] as ID<C>;
+      inviteSecret = parts[3] as InviteSecret;
+    }
 
-  if (!valueID || !inviteSecret) {
-    return undefined;
+    if (!valueID || !inviteSecret) {
+      return undefined;
+    }
+    return { valueID, inviteSecret, valueHint };
   }
-
-  return { valueID, inviteSecret, valueHint };
 }
+
+// getting out of the `expo` business 🤞
+// export function parseInviteLink<C extends CoValue>(
+//   inviteURL: string,
+// ):
+//   | {
+//       valueID: ID<C>;
+//       valueHint?: string;
+//       inviteSecret: InviteSecret;
+//     }
+//   | undefined {
+//   const url = Linking.parse(inviteURL);
+//   const parts = url.path?.split("/");
+
+//   if (!parts || parts[0] !== "invite") {
+//     return undefined;
+//   }
+
+//   let valueHint: string | undefined;
+//   let valueID: ID<C> | undefined;
+//   let inviteSecret: InviteSecret | undefined;
+
+//   if (parts.length === 4) {
+//     valueHint = parts[1];
+//     valueID = parts[2] as ID<C>;
+//     inviteSecret = parts[3] as InviteSecret;
+//   } else if (parts.length === 3) {
+//     valueID = parts[1] as ID<C>;
+//     inviteSecret = parts[2] as InviteSecret;
+//   }
+
+//   if (!valueID || !inviteSecret) {
+//     return undefined;
+//   }
+
+//   return { valueID, inviteSecret, valueHint };
+// }
 
 /////////
 
