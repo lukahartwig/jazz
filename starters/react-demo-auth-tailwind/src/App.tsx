@@ -3,7 +3,7 @@ import { Logo } from "./Logo.tsx";
 import { useAccount } from "./main";
 
 function App() {
-  const { me, logOut } = useAccount();
+  const { me, logOut } = useAccount({ profile: {}, root: {} });
 
   return (
     <>
@@ -23,10 +23,20 @@ function App() {
       <main className="container mt-16 flex flex-col gap-8">
         <Logo />
 
+        <div className="text-center">
+          <h1>
+            Welcome{me?.profile.firstName ? <>, {me?.profile.firstName}</> : ""}
+            !
+          </h1>
+          {!!me?.root.age && (
+            <p>As of today, you are {me.root.age} years old.</p>
+          )}
+        </div>
+
         <Form />
 
         <p className="text-center">
-          Edit your first name,{" "}
+          Edit the form above,{" "}
           <button
             type="button"
             onClick={() => window.location.reload()}
@@ -42,7 +52,7 @@ function App() {
           fields.
         </p>
 
-        <p className="text-center mt-16">
+        <p className="text-center my-16">
           Go to{" "}
           <a
             className="font-semibold underline"
