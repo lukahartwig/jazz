@@ -105,10 +105,15 @@ class UploadState {
     ReturnType<typeof createResolvablePromise<void>> & { completed?: boolean }
   >();
 
+  unawarePeers = new Set<PeerID>();
+
   constructor(private readonly coValueEntry: CoValueEntry) {
     this.peers = new Map();
   }
 
+  getUnawarePeerIds(): PeerID[] {
+    return Array.from(this.unawarePeers);
+  }
   setPendingForPeer(peerId: PeerID) {
     if (!(this.coValueEntry.state.type === "available")) {
       console.error(
@@ -138,6 +143,7 @@ class UploadState {
 
     peerUploadState.resolve();
     peerUploadState.completed = true;
+    this.unawarePeers.delete(peerId);
   }
 
   waitForPeer(peerId: PeerID) {
@@ -343,6 +349,7 @@ export class CoValueEntry {
           currentState.markAsUnavailable(action.peerId);
         }
 
+        this.uploadState.unawarePeers.add(action.peerId);
         break;
     }
   }

@@ -1,21 +1,44 @@
 import { isTryAddTransactionsException } from "../coValueCore.js";
 import { CoValueAvailableState } from "../coValueEntry.js";
+import { Peers } from "../peer/index.js";
 import { DependencyService } from "./DependencyService.js";
-import { BaseMessageHandler, DataMessageHandlerInput } from "./types.js";
+import { SyncService } from "./SyncService.js";
+import {
+  BaseMessageHandler,
+  DataMessageHandlerInput,
+  emptyKnownState,
+} from "./types.js";
 
 /**
- * "Data" is a response to our "pull" message. It's a terminal message which must not be responded to.
+ * "Data" is a response to our "pull" message. It's always some data we asked for, initially.
+ * It's a terminal message which must not be responded to.
  * At this stage the coValue state is considered synced between the peer and the node.
  */
 export class DataResponseHandler extends BaseMessageHandler {
-  constructor(private readonly dependencyService: DependencyService) {
+  constructor(
+    private readonly dependencyService: DependencyService,
+    private readonly syncService: SyncService,
+    private readonly peers: Peers,
+  ) {
     super();
   }
 
-  async handleAvailable(input: DataMessageHandlerInput): Promise<unknown> {
+  async handleAvailable(input: DataMessageHandlerInput): Promise<void> {
+    const { msg, entry } = input;
     await this.dependencyService.loadUnknownDependencies(input);
 
-    return this.addData(input);
+    this.addData(input);
+
+    // Push data to peers which are not aware of the coValue
+    const unawarePeerIds = entry.uploadState.getUnawarePeerIds();
+
+    if (unawarePeerIds.length) {
+      void this.syncService.syncCoValue(
+        entry,
+        emptyKnownState(msg.id),
+        this.peers.getMany(unawarePeerIds),
+      );
+    }
   }
 
   async handleLoading(input: DataMessageHandlerInput) {

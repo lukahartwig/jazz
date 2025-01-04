@@ -22,7 +22,11 @@ export class Peers {
     }
   }
 
-  getAll() {
+  getMany(ids: PeerID[]): PeerEntry[] {
+    return this.getAll().filter((peer: PeerEntry) => ids.includes(peer.id));
+  }
+
+  getAll(): PeerEntry[] {
     return Object.values(this.peers);
   }
 

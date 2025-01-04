@@ -63,8 +63,7 @@ async function loadCoValueFromPeers(
           coValueEntry.markAsNotFoundInPeer(peer.id);
         }
       }, CO_VALUE_LOADING_TIMEOUT);
-      //TODO 25
-      // await coValueEntry.getCoValue();
+
       await coValueEntry.state.waitForPeer(peer.id);
       clearTimeout(timeout);
     }

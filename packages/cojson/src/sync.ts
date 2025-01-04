@@ -69,7 +69,11 @@ export class SyncManager {
       },
     );
 
-    this.dataResponseHandler = new DataResponseHandler(this.dependencyService);
+    this.dataResponseHandler = new DataResponseHandler(
+      this.dependencyService,
+      this.syncService,
+      this.local.peers,
+    );
   }
 
   async initialSync(peer: PeerEntry) {
