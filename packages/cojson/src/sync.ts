@@ -1,4 +1,4 @@
-import { CoValueCore, CoValueHeader } from "./coValueCore.js";
+import { CoValueCore } from "./coValueCore.js";
 import { CoValueEntry } from "./coValueEntry.js";
 import { RawCoID } from "./ids.js";
 import { LocalNode } from "./localNode.js";
@@ -50,10 +50,7 @@ export class SyncManager {
     this.loadService = new LoadService(this.local.peers);
     this.dependencyService = new DependencyService(this, this.loadService);
 
-    this.pullRequestHandler = new PullRequestHandler(
-      this.loadService,
-      this.local,
-    );
+    this.pullRequestHandler = new PullRequestHandler(this.loadService);
     this.pushRequestHandler = new PushRequestHandler(
       this.syncService,
       this.local.peers,

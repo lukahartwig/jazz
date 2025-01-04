@@ -1,12 +1,10 @@
 import { CoValueCore } from "../coValueCore.js";
 import { RawCoID } from "../ids.js";
 import {
-  CoValueContent,
   CoValueKnownState,
   DataMessage,
   PushMessage,
   SyncMessage,
-  emptyKnownState,
 } from "../sync/types.js";
 import { PeerEntry } from "./PeerEntry.js";
 

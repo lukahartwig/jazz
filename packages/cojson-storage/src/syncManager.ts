@@ -14,7 +14,6 @@ import {
   StoredCoValueRow,
   StoredSessionRow,
 } from "./types.js";
-import KnownStateMessage = CojsonInternalTypes.KnownStateMessage;
 import DataMessage = CojsonInternalTypes.DataMessage;
 import PushMessage = CojsonInternalTypes.PushMessage;
 import RawCoID = CojsonInternalTypes.RawCoID;

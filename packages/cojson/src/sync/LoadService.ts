@@ -1,12 +1,6 @@
 import { CoValueCore } from "../coValueCore.js";
 import { CO_VALUE_LOADING_TIMEOUT, CoValueEntry } from "../coValueEntry.js";
-import {
-  PeerEntry,
-  PeerID,
-  Peers,
-  getPeersWithoutErrors,
-} from "../peer/index.js";
-import { DependencyService } from "./DependencyService.js";
+import { PeerEntry, Peers, getPeersWithoutErrors } from "../peer/index.js";
 import { emptyKnownState } from "./types.js";
 
 export class LoadService {
