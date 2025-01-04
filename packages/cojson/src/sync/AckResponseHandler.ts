@@ -1,6 +1,7 @@
 import { CoValueEntry } from "../coValueEntry.js";
 import { PeerEntry, PeerID } from "../peer/PeerEntry.js";
-import { AckMessage, BaseMessageHandler } from "./types.js";
+import { AbstractMessageHandler } from "./AbstractMessageHandler.js";
+import { AckMessage } from "./types.js";
 
 export type AckMessageHandlerInput = {
   msg: AckMessage;
@@ -8,7 +9,7 @@ export type AckMessageHandlerInput = {
   entry: CoValueEntry;
 };
 
-export class AckResponseHandler extends BaseMessageHandler {
+export class AckResponseHandler extends AbstractMessageHandler {
   constructor(
     private onPushContentAcknowledged?: ({
       entry,

@@ -109,7 +109,6 @@ export class SyncManager {
   }
 
   handleSyncMessage(msg: SyncMessage, peer: PeerEntry) {
-    // TODO 25 errored coValues?
     if (peer.erroredCoValues.has(msg.id)) {
       console.error(
         `Skipping message ${msg.action} on errored coValue ${msg.id} from peer ${peer.id}`,

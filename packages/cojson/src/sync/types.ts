@@ -3,6 +3,7 @@ import { CoValueEntry } from "../coValueEntry.js";
 import { RawCoID, SessionID } from "../ids.js";
 import { PeerEntry } from "../peer/PeerEntry.js";
 import { CoValuePriority } from "../priority.js";
+import { QueueRunner } from "../queueUtils/queueRunner.js";
 
 export type CoValueKnownState = {
   id: RawCoID;
@@ -90,24 +91,5 @@ export type DataMessageHandlerInput = {
 };
 
 export interface MessageHandlerInterface {
-  handle({ msg, peer, entry }: MessageHandlerInput): Promise<unknown>;
-}
-
-export abstract class BaseMessageHandler implements MessageHandlerInterface {
-  async handle({ msg, peer, entry }: MessageHandlerInput): Promise<unknown> {
-    // we don't await for handlers to be resolved to not block the execution
-    switch (entry.state.type) {
-      case "available":
-        return this.handleAvailable({ msg, peer, entry });
-      case "loading":
-        return this.handleLoading({ msg, peer, entry });
-      case "unknown":
-      case "unavailable":
-        return this.handleUnknown({ msg, peer, entry });
-    }
-  }
-
-  abstract handleAvailable(input: MessageHandlerInput): Promise<unknown>;
-  abstract handleLoading(input: MessageHandlerInput): Promise<unknown>;
-  abstract handleUnknown(input: MessageHandlerInput): Promise<unknown>;
+  handle({ msg, peer, entry }: MessageHandlerInput): void;
 }

@@ -1,7 +1,8 @@
 import { CoValueAvailableState, CoValueEntry } from "../coValueEntry.js";
 import { PeerEntry } from "../peer/index.js";
+import { AbstractMessageHandler } from "./AbstractMessageHandler.js";
 import { LoadService } from "./LoadService.js";
-import { BaseMessageHandler, PullMessage } from "./types.js";
+import { PullMessage } from "./types.js";
 
 export type PullMessageHandlerInput = {
   msg: PullMessage;
@@ -17,7 +18,7 @@ export type PullMessageHandlerInput = {
  *
  * Handler initiates a new "pull" requests to load the coValue from peers if it is not known by the node.
  */
-export class PullRequestHandler extends BaseMessageHandler {
+export class PullRequestHandler extends AbstractMessageHandler {
   constructor(private readonly loadService: LoadService) {
     super();
   }
@@ -36,7 +37,7 @@ export class PullRequestHandler extends BaseMessageHandler {
     // We need to wait for the CoValue to be loaded that would resolve the CoValue as available.
     await input.entry.getCoValue();
 
-    return this.handle(input);
+    return this.routeMessageByEntryState(input);
   }
 
   async handleUnknown(input: PullMessageHandlerInput): Promise<unknown> {

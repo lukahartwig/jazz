@@ -1,20 +1,17 @@
 import { isTryAddTransactionsException } from "../coValueCore.js";
 import { CoValueAvailableState } from "../coValueEntry.js";
 import { Peers } from "../peer/index.js";
+import { AbstractMessageHandler } from "./AbstractMessageHandler.js";
 import { DependencyService } from "./DependencyService.js";
 import { SyncService } from "./SyncService.js";
-import {
-  BaseMessageHandler,
-  DataMessageHandlerInput,
-  emptyKnownState,
-} from "./types.js";
+import { DataMessageHandlerInput, emptyKnownState } from "./types.js";
 
 /**
  * "Data" is a response to our "pull" message. It's always some data we asked for, initially.
  * It's a terminal message which must not be responded to.
  * At this stage the coValue state is considered synced between the peer and the node.
  */
-export class DataResponseHandler extends BaseMessageHandler {
+export class DataResponseHandler extends AbstractMessageHandler {
   constructor(
     private readonly dependencyService: DependencyService,
     private readonly syncService: SyncService,
@@ -55,13 +52,12 @@ export class DataResponseHandler extends BaseMessageHandler {
 
     if (!msg.header) {
       await entry.getCoValue();
-      // TODO 25 figure out streaming
-      return this.handle(input);
+      return this.routeMessageByEntryState(input);
     }
 
     await this.dependencyService.MakeAvailableWithDependencies(input);
 
-    return this.handle(input);
+    return this.routeMessageByEntryState(input);
   }
 
   async handleUnknown(input: DataMessageHandlerInput) {
@@ -85,7 +81,7 @@ export class DataResponseHandler extends BaseMessageHandler {
 
     entry.moveToLoadingState([peer]);
 
-    return this.handle(input);
+    return this.routeMessageByEntryState(input);
   }
 
   addData(input: DataMessageHandlerInput) {

@@ -1,15 +1,12 @@
 import { CoValueCore, isTryAddTransactionsException } from "../coValueCore.js";
 import { CoValueAvailableState } from "../coValueEntry.js";
 import { Peers } from "../peer/index.js";
+import { AbstractMessageHandler } from "./AbstractMessageHandler.js";
 import { DependencyService } from "./DependencyService.js";
 import { SyncService } from "./SyncService.js";
-import {
-  BaseMessageHandler,
-  PushMessageHandlerInput,
-  emptyKnownState,
-} from "./types.js";
+import { PushMessageHandlerInput, emptyKnownState } from "./types.js";
 
-export class PushRequestHandler extends BaseMessageHandler {
+export class PushRequestHandler extends AbstractMessageHandler {
   constructor(
     protected readonly syncService: SyncService,
     protected readonly peers: Peers,
@@ -32,7 +29,7 @@ export class PushRequestHandler extends BaseMessageHandler {
     }
     entry.moveToLoadingState([peer]);
 
-    return this.handle(input);
+    return this.routeMessageByEntryState(input);
   }
 
   async handleLoading(input: PushMessageHandlerInput) {
@@ -43,7 +40,7 @@ export class PushRequestHandler extends BaseMessageHandler {
 
     await this.dependencyService.MakeAvailableWithDependencies(input);
 
-    return this.handle(input);
+    return this.routeMessageByEntryState(input);
   }
 
   private async addData(coValue: CoValueCore, input: PushMessageHandlerInput) {
