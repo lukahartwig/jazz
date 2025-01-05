@@ -1,6 +1,6 @@
 import { isTryAddTransactionsException } from "../coValueCore.js";
 import { CoValueAvailableState } from "../coValueEntry.js";
-import { Peers } from "../peer/index.js";
+import { LocalNode } from "../exports.js";
 import { AbstractMessageHandler } from "./AbstractMessageHandler.js";
 import { DependencyService } from "./DependencyService.js";
 import { SyncService } from "./SyncService.js";
@@ -15,7 +15,6 @@ export class DataResponseHandler extends AbstractMessageHandler {
   constructor(
     private readonly dependencyService: DependencyService,
     private readonly syncService: SyncService,
-    private readonly peers: Peers,
   ) {
     super();
   }
@@ -26,14 +25,15 @@ export class DataResponseHandler extends AbstractMessageHandler {
 
     this.addData(input);
 
-    // Push data to peers which are not aware of the coValue
+    // Push data to peers which are not aware of the coValue,
+    // they are preserved in entry.uploadState after being marked as 'not-found-in-peer'
     const unawarePeerIds = entry.uploadState.getUnawarePeerIds();
 
     if (unawarePeerIds.length) {
       void this.syncService.syncCoValue(
         entry,
         emptyKnownState(msg.id),
-        this.peers.getMany(unawarePeerIds),
+        LocalNode.peers.getMany(unawarePeerIds),
       );
     }
   }
@@ -51,8 +51,13 @@ export class DataResponseHandler extends AbstractMessageHandler {
     }
 
     if (!msg.header) {
-      await entry.getCoValue();
-      return this.routeMessageByEntryState(input);
+      console.error(
+        "Unexpected empty header in message. Data message is a response to a pull request and should be received for available coValue or include the full header.",
+        msg.id,
+        peer.id,
+      );
+
+      return;
     }
 
     await this.dependencyService.MakeAvailableWithDependencies(input);

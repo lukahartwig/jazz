@@ -2,7 +2,7 @@ import { CoValueCore } from "./coValueCore.js";
 import { CoValueEntry } from "./coValueEntry.js";
 import { RawCoID } from "./ids.js";
 import { LocalNode } from "./localNode.js";
-import { PeerEntry, PeerID } from "./peer/index.js";
+import { PeerEntry, PeerID, Peers } from "./peer/index.js";
 import { DependencyService } from "./sync/DependencyService.js";
 import {
   AckResponseHandler,
@@ -22,6 +22,7 @@ export type PingTimeoutError = "PingTimeout";
 
 export class SyncManager {
   local: LocalNode;
+
   requestedSyncs: {
     [id: RawCoID]:
       | { done: Promise<void>; nRequestsThisTick: number }
@@ -40,20 +41,18 @@ export class SyncManager {
     this.local = local;
 
     this.syncService = new SyncService(
-      this.local.peers,
       // onPushContent callback
       ({ entry, peerId }: { entry: CoValueEntry; peerId: PeerID }) => {
         entry.uploadState.setPendingForPeer(peerId);
       },
     );
 
-    this.loadService = new LoadService(this.local.peers);
+    this.loadService = new LoadService();
     this.dependencyService = new DependencyService(this, this.loadService);
 
     this.pullRequestHandler = new PullRequestHandler(this.loadService);
     this.pushRequestHandler = new PushRequestHandler(
       this.syncService,
-      this.local.peers,
       // The reason for this ugly callback here is to avoid having the local node as a dependency in the handler,
       // This should be removed after CoValueCore is decoupled from the local node instance
       this.dependencyService,
@@ -69,7 +68,6 @@ export class SyncManager {
     this.dataResponseHandler = new DataResponseHandler(
       this.dependencyService,
       this.syncService,
-      this.local.peers,
     );
   }
 

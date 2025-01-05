@@ -52,6 +52,8 @@ const { localNode } = useJazz();
 ```
 */
 export class LocalNode {
+  static peers = new Peers();
+
   /** @internal */
   crypto: CryptoProvider;
   /** @internal */
@@ -61,7 +63,6 @@ export class LocalNode {
   /** @category 3. Low-level */
   currentSessionID: SessionID;
   /** @category 3. Low-level */
-  peers = new Peers();
   syncManager = new SyncManager(this);
   crashed: Error | undefined = undefined;
 
@@ -107,7 +108,7 @@ export class LocalNode {
   }
 
   async addPeer(peerData: Peer) {
-    const peer: PeerEntry = this.peers.add(peerData);
+    const peer: PeerEntry = LocalNode.peers.add(peerData);
 
     if (peer.isServerOrStoragePeer()) {
       await this.syncManager.initialSync(peer);
@@ -129,11 +130,11 @@ export class LocalNode {
         }
       })
       .finally(() => {
-        const state = this.peers.get(peerData.id);
+        const state = LocalNode.peers.get(peerData.id);
         state?.gracefulShutdown();
 
         if (peerData.deletePeerStateOnClose) {
-          this.peers.delete(peer.id);
+          LocalNode.peers.delete(peer.id);
         }
       });
   }
@@ -690,7 +691,7 @@ export class LocalNode {
   }
 
   gracefulShutdown() {
-    for (const peer of this.peers.getAll()) {
+    for (const peer of LocalNode.peers.getAll()) {
       peer.gracefulShutdown();
     }
   }

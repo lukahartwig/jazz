@@ -1,10 +1,11 @@
 import { CoValueCore } from "../coValueCore.js";
 import { CO_VALUE_LOADING_TIMEOUT, CoValueEntry } from "../coValueEntry.js";
-import { PeerEntry, Peers, getPeersWithoutErrors } from "../peer/index.js";
+import { LocalNode } from "../exports.js";
+import { PeerEntry, getPeersWithoutErrors } from "../peer/index.js";
 import { emptyKnownState } from "./types.js";
 
 export class LoadService {
-  constructor(private readonly peers: Peers) {}
+  constructor() {}
 
   /**
    * Sends "pull" request to peers to load/update the coValue state and request to subscribe to peer's updates if have not
@@ -18,7 +19,7 @@ export class LoadService {
   ): Promise<CoValueCore | "unavailable"> {
     const peers = peerToLoadFrom
       ? [peerToLoadFrom]
-      : this.peers.getServerAndStorage();
+      : LocalNode.peers.getServerAndStorage();
 
     try {
       await entry.loadFromPeers(

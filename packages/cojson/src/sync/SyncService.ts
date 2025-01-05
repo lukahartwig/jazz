@@ -1,11 +1,12 @@
 import { CoValuesStore } from "../CoValuesStore.js";
 import { CoValueEntry } from "../coValueEntry.js";
-import { PeerEntry, PeerID, Peers } from "../peer/index.js";
+import { LocalNode } from "../exports.js";
+import { PeerEntry, PeerID } from "../peer/index.js";
+import { SyncManager } from "../sync.js";
 import { CoValueKnownState, emptyKnownState } from "./types.js";
 
 export class SyncService {
   constructor(
-    private readonly peers: Peers,
     private readonly onPushContent?: ({
       entry,
       peerId,
@@ -50,7 +51,7 @@ export class SyncService {
       throw new Error(`Can't sync unavailable coValue ${peerKnownState.id}`);
     }
 
-    const peersToSync = peers || this.peers.getInPriorityOrder();
+    const peersToSync = peers || LocalNode.peers.getInPriorityOrder();
 
     for (const peer of peersToSync) {
       if (peer.erroredCoValues.has(entry.id)) continue;
