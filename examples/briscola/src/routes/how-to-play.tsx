@@ -16,7 +16,7 @@ export const Route = createFileRoute("/how-to-play")({
 
 function RouteComponent() {
   return (
-    <div className="flex flex-col w-full place-items-center justify-center p-2">
+    <div className="flex flex-col w-full place-items-center justify-center p-2 min-h-screen">
       <Card className="max-w-screen-lg">
         <CardHeader>
           <CardTitle>How to Play?</CardTitle>

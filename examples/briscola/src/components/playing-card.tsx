@@ -28,7 +28,7 @@ export function PlayingCard({
   return (
     <motion.div
       className={cn(
-        "block aspect-card w-[150px] bg-white touch-none rounded-lg shadow-lg transform-gpu p-2 border",
+        "block aspect-card w-[150px] bg-white touch-none rounded-lg shadow-lg p-2 border",
         className,
       )}
       style={{

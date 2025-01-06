@@ -7,9 +7,19 @@ import { Group, type ID } from "jazz-tools";
 import { AnimatePresence, LayoutGroup, Reorder, motion } from "motion/react";
 import type { FormEventHandler, ReactNode } from "react";
 
+import { HowToPlayContent } from "@/components/how-to-play-content";
 import { PlayingCard } from "@/components/playing-card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { WORKER_ID } from "@/constants";
 import { useCoState, useInboxSender } from "@/jazz";
+import { InfoIcon } from "lucide-react";
 
 export const Route = createFileRoute("/game/$gameId")({
   component: RouteComponent,
@@ -94,20 +104,24 @@ function RouteComponent() {
 
   return (
     <LayoutGroup>
-      <div className="flex flex-col h-full p-2 bg-green-800">
+      <div className="flex flex-col h-screen p-2 ">
         <PlayerArea player={opponent}>
           <ul className="flex gap-2 flex-row-reverse place-content-center ">
             <AnimatePresence>
-              {opponent.hand.getSorted().map((card) => (
-                <motion.li key={card?.id} layout>
-                  <PlayingCard card={card} faceDown layoutId={card?.id} />
-                </motion.li>
-              ))}
+              {opponent.hand.getSorted().map((card) => {
+                if (!card) return null;
+
+                return (
+                  <motion.li key={card?.id} layout>
+                    <PlayingCard card={card} faceDown layoutId={card?.id} />
+                  </motion.li>
+                );
+              })}
             </AnimatePresence>
           </ul>
         </PlayerArea>
 
-        <div className="container grow items-center justify-center grid grid-cols-2">
+        <div className="container mx-auto grow items-center justify-center grid grid-cols-2">
           <div className="relative flex justify-center items-center">
             {game.deck[0] && (
               <PlayingCard
@@ -169,35 +183,39 @@ function RouteComponent() {
                           card?.data?.value !== undefined &&
                           card.data.suit !== undefined,
                       )
-                      .map((card, i, cards) => (
-                        <Reorder.Item
-                          key={`${card?.data?.suit}${card?.data?.value}`}
-                          value={card}
-                          initial={{
-                            translateY: 800,
-                          }}
-                          animate={{
-                            rotate: i * 15 - (15 * (cards.length - 1)) / 2,
-                            translateY: 0,
-                          }}
-                          whileDrag={{ scale: 1.1 }}
-                          exit={{
-                            scale: 1.1,
-                          }}
-                          layout
-                          layoutId={`${card?.id}`}
-                        >
-                          <RadioGroup.Item
-                            value={`${card?.data?.suit}${card?.data?.value}`}
-                            className="relative data-[state=checked]:border"
-                            asChild
+                      .map((card, i, cards) => {
+                        if (!card) return null;
+
+                        return (
+                          <Reorder.Item
+                            key={`${card?.data?.suit}${card?.data?.value}`}
+                            value={card}
+                            initial={{
+                              translateY: 800,
+                            }}
+                            animate={{
+                              rotate: i * 15 - (15 * (cards.length - 1)) / 2,
+                              translateY: 0,
+                            }}
+                            whileDrag={{ scale: 1.1 }}
+                            exit={{
+                              scale: 1.1,
+                            }}
+                            layout
+                            layoutId={`${card?.id}`}
                           >
-                            <motion.button>
-                              <PlayingCard card={card} />
-                            </motion.button>
-                          </RadioGroup.Item>
-                        </Reorder.Item>
-                      ))}
+                            <RadioGroup.Item
+                              value={`${card?.data?.suit}${card?.data?.value}`}
+                              className="relative data-[state=checked]:translate-y-[-10px] data-[state=checked]:scale-110 data-[state=unchecked]:translate-y-0 transition-transform"
+                              asChild
+                            >
+                              <motion.button>
+                                <PlayingCard card={card} />
+                              </motion.button>
+                            </RadioGroup.Item>
+                          </Reorder.Item>
+                        );
+                      })}
                   </AnimatePresence>
                 </Reorder.Group>
               </RadioGroup.Root>
@@ -217,7 +235,7 @@ interface CardStackProps {
 
 function CardStack({ cards, className, faceDown = false }: CardStackProps) {
   return (
-    <div className={cn("relative p-4 w-[200px] h-[280px]", className)}>
+    <div className={cn("relative w-[150px] h-[245px]", className)}>
       <AnimatePresence>
         {cards.map((card) => (
           <motion.div key={card?.id} className="absolute" animate layout>
@@ -236,22 +254,43 @@ interface PlayerAreaProps {
 function PlayerArea({ children, player }: PlayerAreaProps) {
   return (
     <div className={cn("flex", !player.account?.isMe && "flex-row-reverse")}>
-      <div className="flex items-center justify-center w-1/3">
+      <div className="flex items-center  w-1/3 justify-around flex-col">
         {player.account?.isMe && (
-          <Button size="lg" type="submit">
-            Play
-          </Button>
+          <>
+            <Button size="lg" type="submit">
+              Play selected card
+            </Button>
+            <Dialog>
+              <DialogTrigger>
+                <Button size="sm" type="button" variant="link">
+                  <InfoIcon />
+                  How to play?
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>How to play Briscola</DialogTitle>
+                  <DialogDescription>
+                    <HowToPlayContent />
+                  </DialogDescription>
+                </DialogHeader>
+              </DialogContent>
+            </Dialog>
+          </>
         )}
       </div>
       <div className="w-1/3">{children}</div>
       <div
         className={cn(
-          "flex justify-center flex-col items-center w-1/3",
+          "flex justify-center flex-col items-center w-1/3 gap-2",
           !player.account?.isMe && "flex-col-reverse",
         )}
       >
-        <span className="font-semibold text-lg">
-          {getScore(player.scoredCards?.map((c) => c!) ?? [])}
+        <span className="text-lg">
+          Score:{" "}
+          <span className="font-semibold">
+            {getScore(player.scoredCards?.map((c) => c!) ?? [])}
+          </span>
         </span>
         <CardStack cards={player.scoredCards?.map((c) => c!) ?? []} />
       </div>
