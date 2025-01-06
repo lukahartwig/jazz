@@ -86,7 +86,7 @@ export default async function Page() {
             <th scope="col" className="px-3 py-3.5">
               Average
             </th>
-            <th scope="col" className="px-3 py-3.5">
+            <th scope="col" className="px-3 py-3.5 whitespace-nowrap">
               99th %
             </th>
             <th scope="col" className="px-3 py-3.5">
