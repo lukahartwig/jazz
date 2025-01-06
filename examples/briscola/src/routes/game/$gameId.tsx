@@ -218,7 +218,7 @@ function CardStack({ cards, className, faceDown = false }: CardStackProps) {
   return (
     <div className={cn("relative p-4 w-[200px] h-[280px]", className)}>
       <AnimatePresence>
-        {cards.map((card, i) => (
+        {cards.map((card) => (
           <motion.div key={card?.id} className="absolute" animate layout>
             <PlayingCard card={card} faceDown={faceDown} layoutId={card?.id} />
           </motion.div>

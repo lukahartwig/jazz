@@ -20,9 +20,9 @@ function HomeComponent() {
   const navigate = useNavigate({ from: "/" });
 
   const onNewGameClick = async () => {
-    const account = await Account.load(workerId, me, {});
+    const workerAcccount = await Account.load(workerId, me, {});
 
-    if (!account) {
+    if (!workerAcccount) {
       return;
     }
 

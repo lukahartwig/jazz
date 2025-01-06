@@ -179,10 +179,11 @@ async function drawCard(player: Player, deck: CardList) {
     const metaGroup = Group.create({ owner: worker });
     metaGroup.addMember("everyone", "reader");
     metaGroup.addMember(playerAccount, "writer");
-    // Create the card meta. This is visible to everyone. It's used to sort the cards in the UI.
+    // Create the card meta. This is visible to everyone.
+    // It's used to sort the cards in the UI.
     card.meta = CardMeta.create({}, { owner: metaGroup });
-    // Extends the card data group, which at creation is private to the worker,
-    // with the player's read group, so the player can read the card data.
+    // Add the player to the card's data group so that
+    // the player can read the card data.
     card.data?._owner.castAs(Group).addMember(playerAccount, "reader");
     player.hand?.push(card);
   }
@@ -274,7 +275,7 @@ async function handlePlayIntent(senderId: ID<Account>, playIntent: PlayIntent) {
 
   // make the newly played card's data visible to everyone by extending its group with
   // the public read-only group so that everyone can see the card.
-  const group = await playedCard.card.data?._owner
+  const group = await playedCard.card.data._owner
     .castAs(Group)
     .ensureLoaded({});
   group?.extend(publicReadOnly);
@@ -293,7 +294,7 @@ async function handlePlayIntent(senderId: ID<Account>, playIntent: PlayIntent) {
     } else {
       // else the active player wins only if they played a briscola.
       // (we already know the other player didn't)
-      if (playedCard.card.data?.suit === state.game.briscola) {
+      if (playedCard.card.data.suit === state.game.briscola) {
         winner = player;
       } else {
         winner = opponent;
