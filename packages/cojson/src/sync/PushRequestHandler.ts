@@ -28,7 +28,7 @@ export class PushRequestHandler extends AbstractMessageHandler {
     }
     entry.moveToLoadingState([peer]);
 
-    return this.routeMessageByEntryState(input);
+    return this.routeMessage(input);
   }
 
   async handleLoading(input: PushMessageHandlerInput) {
@@ -39,7 +39,7 @@ export class PushRequestHandler extends AbstractMessageHandler {
 
     await this.dependencyService.MakeAvailableWithDependencies(input);
 
-    return this.routeMessageByEntryState(input);
+    return this.routeMessage(input);
   }
 
   private async addData(coValue: CoValueCore, input: PushMessageHandlerInput) {

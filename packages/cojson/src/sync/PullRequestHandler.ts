@@ -37,7 +37,7 @@ export class PullRequestHandler extends AbstractMessageHandler {
     // We need to wait for the CoValue to be loaded that would resolve the CoValue as available.
     await input.entry.getCoValue();
 
-    return this.routeMessageByEntryState(input);
+    return this.routeMessage(input);
   }
 
   async handleUnknown(input: PullMessageHandlerInput): Promise<unknown> {

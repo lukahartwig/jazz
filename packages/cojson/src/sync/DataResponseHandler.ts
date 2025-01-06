@@ -20,9 +20,16 @@ export class DataResponseHandler extends AbstractMessageHandler {
   }
 
   async handleAvailable(input: DataMessageHandlerInput): Promise<void> {
-    const { msg, entry } = input;
+    const { msg, entry, peer } = input;
     await this.dependencyService.loadUnknownDependencies(input);
-    // TODO if not found in peer push data into that peer
+
+    if (!msg.known) {
+      // Send coValue to the peer if not known by the peer but available on our side
+      return this.syncService.syncCoValue(entry, emptyKnownState(msg.id), [
+        peer,
+      ]);
+    }
+
     this.addData(input);
 
     // Push data to peers which are not aware of the coValue,
@@ -62,7 +69,7 @@ export class DataResponseHandler extends AbstractMessageHandler {
 
     await this.dependencyService.MakeAvailableWithDependencies(input);
 
-    return this.routeMessageByEntryState(input);
+    return this.routeMessage(input);
   }
 
   async handleUnknown(input: DataMessageHandlerInput) {
@@ -86,7 +93,7 @@ export class DataResponseHandler extends AbstractMessageHandler {
 
     entry.moveToLoadingState([peer]);
 
-    return this.routeMessageByEntryState(input);
+    return this.routeMessage(input);
   }
 
   addData(input: DataMessageHandlerInput) {

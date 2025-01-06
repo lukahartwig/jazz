@@ -1,36 +1,36 @@
 import { RawCoID } from "../ids.js";
 type DeferredFn = () => Promise<unknown>;
 
-export class QueueRunner {
-  private coIds: Map<RawCoID, { queue: DeferredFn[]; active: boolean }> =
+export class ParallelQueueRunner {
+  private queueIds: Map<RawCoID, { queue: DeferredFn[]; locked: boolean }> =
     new Map();
 
-  defferForId(id: RawCoID, fn: () => Promise<unknown>) {
-    const item = this.coIds.get(id);
+  pushFor(queueId: RawCoID, fn: () => Promise<unknown>) {
+    const item = this.queueIds.get(queueId);
     if (item) {
       item.queue.push(fn);
     } else {
-      this.coIds.set(id, { queue: [fn], active: false });
+      this.queueIds.set(queueId, { queue: [fn], locked: false });
     }
 
-    void this.processQueue(id);
+    void this.processQueue(queueId);
   }
 
-  private async processQueue(id: RawCoID) {
-    const item = this.coIds.get(id)!;
+  private async processQueue(queueId: RawCoID) {
+    const queueEntry = this.queueIds.get(queueId)!;
 
-    if (item.active) return;
-    item.active = true;
+    if (queueEntry.locked) return;
+    queueEntry.locked = true;
 
-    while (item.queue.length) {
+    while (queueEntry.queue.length) {
       try {
-        await item.queue.shift()!();
+        await queueEntry.queue.shift()!();
       } catch (e) {
-        console.error(`Error while processing queue for ${id} ${e}`);
+        console.error(`Error while processing queue for ${queueId} ${e}`);
       }
     }
 
-    item.active = false;
+    queueEntry.locked = false;
   }
 }
 

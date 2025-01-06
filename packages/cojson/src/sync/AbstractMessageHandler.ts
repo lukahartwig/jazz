@@ -1,22 +1,18 @@
-import { QueueRunner } from "../queueUtils/queueRunner.js";
+import { ParallelQueueRunner } from "../utils/parallelQueueRunner.js";
 import { MessageHandlerInput, MessageHandlerInterface } from "./types.js";
 
 export abstract class AbstractMessageHandler
   implements MessageHandlerInterface
 {
-  private readonly queue = new QueueRunner();
+  private readonly queuesRunner = new ParallelQueueRunner();
 
   handle({ msg, peer, entry }: MessageHandlerInput) {
-    this.queue.defferForId(msg.id, () =>
-      this.routeMessageByEntryState({ msg, peer, entry }),
+    this.queuesRunner.pushFor(msg.id, () =>
+      this.routeMessage({ msg, peer, entry }),
     );
   }
 
-  protected routeMessageByEntryState({
-    msg,
-    peer,
-    entry,
-  }: MessageHandlerInput) {
+  protected routeMessage({ msg, peer, entry }: MessageHandlerInput) {
     switch (entry.state.type) {
       case "available":
         return this.handleAvailable({ msg, peer, entry });
