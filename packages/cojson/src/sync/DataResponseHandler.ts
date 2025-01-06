@@ -22,7 +22,7 @@ export class DataResponseHandler extends AbstractMessageHandler {
   async handleAvailable(input: DataMessageHandlerInput): Promise<void> {
     const { msg, entry } = input;
     await this.dependencyService.loadUnknownDependencies(input);
-
+    // TODO if not found in peer push data into that peer
     this.addData(input);
 
     // Push data to peers which are not aware of the coValue,
@@ -43,7 +43,7 @@ export class DataResponseHandler extends AbstractMessageHandler {
 
     // not known by peer
     if (!msg.known) {
-      input.entry.dispatch({
+      entry.dispatch({
         type: "not-found-in-peer",
         peerId: peer.id,
       });
