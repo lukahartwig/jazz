@@ -10,136 +10,136 @@
 
 // Import Routes
 
-import { Route as rootRoute } from "./routes/__root";
-import { Route as GameImport } from "./routes/game";
-import { Route as GameGameIdImport } from "./routes/game/$gameId";
-import { Route as IndexImport } from "./routes/index";
-import { Route as WaitingRoomWaitingRoomIdImport } from "./routes/waiting-room.$waitingRoomId";
+import { Route as rootRoute } from './routes/__root'
+import { Route as GameImport } from './routes/game'
+import { Route as IndexImport } from './routes/index'
+import { Route as WaitingRoomWaitingRoomIdImport } from './routes/waiting-room.$waitingRoomId'
+import { Route as GameGameIdImport } from './routes/game/$gameId'
 
 // Create/Update Routes
 
 const GameRoute = GameImport.update({
-  id: "/game",
-  path: "/game",
+  id: '/game',
+  path: '/game',
   getParentRoute: () => rootRoute,
-} as any);
+} as any)
 
 const IndexRoute = IndexImport.update({
-  id: "/",
-  path: "/",
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRoute,
-} as any);
+} as any)
 
 const WaitingRoomWaitingRoomIdRoute = WaitingRoomWaitingRoomIdImport.update({
-  id: "/waiting-room/$waitingRoomId",
-  path: "/waiting-room/$waitingRoomId",
+  id: '/waiting-room/$waitingRoomId',
+  path: '/waiting-room/$waitingRoomId',
   getParentRoute: () => rootRoute,
-} as any);
+} as any)
 
 const GameGameIdRoute = GameGameIdImport.update({
-  id: "/$gameId",
-  path: "/$gameId",
+  id: '/$gameId',
+  path: '/$gameId',
   getParentRoute: () => GameRoute,
-} as any);
+} as any)
 
 // Populate the FileRoutesByPath interface
 
-declare module "@tanstack/react-router" {
+declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    "/": {
-      id: "/";
-      path: "/";
-      fullPath: "/";
-      preLoaderRoute: typeof IndexImport;
-      parentRoute: typeof rootRoute;
-    };
-    "/game": {
-      id: "/game";
-      path: "/game";
-      fullPath: "/game";
-      preLoaderRoute: typeof GameImport;
-      parentRoute: typeof rootRoute;
-    };
-    "/game/$gameId": {
-      id: "/game/$gameId";
-      path: "/$gameId";
-      fullPath: "/game/$gameId";
-      preLoaderRoute: typeof GameGameIdImport;
-      parentRoute: typeof GameImport;
-    };
-    "/waiting-room/$waitingRoomId": {
-      id: "/waiting-room/$waitingRoomId";
-      path: "/waiting-room/$waitingRoomId";
-      fullPath: "/waiting-room/$waitingRoomId";
-      preLoaderRoute: typeof WaitingRoomWaitingRoomIdImport;
-      parentRoute: typeof rootRoute;
-    };
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexImport
+      parentRoute: typeof rootRoute
+    }
+    '/game': {
+      id: '/game'
+      path: '/game'
+      fullPath: '/game'
+      preLoaderRoute: typeof GameImport
+      parentRoute: typeof rootRoute
+    }
+    '/game/$gameId': {
+      id: '/game/$gameId'
+      path: '/$gameId'
+      fullPath: '/game/$gameId'
+      preLoaderRoute: typeof GameGameIdImport
+      parentRoute: typeof GameImport
+    }
+    '/waiting-room/$waitingRoomId': {
+      id: '/waiting-room/$waitingRoomId'
+      path: '/waiting-room/$waitingRoomId'
+      fullPath: '/waiting-room/$waitingRoomId'
+      preLoaderRoute: typeof WaitingRoomWaitingRoomIdImport
+      parentRoute: typeof rootRoute
+    }
   }
 }
 
 // Create and export the route tree
 
 interface GameRouteChildren {
-  GameGameIdRoute: typeof GameGameIdRoute;
+  GameGameIdRoute: typeof GameGameIdRoute
 }
 
 const GameRouteChildren: GameRouteChildren = {
   GameGameIdRoute: GameGameIdRoute,
-};
+}
 
-const GameRouteWithChildren = GameRoute._addFileChildren(GameRouteChildren);
+const GameRouteWithChildren = GameRoute._addFileChildren(GameRouteChildren)
 
 export interface FileRoutesByFullPath {
-  "/": typeof IndexRoute;
-  "/game": typeof GameRouteWithChildren;
-  "/game/$gameId": typeof GameGameIdRoute;
-  "/waiting-room/$waitingRoomId": typeof WaitingRoomWaitingRoomIdRoute;
+  '/': typeof IndexRoute
+  '/game': typeof GameRouteWithChildren
+  '/game/$gameId': typeof GameGameIdRoute
+  '/waiting-room/$waitingRoomId': typeof WaitingRoomWaitingRoomIdRoute
 }
 
 export interface FileRoutesByTo {
-  "/": typeof IndexRoute;
-  "/game": typeof GameRouteWithChildren;
-  "/game/$gameId": typeof GameGameIdRoute;
-  "/waiting-room/$waitingRoomId": typeof WaitingRoomWaitingRoomIdRoute;
+  '/': typeof IndexRoute
+  '/game': typeof GameRouteWithChildren
+  '/game/$gameId': typeof GameGameIdRoute
+  '/waiting-room/$waitingRoomId': typeof WaitingRoomWaitingRoomIdRoute
 }
 
 export interface FileRoutesById {
-  __root__: typeof rootRoute;
-  "/": typeof IndexRoute;
-  "/game": typeof GameRouteWithChildren;
-  "/game/$gameId": typeof GameGameIdRoute;
-  "/waiting-room/$waitingRoomId": typeof WaitingRoomWaitingRoomIdRoute;
+  __root__: typeof rootRoute
+  '/': typeof IndexRoute
+  '/game': typeof GameRouteWithChildren
+  '/game/$gameId': typeof GameGameIdRoute
+  '/waiting-room/$waitingRoomId': typeof WaitingRoomWaitingRoomIdRoute
 }
 
 export interface FileRouteTypes {
-  fileRoutesByFullPath: FileRoutesByFullPath;
-  fullPaths: "/" | "/game" | "/game/$gameId" | "/waiting-room/$waitingRoomId";
-  fileRoutesByTo: FileRoutesByTo;
-  to: "/" | "/game" | "/game/$gameId" | "/waiting-room/$waitingRoomId";
+  fileRoutesByFullPath: FileRoutesByFullPath
+  fullPaths: '/' | '/game' | '/game/$gameId' | '/waiting-room/$waitingRoomId'
+  fileRoutesByTo: FileRoutesByTo
+  to: '/' | '/game' | '/game/$gameId' | '/waiting-room/$waitingRoomId'
   id:
-    | "__root__"
-    | "/"
-    | "/game"
-    | "/game/$gameId"
-    | "/waiting-room/$waitingRoomId";
-  fileRoutesById: FileRoutesById;
+    | '__root__'
+    | '/'
+    | '/game'
+    | '/game/$gameId'
+    | '/waiting-room/$waitingRoomId'
+  fileRoutesById: FileRoutesById
 }
 
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute;
-  GameRoute: typeof GameRouteWithChildren;
-  WaitingRoomWaitingRoomIdRoute: typeof WaitingRoomWaitingRoomIdRoute;
+  IndexRoute: typeof IndexRoute
+  GameRoute: typeof GameRouteWithChildren
+  WaitingRoomWaitingRoomIdRoute: typeof WaitingRoomWaitingRoomIdRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   GameRoute: GameRouteWithChildren,
   WaitingRoomWaitingRoomIdRoute: WaitingRoomWaitingRoomIdRoute,
-};
+}
 
 export const routeTree = rootRoute
   ._addFileChildren(rootRouteChildren)
-  ._addFileTypes<FileRouteTypes>();
+  ._addFileTypes<FileRouteTypes>()
 
 /* ROUTE_MANIFEST_START
 {
