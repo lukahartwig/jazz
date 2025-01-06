@@ -130,10 +130,27 @@ type ToJazzParams<
 > = {
   fetch: (id: ExtID, token: string) => Promise<ExtValue>;
 
-  createFromExt: (id: ExtID, response: ExtValue, owner: Group) => Promise<void>;
+  createFromExt: (
+    id: ExtID,
+    response: ExtValue,
+    owner: Group,
+    getOrCreateExtDep: <C extends CoValue>(
+      coValueClass: CoValueClass<C>,
+      id: ExtID,
+      prefetchedExt?: any,
+    ) => Promise<C>,
+  ) => Promise<void>;
 
-  updateFromExt: (id: ExtID, response: ExtValue, coValue: C) => Promise<void>;
-  relations?: (keyof C)[];
+  updateFromExt: (
+    id: ExtID,
+    response: ExtValue,
+    coValue: C,
+    updateOrCreateExtDep: <C extends CoValue>(
+      coValueClass: CoValueClass<C>,
+      id: ExtID,
+      prefetchedExt?: any,
+    ) => Promise<C>,
+  ) => Promise<void>;
 };
 
 type ToExtParams<

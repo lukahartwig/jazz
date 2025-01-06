@@ -1,10 +1,3 @@
-# `jazz-nodejs`
+# `jazz-bridge`
 
-Node.JS bindings for Jazz (see [jazz.tools](https://jazz.tools)), a framework for distributed state.
-
-Lets you write server-side workers that interact with Jazz state.
-
-Compatible runtimes:
-
-- NodeJS
-- Bun
+A general framework for syncing between Jazz state and other systems, such as databases, external APIs, the filesystem, etc.
