@@ -1,11 +1,39 @@
 import { cn } from "@/lib/utils";
+import { clsx } from "clsx";
 import { Icon } from "gcmp-design-system/src/app/components/atoms/Icon";
 import { HeroHeader } from "gcmp-design-system/src/app/components/molecules/HeroHeader";
 import { HeartIcon } from "lucide-react";
+import { Fragment } from "react";
 
 export const metadata = {
   title: "Status",
   description: "Great apps by smart people.",
+};
+
+const locations = [
+  {
+    name: "Edinburgh",
+    people: [
+      {
+        name: "Lindsay Walton",
+        title: "Front-end Developer",
+        email: "lindsay.walton@example.com",
+        role: "Member",
+      },
+      {
+        name: "Courtney Henry",
+        title: "Designer",
+        email: "courtney.henry@example.com",
+        role: "Admin",
+      },
+    ],
+  },
+  // More people...
+];
+
+const statuses = {
+  up: "text-green-400 bg-green-400/10",
+  down: "text-rose-400 bg-rose-400/10",
 };
 
 export default async function Page() {
@@ -43,50 +71,54 @@ export default async function Page() {
         slogan="Great system status spage by smart people."
       />
 
-      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-12">
-        {responseData.results.A.frames.map((frame) => (
-          <div key={frame.schema.fields[1].labels.probe} className="">
-            <h2 className="mt-2 flex items-center gap-2 text-xl text-stone-900 dark:text-white">
-              {startCase(frame.schema.fields[1].labels.probe)}
-            </h2>
-            <div className="mt-3 flex gap-4 items-center">
-              <Icon
-                name="heart"
-                size="4xl"
-                className={
-                  frame.data.values[1][0] === 1
-                    ? "text-green-500"
-                    : "text-red-500"
-                }
-              />
-              <div>
-                <p className="flex items-baseline text-stone-900 dark:text-stone-200">
-                  <div className="bg-blue-400 self-center size-2 rounded-full mr-1.5" />
-                  127
-                  <span className="self-baseline text-xs text-stone-500">
-                    ms
-                  </span>
-                </p>
-                <p className="mt-0.5 text-xs">Avg latency</p>
-              </div>
-              <div>
-                <p className="flex items-baseline text-stone-900 dark:text-stone-200">
-                  <div className="bg-red-500 self-center size-2 rounded-full mr-1.5" />
-                  337
-                  <span className="self-baseline text-xs text-stone-500">
-                    ms
-                  </span>
-                </p>
-                <p className="mt-0.5 text-xs">99th percentile</p>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
-        {/* <pre>{JSON.stringify(responseData, null, 2)}</pre> */}
-      </div>
+      <table className="min-w-full">
+        <thead className="text-left text-sm font-semibold text-stone-900 dark:text-white">
+          <tr>
+            <th scope="col" className="py-3.5 pl-4 pr-3 sm:pl-3 w-3/5">
+              Latency
+            </th>
+            <th scope="col" className="px-3 py-3.5">
+              Average
+            </th>
+            <th scope="col" className="px-3 py-3.5">
+              99th %
+            </th>
+            <th scope="col" className="px-3 py-3.5">
+              Status
+            </th>
+            <th>
+              <span className="sr-only">Location</span>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {responseData.results.A.frames.map((frame) => (
+            <tr key={frame.schema.fields[1].labels.probe} className="border-t">
+              <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-stone-900 sm:pl-3"></td>
+              <td className="whitespace-nowrap px-3 py-4 text-sm">100ms</td>
+              <td className="whitespace-nowrap px-3 py-4 text-sm">200ms</td>
+              <td className="whitespace-nowrap px-3 py-4 text-sm">
+                <div className="flex items-center gap-2">
+                  <div
+                    className={clsx(
+                      "flex-none rounded-full p-1",
+                      frame.data.values[1][0] === 1
+                        ? "text-green-400 bg-green-400/10"
+                        : "text-rose-400 bg-rose-400/10",
+                    )}
+                  >
+                    <div className="size-1.5 rounded-full bg-current" />
+                  </div>
+                  {frame.data.values[1][0] === 1 ? "Up" : "Down"}
+                </div>
+              </td>
+              <td className="whitespace-nowrap px-3 py-4 text-sm">
+                {startCase(frame.schema.fields[1].labels.probe)}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }
