@@ -1,10 +1,6 @@
-import { CodeGroup } from "@/components/forMdx";
-import { cn } from "@/lib/utils";
+import { LatencyChart } from "@/components/LatencyChart";
 import { clsx } from "clsx";
-import { Icon } from "gcmp-design-system/src/app/components/atoms/Icon";
 import { HeroHeader } from "gcmp-design-system/src/app/components/molecules/HeroHeader";
-import { HeartIcon } from "lucide-react";
-import { Fragment } from "react";
 
 export const metadata = {
   title: "Status",
@@ -81,8 +77,6 @@ export default async function Page() {
         slogan="Great system status spage by smart people."
       />
 
-      {/*<CodeGroup>{JSON.stringify(responseData, null, 2)}</CodeGroup>*/}
-
       <table className="min-w-full">
         <thead className="text-left text-sm font-semibold text-stone-900 dark:text-white">
           <tr>
@@ -105,9 +99,9 @@ export default async function Page() {
         </thead>
         <tbody>
           {Object.values(byProbe).map((row) => (
-            <tr key={row.probe} className="border-t">
+            <tr key={row.label} className="border-t">
               <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-stone-900 sm:pl-3">
-                {row.probe}
+                <LatencyChart data={row} />
               </td>
               <td className="whitespace-nowrap px-3 py-4 text-sm">100ms</td>
               <td className="whitespace-nowrap px-3 py-4 text-sm">100ms</td>
