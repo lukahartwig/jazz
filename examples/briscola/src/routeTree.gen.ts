@@ -11,12 +11,19 @@
 // Import Routes
 
 import { Route as rootRoute } from './routes/__root'
+import { Route as HowToPlayImport } from './routes/how-to-play'
 import { Route as GameImport } from './routes/game'
 import { Route as IndexImport } from './routes/index'
 import { Route as WaitingRoomWaitingRoomIdImport } from './routes/waiting-room.$waitingRoomId'
 import { Route as GameGameIdImport } from './routes/game/$gameId'
 
 // Create/Update Routes
+
+const HowToPlayRoute = HowToPlayImport.update({
+  id: '/how-to-play',
+  path: '/how-to-play',
+  getParentRoute: () => rootRoute,
+} as any)
 
 const GameRoute = GameImport.update({
   id: '/game',
@@ -60,6 +67,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GameImport
       parentRoute: typeof rootRoute
     }
+    '/how-to-play': {
+      id: '/how-to-play'
+      path: '/how-to-play'
+      fullPath: '/how-to-play'
+      preLoaderRoute: typeof HowToPlayImport
+      parentRoute: typeof rootRoute
+    }
     '/game/$gameId': {
       id: '/game/$gameId'
       path: '/$gameId'
@@ -92,6 +106,7 @@ const GameRouteWithChildren = GameRoute._addFileChildren(GameRouteChildren)
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/game': typeof GameRouteWithChildren
+  '/how-to-play': typeof HowToPlayRoute
   '/game/$gameId': typeof GameGameIdRoute
   '/waiting-room/$waitingRoomId': typeof WaitingRoomWaitingRoomIdRoute
 }
@@ -99,6 +114,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/game': typeof GameRouteWithChildren
+  '/how-to-play': typeof HowToPlayRoute
   '/game/$gameId': typeof GameGameIdRoute
   '/waiting-room/$waitingRoomId': typeof WaitingRoomWaitingRoomIdRoute
 }
@@ -107,19 +123,31 @@ export interface FileRoutesById {
   __root__: typeof rootRoute
   '/': typeof IndexRoute
   '/game': typeof GameRouteWithChildren
+  '/how-to-play': typeof HowToPlayRoute
   '/game/$gameId': typeof GameGameIdRoute
   '/waiting-room/$waitingRoomId': typeof WaitingRoomWaitingRoomIdRoute
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/game' | '/game/$gameId' | '/waiting-room/$waitingRoomId'
+  fullPaths:
+    | '/'
+    | '/game'
+    | '/how-to-play'
+    | '/game/$gameId'
+    | '/waiting-room/$waitingRoomId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/game' | '/game/$gameId' | '/waiting-room/$waitingRoomId'
+  to:
+    | '/'
+    | '/game'
+    | '/how-to-play'
+    | '/game/$gameId'
+    | '/waiting-room/$waitingRoomId'
   id:
     | '__root__'
     | '/'
     | '/game'
+    | '/how-to-play'
     | '/game/$gameId'
     | '/waiting-room/$waitingRoomId'
   fileRoutesById: FileRoutesById
@@ -128,12 +156,14 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   GameRoute: typeof GameRouteWithChildren
+  HowToPlayRoute: typeof HowToPlayRoute
   WaitingRoomWaitingRoomIdRoute: typeof WaitingRoomWaitingRoomIdRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   GameRoute: GameRouteWithChildren,
+  HowToPlayRoute: HowToPlayRoute,
   WaitingRoomWaitingRoomIdRoute: WaitingRoomWaitingRoomIdRoute,
 }
 
@@ -149,6 +179,7 @@ export const routeTree = rootRoute
       "children": [
         "/",
         "/game",
+        "/how-to-play",
         "/waiting-room/$waitingRoomId"
       ]
     },
@@ -160,6 +191,9 @@ export const routeTree = rootRoute
       "children": [
         "/game/$gameId"
       ]
+    },
+    "/how-to-play": {
+      "filePath": "how-to-play.tsx"
     },
     "/game/$gameId": {
       "filePath": "game/$gameId.tsx",

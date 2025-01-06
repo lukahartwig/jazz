@@ -8,6 +8,7 @@ import { AnimatePresence, LayoutGroup, Reorder, motion } from "motion/react";
 import type { FormEventHandler, ReactNode } from "react";
 
 import { PlayingCard } from "@/components/playing-card";
+import { WORKER_ID } from "@/constants";
 import { useCoState, useInboxSender } from "@/jazz";
 
 export const Route = createFileRoute("/game/$gameId")({
@@ -33,7 +34,7 @@ export const Route = createFileRoute("/game/$gameId")({
 
 function RouteComponent() {
   const { gameId } = Route.useParams();
-  const playCard = useInboxSender(import.meta.env.VITE_JAZZ_WORKER_ACCOUNT);
+  const playCard = useInboxSender(WORKER_ID);
 
   const game = useCoState(Game, gameId as ID<Game>, {
     // TODO: load intent only for current user

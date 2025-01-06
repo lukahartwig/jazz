@@ -5,6 +5,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { WORKER_ID } from "@/constants";
 import { JoinGameRequest, WaitingRoom } from "@/schema";
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { Group, type ID, InboxSender } from "jazz-tools";
@@ -33,7 +34,7 @@ export const Route = createFileRoute("/waiting-room/$waitingRoomId")({
 
     if (!waitingRoom?.account1?.isMe) {
       const sender = await InboxSender.load<JoinGameRequest, WaitingRoom>(
-        import.meta.env.VITE_JAZZ_WORKER_ACCOUNT,
+        WORKER_ID,
         me,
       );
       sender.sendMessage(

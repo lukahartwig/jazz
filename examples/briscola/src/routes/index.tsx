@@ -3,28 +3,26 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { WORKER_ID } from "@/constants";
 import { useAccount, useInboxSender } from "@/jazz";
 import { CreateGameRequest } from "@/schema";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Account, Group } from "jazz-tools";
-
-const workerId = import.meta.env.VITE_JAZZ_WORKER_ACCOUNT;
+import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
+import { Group } from "jazz-tools";
+import { ExternalLinkIcon } from "lucide-react";
+import { useState } from "react";
 
 export const Route = createFileRoute("/")({
   component: HomeComponent,
 });
 
 function HomeComponent() {
-  const createGame = useInboxSender(workerId);
+  const createGame = useInboxSender(WORKER_ID);
   const { me } = useAccount();
   const navigate = useNavigate({ from: "/" });
+  const [isLoading, setIsLoading] = useState(false);
 
   const onNewGameClick = async () => {
-    const workerAcccount = await Account.load(workerId, me, {});
-
-    if (!workerAcccount) {
-      return;
-    }
+    setIsLoading(true);
 
     const waitingRoomId = await createGame(
       CreateGameRequest.create(
@@ -36,6 +34,7 @@ function HomeComponent() {
     );
 
     if (!waitingRoomId) {
+      setIsLoading(false);
       return;
     }
 
@@ -51,7 +50,13 @@ function HomeComponent() {
         <CardContent className="p-0">
           <div className="flex items-center space-x-4">
             <div className="w-1/2 flex flex-col p-4">
-              <Button onClick={onNewGameClick}>New Game</Button>
+              <Button
+                onClick={onNewGameClick}
+                loading={isLoading}
+                loadingText="Creating game..."
+              >
+                New Game
+              </Button>
             </div>
             <Separator orientation="vertical" className="h-40" />
             <div className="w-1/2 flex flex-col space-y-4 p-4">
@@ -63,8 +68,20 @@ function HomeComponent() {
             </div>
           </div>
           <Separator />
-          <div className="p-4">
-            <Button variant="link">How to play?</Button>
+          <div className="p-4 flex items-center justify-between">
+            <Button variant="link" asChild>
+              <Link to="/how-to-play">How to play?</Link>
+            </Button>
+            <Button variant="link" asChild className="text-muted-foreground">
+              <Link
+                href="https://en.wikipedia.org/wiki/Briscola"
+                target="_blank"
+                rel="noreferrer"
+              >
+                Briscola on Wikipedia
+                <ExternalLinkIcon className="w-4 h-4 ml-1" />
+              </Link>
+            </Button>
           </div>
         </CardContent>
       </Card>
