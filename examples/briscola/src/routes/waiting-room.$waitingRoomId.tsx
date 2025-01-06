@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -5,10 +6,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { WORKER_ID } from "@/constants";
 import { JoinGameRequest, WaitingRoom } from "@/schema";
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { Group, type ID, InboxSender } from "jazz-tools";
+import { ClipboardCopyIcon, Loader2Icon } from "lucide-react";
 import { useEffect } from "react";
 
 export const Route = createFileRoute("/waiting-room/$waitingRoomId")({
@@ -65,18 +68,35 @@ function RouteComponent() {
     });
   }, [waitingRoom]);
 
+  const onCopyClick = () => {
+    navigator.clipboard.writeText(waitingRoomId);
+  };
+
   return (
     <div className="h-screen flex flex-col w-full place-items-center justify-center p-2">
       <Card className="w-[500px]">
         <CardHeader>
-          <CardTitle>Waiting for opponent to join the game</CardTitle>
+          <CardTitle className="flex items-center">
+            <Loader2Icon className="animate-spin inline h-8 w-8 mr-2" />
+            Waiting for opponent to join the game
+          </CardTitle>
           <CardDescription>
             Share this ID with your friend to join the game. The game will
             automatically start once they join.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <pre>{waitingRoomId}</pre>
+          <div className="flex">
+            <Input
+              className="w-full border bg-muted rounded-e-none"
+              readOnly
+              value={waitingRoomId}
+            />
+            <Button onClick={onCopyClick} className="rounded-s-none">
+              <ClipboardCopyIcon className="w-5 h-5" />
+              Copy
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </div>
