@@ -48,24 +48,15 @@ function HomeComponent() {
           <CardTitle>Welcome to Jazz Briscola</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
-          <div className="flex items-center space-x-4">
-            <div className="w-1/2 flex flex-col p-4">
-              <Button
-                onClick={onNewGameClick}
-                loading={isLoading}
-                loadingText="Creating game..."
-              >
-                New Game
-              </Button>
-            </div>
-            <Separator orientation="vertical" className="h-40" />
-            <div className="w-1/2 flex flex-col space-y-4 p-4">
-              <div className="flex flex-col space-y-2">
-                <Label htmlFor="picture">Game ID</Label>
-                <Input id="picture" placeholder="co_XXXXXXXXXXX" />
-              </div>
-              <Button>Join</Button>
-            </div>
+          <div className="flex items-center p-4">
+            <Button
+              onClick={onNewGameClick}
+              loading={isLoading}
+              loadingText="Creating game..."
+              className="w-full"
+            >
+              New Game
+            </Button>
           </div>
           <Separator />
           <div className="p-4 flex items-center justify-between">

@@ -52,7 +52,6 @@ export const Route = createFileRoute("/waiting-room/$waitingRoomId")({
 });
 
 function RouteComponent() {
-  const { waitingRoomId } = Route.useParams();
   const { waitingRoom } = Route.useLoaderData();
   const navigate = Route.useNavigate();
 
@@ -69,7 +68,7 @@ function RouteComponent() {
   }, [waitingRoom]);
 
   const onCopyClick = () => {
-    navigator.clipboard.writeText(waitingRoomId);
+    navigator.clipboard.writeText(window.location.toString());
   };
 
   return (
@@ -81,7 +80,7 @@ function RouteComponent() {
             Waiting for opponent to join the game
           </CardTitle>
           <CardDescription>
-            Share this ID with your friend to join the game. The game will
+            Share this link with your friend to join the game. The game will
             automatically start once they join.
           </CardDescription>
         </CardHeader>
@@ -90,7 +89,7 @@ function RouteComponent() {
             <Input
               className="w-full border bg-muted rounded-e-none"
               readOnly
-              value={waitingRoomId}
+              value={`${window.location}`}
             />
             <Button onClick={onCopyClick} className="rounded-s-none">
               <ClipboardCopyIcon className="w-5 h-5" />
