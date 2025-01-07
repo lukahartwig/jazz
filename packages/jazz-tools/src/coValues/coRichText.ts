@@ -1,5 +1,9 @@
-import type { Account, CoMapInit, Group, TextPos } from "../internal.js";
-import { CoList, CoMap, CoPlainText, co } from "../internal.js";
+import { co } from "../internal.js";
+import type { Account } from "./account.js";
+import { CoList } from "./coList.js";
+import { CoMap, type CoMapInit } from "./coMap.js";
+import { CoPlainText, type TextPos } from "./coPlainText.js";
+import type { Group } from "./group.js";
 
 /**
  * Base class for text annotations and formatting marks.
