@@ -1,8 +1,12 @@
 "use client";
 
 import { ApexOptions } from "apexcharts";
+import dynamic from "next/dynamic";
 import { useMemo } from "react";
-import Chart from "react-apexcharts";
+
+const ReactApexChart = dynamic(() => import("react-apexcharts"), {
+  ssr: false,
+});
 
 export function LatencyChart({ data }: { data: any }) {
   const series = useMemo(() => {
@@ -146,7 +150,7 @@ export function LatencyChart({ data }: { data: any }) {
   };
 
   return (
-    <Chart
+    <ReactApexChart
       options={options}
       series={[series]}
       type="heatmap"
