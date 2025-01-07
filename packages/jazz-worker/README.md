@@ -2,7 +2,7 @@
 
 A Jazz agent that runs in any runtime that natively supports WASM and WebSocket clients.
 
-Tested in:
+Tested on:
 - NodeJS (v22 or higher)
 - Bun
 - Deno
