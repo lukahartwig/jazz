@@ -15,13 +15,13 @@ import {
 } from "./coValues/account.js";
 import { OpID, RawCoList } from "./coValues/coList.js";
 import { RawCoMap } from "./coValues/coMap.js";
+import { RawCoPlainText, stringifyOpID } from "./coValues/coPlainText.js";
 import {
   CoStreamItem,
   RawBinaryCoStream,
   RawCoStream,
 } from "./coValues/coStream.js";
 import { EVERYONE, RawGroup } from "./coValues/group.js";
-import { RawCoPlainText, stringifyOpID } from "./coValues/coPlainText.js";
 import type { Everyone } from "./coValues/group.js";
 import {
   CryptoProvider,
