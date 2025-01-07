@@ -49,6 +49,9 @@ export default async function Page() {
 
   const responseData = await res.json();
 
+  if (!responseData.results?.A?.frames || !responseData.results?.B?.frames)
+    return;
+
   const byProbe: any[] = [];
 
   for (const frame of responseData.results.A.frames) {
