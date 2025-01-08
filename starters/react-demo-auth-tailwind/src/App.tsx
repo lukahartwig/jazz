@@ -1,6 +1,6 @@
+import { useAccount } from "jazz-react";
 import { Form } from "./Form.tsx";
 import { Logo } from "./Logo.tsx";
-import { useAccount } from "./main";
 
 function App() {
   const { me, logOut } = useAccount({ profile: {}, root: {} });
