@@ -26,7 +26,7 @@ export class RawCoPlainText<
   /** @category 6. Meta */
   type = "coplaintext" as const;
 
-  private _segmenter!: Intl.Segmenter;
+  private _segmenter: Intl.Segmenter;
 
   _cachedMapping: WeakMap<
     NonNullable<typeof this._cachedEntries>,
@@ -36,6 +36,11 @@ export class RawCoPlainText<
   constructor(core: CoValueCore) {
     super(core);
     this._cachedMapping = new WeakMap();
+    if (!Intl.Segmenter) {
+      throw new Error(
+        "Intl.Segmenter is not supported for this compilation target. Use a polyfill to get coPlainText support in Jazz. (eg. https://formatjs.github.io/docs/polyfills/intl-segmenter/)",
+      );
+    }
     this._segmenter = new Intl.Segmenter("en", {
       granularity: "grapheme",
     });

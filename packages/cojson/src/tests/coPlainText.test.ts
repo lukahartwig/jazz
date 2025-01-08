@@ -16,7 +16,7 @@ test("should throw on creation if Intl.Segmenter is not available", () => {
   const node = new LocalNode(...randomAnonymousAccountAndSessionID(), Crypto);
   const group = node.createGroup();
   expect(() => group.createPlainText()).toThrow(
-    "Intl.Segmenter is not a constructor",
+    "Intl.Segmenter is not supported for this compilation target. Use a polyfill to get coPlainText support in Jazz. (eg. https://formatjs.github.io/docs/polyfills/intl-segmenter/)",
   );
 });
 
