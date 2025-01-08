@@ -20,13 +20,15 @@ type PlaintextIdxMapping = {
   idxBeforeOpID: { [opID: StringifiedOpID]: number };
 };
 
-const segmenter = new Intl.Segmenter("en", { granularity: "grapheme" });
-
 export class RawCoPlainText<
   Meta extends JsonObject | null = JsonObject | null,
 > extends RawCoList<string, Meta> {
   /** @category 6. Meta */
   type = "coplaintext" as const;
+
+  private static _segmenter = new Intl.Segmenter("en", {
+    granularity: "grapheme",
+  });
 
   _cachedMapping: WeakMap<
     NonNullable<typeof this._cachedEntries>,
@@ -91,7 +93,7 @@ export class RawCoPlainText<
     }
     const nextTxId = this.core.nextTransactionID();
     let changeIdx = 0;
-    for (const grapheme of segmenter.segment(text)) {
+    for (const grapheme of RawCoPlainText._segmenter.segment(text)) {
       ops.push({
         op: "app",
         value: grapheme.segment,
