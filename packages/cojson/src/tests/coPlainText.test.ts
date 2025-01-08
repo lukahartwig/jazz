@@ -1,10 +1,24 @@
-import { expect, test } from "vitest";
+import { expect, test, vi, afterEach } from "vitest";
 import { expectPlainText } from "../coValue.js";
 import { WasmCrypto } from "../crypto/WasmCrypto.js";
 import { LocalNode } from "../localNode.js";
 import { randomAnonymousAccountAndSessionID } from "./testUtils.js";
 
 const Crypto = await WasmCrypto.create();
+
+afterEach(() => void vi.unstubAllGlobals());
+
+test("should throw on creation if Intl.Segmenter is not available", () => {
+  vi.stubGlobal("Intl", {
+    Segmenter: undefined,
+  });
+
+  const node = new LocalNode(...randomAnonymousAccountAndSessionID(), Crypto);
+  const group = node.createGroup();
+  expect(() => group.createPlainText()).toThrow(
+    "Intl.Segmenter is not a constructor",
+  );
+});
 
 test("Empty CoPlainText works", () => {
   const node = new LocalNode(...randomAnonymousAccountAndSessionID(), Crypto);

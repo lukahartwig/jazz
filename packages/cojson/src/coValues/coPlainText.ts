@@ -26,9 +26,7 @@ export class RawCoPlainText<
   /** @category 6. Meta */
   type = "coplaintext" as const;
 
-  private static _segmenter = new Intl.Segmenter("en", {
-    granularity: "grapheme",
-  });
+  private _segmenter!: Intl.Segmenter;
 
   _cachedMapping: WeakMap<
     NonNullable<typeof this._cachedEntries>,
@@ -38,6 +36,9 @@ export class RawCoPlainText<
   constructor(core: CoValueCore) {
     super(core);
     this._cachedMapping = new WeakMap();
+    this._segmenter = new Intl.Segmenter("en", {
+      granularity: "grapheme",
+    });
   }
 
   get mapping() {
@@ -93,7 +94,7 @@ export class RawCoPlainText<
     }
     const nextTxId = this.core.nextTransactionID();
     let changeIdx = 0;
-    for (const grapheme of RawCoPlainText._segmenter.segment(text)) {
+    for (const grapheme of this._segmenter.segment(text)) {
       ops.push({
         op: "app",
         value: grapheme.segment,
