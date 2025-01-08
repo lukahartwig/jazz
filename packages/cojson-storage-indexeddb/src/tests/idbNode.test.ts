@@ -23,7 +23,7 @@ test("Should be able to initialize and load from empty DB", async () => {
 
   await new Promise((resolve) => setTimeout(resolve, 200));
 
-  expect(node.peers.get("indexedDB")).toBeDefined();
+  expect(LocalNode.peers.get("indexedDB")).toBeDefined();
 });
 
 test("Should be able to sync data to database and then load that from a new node", async () => {

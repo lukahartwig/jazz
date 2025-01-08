@@ -24,6 +24,7 @@ import {
   RawGroup,
   secretSeedFromInviteSecret,
 } from "./coValues/group.js";
+import { config } from "./config.js";
 import { AgentSecret, CryptoProvider } from "./crypto/crypto.js";
 import { AgentID, RawCoID, SessionID, isAgentID } from "./ids.js";
 import { Peer, PeerEntry, Peers } from "./peer/index.js";
@@ -87,7 +88,9 @@ export class LocalNode {
         return;
       }
       try {
-        console.log("🔵 ===>>> Received from", peer.id, msg);
+        if (config.TRACE_SYNC_MESSAGES) {
+          console.log("🔵 ===>>> Received from", peer.id, msg);
+        }
         this.syncManager.handleSyncMessage(
           transformIncomingMessageFromPeer(msg, peer.id),
           peer,

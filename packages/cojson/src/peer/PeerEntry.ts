@@ -3,6 +3,7 @@ import {
   QueueEntry,
 } from "../PriorityBasedMessageQueue.js";
 import { TryAddTransactionsError } from "../coValueCore.js";
+import { config } from "../config.js";
 import { RawCoID } from "../ids.js";
 import { IncomingSyncStream, OutgoingSyncQueue } from "../localNode.js";
 import { CO_VALUE_PRIORITY } from "../priority.js";
@@ -96,9 +97,11 @@ export class PeerEntry {
     }
 
     const transformedMessages = transformOutgoingMessageToPeer(msg, this.id);
-    transformedMessages.map((msg) => {
-      console.log("🟢 <<<=== Sending to peer", this.id, msg);
-    });
+    if (config.TRACE_SYNC_MESSAGES) {
+      transformedMessages.map((msg) => {
+        console.log("🟢 <<<=== Sending to peer", this.id, msg);
+      });
+    }
 
     try {
       return await Promise.all(

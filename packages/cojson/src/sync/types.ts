@@ -3,7 +3,6 @@ import { CoValueEntry } from "../coValueEntry.js";
 import { RawCoID, SessionID } from "../ids.js";
 import { PeerEntry } from "../peer/PeerEntry.js";
 import { CoValuePriority } from "../priority.js";
-import { ParallelQueueRunner } from "../utils/parallelQueueRunner.js";
 
 export type CoValueKnownState = {
   id: RawCoID;

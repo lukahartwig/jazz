@@ -2,7 +2,6 @@ import { CoValuesStore } from "../CoValuesStore.js";
 import { CoValueEntry } from "../coValueEntry.js";
 import { LocalNode } from "../exports.js";
 import { PeerEntry, PeerID } from "../peer/index.js";
-import { SyncManager } from "../sync.js";
 import { CoValueKnownState, emptyKnownState } from "./types.js";
 
 export class SyncService {

@@ -5,7 +5,7 @@ export class ParallelQueueRunner {
   private queueIds: Map<RawCoID, { queue: DeferredFn[]; locked: boolean }> =
     new Map();
 
-  pushFor(queueId: RawCoID, fn: () => Promise<unknown>) {
+  defferPer(queueId: RawCoID, fn: () => Promise<unknown>) {
     const item = this.queueIds.get(queueId);
     if (item) {
       item.queue.push(fn);
