@@ -18,6 +18,10 @@ import {
 import { RawAccountID } from "cojson";
 
 export { RNDemoAuth } from "./auth/DemoAuthMethod.js";
+export { RNPasskeyAuth } from "./auth/RNPasskeyAuth.js";
+export { PasskeyWebView } from "./auth/PasskeyWebView.js";
+export { PasskeyAuthBasicUI } from "./auth/PasskeyAuthBasicUI.js";
+export { useRNPasskeyAuth } from "./auth/useRNPasskeyAuth.js";
 
 import { PureJSCrypto } from "cojson/native";
 import { createWebSocketPeerWithReconnection } from "./createWebSocketPeerWithReconnection.js";
