@@ -7,7 +7,7 @@ export abstract class AbstractMessageHandler
   private readonly queuesRunner = new ParallelQueueRunner();
 
   handle({ msg, peer, entry }: MessageHandlerInput) {
-    this.queuesRunner.pushFor(msg.id, () =>
+    this.queuesRunner.defferPer(msg.id, () =>
       this.routeMessage({ msg, peer, entry }),
     );
   }

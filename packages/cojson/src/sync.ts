@@ -2,7 +2,7 @@ import { CoValueCore } from "./coValueCore.js";
 import { CoValueEntry } from "./coValueEntry.js";
 import { RawCoID } from "./ids.js";
 import { LocalNode } from "./localNode.js";
-import { PeerEntry, PeerID, Peers } from "./peer/index.js";
+import { PeerEntry, PeerID } from "./peer/index.js";
 import { DependencyService } from "./sync/DependencyService.js";
 import {
   AckResponseHandler,
@@ -31,11 +31,11 @@ export class SyncManager {
 
   private readonly loadService: LoadService;
   private readonly syncService: SyncService;
+  private readonly dependencyService: DependencyService;
   private readonly pullRequestHandler: PullRequestHandler;
   private readonly pushRequestHandler: PushRequestHandler;
   private readonly ackResponseHandler: AckResponseHandler;
   private readonly dataResponseHandler: DataResponseHandler;
-  private readonly dependencyService: DependencyService;
 
   constructor(local: LocalNode) {
     this.local = local;

@@ -156,11 +156,6 @@ export class SyncManager {
       newDataMessages,
     });
 
-    // const knownMessage: KnownStateMessage = {
-    //   action: "known",
-    //   ...newCoValueKnownState,
-    // };
-    // asDependencyOf && (knownMessage.asDependencyOf = asDependencyOf);
     messageMap[newCoValueKnownState.id] = {
       dataMessages: newDataMessages,
     };
@@ -199,12 +194,12 @@ export class SyncManager {
       });
     }
 
-    const { needMissingTransactions, ourKnown } = await this.addTransactions(
+    const { isMissingTransactions, ourKnown } = await this.addTransactions(
       coValueRow,
       msg,
     );
 
-    if (needMissingTransactions) {
+    if (isMissingTransactions) {
       return this.sendStateMessage({
         action: "pull",
         ...ourKnown,
@@ -230,12 +225,12 @@ export class SyncManager {
       return;
     }
 
-    const { needMissingTransactions } = await this.addTransactions(
+    const { isMissingTransactions } = await this.addTransactions(
       coValueRow,
       msg,
     );
 
-    if (needMissingTransactions) {
+    if (isMissingTransactions) {
       console.error(
         'needMissingTransactions. We should never be here. "Data" action is a response to our specific request.',
       );
@@ -266,7 +261,7 @@ export class SyncManager {
       sessions: {},
     };
 
-    let needMissingTransactions = false;
+    let isMissingTransactions = false;
 
     await this.dbClient.unitOfWork(() =>
       (Object.keys(msg.new) as SessionID[]).map((sessionID) => {
@@ -276,13 +271,13 @@ export class SyncManager {
         }
 
         if ((sessionRow?.lastIdx || 0) < (msg.new[sessionID]?.after || 0)) {
-          needMissingTransactions = true;
+          isMissingTransactions = true;
         } else {
           return this.putNewTxs(msg, sessionID, sessionRow, storedCoValueRowID);
         }
       }),
     );
-    return { ourKnown, needMissingTransactions };
+    return { ourKnown, isMissingTransactions };
   }
 
   private async putNewTxs(

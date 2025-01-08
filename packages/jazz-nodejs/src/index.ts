@@ -1,4 +1,4 @@
-import { AgentSecret, Peer, WasmCrypto } from "cojson";
+import { AgentSecret, LocalNode, Peer, WasmCrypto } from "cojson";
 import { createWebSocketPeer } from "cojson-transport-ws";
 import {
   Account,
@@ -54,7 +54,7 @@ export async function startWorker<Acc extends Account>({
   });
 
   setInterval(async () => {
-    if (!worker._raw.core.node.peers.get("upstream")) {
+    if (!LocalNode.peers.get("upstream")) {
       console.log(new Date(), "Reconnecting to upstream " + peer);
 
       const wsPeer: Peer = createWebSocketPeer({

@@ -2,11 +2,12 @@
 // This is NOT needed to make the chat work
 
 import { Chat } from "@/schema.ts";
+import { LocalNode } from "cojson";
 import { Account, CoValue, ID } from "jazz-tools";
 
 export function waitForUpload(id: ID<CoValue>, me: Account) {
   const syncManager = me._raw.core.node.syncManager;
-  const peers = me._raw.core.node.peers.getAll();
+  const peers = LocalNode.peers.getAll();
 
   return Promise.all(
     peers.map((peer) => syncManager.waitForUploadIntoPeer(peer.id, id)),

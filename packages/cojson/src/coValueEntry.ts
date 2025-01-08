@@ -1,4 +1,5 @@
 import { CoValueCore } from "./coValueCore.js";
+import { HYBRID_MESSAGING_MODE } from "./globals.js";
 import { RawCoID } from "./ids.js";
 import { PeerEntry, PeerID } from "./peer/index.js";
 
@@ -132,11 +133,15 @@ class UploadState {
   setCompletedForPeer(peerId: PeerID) {
     const peerUploadState = this.peers.get(peerId);
     if (!peerUploadState) {
-      console.error(
-        "Trying to set complete for a coValue that is not uploaded to",
-        peerId,
-        this.coValueEntry.id,
-      );
+      if (!HYBRID_MESSAGING_MODE) {
+        // When two messaging protocol are stacked, this could produce some excessive "ack" messages
+        // out of peer's "known" messages which would lead to this error. Should be ignored in HYBRID_MESSAGING_MODE
+        console.error(
+          "Trying to set complete for a coValue that is not uploaded to",
+          peerId,
+          this.coValueEntry.id,
+        );
+      }
 
       return;
     }

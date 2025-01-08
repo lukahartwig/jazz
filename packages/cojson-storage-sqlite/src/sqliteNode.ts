@@ -22,9 +22,6 @@ class LocalNodeWrapper {
 
   push(msg: SyncMessage): Promise<unknown> {
     const transformedMessages = transformOutgoingMessageToPeer(msg);
-    transformedMessages.map((transformedMessage) => {
-      // console.log("🔴 <<<=== SQLite is sending", transformedMessage);
-    });
 
     return Promise.all(
       transformedMessages.map((transformedMessage) => {
@@ -39,7 +36,7 @@ class LocalNodeWrapper {
 }
 
 export class SQLiteNode {
-  // ugly public static var to be deleted after new protocol is in effect on all peers
+  // ugly public static var to be deleted after new protocol is in effect in the all peers
   public static USE_PROTOCOL2 = false;
 
   private readonly syncManager: SyncManager;
@@ -62,8 +59,6 @@ export class SQLiteNode {
           if (msg === "Disconnected" || msg === "PingTimeout") {
             throw new Error("Unexpected Disconnected message");
           }
-          // console.log("🟡 <<<=== SQLite is getting", msg);
-
           await this.syncManager.handleSyncMessage(
             transformIncomingMessageFromPeer(msg),
           );

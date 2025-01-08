@@ -16,7 +16,7 @@ import {
 } from "jazz-tools";
 
 import NetInfo from "@react-native-community/netinfo";
-import { RawAccountID } from "cojson";
+import { LocalNode, RawAccountID } from "cojson";
 import { createWebSocketPeer } from "cojson-transport-ws";
 import * as Linking from "expo-linking";
 import { PureJSCrypto } from "jazz-tools/native";
@@ -102,7 +102,9 @@ export async function createJazzRNContext<Acc extends Account>(
   async function websocketReconnectLoop() {
     while (shouldTryToReconnect) {
       if (
-        Object.keys(node.peers).some((peerId) => peerId.includes(options.peer))
+        Object.keys(LocalNode.peers).some((peerId) =>
+          peerId.includes(options.peer),
+        )
       ) {
         // TODO: this might drain battery, use listeners instead
         await new Promise((resolve) => setTimeout(resolve, 100));

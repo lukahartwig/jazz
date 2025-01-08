@@ -1,4 +1,4 @@
-// vitest.config.ts
+// vitest.globals.ts
 import { defineConfig } from "vitest/config";
 
 export default defineConfig({
