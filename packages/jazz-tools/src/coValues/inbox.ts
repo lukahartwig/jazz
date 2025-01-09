@@ -158,7 +158,7 @@ export class Inbox {
             const id = item.value;
 
             node
-              .load(id)
+              .load<InboxMessage<I, O>>(id)
               .then((message) => {
                 if (message === "unavailable") {
                   return Promise.reject(
@@ -245,16 +245,16 @@ export class Inbox {
 
     const node = account._raw.core.node;
 
-    const root = await node.load(profile.inbox as CoID<InboxRoot>);
+    const root = await node.load<InboxRoot>(profile.inbox);
 
     if (root === "unavailable") {
       throw new Error("Inbox not found");
     }
 
     const [messages, processed, failed] = await Promise.all([
-      node.load(root.get("messages")!),
-      node.load(root.get("processed")!),
-      node.load(root.get("failed")!),
+      node.load<MessagesStream>(root.get("messages")!),
+      node.load<TxKeyStream>(root.get("processed")!),
+      node.load<FailedMessagesStream>(root.get("failed")!),
     ]);
 
     if (
@@ -315,15 +315,15 @@ export class InboxSender<I extends CoValue, O extends CoValue | undefined> {
   >(inboxOwnerID: ID<Account>, currentAccount: Account) {
     const node = currentAccount._raw.core.node;
 
-    const inboxOwnerRaw = await node.load(
-      inboxOwnerID as unknown as CoID<RawAccount>,
-    );
+    const inboxOwnerRaw = await node.load<RawAccount>(inboxOwnerID);
 
     if (inboxOwnerRaw === "unavailable") {
       throw new Error("Failed to load the inbox owner");
     }
 
-    const inboxOwnerProfileRaw = await node.load(inboxOwnerRaw.get("profile")!);
+    const inboxOwnerProfileRaw = await node.load<RawCoMap>(
+      inboxOwnerRaw.get("profile")!,
+    );
 
     if (inboxOwnerProfileRaw === "unavailable") {
       throw new Error("Failed to load the inbox owner profile");
@@ -337,7 +337,7 @@ export class InboxSender<I extends CoValue, O extends CoValue | undefined> {
 
     const id = await acceptInvite(inboxInvite as InboxInvite, currentAccount);
 
-    const messages = await node.load(id);
+    const messages = await node.load<MessagesStream>(id);
 
     if (messages === "unavailable") {
       throw new Error("Inbox not found");

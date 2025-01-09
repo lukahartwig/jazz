@@ -35,7 +35,7 @@ import { accountOrAgentIDfromSessionID } from "./typeUtils/accountOrAgentIDfromS
 import { expectGroup } from "./typeUtils/expectGroup.js";
 import { isAccountID } from "./typeUtils/isAccountID.js";
 import CoValueContent = CojsonInternalTypes.CoValueContent;
-import { CoValueKnownState } from "./sync/types.js";
+import { CoValueKnownState } from "./sync/index.js";
 
 /**
     In order to not block other concurrently syncing CoValues we introduce a maximum size of transactions,
