@@ -1,5 +1,19 @@
 # cojson
 
+## 0.8.39
+
+### Patch Changes
+
+- 249eecb: Added new APIs to wait for CoValue sync
+- 3121551: Add connected peers gauge metric
+
+## 0.8.38
+
+### Patch Changes
+
+- b00ee91: Apply time travel when checking the roles on a parent group
+- f488c09: Add message queue size metrics
+
 ## 0.8.37
 
 ### Patch Changes

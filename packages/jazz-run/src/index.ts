@@ -60,14 +60,16 @@ const dbOption = Options.file("db")
   )
   .pipe(Options.withDefault("sync-db/storage.db"));
 
-export const startSyncServerCommand = Command.make(
+const startSyncServerCommand = Command.make(
   "sync",
   { port: portOption, inMemory: inMemoryOption, db: dbOption },
   ({ port, inMemory, db }) => {
     return Effect.gen(function* () {
       yield* Effect.promise(() => startSyncServer({ port, inMemory, db }));
 
-      Console.log(`COJSON sync server listening on ws://127.0.0.1:${port}`);
+      yield* Console.log(
+        `COJSON sync server listening on ws://127.0.0.1:${port}`,
+      );
 
       // Keep the server up
       yield* Effect.never;

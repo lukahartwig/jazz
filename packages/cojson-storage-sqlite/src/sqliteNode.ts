@@ -54,6 +54,8 @@ export class SQLiteNode {
     );
 
     const processMessages = async () => {
+      let lastTimer = performance.now();
+
       for await (const msg of fromLocalNode) {
         try {
           if (msg === "Disconnected" || msg === "PingTimeout") {
@@ -62,6 +64,15 @@ export class SQLiteNode {
           await this.syncManager.handleSyncMessage(
             transformIncomingMessageFromPeer(msg),
           );
+          // Since better-sqlite3 is synchronous there may be the case
+          // where a bulk of messages are processed using only microtasks
+          // which may block other peers from sending messages.
+
+          // To avoid this we schedule a timer to downgrade the priority of the storage peer work
+          if (performance.now() - lastTimer > 500) {
+            lastTimer = performance.now();
+            await new Promise((resolve) => setTimeout(resolve, 0));
+          }
         } catch (e) {
           console.error(
             new Error(

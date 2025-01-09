@@ -1,5 +1,30 @@
 # todo-vue
 
+## 0.0.21
+
+### Patch Changes
+
+- jazz-browser@0.8.40
+- jazz-vue@0.8.40
+
+## 0.0.20
+
+### Patch Changes
+
+- Updated dependencies [e386f2b]
+- Updated dependencies [249eecb]
+  - jazz-browser@0.8.39
+  - jazz-tools@0.8.39
+  - jazz-vue@0.8.39
+
+## 0.0.19
+
+### Patch Changes
+
+- jazz-browser@0.8.38
+- jazz-tools@0.8.38
+- jazz-vue@0.8.38
+
 ## 0.0.18
 
 ### Patch Changes

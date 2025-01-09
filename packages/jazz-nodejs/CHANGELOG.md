@@ -1,5 +1,26 @@
 # jazz-autosub
 
+## 0.8.39
+
+### Patch Changes
+
+- 96f844a: Wait for all coValues to be synced before resolving done and improve WebSocket reconnection
+- Updated dependencies [249eecb]
+- Updated dependencies [3121551]
+  - jazz-tools@0.8.39
+  - cojson@0.8.39
+  - cojson-transport-ws@0.8.39
+
+## 0.8.38
+
+### Patch Changes
+
+- Updated dependencies [b00ee91]
+- Updated dependencies [f488c09]
+  - cojson@0.8.38
+  - cojson-transport-ws@0.8.38
+  - jazz-tools@0.8.38
+
 ## 0.8.37
 
 ### Patch Changes

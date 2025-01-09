@@ -1,3 +1,4 @@
+import { ValueType, metrics } from "@opentelemetry/api";
 import { CoValueCore } from "./coValueCore.js";
 import { CoValueEntry } from "./coValueEntry.js";
 import { RawCoID } from "./ids.js";
@@ -29,6 +30,12 @@ export class SyncManager {
       | undefined;
   } = {};
 
+  peersCounter = metrics.getMeter("cojson").createUpDownCounter("jazz.peers", {
+    description: "Amount of connected peers",
+    valueType: ValueType.INT,
+    unit: "peer",
+  });
+
   private readonly loadService: LoadService;
   private readonly syncService: SyncService;
   private readonly dependencyService: DependencyService;
@@ -58,6 +65,98 @@ export class SyncManager {
       this.dependencyService,
     );
 
+    /**
+     * TODO add peersCounter.add into localNode.addPeer
+     *   addPeer(peer: Peer) {
+     *     const prevPeer = this.peers[peer.id];
+     *     const peerState = new PeerState(peer, prevPeer?.knownStates);
+     *     this.peers[peer.id] = peerState;
+     *
+     *     if (prevPeer && !prevPeer.closed) {
+     *       prevPeer.gracefulShutdown();
+     *     }
+     *
+     *     this.peersCounter.add(1, { role: peer.role });
+     *
+     *     const unsubscribeFromKnownStatesUpdates = peerState.knownStates.subscribe(
+     *       (id) => {
+     *         this.syncState.triggerUpdate(peer.id, id);
+     *       },
+     *     );
+     *
+     *     if (peerState.isServerOrStoragePeer()) {
+     *       const initialSync = async () => {
+     *         for (const entry of this.local.coValuesStore.getValues()) {
+     *           await this.subscribeToIncludingDependencies(entry.id, peerState);
+     *
+     *           if (entry.state.type === "available") {
+     *             await this.sendNewContentIncludingDependencies(entry.id, peerState);
+     *           }
+     *
+     *           if (!peerState.optimisticKnownStates.has(entry.id)) {
+     *             peerState.optimisticKnownStates.dispatch({
+     *               type: "SET_AS_EMPTY",
+     *               id: entry.id,
+     *             });
+     *           }
+     *         }
+     *       };
+     *       void initialSync();
+     *     }
+     *
+     *     const processMessages = async () => {
+     *       for await (const msg of peerState.incoming) {
+     *         if (msg === "Disconnected") {
+     *           return;
+     *         }
+     *         if (msg === "PingTimeout") {
+     *           console.error("Ping timeout from peer", peer.id);
+     *           return;
+     *         }
+     *         try {
+     *           await this.handleSyncMessage(msg, peerState);
+     *         } catch (e) {
+     *           throw new Error(
+     *             `Error reading from peer ${
+     *               peer.id
+     *             }, handling msg\n\n${JSON.stringify(msg, (k, v) =>
+     *               k === "changes" || k === "encryptedChanges"
+     *                 ? v.slice(0, 20) + "..."
+     *                 : v,
+     *             )}`,
+     *             { cause: e },
+     *           );
+     *         }
+     *       }
+     *     };
+     *
+     *     processMessages()
+     *       .then(() => {
+     *         if (peer.crashOnClose) {
+     *           console.error("Unexepcted close from peer", peer.id);
+     *           this.local.crashed = new Error("Unexpected close from peer");
+     *           throw new Error("Unexpected close from peer");
+     *         }
+     *       })
+     *       .catch((e) => {
+     *         console.error("Error processing messages from peer", peer.id, e);
+     *         if (peer.crashOnClose) {
+     *           this.local.crashed = e;
+     *           throw new Error(e);
+     *         }
+     *       })
+     *       .finally(() => {
+     *         const state = this.peers[peer.id];
+     *         state?.gracefulShutdown();
+     *         unsubscribeFromKnownStatesUpdates();
+     *         this.peersCounter.add(-1, { role: peer.role });
+     *
+     *         if (peer.deletePeerStateOnClose) {
+     *           delete this.peers[peer.id];
+     *         }
+     *       });
+     *   }
+     */
     this.ackResponseHandler = new AckResponseHandler(
       // onPushContentAcknowledged callback
       ({ entry, peerId }: { entry: CoValueEntry; peerId: PeerID }) => {

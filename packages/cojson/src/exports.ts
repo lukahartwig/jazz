@@ -1,5 +1,4 @@
 import { base64URLtoBytes, bytesToBase64url } from "./base64url.js";
-import type { AnyRawCoValue, CoID } from "./coValue.js";
 import { type RawCoValue } from "./coValue.js";
 import {
   CoValueCore,
@@ -7,11 +6,6 @@ import {
   MAX_RECOMMENDED_TX_SIZE,
   idforHeader,
 } from "./coValueCore.js";
-import type {
-  AccountMeta,
-  RawAccountID,
-  RawAccountMigration,
-} from "./coValues/account.js";
 import {
   ControlledAgent,
   RawAccount,
@@ -21,10 +15,6 @@ import {
 } from "./coValues/account.js";
 import { RawCoList } from "./coValues/coList.js";
 import { RawCoMap } from "./coValues/coMap.js";
-import type {
-  BinaryCoStreamMeta,
-  BinaryStreamInfo,
-} from "./coValues/coStream.js";
 import { RawBinaryCoStream, RawCoStream } from "./coValues/coStream.js";
 import type { Everyone, InviteSecret } from "./coValues/group.js";
 import { EVERYONE, RawGroup } from "./coValues/group.js";
@@ -35,7 +25,7 @@ import {
   secretSeedLength,
   shortHashLength,
 } from "./crypto/crypto.js";
-import type { AgentID, SessionID } from "./ids.js";
+import type { AgentID, RawCoID, SessionID } from "./ids.js";
 import {
   getGroupDependentKey,
   getGroupDependentKeyList,
@@ -64,6 +54,17 @@ import { emptyKnownState } from "./sync/index.js";
 import { accountOrAgentIDfromSessionID } from "./typeUtils/accountOrAgentIDfromSessionID.js";
 import { expectGroup } from "./typeUtils/expectGroup.js";
 import { isAccountID } from "./typeUtils/isAccountID.js";
+
+import type { AnyRawCoValue, CoID } from "./coValue.js";
+import type {
+  AccountMeta,
+  RawAccountID,
+  RawAccountMigration,
+} from "./coValues/account.js";
+import type {
+  BinaryCoStreamMeta,
+  BinaryStreamInfo,
+} from "./coValues/coStream.js";
 
 type Value = JsonValue | AnyRawCoValue;
 
@@ -100,6 +101,7 @@ export {
   RawCoStream,
   RawBinaryCoStream,
   RawCoValue,
+  RawCoID,
   CoID,
   AnyRawCoValue,
   RawAccount,

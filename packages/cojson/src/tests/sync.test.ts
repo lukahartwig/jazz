@@ -1,9 +1,9 @@
-import { describe, expect, test, vi } from "vitest";
+import { afterEach, describe, expect, test, vi } from "vitest";
 import { expectMap } from "../coValue.js";
-import { CoValueHeader } from "../coValueCore.js";
-import { RawAccountID } from "../coValues/account.js";
-import { MapOpPayload, RawCoMap } from "../coValues/coMap.js";
-import { RawGroup } from "../coValues/group.js";
+import type { CoValueHeader } from "../coValueCore.js";
+import type { RawAccountID } from "../coValues/account.js";
+import { type MapOpPayload, RawCoMap } from "../coValues/coMap.js";
+import type { RawGroup } from "../coValues/group.js";
 import { WasmCrypto } from "../crypto/WasmCrypto.js";
 import { stableStringify } from "../jsonStringify.js";
 import { LocalNode } from "../localNode.js";
@@ -11,8 +11,11 @@ import { getPriorityFromHeader } from "../priority.js";
 import { connectedPeers, newQueuePair } from "../streamUtils.js";
 import { SyncMessage } from "../sync/types.js";
 import {
+  blockMessageTypeOnOutgoingPeer,
+  createTestMetricReader,
   createTestNode,
   randomAnonymousAccountAndSessionID,
+  tearDownTestMetricReader,
   waitFor,
 } from "./testUtils.js";
 
@@ -1654,12 +1657,7 @@ describe("SyncManager - knownStates vs optimisticKnownStates", () => {
     await client.syncManager.actuallySyncCoValue(mapOnClient.core);
 
     // Wait for the full sync to complete
-    await waitFor(() => {
-      return client.syncManager.syncStateSubscriptionManager.getIsCoValueFullyUploadedIntoPeer(
-        "jazzCloudConnection",
-        mapOnClient.core.id,
-      );
-    });
+    await mapOnClient.core.waitForSync();
 
     const peerStateClient = client.syncManager.peers["jazzCloudConnection"]!;
     const peerStateJazzCloud =
@@ -1687,31 +1685,17 @@ describe("SyncManager - knownStates vs optimisticKnownStates", () => {
     map.set("key1", "value1", "trusting");
 
     await client.syncManager.actuallySyncCoValue(map.core);
-    await waitFor(() => {
-      return client.syncManager.syncStateSubscriptionManager.getIsCoValueFullyUploadedIntoPeer(
-        "jazzCloudConnection",
-        map.core.id,
-      );
-    });
+    await map.core.waitForSync();
 
     // Block the content messages
     // The main difference between optimisticKnownStates and knownStates is that
     // optimisticKnownStates is updated when the content messages are sent,
     // while knownStates is only updated when we receive the "known" messages
     // that are acknowledging the receipt of the content messages
-    const push = jazzCloudConnectionAsPeer.outgoing.push;
-    const pushSpy = vi.spyOn(jazzCloudConnectionAsPeer.outgoing, "push");
-
-    const blockedMessages: SyncMessage[] = [];
-
-    pushSpy.mockImplementation(async (msg) => {
-      if (msg.action === "content") {
-        blockedMessages.push(msg);
-        return Promise.resolve();
-      }
-
-      return push.call(jazzCloudConnectionAsPeer.outgoing, msg);
-    });
+    const outgoing = blockMessageTypeOnOutgoingPeer(
+      jazzCloudConnectionAsPeer,
+      "content",
+    );
 
     map.set("key2", "value2", "trusting");
 
@@ -1726,18 +1710,10 @@ describe("SyncManager - knownStates vs optimisticKnownStates", () => {
     // Restore the implementation of push and send the blocked messages
     // After this the full sync can be completed and the other node will
     // respond with a "known" message acknowledging the receipt of the content messages
-    pushSpy.mockRestore();
+    outgoing.unblock();
+    await outgoing.sendBlockedMessages();
 
-    for (const msg of blockedMessages) {
-      await jazzCloudConnectionAsPeer.outgoing.push(msg);
-    }
-
-    await waitFor(() => {
-      return client.syncManager.syncStateSubscriptionManager.getIsCoValueFullyUploadedIntoPeer(
-        "jazzCloudConnection",
-        map.core.id,
-      );
-    });
+    await map.core.waitForSync();
 
     expect(peerState.optimisticKnownStates.get(map.core.id)).toEqual(
       peerState.knownStates.get(map.core.id),
@@ -1757,12 +1733,7 @@ describe("SyncManager.addPeer", () => {
     await client.syncManager.actuallySyncCoValue(map.core);
 
     // Wait for initial sync
-    await waitFor(() => {
-      return client.syncManager.syncStateSubscriptionManager.getIsCoValueFullyUploadedIntoPeer(
-        "jazzCloudConnection",
-        map.core.id,
-      );
-    });
+    await map.core.waitForSync();
 
     // Store the initial known states
     const initialKnownStates =
@@ -1802,12 +1773,7 @@ describe("SyncManager.addPeer", () => {
     await client.syncManager.actuallySyncCoValue(map.core);
 
     // Wait for initial sync
-    await waitFor(() => {
-      return client.syncManager.syncStateSubscriptionManager.getIsCoValueFullyUploadedIntoPeer(
-        "jazzCloudConnection",
-        map.core.id,
-      );
-    });
+    await map.core.waitForSync();
 
     // Connect second peer with different ID
     const [brandNewPeer] = connectedPeers("brandNewPeer", "unusedPeer", {
@@ -1894,10 +1860,7 @@ describe("SyncManager.addPeer", () => {
 
     client.syncManager.addPeer(jazzCloudConnectionAsPeer);
 
-    await client.syncManager.waitForUploadIntoPeer(
-      jazzCloudConnectionAsPeer.id,
-      map.core.id,
-    );
+    await map.core.waitForSync();
 
     expect(jazzCloud.coValuesStore.get(map.id).state.type).toBe("available");
   });
@@ -1960,7 +1923,7 @@ describe("loadCoValueCore with retry", () => {
   });
 });
 
-describe("waitForUploadIntoPeer", () => {
+describe("waitForSyncWithPeer", () => {
   test("should resolve when the coValue is fully uploaded into the peer", async () => {
     const { client, jazzCloudConnectionAsPeer: peer } =
       createTwoConnectedNodes();
@@ -1973,12 +1936,7 @@ describe("waitForUploadIntoPeer", () => {
     await client.syncManager.actuallySyncCoValue(map.core);
 
     await expect(
-      Promise.race([
-        client.syncManager.waitForUploadIntoPeer(peer.id, map.core.id),
-        new Promise((_, reject) =>
-          setTimeout(() => reject(new Error("Timeout")), 100),
-        ),
-      ]),
+      client.syncManager.waitForSyncWithPeer(peer.id, map.core.id, 100),
     ).resolves.toBe(true);
   });
 
@@ -1998,13 +1956,96 @@ describe("waitForUploadIntoPeer", () => {
     await client.syncManager.actuallySyncCoValue(map.core);
 
     await expect(
-      Promise.race([
-        client.syncManager.waitForUploadIntoPeer(peer.id, map.core.id),
-        new Promise((_, reject) =>
-          setTimeout(() => reject(new Error("Timeout")), 100),
-        ),
-      ]),
+      client.syncManager.waitForSyncWithPeer(peer.id, map.core.id, 100),
     ).rejects.toThrow("Timeout");
+  });
+});
+
+describe("metrics", () => {
+  afterEach(() => {
+    tearDownTestMetricReader();
+  });
+
+  test("should correctly track the number of connected peers", async () => {
+    const metricReader = createTestMetricReader();
+    const [admin, session] = randomAnonymousAccountAndSessionID();
+    const node = new LocalNode(admin, session, Crypto);
+
+    let connectedPeers = await metricReader.getMetricValue("jazz.peers", {
+      role: "peer",
+    });
+    expect(connectedPeers).toBeUndefined();
+    let connectedServerPeers = await metricReader.getMetricValue("jazz.peers", {
+      role: "server",
+    });
+    expect(connectedServerPeers).toBeUndefined();
+
+    // Add a first peer
+    const [inPeer1, outPeer1] = newQueuePair();
+    node.syncManager.addPeer({
+      id: "peer-1",
+      incoming: inPeer1,
+      outgoing: outPeer1,
+      role: "peer",
+      crashOnClose: false,
+    });
+
+    connectedPeers = await metricReader.getMetricValue("jazz.peers", {
+      role: "peer",
+    });
+    expect(connectedPeers).toBe(1);
+
+    // Add another peer
+    const [inPeer2, outPeer2] = newQueuePair();
+    node.syncManager.addPeer({
+      id: "peer-2",
+      incoming: inPeer2,
+      outgoing: outPeer2,
+      role: "peer",
+      crashOnClose: false,
+    });
+
+    connectedPeers = await metricReader.getMetricValue("jazz.peers", {
+      role: "peer",
+    });
+    expect(connectedPeers).toBe(2);
+
+    // Add a server peer
+    const [inServer1, outServer1] = newQueuePair();
+    node.syncManager.addPeer({
+      id: "server-1",
+      incoming: inServer1,
+      outgoing: outServer1,
+      role: "server",
+      crashOnClose: false,
+    });
+    connectedServerPeers = await metricReader.getMetricValue("jazz.peers", {
+      role: "server",
+    });
+    expect(connectedServerPeers).toBe(1);
+    connectedPeers = await metricReader.getMetricValue("jazz.peers", {
+      role: "peer",
+    });
+    expect(connectedPeers).toBe(2);
+
+    // @ts-expect-error Simulating peer-1 closing
+    await outPeer1.push("Disconnected");
+    await waitFor(() => node.syncManager.peers["peer-1"]?.closed);
+
+    connectedPeers = await metricReader.getMetricValue("jazz.peers", {
+      role: "peer",
+    });
+    expect(connectedPeers).toBe(1);
+
+    // @ts-expect-error Simulating server-1 closing
+    await outServer1.push("Disconnected");
+
+    await waitFor(() => node.syncManager.peers["server-1"]?.closed);
+
+    connectedServerPeers = await metricReader.getMetricValue("jazz.peers", {
+      role: "server",
+    });
+    expect(connectedServerPeers).toBe(0);
   });
 });
 

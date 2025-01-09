@@ -5,36 +5,25 @@ import {
   Stringified,
   cojsonInternals,
 } from "cojson";
-import {
-  SignatureAfterRow,
-  StoredCoValueRow,
-  StoredSessionRow,
-  TransactionRow,
-} from "./types.js";
+import { StoredCoValueRow, StoredSessionRow, TransactionRow } from "./types.js";
 
 export function collectNewTxs({
   newTxsInSession,
   newDataMessages,
   sessionRow,
-  signaturesAndIdxs,
-  peerKnownState,
   firstNewTxIdx,
 }: {
   newTxsInSession: TransactionRow[];
   newDataMessages: CojsonInternalTypes.DataMessage[];
   sessionRow: StoredSessionRow;
-  signaturesAndIdxs: SignatureAfterRow[];
-  peerKnownState: CojsonInternalTypes.CoValueKnownState;
   firstNewTxIdx: number;
 }) {
-  let idx = firstNewTxIdx;
-
   for (const tx of newTxsInSession) {
     let sessionEntry =
       newDataMessages[newDataMessages.length - 1]!.new[sessionRow.sessionID];
     if (!sessionEntry) {
       sessionEntry = {
-        after: idx,
+        after: firstNewTxIdx,
         lastSignature: "WILL_BE_REPLACED" as CojsonInternalTypes.Signature,
         newTransactions: [],
       };
@@ -43,21 +32,23 @@ export function collectNewTxs({
     }
 
     sessionEntry.newTransactions.push(tx.tx);
-
-    if (signaturesAndIdxs[0] && idx === signaturesAndIdxs[0].idx) {
-      sessionEntry.lastSignature = signaturesAndIdxs[0].signature;
-      signaturesAndIdxs.shift();
-      newDataMessages.push({
-        action: "data",
-        known: true,
-        id: peerKnownState.id,
-        new: {},
-        priority: cojsonInternals.getPriorityFromHeader(undefined),
-      });
-    } else if (idx === firstNewTxIdx + newTxsInSession.length - 1) {
-      sessionEntry.lastSignature = sessionRow.lastSignature;
-    }
-    idx += 1;
+    sessionEntry.lastSignature = sessionRow.lastSignature;
+    /** TODO25
+     *     if (signaturesAndIdxs[0] && idx === signaturesAndIdxs[0].idx) {
+     *       sessionEntry.lastSignature = signaturesAndIdxs[0].signature;
+     *       signaturesAndIdxs.shift();
+     *       newDataMessages.push({
+     *         action: "data",
+     *         known: true,
+     *         id: peerKnownState.id,
+     *         new: {},
+     *         priority: cojsonInternals.getPriorityFromHeader(undefined),
+     *       });
+     *     } else if (idx === firstNewTxIdx + newTxsInSession.length - 1) {
+     *       sessionEntry.lastSignature = sessionRow.lastSignature;
+     *     }
+     *     idx += 1;
+     */
   }
 }
 

@@ -1,5 +1,34 @@
 # jazz-browser
 
+## 0.8.40
+
+### Patch Changes
+
+- cojson-storage-indexeddb@0.8.40
+
+## 0.8.39
+
+### Patch Changes
+
+- e386f2b: Automatically set up the Cmd+J listener if 'allowJazzInspector' is present in the URL. Cmd+J opens inspector.jazz.tools with the current user's account.
+- Updated dependencies [249eecb]
+- Updated dependencies [3121551]
+  - jazz-tools@0.8.39
+  - cojson@0.8.39
+  - cojson-storage-indexeddb@0.8.39
+  - cojson-transport-ws@0.8.39
+
+## 0.8.38
+
+### Patch Changes
+
+- Updated dependencies [b00ee91]
+- Updated dependencies [f488c09]
+  - cojson@0.8.38
+  - cojson-storage-indexeddb@0.8.38
+  - cojson-transport-ws@0.8.38
+  - jazz-tools@0.8.38
+
 ## 0.8.37
 
 ### Patch Changes

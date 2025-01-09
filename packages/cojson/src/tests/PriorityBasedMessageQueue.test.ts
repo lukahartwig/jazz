@@ -1,15 +1,23 @@
-import { describe, expect, test } from "vitest";
+import { afterEach, describe, expect, test } from "vitest";
 import { PriorityBasedMessageQueue } from "../PriorityBasedMessageQueue.js";
 import { CO_VALUE_PRIORITY } from "../priority.js";
-
-import { SyncMessage } from "../sync/types.js";
+import type { SyncMessage } from "../sync.js";
+import {
+  createTestMetricReader,
+  tearDownTestMetricReader,
+} from "./testUtils.js";
 
 function setup() {
+  const metricReader = createTestMetricReader();
   const queue = new PriorityBasedMessageQueue(CO_VALUE_PRIORITY.MEDIUM);
-  return { queue };
+  return { queue, metricReader };
 }
 
 describe("PriorityBasedMessageQueue", () => {
+  afterEach(() => {
+    tearDownTestMetricReader();
+  });
+
   test("should initialize with correct properties", () => {
     const { queue } = setup();
     expect(queue["defaultPriority"]).toBe(CO_VALUE_PRIORITY.MEDIUM);
@@ -44,7 +52,7 @@ describe("PriorityBasedMessageQueue", () => {
   });
 
   test("should pull messages in priority order", async () => {
-    const { queue } = setup();
+    const { queue, metricReader } = setup();
     const lowPriorityMsg: SyncMessage = {
       action: "content",
       id: "co_zlow",
@@ -65,12 +73,42 @@ describe("PriorityBasedMessageQueue", () => {
     };
 
     void queue.push(lowPriorityMsg);
+    expect(
+      await metricReader.getMetricValue("jazz.messagequeue.size", {
+        priority: lowPriorityMsg.priority,
+      }),
+    ).toBe(1);
     void queue.push(mediumPriorityMsg);
+    expect(
+      await metricReader.getMetricValue("jazz.messagequeue.size", {
+        priority: mediumPriorityMsg.priority,
+      }),
+    ).toBe(1);
     void queue.push(highPriorityMsg);
+    expect(
+      await metricReader.getMetricValue("jazz.messagequeue.size", {
+        priority: highPriorityMsg.priority,
+      }),
+    ).toBe(1);
 
-    expect(queue.pull()?.content).toEqual(highPriorityMsg);
-    expect(queue.pull()?.content).toEqual(mediumPriorityMsg);
-    expect(queue.pull()?.content).toEqual(lowPriorityMsg);
+    expect(queue.pull()?.msg).toEqual(highPriorityMsg);
+    expect(
+      await metricReader.getMetricValue("jazz.messagequeue.size", {
+        priority: highPriorityMsg.priority,
+      }),
+    ).toBe(0);
+    expect(queue.pull()?.msg).toEqual(mediumPriorityMsg);
+    expect(
+      await metricReader.getMetricValue("jazz.messagequeue.size", {
+        priority: mediumPriorityMsg.priority,
+      }),
+    ).toBe(0);
+    expect(queue.pull()?.msg).toEqual(lowPriorityMsg);
+    expect(
+      await metricReader.getMetricValue("jazz.messagequeue.size", {
+        priority: lowPriorityMsg.priority,
+      }),
+    ).toBe(0);
   });
 
   test("should return undefined when pulling from empty queue", () => {

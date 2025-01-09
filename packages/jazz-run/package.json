@@ -3,7 +3,17 @@
   "bin": "./dist/index.js",
   "type": "module",
   "license": "MIT",
-  "version": "0.8.37",
+  "version": "0.8.40",
+  "exports": {
+    "./startSyncServer": {
+      "import": "./dist/startSyncServer.js",
+      "types": "./src/startSyncServer.ts"
+    },
+    "./createWorkerAccount": {
+      "import": "./dist/createWorkerAccount.js",
+      "types": "./src/createWorkerAccount.ts"
+    }
+  },
   "scripts": {
     "format-and-lint": "biome check .",
     "format-and-lint:fix": "biome check . --write",
@@ -18,15 +28,15 @@
     "@effect/printer-ansi": "^0.34.5",
     "@effect/schema": "^0.71.1",
     "@effect/typeclass": "^0.25.5",
-    "cojson": "workspace:0.8.37",
-    "cojson-storage-sqlite": "workspace:0.8.37",
-    "cojson-transport-ws": "workspace:0.8.37",
+    "cojson": "workspace:0.8.39",
+    "cojson-storage-sqlite": "workspace:0.8.40",
+    "cojson-transport-ws": "workspace:0.8.39",
     "effect": "^3.6.5",
-    "jazz-tools": "workspace:0.8.37",
+    "jazz-tools": "workspace:0.8.39",
     "ws": "^8.14.2"
   },
   "devDependencies": {
     "@types/ws": "8.5.10",
-    "typescript": "^5.3.3"
+    "typescript": "~5.6.2"
   }
 }

@@ -31,7 +31,7 @@ export const docNavigationItems = [
           react: 100,
           vue: 100,
           "react-native": 100,
-          svelte: 0,
+          svelte: 100,
         },
       },
       {
@@ -98,7 +98,7 @@ export const docNavigationItems = [
       {
         name: "Groups as permission scopes",
         href: "/docs/groups/intro",
-        done: 0,
+        done: 10,
       },
       {
         name: "Public sharing & Invites",
