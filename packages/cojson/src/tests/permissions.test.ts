@@ -2854,3 +2854,57 @@ test("High-level permissions work correctly when a group is extended", async () 
 
   expect(mapAsReaderAfterRemove.get("foo")).not.toEqual("baz");
 });
+
+test("self-extensions should not break the permissions checks", () => {
+  const { group } = newGroupHighLevel();
+
+  group.set(`child_${group.id}`, "extend", "trusting");
+  group.set(`parent_${group.id}`, "extend", "trusting");
+
+  const map = group.createMap();
+  map.set("test", "Hello!");
+
+  expect(map.get("test")).toEqual("Hello!");
+});
+
+test("extend cycles should not break the permissions checks", () => {
+  const { group, node } = newGroupHighLevel();
+
+  const group2 = node.createGroup();
+  const group3 = node.createGroup();
+
+  group.set(`child_${group2.id}`, "extend", "trusting");
+  group2.set(`child_${group3.id}`, "extend", "trusting");
+  group3.set(`child_${group.id}`, "extend", "trusting");
+
+  group.set(`parent_${group2.id}`, "extend", "trusting");
+  group2.set(`parent_${group3.id}`, "extend", "trusting");
+  group3.set(`parent_${group.id}`, "extend", "trusting");
+
+  const map = group.createMap();
+  map.set("test", "Hello!");
+
+  expect(map.get("test")).toEqual("Hello!");
+});
+
+test("extend cycles should not break the keys rotation", () => {
+  const { group, node } = newGroupHighLevel();
+
+  const group2 = node.createGroup();
+  const group3 = node.createGroup();
+
+  group.set(`child_${group2.id}`, "extend", "trusting");
+  group2.set(`child_${group3.id}`, "extend", "trusting");
+  group3.set(`child_${group.id}`, "extend", "trusting");
+
+  group.set(`parent_${group2.id}`, "extend", "trusting");
+  group2.set(`parent_${group3.id}`, "extend", "trusting");
+  group3.set(`parent_${group.id}`, "extend", "trusting");
+
+  group.rotateReadKey();
+
+  const map = group.createMap();
+  map.set("test", "Hello!");
+
+  expect(map.get("test")).toEqual("Hello!");
+});

@@ -1,12 +1,12 @@
 {
   "name": "cojson-transport-ws",
   "type": "module",
-  "version": "0.8.49",
+  "version": "0.9.0",
   "main": "dist/index.js",
   "types": "src/index.ts",
   "license": "MIT",
   "dependencies": {
-    "cojson": "workspace:0.8.49",
+    "cojson": "workspace:0.9.0",
     "typescript": "~5.6.2"
   },
   "scripts": {

@@ -1,8 +1,0 @@
-{
-  "build": {
-    "env": {
-      "APP_NAME": "books-demo"
-    }
-  },
-  "ignoreCommand": "node ../../ignore-vercel-build.js"
-}

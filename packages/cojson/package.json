@@ -10,6 +10,11 @@
       "types": "./src/index.web.ts",
       "default": "./dist/web/index.web.js"
     },
+    "./crypto": {
+      "react-native": "./dist/native/crypto/export.js",
+      "types": "./src/crypto/export.ts",
+      "default": "./dist/web/crypto/export.js"
+    },
     "./native": {
       "react-native": "./dist/native/index.native.js",
       "types": "./src/index.native.ts",
@@ -19,7 +24,7 @@
   },
   "type": "module",
   "license": "MIT",
-  "version": "0.8.49",
+  "version": "0.9.0",
   "devDependencies": {
     "@opentelemetry/sdk-metrics": "^1.29.0",
     "@types/jest": "^29.5.3",

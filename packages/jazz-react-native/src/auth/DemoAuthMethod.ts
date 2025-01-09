@@ -23,8 +23,15 @@ export namespace RNDemoAuth {
 
 const localStorageKey = "demo-auth-logged-in-secret";
 
+export function encodeUsername(username: string) {
+  return btoa(username)
+    .replace(/=/g, "-")
+    .replace(/\+/g, "_")
+    .replace(/\//g, ".");
+}
+
 function getUserStorageKey(username: string) {
-  return `demo-auth-existing-users-${btoa(username)}`;
+  return `demo-auth-existing-users-${encodeUsername(username)}`;
 }
 
 function getLegacyUserStorageKey(username: string) {
@@ -102,7 +109,21 @@ export class RNDemoAuth implements AuthMethod {
     },
     store?: KvStore | undefined,
   ) {
-    const kvStore = store ? store : KvStoreContext.getInstance().getStorage();
+    let kvStore = store;
+
+    if (!kvStore) {
+      const kvStoreContext = KvStoreContext.getInstance();
+
+      if (!kvStoreContext.isInitialized()) {
+        const { ExpoSecureStoreAdapter } = await import(
+          "../storage/expo-secure-store-adapter.js"
+        );
+
+        kvStoreContext.initialize(new ExpoSecureStoreAdapter());
+      }
+
+      kvStore = kvStoreContext.getStorage();
+    }
 
     await migrateExistingUsersKeys(kvStore);
 
@@ -133,6 +154,7 @@ export class RNDemoAuth implements AuthMethod {
             this.driver.onSignedIn({ logOut });
           },
           onError: (error: string | Error) => {
+            this.kvStore.delete(localStorageKey);
             this.driver.onError(error);
           },
           logOut: async () => {
@@ -181,8 +203,6 @@ export class RNDemoAuth implements AuthMethod {
                   this.driver.onSignedIn({ logOut });
                 },
                 onError: (error: string | Error) => {
-                  // @ts-expect-error asd
-                  console.error("onError", error.cause);
                   this.driver.onError(error);
                 },
                 logOut: async () => {

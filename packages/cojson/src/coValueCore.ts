@@ -415,7 +415,10 @@ export class CoValueCore {
       throw new Error("Trying to add transactions after node is crashed");
     }
     const transactions = this.sessionLogs.get(sessionID)?.transactions ?? [];
-    transactions.push(...newTransactions);
+
+    for (const tx of newTransactions) {
+      transactions.push(tx);
+    }
 
     const signatureAfter =
       this.sessionLogs.get(sessionID)?.signatureAfter ?? {};

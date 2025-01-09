@@ -1,5 +1,5 @@
 import clsx from "clsx";
-import { ReactNode } from "react";
+import type { ReactNode } from "react";
 import { H1 } from "../atoms/Headings";
 
 function H1Sub({ children }: { children: React.ReactNode }) {
@@ -17,14 +17,14 @@ export function HeroHeader({
   className = "",
 }: {
   title: ReactNode;
-  slogan: ReactNode;
+  slogan?: ReactNode;
   pt?: boolean;
   className?: string;
 }) {
   return (
     <hgroup className={clsx(pt && "pt-12 md:pt-20", "mb-10", className)}>
       <H1>{title}</H1>
-      <H1Sub>{slogan}</H1Sub>
+      {slogan && <H1Sub>{slogan}</H1Sub>}
     </hgroup>
   );
 }

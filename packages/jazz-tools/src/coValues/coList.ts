@@ -23,6 +23,7 @@ import {
   isRefEncoded,
   loadCoValue,
   makeRefs,
+  parseCoValueCreateOptions,
   subscribeToCoValue,
   subscribeToExistingCoValue,
   subscriptionsScopes,
@@ -220,10 +221,11 @@ export class CoList<Item = any> extends Array<Item> implements CoValue {
   static create<L extends CoList>(
     this: CoValueClass<L>,
     items: UnCo<L[number]>[],
-    options: { owner: Account | Group },
+    options: { owner: Account | Group } | Account | Group,
   ) {
-    const instance = new this({ init: items, owner: options.owner });
-    const raw = options.owner._raw.createList(
+    const { owner } = parseCoValueCreateOptions(options);
+    const instance = new this({ init: items, owner });
+    const raw = owner._raw.createList(
       toRawItems(items, instance._schema[ItemsSym]),
     );
 
@@ -239,9 +241,11 @@ export class CoList<Item = any> extends Array<Item> implements CoValue {
   }
 
   push(...items: Item[]): number {
-    for (const item of toRawItems(items as Item[], this._schema[ItemsSym])) {
-      this._raw.append(item);
-    }
+    this._raw.appendItems(
+      toRawItems(items, this._schema[ItemsSym]),
+      undefined,
+      "private",
+    );
 
     return this._raw.entries().length;
   }

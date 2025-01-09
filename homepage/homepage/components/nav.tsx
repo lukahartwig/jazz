@@ -39,6 +39,10 @@ export function JazzNav() {
           href: "https://github.com/garden-co/jazz/releases",
           newTab: true,
         },
+        {
+          title: "Status",
+          href: "/status",
+        },
       ]}
       socials={socials}
       docNav={<DocNav className="block h-auto" />}

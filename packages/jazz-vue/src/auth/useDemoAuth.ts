@@ -2,7 +2,7 @@ import { AgentSecret } from "cojson";
 import { BrowserDemoAuth } from "jazz-browser";
 import { Account, ID } from "jazz-tools";
 import { onUnmounted, reactive, ref } from "vue";
-import { logoutHandler } from "../createJazzVueApp.js";
+import { logoutHandler } from "../provider.js";
 
 export type DemoAuthState = (
   | {

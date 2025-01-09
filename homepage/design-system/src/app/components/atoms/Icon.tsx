@@ -130,7 +130,7 @@ export function Icon({
       aria-hidden="true"
       size={sizes[size]}
       strokeWidth={strokeWidths[size]}
-      strokeLinecap="butt"
+      strokeLinecap="round"
       className={className}
       {...svgProps}
     />

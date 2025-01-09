@@ -14,6 +14,7 @@ import {
   Ref,
   ensureCoValueLoaded,
   loadCoValue,
+  parseCoValueCreateOptions,
   subscribeToCoValue,
   subscribeToExistingCoValue,
 } from "../internal.js";
@@ -123,9 +124,9 @@ export class Group extends CoValueBase implements CoValue {
 
   static create<G extends Group>(
     this: CoValueClass<G>,
-    options: { owner: Account },
+    options: { owner: Account } | Account,
   ) {
-    return new this(options);
+    return new this(parseCoValueCreateOptions(options));
   }
 
   myRole(): Role | undefined {

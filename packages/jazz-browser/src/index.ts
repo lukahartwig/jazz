@@ -21,6 +21,7 @@ import { StorageConfig, getStorageOptions } from "./storageOptions.js";
 export { BrowserDemoAuth } from "./auth/DemoAuth.js";
 export { BrowserPasskeyAuth } from "./auth/PasskeyAuth.js";
 export { BrowserPassphraseAuth } from "./auth/PassphraseAuth.js";
+export { BrowserOnboardingAuth } from "./auth/OnboardingAuth.js";
 import { setupInspector } from "./utils/export-account-inspector.js";
 
 setupInspector();

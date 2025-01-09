@@ -69,18 +69,19 @@ export class AccountRoot extends CoMap {
 export class JazzAccount extends Account {
   root = co.ref(AccountRoot);
 
-  migrate(this: JazzAccount) {
+  migrate() {
+    const account = this;
+
     if (!this._refs.root) {
-      const ownership = { owner: this };
-      const orders = ListOfBubbleTeaOrders.create([], ownership);
+      const orders = ListOfBubbleTeaOrders.create([], account);
       const draft = DraftBubbleTeaOrder.create(
         {
-          addOns: ListOfBubbleTeaAddOns.create([], ownership),
+          addOns: ListOfBubbleTeaAddOns.create([], account),
         },
-        ownership,
+        account,
       );
 
-      this.root = AccountRoot.create({ draft, orders }, ownership);
+      this.root = AccountRoot.create({ draft, orders }, account);
     }
   }
 }

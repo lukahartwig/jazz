@@ -1,5 +1,18 @@
 # cojson
 
+## 0.9.0
+
+### Patch Changes
+
+- 8eda792: Add a crypto entry to optionally import the crypto modules
+- 1ef3226: Add the assign method to RawCoMap to create bulk transactions and optimize RawCoMap init
+
+## 0.8.50
+
+### Patch Changes
+
+- 43378ef: Handle circular references in group inheritance
+
 ## 0.8.49
 
 ### Patch Changes

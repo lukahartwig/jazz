@@ -3,7 +3,11 @@
   "remoteCache": {},
   "tasks": {
     "build": {
-      "env": ["RESEND_API_KEY", "RESEND_AUDIENCE_ID"],
+      "env": [
+        "RESEND_API_KEY",
+        "RESEND_AUDIENCE_ID",
+        "GRAFANA_SERVICE_ACCOUNT"
+      ],
       "dependsOn": ["^build"],
       "outputs": ["dist/**", ".svelte-kit/output/**"]
     },

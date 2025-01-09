@@ -64,6 +64,25 @@ describe("Simple CoMap operations", async () => {
     ]);
   });
 
+  test("Construction with an Account", () => {
+    const map = TestMap.create(
+      { color: "red", _height: 10, birthday: birthday },
+      me,
+    );
+
+    expect(map.color).toEqual("red");
+  });
+
+  test("Construction with a Group", () => {
+    const group = Group.create(me);
+    const map = TestMap.create(
+      { color: "red", _height: 10, birthday: birthday },
+      group,
+    );
+
+    expect(map.color).toEqual("red");
+  });
+
   test("Construction with too many things provided", () => {
     const mapWithExtra = TestMap.create(
       {

@@ -236,7 +236,7 @@ export class Account extends CoValueBase implements CoValue {
     return this.toJSON();
   }
 
-  async applyMigration(creationProps?: { name: string }) {
+  async applyMigration(creationProps?: { name: string; onboarding?: boolean }) {
     if (creationProps) {
       const profileGroup = RegisteredSchemas["Group"].create({ owner: this });
       profileGroup.addMember("everyone", "reader");

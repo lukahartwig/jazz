@@ -4,8 +4,8 @@
   
   <script setup lang="ts">
 import { Group } from "jazz-tools";
+import { useAccount } from "jazz-vue";
 import { useRouter } from "vue-router";
-import { useAccount } from "../main";
 import { Chat } from "../schema";
 
 const router = useRouter();

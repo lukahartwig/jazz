@@ -1,12 +1,8 @@
-import { DemoAuthBasicUI, createJazzVueApp, useDemoAuth } from "jazz-vue";
+import { DemoAuthBasicUI, JazzProvider, useDemoAuth } from "jazz-vue";
 import { createApp, defineComponent, h } from "vue";
 import App from "./App.vue";
 import "./index.css";
 import router from "./router";
-
-const Jazz = createJazzVueApp();
-export const { useAccount, useCoState } = Jazz;
-const { JazzProvider } = Jazz;
 
 const RootComponent = defineComponent({
   name: "RootComponent",

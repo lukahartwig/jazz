@@ -12,27 +12,31 @@ export type { CoValue, ID } from "./internal.js";
 
 export { Encoders, co } from "./internal.js";
 
-export {
-  Inbox,
-  InboxSender,
-} from "./coValues/inbox.js";
+export { Inbox, InboxSender } from "./coValues/inbox.js";
 
 export {
   Account,
   isControlledAccount,
   type AccountClass,
 } from "./coValues/account.js";
-export { Group } from "./coValues/group.js";
 export {
-  CoStream,
-  CoFeed,
-  FileStream,
   BinaryCoStream,
+  CoFeed,
+  CoStream,
+  FileStream,
 } from "./coValues/coFeed.js";
 export { CoList } from "./coValues/coList.js";
 export { CoMap, type CoMapInit } from "./coValues/coMap.js";
-export { CoValueBase } from "./coValues/interfaces.js";
+export { CoPlainText, type TextPos } from "./coValues/coPlainText.js";
+export {
+  CoRichText,
+  Marks,
+  type TreeLeaf,
+  type TreeNode,
+} from "./coValues/coRichText.js";
 export { ImageDefinition } from "./coValues/extensions/imageDef.js";
+export { Group } from "./coValues/group.js";
+export { CoValueBase } from "./coValues/interfaces.js";
 export { Profile } from "./coValues/profile.js";
 export { SchemaUnion } from "./coValues/schemaUnion.js";
 

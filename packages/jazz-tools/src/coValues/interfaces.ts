@@ -1,4 +1,8 @@
-import type { CojsonInternalTypes, RawCoValue } from "cojson";
+import type {
+  CoValueUniqueness,
+  CojsonInternalTypes,
+  RawCoValue,
+} from "cojson";
 import { RawAccount } from "cojson";
 import { AnonymousJazzAgent } from "../implementation/anonymousJazzAgent.js";
 import type { DeeplyLoaded, DepthsIn } from "../internal.js";
@@ -157,18 +161,17 @@ export function loadCoValue<V extends CoValue, Depth>(
   depth: Depth & DepthsIn<V>,
 ): Promise<DeeplyLoaded<V, Depth> | undefined> {
   return new Promise((resolve) => {
-    const unsubscribe = subscribeToCoValue(
+    subscribeToCoValue(
       cls,
       id,
       as,
       depth,
-      (value) => {
+      (value, unsubscribe) => {
         resolve(value);
         unsubscribe();
       },
       () => {
         resolve(undefined);
-        unsubscribe();
       },
     );
   });
@@ -191,37 +194,49 @@ export function subscribeToCoValue<V extends CoValue, Depth>(
   id: ID<V>,
   as: Account | AnonymousJazzAgent,
   depth: Depth & DepthsIn<V>,
-  listener: (value: DeeplyLoaded<V, Depth>) => void,
+  listener: (value: DeeplyLoaded<V, Depth>, unsubscribe: () => void) => void,
   onUnavailable?: () => void,
+  syncResolution?: boolean,
 ): () => void {
   const ref = new Ref(id, as, { ref: cls, optional: false });
 
   let unsubscribed = false;
   let unsubscribe: (() => void) | undefined;
 
-  ref
-    .load()
-    .then((value) => {
-      if (!value) {
-        onUnavailable && onUnavailable();
-        return;
-      }
-      if (unsubscribed) return;
-      const subscription = new SubscriptionScope(
-        value,
-        cls as CoValueClass<V> & CoValueFromRaw<V>,
-        (update) => {
-          if (fulfillsDepth(depth, update)) {
-            listener(update as DeeplyLoaded<V, Depth>);
-          }
-        },
-      );
+  function subscribe(value: V | undefined) {
+    if (!value) {
+      onUnavailable && onUnavailable();
+      return;
+    }
+    if (unsubscribed) return;
+    const subscription = new SubscriptionScope(
+      value,
+      cls as CoValueClass<V> & CoValueFromRaw<V>,
+      (update, subscription) => {
+        if (fulfillsDepth(depth, update)) {
+          listener(
+            update as DeeplyLoaded<V, Depth>,
+            subscription.unsubscribeAll,
+          );
+        }
+      },
+    );
 
-      unsubscribe = () => subscription.unsubscribeAll();
-    })
-    .catch((e) => {
-      console.error("Failed to load / subscribe to CoValue", e);
-    });
+    unsubscribe = subscription.unsubscribeAll;
+  }
+
+  const sync = syncResolution ? ref.syncLoad() : undefined;
+
+  if (sync) {
+    subscribe(sync);
+  } else {
+    ref
+      .load()
+      .then((value) => subscribe(value))
+      .catch((e) => {
+        console.error("Failed to load / subscribe to CoValue", e);
+      });
+  }
 
   return function unsubscribeAtAnyPoint() {
     unsubscribed = true;
@@ -229,7 +244,9 @@ export function subscribeToCoValue<V extends CoValue, Depth>(
   };
 }
 
-export function createCoValueObservable<V extends CoValue, Depth>() {
+export function createCoValueObservable<V extends CoValue, Depth>(options?: {
+  syncResolution?: boolean;
+}) {
   let currentValue: DeeplyLoaded<V, Depth> | undefined = undefined;
   let subscriberCount = 0;
 
@@ -253,6 +270,7 @@ export function createCoValueObservable<V extends CoValue, Depth>() {
         listener();
       },
       onUnavailable,
+      options?.syncResolution,
     );
 
     return () => {
@@ -284,4 +302,22 @@ export function subscribeToExistingCoValue<V extends CoValue, Depth>(
     depth,
     listener,
   );
+}
+
+export function parseCoValueCreateOptions(
+  options:
+    | {
+        owner: Account | Group;
+        unique?: CoValueUniqueness["uniqueness"];
+      }
+    | Account
+    | Group,
+) {
+  return "_type" in options &&
+    (options._type === "Account" || options._type === "Group")
+    ? { owner: options, uniqueness: undefined }
+    : {
+        owner: options.owner,
+        uniqueness: options.unique ? { uniqueness: options.unique } : undefined,
+      };
 }

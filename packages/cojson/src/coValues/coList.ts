@@ -7,9 +7,9 @@ import { isCoValue } from "../typeUtils/isCoValue.js";
 import { RawAccountID } from "./account.js";
 import { RawGroup } from "./group.js";
 
-type OpID = TransactionID & { changeIdx: number };
+export type OpID = TransactionID & { changeIdx: number };
 
-type InsertionOpPayload<T extends JsonValue> =
+export type InsertionOpPayload<T extends JsonValue> =
   | {
       op: "pre";
       value: T;
@@ -21,7 +21,7 @@ type InsertionOpPayload<T extends JsonValue> =
       after: OpID | "start";
     };
 
-type DeletionOpPayload = {
+export type DeletionOpPayload = {
   op: "del";
   insertion: OpID;
 };
@@ -49,7 +49,7 @@ export class RawCoListView<
   /** @category 6. Meta */
   id: CoID<this>;
   /** @category 6. Meta */
-  type = "colist" as const;
+  type: "colist" | "coplaintext" = "colist" as const;
   /** @category 6. Meta */
   core: CoValueCore;
   /** @internal */
@@ -288,6 +288,7 @@ export class RawCoListView<
   ) {
     const entry =
       this.insertions[opID.sessionID]?.[opID.txIndex]?.[opID.changeIdx];
+
     if (!entry) {
       throw new Error("Missing op " + opID);
     }
@@ -413,6 +414,14 @@ export class RawCoList<
     after?: number,
     privacy: "private" | "trusting" = "private",
   ) {
+    this.appendItems([item], after, privacy);
+  }
+
+  appendItems(
+    items: Item[],
+    after?: number,
+    privacy: "private" | "trusting" = "private",
+  ) {
     const entries = this.entries();
     after =
       after === undefined
@@ -420,7 +429,7 @@ export class RawCoList<
           ? entries.length - 1
           : 0
         : after;
-    let opIDBefore;
+    let opIDBefore: OpID | "start";
     if (entries.length > 0) {
       const entryBefore = entries[after];
       if (!entryBefore) {
@@ -433,24 +442,22 @@ export class RawCoList<
       }
       opIDBefore = "start";
     }
-    this.core.makeTransaction(
-      [
-        {
-          op: "app",
-          value: isCoValue(item) ? item.id : item,
-          after: opIDBefore,
-        },
-      ],
-      privacy,
-    );
 
-    const listAfter = new RawCoList(this.core) as this;
+    const changes = items.map((item) => ({
+      op: "app",
+      value: isCoValue(item) ? item.id : item,
+      after: opIDBefore,
+    }));
 
-    this.afterStart = listAfter.afterStart;
-    this.beforeEnd = listAfter.beforeEnd;
-    this.insertions = listAfter.insertions;
-    this.deletionsByInsertion = listAfter.deletionsByInsertion;
-    this._cachedEntries = undefined;
+    if (opIDBefore !== "start") {
+      // When added as successors we need to reverse the items
+      // to keep the same insertion order
+      changes.reverse();
+    }
+
+    this.core.makeTransaction(changes, privacy);
+
+    this.rebuildFromCore();
   }
 
   /**
@@ -497,13 +504,7 @@ export class RawCoList<
       privacy,
     );
 
-    const listAfter = new RawCoList(this.core) as this;
-
-    this.afterStart = listAfter.afterStart;
-    this.beforeEnd = listAfter.beforeEnd;
-    this.insertions = listAfter.insertions;
-    this.deletionsByInsertion = listAfter.deletionsByInsertion;
-    this._cachedEntries = undefined;
+    this.rebuildFromCore();
   }
 
   /** Deletes the item at index `at`.
@@ -530,13 +531,7 @@ export class RawCoList<
       privacy,
     );
 
-    const listAfter = new RawCoList(this.core) as this;
-
-    this.afterStart = listAfter.afterStart;
-    this.beforeEnd = listAfter.beforeEnd;
-    this.insertions = listAfter.insertions;
-    this.deletionsByInsertion = listAfter.deletionsByInsertion;
-    this._cachedEntries = undefined;
+    this.rebuildFromCore();
   }
 
   replace(
@@ -564,6 +559,11 @@ export class RawCoList<
       ],
       privacy,
     );
+    this.rebuildFromCore();
+  }
+
+  /** @internal */
+  rebuildFromCore() {
     const listAfter = new RawCoList(this.core) as this;
 
     this.afterStart = listAfter.afterStart;

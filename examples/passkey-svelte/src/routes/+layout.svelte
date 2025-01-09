@@ -1,6 +1,5 @@
 <script lang="ts">
-  import { usePasskeyAuth, PasskeyAuthBasicUI } from 'jazz-svelte';
-  import { Provider } from '$lib/jazz';
+  import { JazzProvider, PasskeyAuthBasicUI, usePasskeyAuth } from 'jazz-svelte';
 
   let { children } = $props();
 
@@ -15,12 +14,12 @@
   <PasskeyAuthBasicUI state={auth.state} />
 
   {#if auth.current}
-    <Provider
+    <JazzProvider
       auth={auth.current}
       peer="wss://cloud.jazz.tools/?key=minimal-svelte-auth-passkey@garden.co"
     >
       {@render children?.()}
-    </Provider>
+    </JazzProvider>
   {/if}
 </div>
 

@@ -1,5 +1,52 @@
 # jazz-react
 
+## 0.9.1
+
+### Patch Changes
+
+- 1b71969: Add Onboarding auth to handle users onboarding without an auth screen
+- Updated dependencies [1b71969]
+- Updated dependencies [5d98189]
+  - jazz-browser@0.9.1
+  - jazz-tools@0.9.1
+  - jazz-react-core@0.8.47
+
+## 0.9.0
+
+### Minor Changes
+
+- 956a4d1: Change the way the JazzProvider is created and make the hooks available as top-level imports.
+
+  This is a breaking change.
+
+### Patch Changes
+
+- Updated dependencies [8eda792]
+- Updated dependencies [8eda792]
+- Updated dependencies [1ef3226]
+  - cojson@0.9.0
+  - jazz-tools@0.9.0
+  - jazz-browser@0.9.0
+  - jazz-react-core@0.8.46
+
+## 0.8.51
+
+### Patch Changes
+
+- Updated dependencies [dc62b95]
+- Updated dependencies [1de26f8]
+  - jazz-tools@0.8.51
+  - jazz-browser@0.8.51
+
+## 0.8.50
+
+### Patch Changes
+
+- Updated dependencies [43378ef]
+  - cojson@0.8.50
+  - jazz-browser@0.8.50
+  - jazz-tools@0.8.50
+
 ## 0.8.49
 
 ### Patch Changes

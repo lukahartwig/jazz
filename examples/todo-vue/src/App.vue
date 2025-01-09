@@ -63,7 +63,7 @@ main {
 </style>
 
 <script setup lang="ts">
-import { useAccount } from "./main";
+import { useAccount } from "jazz-vue";
 
 const { me, logOut } = useAccount();
 </script>

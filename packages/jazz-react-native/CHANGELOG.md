@@ -1,5 +1,49 @@
 # jazz-browser
 
+## 0.9.1
+
+### Patch Changes
+
+- Updated dependencies [1b71969]
+  - jazz-tools@0.9.1
+  - jazz-react-core@0.8.47
+
+## 0.9.0
+
+### Minor Changes
+
+- 1e5e3a1: Change the way the JazzProvider is created and make the hooks available as top-level imports.
+
+### Patch Changes
+
+- 1da4d55: Fix username key hashing in DemoAuth
+  Improve error handling when loading an existing account fails
+  Fix the double context creation in Reacc development mode
+- Updated dependencies [8eda792]
+- Updated dependencies [8eda792]
+- Updated dependencies [1ef3226]
+  - cojson@0.9.0
+  - jazz-tools@0.9.0
+  - cojson-transport-ws@0.9.0
+  - jazz-react-core@0.8.46
+
+## 0.8.51
+
+### Patch Changes
+
+- Updated dependencies [dc62b95]
+- Updated dependencies [1de26f8]
+  - jazz-tools@0.8.51
+
+## 0.8.50
+
+### Patch Changes
+
+- Updated dependencies [43378ef]
+  - cojson@0.8.50
+  - cojson-transport-ws@0.8.50
+  - jazz-tools@0.8.50
+
 ## 0.8.49
 
 ### Patch Changes

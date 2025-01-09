@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { useAccount } from '$lib/jazz';
+  import { useAccount } from 'jazz-svelte';
 
   const account = useAccount({
     root: {}
