@@ -1053,15 +1053,11 @@ export class CoValueCore {
         : [];
   }
 
-  /**
-   * TODO25
-   *   waitForSync(options?: {
-   *     timeout?: number;
-   *   }) {
-   *     return this.node.syncManager.waitForSync(this.id, options?.timeout);
-   *   }
-   * }
-   */
+  waitForSync(options?: {
+    timeout?: number;
+  }) {
+    return this.node.syncManager.waitForSync(this.id, options?.timeout);
+  }
 
   addNewContent(content: CoValueContent) {
     let anyMissingTransaction = false;

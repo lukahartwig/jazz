@@ -33,22 +33,6 @@ export function collectNewTxs({
 
     sessionEntry.newTransactions.push(tx.tx);
     sessionEntry.lastSignature = sessionRow.lastSignature;
-    /** TODO25
-     *     if (signaturesAndIdxs[0] && idx === signaturesAndIdxs[0].idx) {
-     *       sessionEntry.lastSignature = signaturesAndIdxs[0].signature;
-     *       signaturesAndIdxs.shift();
-     *       newDataMessages.push({
-     *         action: "data",
-     *         known: true,
-     *         id: peerKnownState.id,
-     *         new: {},
-     *         priority: cojsonInternals.getPriorityFromHeader(undefined),
-     *       });
-     *     } else if (idx === firstNewTxIdx + newTxsInSession.length - 1) {
-     *       sessionEntry.lastSignature = sessionRow.lastSignature;
-     *     }
-     *     idx += 1;
-     */
   }
 }
 

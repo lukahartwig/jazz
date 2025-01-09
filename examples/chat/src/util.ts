@@ -3,11 +3,6 @@
 
 import { Chat } from "@/schema.ts";
 
-/**
- * TODO25
- * check method chat.waitForSync()
- * @param chat
- */
 export function onChatLoad(chat: Chat) {
   if (window.parent) {
     chat.waitForSync().then(() => {

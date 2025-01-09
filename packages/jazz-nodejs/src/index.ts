@@ -24,7 +24,7 @@ export async function startWorker<Acc extends Account>({
 }): Promise<{ worker: Acc; done: () => Promise<void> }> {
   let node: LocalNode | undefined = undefined;
   const wsPeer = webSocketWithReconnection(syncServer, (peer) => {
-    node?.syncManager.addPeer(peer);
+    node?.addPeer(peer);
   });
 
   if (!accountID) {

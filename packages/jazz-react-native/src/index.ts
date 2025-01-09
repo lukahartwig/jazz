@@ -16,7 +16,7 @@ import {
 } from "jazz-tools";
 
 import NetInfo from "@react-native-community/netinfo";
-import { RawAccountID } from "cojson";
+import { LocalNode, RawAccountID } from "cojson";
 import { createWebSocketPeer } from "cojson-transport-ws";
 import * as Linking from "expo-linking";
 import { PureJSCrypto } from "jazz-tools/native";
@@ -71,7 +71,7 @@ export async function createJazzRNContext<Acc extends Account>(
     options.peer,
     options.reconnectionTimeout,
     (peer) => {
-      node.syncManager.addPeer(peer);
+      LocalNode.peers.add(peer);
     },
   );
 

@@ -1,3 +1,4 @@
+import { ValueType, metrics } from "@opentelemetry/api";
 import { Result, err, ok } from "neverthrow";
 import { CoValuesStore } from "./CoValuesStore.js";
 import { CoID, RawCoValue } from "./coValue.js";
@@ -54,6 +55,11 @@ const { localNode } = useJazz();
 */
 export class LocalNode {
   static peers = new Peers();
+  peersCounter = metrics.getMeter("cojson").createUpDownCounter("jazz.peers", {
+    description: "Amount of connected peers",
+    valueType: ValueType.INT,
+    unit: "peer",
+  });
 
   /** @internal */
   crypto: CryptoProvider;
@@ -112,6 +118,7 @@ export class LocalNode {
 
   async addPeer(peerData: Peer) {
     const peer: PeerEntry = LocalNode.peers.add(peerData);
+    this.peersCounter.add(1, { role: peer.role });
 
     if (peer.isServerOrStoragePeer()) {
       await this.syncManager.initialSync(peer);
@@ -135,6 +142,7 @@ export class LocalNode {
       .finally(() => {
         const state = LocalNode.peers.get(peerData.id);
         state?.gracefulShutdown();
+        this.peersCounter.add(-1, { role: peer.role });
 
         if (peerData.deletePeerStateOnClose) {
           LocalNode.peers.delete(peer.id);

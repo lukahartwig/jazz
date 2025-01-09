@@ -1,3 +1,4 @@
+import { emptyKnownState } from "cojson";
 import { createWebSocketPeer } from "cojson-transport-ws";
 import { Account, WasmCrypto, isControlledAccount } from "jazz-tools";
 import { WebSocket } from "ws";
@@ -32,8 +33,11 @@ export const createWorkerAccount = async ({
   const syncManager = account._raw.core.node.syncManager;
 
   await Promise.all([
-    syncManager.syncCoValue(accountCoValue),
-    syncManager.syncCoValue(accountProfileCoValue),
+    syncManager.syncCoValue(accountCoValue, emptyKnownState(accountCoValue.id)),
+    syncManager.syncCoValue(
+      accountProfileCoValue,
+      emptyKnownState(accountCoValue.id),
+    ),
   ]);
 
   await account.waitForAllCoValuesSync({ timeout: 4_000 });
