@@ -66,9 +66,7 @@ export class HRProfile extends Profile {
 export class HRAccount extends Account {
   profile = co.ref(HRProfile)!;
 
-  migrate(this: HRAccount, creationProps?: { name: string }) {
-    super.migrate(creationProps);
-
+  migrate() {
     if (!this.profile._refs.employees) {
       this.profile.employees = EmployeeCoList.create([], {
         owner: this.profile._owner,

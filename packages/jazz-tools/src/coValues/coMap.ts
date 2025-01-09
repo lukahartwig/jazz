@@ -13,7 +13,6 @@ import type {
   CoValueClass,
   DeeplyLoaded,
   DepthsIn,
-  Group,
   ID,
   IfCo,
   RefEncoded,
@@ -22,7 +21,6 @@ import type {
   co,
 } from "../internal.js";
 import {
-  Account,
   CoValueBase,
   ItemsSym,
   Ref,
@@ -36,6 +34,9 @@ import {
   subscribeToExistingCoValue,
   subscriptionsScopes,
 } from "../internal.js";
+import { type Account } from "./account.js";
+import { type Group } from "./group.js";
+import { RegisteredSchemas } from "./registeredSchemas.js";
 
 type CoMapEdit<V> = {
   value?: V;
@@ -178,7 +179,7 @@ export class CoMap extends CoValueBase implements CoValue {
       by:
         rawEdit.by &&
         new Ref<Account>(rawEdit.by as ID<Account>, target._loadedAs, {
-          ref: Account,
+          ref: RegisteredSchemas["Account"],
           optional: false,
         }).accessFrom(target, "_edits." + key + ".by"),
       madeAt: rawEdit.at,
@@ -616,8 +617,14 @@ const CoMapProxyHandler: ProxyHandler<CoMap> = {
     } else if (key in target) {
       return Reflect.get(target, key, receiver);
     } else {
-      const descriptor = (target._schema[key as keyof CoMap["_schema"]] ||
-        target._schema[ItemsSym]) as Schema;
+      const schema = target._schema;
+
+      if (!schema) {
+        return undefined;
+      }
+
+      const descriptor = (schema[key as keyof CoMap["_schema"]] ||
+        schema[ItemsSym]) as Schema;
       if (descriptor && typeof key === "string") {
         const raw = target._raw.get(key);
 
@@ -742,3 +749,5 @@ const CoMapProxyHandler: ProxyHandler<CoMap> = {
     }
   },
 };
+
+RegisteredSchemas["CoMap"] = CoMap;

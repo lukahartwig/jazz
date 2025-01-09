@@ -1,5 +1,39 @@
 # cojson
 
+## 0.8.49
+
+### Patch Changes
+
+- 25dfd90: Fixes the transactions collection on permissions to avoid RangeError issues
+
+## 0.8.48
+
+### Patch Changes
+
+- 10ea733: Give the ability to extend a group to accounts with reader, writer and writeOnly access level to the parent group and not only admins. The account still needs to be an admin on the child group to be able to extend it.
+
+## 0.8.45
+
+### Patch Changes
+
+- 6f0bd7f: Throw an error if an invite is created from an account owned coValue
+- fca6a0b: skip verify step when creating a new local transaction
+- 88d7d9a: Add Inbox a new experimental API to simplfy the initial handshake between accounts
+
+## 0.8.44
+
+### Patch Changes
+
+- 5d20c81: Add an internal API to disable the permission errors logs
+
+## 0.8.41
+
+### Patch Changes
+
+- 3252502: Optimize the transactions processing on CoMap and CoStream
+- 6370348: Remove @opentelemetry/api as a peer dependency and add it as a dependency
+- ac216b9: Add a new writeOnly role, to limit access only to their own changes. Useful to push objects into lists of moderated content.
+
 ## 0.8.39
 
 ### Patch Changes

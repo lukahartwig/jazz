@@ -15,17 +15,19 @@ import {
 } from "./coValues/account.js";
 import { RawCoList } from "./coValues/coList.js";
 import { RawCoMap } from "./coValues/coMap.js";
-import { RawBinaryCoStream, RawCoStream } from "./coValues/coStream.js";
-import type { Everyone, InviteSecret } from "./coValues/group.js";
+import {
+  CoStreamItem,
+  RawBinaryCoStream,
+  RawCoStream,
+} from "./coValues/coStream.js";
+import type { Everyone } from "./coValues/group.js";
 import { EVERYONE, RawGroup } from "./coValues/group.js";
-import type { AgentSecret } from "./crypto/crypto.js";
 import {
   CryptoProvider,
   StreamingHash,
   secretSeedLength,
   shortHashLength,
 } from "./crypto/crypto.js";
-import type { AgentID, RawCoID, SessionID } from "./ids.js";
 import {
   getGroupDependentKey,
   getGroupDependentKeyList,
@@ -33,16 +35,13 @@ import {
   rawCoIDfromBytes,
   rawCoIDtoBytes,
 } from "./ids.js";
-import { Stringified, parseJSON } from "./jsonStringify.js";
-import type { JsonValue } from "./jsonValue.js";
+import { Stringified, parseJSON, stableStringify } from "./jsonStringify.js";
 import {
   IncomingSyncStream,
   LocalNode,
   OutgoingSyncQueue,
 } from "./localNode.js";
-import type * as Media from "./media.js";
 import { emptyDataMessage, unknownDataMessage } from "./peer/PeerOperations.js";
-import type { Peer } from "./peer/index.js";
 import type { Role } from "./permissions.js";
 import { getPriorityFromHeader } from "./priority.js";
 import { FileSystem } from "./storage/FileSystem.js";
@@ -65,7 +64,13 @@ import type {
   BinaryCoStreamMeta,
   BinaryStreamInfo,
 } from "./coValues/coStream.js";
-
+import type { InviteSecret } from "./coValues/group.js";
+import type { AgentSecret } from "./crypto/crypto.js";
+import type { AgentID, RawCoID, SessionID } from "./ids.js";
+import type { JsonValue } from "./jsonValue.js";
+import type * as Media from "./media.js";
+import type { Peer } from "./peer/index.js";
+import { disablePermissionErrors } from "./permissions.js";
 type Value = JsonValue | AnyRawCoValue;
 
 /** @hidden */
@@ -79,6 +84,7 @@ export const cojsonInternals = {
   base64URLtoBytes,
   bytesToBase64url,
   parseJSON,
+  stableStringify,
   accountOrAgentIDfromSessionID,
   isAccountID,
   accountHeaderForInitialAgentSecret,
@@ -88,6 +94,7 @@ export const cojsonInternals = {
   getPriorityFromHeader,
   getGroupDependentKeyList,
   getGroupDependentKey,
+  disablePermissionErrors,
 };
 
 export {
@@ -142,6 +149,7 @@ export type {
   PingTimeoutError,
   CoValueUniqueness,
   Stringified,
+  CoStreamItem,
 };
 
 // eslint-disable-next-line @typescript-eslint/no-namespace
@@ -162,6 +170,7 @@ export namespace CojsonInternalTypes {
   export type RawCoID = import("./ids.js").RawCoID;
   export type ProfileShape = import("./coValues/account.js").ProfileShape;
   export type SealerSecret = import("./crypto/crypto.js").SealerSecret;
+  export type SignerID = import("./crypto/crypto.js").SignerID;
   export type SignerSecret = import("./crypto/crypto.js").SignerSecret;
   export type JsonObject = import("./jsonValue.js").JsonObject;
 }

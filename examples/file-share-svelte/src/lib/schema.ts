@@ -27,9 +27,7 @@ export class FileShareAccount extends Account {
   /** The account migration is run on account creation and on every log-in.
    *  You can use it to set up the account root and any other initial CoValues you need.
    */
-  async migrate(creationProps?: { name: string }) {
-    super.migrate(creationProps);
-
+  async migrate() {
     await this._refs.root?.load();
 
     // Initialize root if it doesn't exist

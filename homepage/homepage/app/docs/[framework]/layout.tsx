@@ -2,7 +2,10 @@ import DocsLayout from "@/components/docs/DocsLayout";
 import { DocNav } from "@/components/docs/nav";
 
 export const metadata = {
-  title: "Documentation",
+  title: {
+    default: "Documentation",
+    template: "%s | Jazz",
+  },
   description: "Jazz guide and documentation.",
 };
 

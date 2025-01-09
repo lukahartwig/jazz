@@ -1574,6 +1574,330 @@ test("ReaderInvites can not invite writers", () => {
   expect(groupAsInvite.get(invitedWriterID)).toBeUndefined();
 });
 
+test("WriteOnlyInvites can not invite writers", () => {
+  const { groupCore, admin } = newGroup();
+
+  const inviteSecret = Crypto.newRandomAgentSecret();
+  const inviteID = Crypto.getAgentID(inviteSecret);
+
+  const group = expectGroup(groupCore.getCurrentContent());
+
+  const { secret: readKey, id: readKeyID } = Crypto.newRandomKeySecret();
+  const revelation = Crypto.seal({
+    message: readKey,
+    from: admin.currentSealerSecret(),
+    to: admin.currentSealerID()._unsafeUnwrap(),
+    nOnceMaterial: {
+      in: groupCore.id,
+      tx: groupCore.nextTransactionID(),
+    },
+  });
+
+  group.set(`${readKeyID}_for_${admin.id}`, revelation, "trusting");
+  group.set("readKey", readKeyID, "trusting");
+
+  group.set(inviteID, "writeOnlyInvite", "trusting");
+
+  expect(group.get(inviteID)).toEqual("writeOnlyInvite");
+
+  const revelationForInvite = Crypto.seal({
+    message: readKey,
+    from: admin.currentSealerSecret(),
+    to: Crypto.getAgentSealerID(inviteID),
+    nOnceMaterial: {
+      in: groupCore.id,
+      tx: groupCore.nextTransactionID(),
+    },
+  });
+
+  group.set(`${readKeyID}_for_${inviteID}`, revelationForInvite, "trusting");
+
+  const groupAsInvite = expectGroup(
+    groupCore
+      .testWithDifferentAccount(
+        new ControlledAgent(inviteSecret, Crypto),
+        Crypto.newRandomSessionID(inviteID),
+      )
+      .getCurrentContent(),
+  );
+
+  const invitedWriterSecret = Crypto.newRandomAgentSecret();
+  const invitedWriterID = Crypto.getAgentID(invitedWriterSecret);
+
+  groupAsInvite.set(invitedWriterID, "writer", "trusting");
+  expect(groupAsInvite.get(invitedWriterID)).toBeUndefined();
+});
+
+test("WriteOnlyInvites can not invite admins", () => {
+  const { groupCore, admin } = newGroup();
+
+  const inviteSecret = Crypto.newRandomAgentSecret();
+  const inviteID = Crypto.getAgentID(inviteSecret);
+
+  const group = expectGroup(groupCore.getCurrentContent());
+
+  const { secret: readKey, id: readKeyID } = Crypto.newRandomKeySecret();
+  const revelation = Crypto.seal({
+    message: readKey,
+    from: admin.currentSealerSecret(),
+    to: admin.currentSealerID()._unsafeUnwrap(),
+    nOnceMaterial: {
+      in: groupCore.id,
+      tx: groupCore.nextTransactionID(),
+    },
+  });
+
+  group.set(`${readKeyID}_for_${admin.id}`, revelation, "trusting");
+  group.set("readKey", readKeyID, "trusting");
+
+  group.set(inviteID, "writeOnlyInvite", "trusting");
+
+  expect(group.get(inviteID)).toEqual("writeOnlyInvite");
+
+  const revelationForInvite = Crypto.seal({
+    message: readKey,
+    from: admin.currentSealerSecret(),
+    to: Crypto.getAgentSealerID(inviteID),
+    nOnceMaterial: {
+      in: groupCore.id,
+      tx: groupCore.nextTransactionID(),
+    },
+  });
+
+  group.set(`${readKeyID}_for_${inviteID}`, revelationForInvite, "trusting");
+
+  const groupAsInvite = expectGroup(
+    groupCore
+      .testWithDifferentAccount(
+        new ControlledAgent(inviteSecret, Crypto),
+        Crypto.newRandomSessionID(inviteID),
+      )
+      .getCurrentContent(),
+  );
+
+  const invitedWriterSecret = Crypto.newRandomAgentSecret();
+  const invitedWriterID = Crypto.getAgentID(invitedWriterSecret);
+
+  groupAsInvite.set(invitedWriterID, "admin", "trusting");
+  expect(groupAsInvite.get(invitedWriterID)).toBeUndefined();
+});
+
+test("WriteOnlyInvites can invite writeOnly", () => {
+  const { groupCore, admin } = newGroup();
+
+  const inviteSecret = Crypto.newRandomAgentSecret();
+  const inviteID = Crypto.getAgentID(inviteSecret);
+
+  const group = expectGroup(groupCore.getCurrentContent());
+
+  const { secret: readKey, id: readKeyID } = Crypto.newRandomKeySecret();
+  const revelation = Crypto.seal({
+    message: readKey,
+    from: admin.currentSealerSecret(),
+    to: admin.currentSealerID()._unsafeUnwrap(),
+    nOnceMaterial: {
+      in: groupCore.id,
+      tx: groupCore.nextTransactionID(),
+    },
+  });
+
+  group.set(`${readKeyID}_for_${admin.id}`, revelation, "trusting");
+  group.set("readKey", readKeyID, "trusting");
+
+  group.set(inviteID, "writeOnlyInvite", "trusting");
+
+  expect(group.get(inviteID)).toEqual("writeOnlyInvite");
+
+  const revelationForInvite = Crypto.seal({
+    message: readKey,
+    from: admin.currentSealerSecret(),
+    to: Crypto.getAgentSealerID(inviteID),
+    nOnceMaterial: {
+      in: groupCore.id,
+      tx: groupCore.nextTransactionID(),
+    },
+  });
+
+  group.set(`${readKeyID}_for_${inviteID}`, revelationForInvite, "trusting");
+
+  const groupAsInvite = expectGroup(
+    groupCore
+      .testWithDifferentAccount(
+        new ControlledAgent(inviteSecret, Crypto),
+        Crypto.newRandomSessionID(inviteID),
+      )
+      .getCurrentContent(),
+  );
+
+  const invitedWriterSecret = Crypto.newRandomAgentSecret();
+  const invitedWriterID = Crypto.getAgentID(invitedWriterSecret);
+
+  groupAsInvite.set(invitedWriterID, "writeOnly", "trusting");
+  expect(groupAsInvite.get(invitedWriterID)).toEqual("writeOnly");
+});
+
+test("WriteOnlyInvites can set writeKeys", () => {
+  const { groupCore, admin } = newGroup();
+
+  const inviteSecret = Crypto.newRandomAgentSecret();
+  const inviteID = Crypto.getAgentID(inviteSecret);
+
+  const group = expectGroup(groupCore.getCurrentContent());
+
+  const { secret: readKey, id: readKeyID } = Crypto.newRandomKeySecret();
+  const revelation = Crypto.seal({
+    message: readKey,
+    from: admin.currentSealerSecret(),
+    to: admin.currentSealerID()._unsafeUnwrap(),
+    nOnceMaterial: {
+      in: groupCore.id,
+      tx: groupCore.nextTransactionID(),
+    },
+  });
+
+  group.set(`${readKeyID}_for_${admin.id}`, revelation, "trusting");
+  group.set("readKey", readKeyID, "trusting");
+
+  group.set(inviteID, "writeOnlyInvite", "trusting");
+
+  expect(group.get(inviteID)).toEqual("writeOnlyInvite");
+
+  const revelationForInvite = Crypto.seal({
+    message: readKey,
+    from: admin.currentSealerSecret(),
+    to: Crypto.getAgentSealerID(inviteID),
+    nOnceMaterial: {
+      in: groupCore.id,
+      tx: groupCore.nextTransactionID(),
+    },
+  });
+
+  group.set(`${readKeyID}_for_${inviteID}`, revelationForInvite, "trusting");
+
+  const groupAsInvite = expectGroup(
+    groupCore
+      .testWithDifferentAccount(
+        new ControlledAgent(inviteSecret, Crypto),
+        Crypto.newRandomSessionID(inviteID),
+      )
+      .getCurrentContent(),
+  );
+
+  groupAsInvite.set(`writeKeyFor_${admin.id}`, readKeyID, "trusting");
+  expect(groupAsInvite.get(`writeKeyFor_${admin.id}`)).toEqual(readKeyID);
+});
+
+test("Invites can't override key revelations", () => {
+  const { groupCore, admin } = newGroup();
+
+  const inviteSecret = Crypto.newRandomAgentSecret();
+  const inviteID = Crypto.getAgentID(inviteSecret);
+
+  const group = expectGroup(groupCore.getCurrentContent());
+
+  const { secret: readKey, id: readKeyID } = Crypto.newRandomKeySecret();
+  const revelation = Crypto.seal({
+    message: readKey,
+    from: admin.currentSealerSecret(),
+    to: admin.currentSealerID()._unsafeUnwrap(),
+    nOnceMaterial: {
+      in: groupCore.id,
+      tx: groupCore.nextTransactionID(),
+    },
+  });
+
+  group.set(`${readKeyID}_for_${admin.id}`, revelation, "trusting");
+  group.set("readKey", readKeyID, "trusting");
+
+  group.set(inviteID, "readerInvite", "trusting");
+
+  expect(group.get(inviteID)).toEqual("readerInvite");
+
+  const revelationForInvite = Crypto.seal({
+    message: readKey,
+    from: admin.currentSealerSecret(),
+    to: Crypto.getAgentSealerID(inviteID),
+    nOnceMaterial: {
+      in: groupCore.id,
+      tx: groupCore.nextTransactionID(),
+    },
+  });
+
+  group.set(`${readKeyID}_for_${inviteID}`, revelationForInvite, "trusting");
+
+  const groupAsInvite = expectGroup(
+    groupCore
+      .testWithDifferentAccount(
+        new ControlledAgent(inviteSecret, Crypto),
+        Crypto.newRandomSessionID(inviteID),
+      )
+      .getCurrentContent(),
+  );
+
+  groupAsInvite.set(
+    `${readKeyID}_for_${admin.id}`,
+    "Evil change" as any,
+    "trusting",
+  );
+  expect(groupAsInvite.get(`${readKeyID}_for_${admin.id}`)).toBe(revelation);
+});
+
+test("WriteOnlyInvites can't override writeKeys", () => {
+  const { groupCore, admin } = newGroup();
+
+  const inviteSecret = Crypto.newRandomAgentSecret();
+  const inviteID = Crypto.getAgentID(inviteSecret);
+
+  const group = expectGroup(groupCore.getCurrentContent());
+
+  const { secret: readKey, id: readKeyID } = Crypto.newRandomKeySecret();
+  const revelation = Crypto.seal({
+    message: readKey,
+    from: admin.currentSealerSecret(),
+    to: admin.currentSealerID()._unsafeUnwrap(),
+    nOnceMaterial: {
+      in: groupCore.id,
+      tx: groupCore.nextTransactionID(),
+    },
+  });
+
+  group.set(`${readKeyID}_for_${admin.id}`, revelation, "trusting");
+  group.set("readKey", readKeyID, "trusting");
+
+  group.set(inviteID, "writeOnlyInvite", "trusting");
+
+  expect(group.get(inviteID)).toEqual("writeOnlyInvite");
+
+  const revelationForInvite = Crypto.seal({
+    message: readKey,
+    from: admin.currentSealerSecret(),
+    to: Crypto.getAgentSealerID(inviteID),
+    nOnceMaterial: {
+      in: groupCore.id,
+      tx: groupCore.nextTransactionID(),
+    },
+  });
+
+  group.set(`${readKeyID}_for_${inviteID}`, revelationForInvite, "trusting");
+
+  const groupAsInvite = expectGroup(
+    groupCore
+      .testWithDifferentAccount(
+        new ControlledAgent(inviteSecret, Crypto),
+        Crypto.newRandomSessionID(inviteID),
+      )
+      .getCurrentContent(),
+  );
+
+  groupAsInvite.set(`writeKeyFor_${admin.id}`, readKeyID, "trusting");
+  groupAsInvite.set(
+    `writeKeyFor_${admin.id}`,
+    "Evil change" as any,
+    "trusting",
+  );
+  expect(groupAsInvite.get(`writeKeyFor_${admin.id}`)).toEqual(readKeyID);
+});
+
 test("Can give read permission to 'everyone'", () => {
   const { node, groupCore } = newGroup();
 
@@ -1833,21 +2157,17 @@ test("Admins can set child extensions when the admin role is inherited", async (
   );
 });
 
-test("Writers, readers and invitees can not set child extensions", () => {
+test("Writers, readers and writeOnly can set child extensions", () => {
   const { group, node } = newGroupHighLevel();
   const childGroup = node.createGroup();
 
   const writer = node.createAccount();
   const reader = node.createAccount();
-  const adminInvite = node.createAccount();
-  const writerInvite = node.createAccount();
-  const readerInvite = node.createAccount();
+  const writeOnly = node.createAccount();
 
   group.addMember(writer, "writer");
   group.addMember(reader, "reader");
-  group.addMember(adminInvite, "adminInvite");
-  group.addMember(writerInvite, "writerInvite");
-  group.addMember(readerInvite, "readerInvite");
+  group.addMember(writeOnly, "writeOnly");
 
   const groupAsWriter = expectGroup(
     group.core
@@ -1856,7 +2176,7 @@ test("Writers, readers and invitees can not set child extensions", () => {
   );
 
   groupAsWriter.set(`child_${childGroup.id}`, "extend", "trusting");
-  expect(groupAsWriter.get(`child_${childGroup.id}`)).toBeUndefined();
+  expect(groupAsWriter.get(`child_${childGroup.id}`)).toEqual("extend");
 
   const groupAsReader = expectGroup(
     group.core
@@ -1865,7 +2185,20 @@ test("Writers, readers and invitees can not set child extensions", () => {
   );
 
   groupAsReader.set(`child_${childGroup.id}`, "extend", "trusting");
-  expect(groupAsReader.get(`child_${childGroup.id}`)).toBeUndefined();
+  expect(groupAsReader.get(`child_${childGroup.id}`)).toEqual("extend");
+});
+
+test("Invitees can not set child extensions", () => {
+  const { group, node } = newGroupHighLevel();
+  const childGroup = node.createGroup();
+
+  const adminInvite = node.createAccount();
+  const writerInvite = node.createAccount();
+  const readerInvite = node.createAccount();
+
+  group.addMember(adminInvite, "adminInvite");
+  group.addMember(writerInvite, "writerInvite");
+  group.addMember(readerInvite, "readerInvite");
 
   const groupAsAdminInvite = expectGroup(
     group.core

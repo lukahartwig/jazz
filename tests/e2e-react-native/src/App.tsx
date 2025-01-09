@@ -5,7 +5,7 @@ import {
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import React, { StrictMode, useEffect, useRef } from "react";
 
-import { DemoAuthBasicUI, useDemoAuth } from "jazz-react-native";
+import { useDemoAuth } from "jazz-react-native";
 import { Jazz } from "./jazz";
 import { SimpleSharing } from "./screens/SimpleSharing";
 
@@ -18,10 +18,10 @@ function App() {
 
   useEffect(() => {
     if (state.state === "ready" && !signedUp.current) {
-      if (state.existingUsers.includes("Mister X")) {
-        state.logInAs("Mister X");
+      if (state.existingUsers.includes("MisterX")) {
+        state.logInAs("MisterX");
       } else {
-        state.signUp("Mister X");
+        state.signUp("MisterX");
       }
 
       signedUp.current = true;

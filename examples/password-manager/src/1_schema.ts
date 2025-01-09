@@ -28,8 +28,7 @@ export class PasswordManagerAccount extends Account {
   profile = co.ref(Profile);
   root = co.ref(PasswordManagerAccountRoot);
 
-  migrate(this: PasswordManagerAccount, creationProps?: { name: string }) {
-    super.migrate(creationProps);
+  migrate() {
     if (!this._refs.root) {
       const group = Group.create({ owner: this });
       const firstFolder = Folder.create(

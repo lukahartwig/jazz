@@ -1,10 +1,16 @@
-import { SiDiscord, SiGithub, SiX } from "@icons-pack/react-simple-icons";
+import {
+  SiBluesky,
+  SiDiscord,
+  SiGithub,
+  SiX,
+} from "@icons-pack/react-simple-icons";
 import { clsx } from "clsx";
 
 export interface SocialLinksProps {
   github?: string;
   x?: string;
   discord?: string;
+  bluesky?: string;
 }
 
 const socials = [
@@ -19,6 +25,12 @@ const socials = [
     icon: SiDiscord,
     key: "discord",
     size: 23,
+  },
+  {
+    name: "BlueSky",
+    icon: SiBluesky,
+    key: "bluesky",
+    size: 20,
   },
   {
     name: "X",

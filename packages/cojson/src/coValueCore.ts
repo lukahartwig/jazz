@@ -210,6 +210,7 @@ export class CoValueCore {
     newTransactions: Transaction[],
     givenExpectedNewHash: Hash | undefined,
     newSignature: Signature,
+    skipVerify: boolean = false,
   ): Result<true, TryAddTransactionsError> {
     return this.node
       .resolveAccountAgent(
@@ -239,8 +240,10 @@ export class CoValueCore {
           } satisfies InvalidHashError);
         }
 
-        // const beforeVerify = performance.now();
-        if (!this.crypto.verify(newSignature, expectedNewHash, signerID)) {
+        if (
+          skipVerify !== true &&
+          !this.crypto.verify(newSignature, expectedNewHash, signerID)
+        ) {
           return err({
             type: "InvalidSignature",
             id: this.id,
@@ -451,7 +454,16 @@ export class CoValueCore {
       signatureAfter: signatureAfter,
     });
 
-    this._cachedContent = undefined;
+    if (
+      this._cachedContent &&
+      "processNewTransactions" in this._cachedContent &&
+      typeof this._cachedContent.processNewTransactions === "function"
+    ) {
+      this._cachedContent.processNewTransactions();
+    } else {
+      this._cachedContent = undefined;
+    }
+
     this._cachedKnownState = undefined;
     this._cachedDependentOn = undefined;
     this._cachedNewContentSinceEmpty = undefined;
@@ -601,6 +613,7 @@ export class CoValueCore {
       [transaction],
       expectedNewHash,
       signature,
+      true,
     )._unsafeUnwrap({ withStackTrace: true });
 
     if (success) {
@@ -626,14 +639,19 @@ export class CoValueCore {
     return newContent;
   }
 
-  getValidSortedTransactions(options?: {
+  getValidTransactions(options?: {
     ignorePrivateTransactions: boolean;
+    knownTransactions?: CoValueKnownState["sessions"];
   }): DecryptedTransaction[] {
     const validTransactions = determineValidTransactions(this);
 
     const allTransactions: DecryptedTransaction[] = [];
 
     for (const { txID, tx } of validTransactions) {
+      if (options?.knownTransactions?.[txID.sessionID]! >= txID.txIndex) {
+        continue;
+      }
+
       if (tx.privacy === "trusting") {
         allTransactions.push({
           txID,
@@ -680,21 +698,35 @@ export class CoValueCore {
       });
     }
 
-    allTransactions.sort(
-      (a, b) =>
-        a.madeAt - b.madeAt ||
-        (a.txID.sessionID < b.txID.sessionID ? -1 : 1) ||
-        a.txID.txIndex - b.txID.txIndex,
-    );
+    return allTransactions;
+  }
+
+  getValidSortedTransactions(options?: {
+    ignorePrivateTransactions: boolean;
+  }): DecryptedTransaction[] {
+    const allTransactions = this.getValidTransactions(options);
+
+    allTransactions.sort(this.compareTransactions);
 
     return allTransactions;
+  }
+
+  compareTransactions(
+    a: Pick<DecryptedTransaction, "madeAt" | "txID">,
+    b: Pick<DecryptedTransaction, "madeAt" | "txID">,
+  ) {
+    return (
+      a.madeAt - b.madeAt ||
+      (a.txID.sessionID < b.txID.sessionID ? -1 : 1) ||
+      a.txID.txIndex - b.txID.txIndex
+    );
   }
 
   getCurrentReadKey(): { secret: KeySecret | undefined; id: KeyID } {
     if (this.header.ruleset.type === "group") {
       const content = expectGroup(this.getCurrentContent());
 
-      const currentKeyId = content.get("readKey");
+      const currentKeyId = content.getCurrentReadKeyId();
 
       if (!currentKeyId) {
         throw new Error("No readKey set");
