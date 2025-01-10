@@ -30,7 +30,7 @@ export class SyncService {
         coValue,
       });
 
-      // TODO should be moved inside peer.send.push
+      // TODO M.O. should be moved inside peer.send.push
       if (this.onPushContent) {
         const entry = coValuesStore.get(coValue.id);
         this.onPushContent({ entry, peerId: peer.id });
@@ -52,14 +52,15 @@ export class SyncService {
 
     const peersToSync = peers || LocalNode.peers.getInPriorityOrder();
 
-    for (const peer of peersToSync) {
+    for await (const peer of peersToSync) {
       if (peer.erroredCoValues.has(entry.id)) continue;
 
       await peer.send.push({
         peerKnownState,
         coValue: entry.state.coValue,
       });
-      // TODO should be moved inside peer.send.push
+
+      // TODO M.O. should be moved inside peer.send.push
       if (this.onPushContent) {
         this.onPushContent({ entry, peerId: peer.id });
       }

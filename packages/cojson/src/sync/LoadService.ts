@@ -5,8 +5,6 @@ import { PeerEntry, getPeersWithoutErrors } from "../peer/index.js";
 import { emptyKnownState } from "./types.js";
 
 export class LoadService {
-  constructor() {}
-
   /**
    * Sends "pull" request to peers to load/update the coValue state and request to subscribe to peer's updates if have not
    *
@@ -20,6 +18,10 @@ export class LoadService {
     const peers = peerToLoadFrom
       ? [peerToLoadFrom]
       : LocalNode.peers.getServerAndStorage();
+
+    if (entry.state.type === "loading") {
+      return entry.getCoValue();
+    }
 
     try {
       await entry.loadFromPeers(
@@ -59,8 +61,9 @@ async function loadCoValueFromPeers(
         }
       }, CO_VALUE_LOADING_TIMEOUT);
 
-      await coValueEntry.state.waitForPeer(peer.id);
-      clearTimeout(timeout);
+      coValueEntry.state.waitForPeer(peer.id).then(() => {
+        clearTimeout(timeout);
+      });
     }
   }
 }

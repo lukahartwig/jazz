@@ -64,7 +64,7 @@ export class PeerOperations {
     });
   }
 
-  async push({
+  push({
     peerKnownState,
     coValue,
   }: { peerKnownState: CoValueKnownState; coValue: CoValueCore }) {

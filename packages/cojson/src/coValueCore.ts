@@ -934,6 +934,7 @@ export class CoValueCore {
     return this.sessionLogs.get(txID.sessionID)?.transactions[txID.txIndex];
   }
 
+  // TODO M.O. do cache addContentSince for a while?
   newContentSince(knownState: CoValueKnownState): CoValueContent[] | undefined {
     const shouldSendEverything =
       !knownState.header ||
