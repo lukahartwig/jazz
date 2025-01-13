@@ -75,8 +75,8 @@ export const frameworkToAuthExamples: Partial<
   Record<FrameworkAuthPair, { name: string; repo: string | undefined }>
 > = {
   "react-demo-auth": {
-    name: "React + Jazz + Demo Auth",
-    repo: "garden-co/jazz/examples/chat",
+    name: "React + Jazz + Demo Auth + Tailwind",
+    repo: "garden-co/jazz/starters/react-demo-auth-tailwind",
   },
   "react-passkey-auth": {
     name: "React + Jazz + Passkey Auth",
@@ -94,16 +94,16 @@ export const frameworkToAuthExamples: Partial<
     name: "Svelte + Jazz + Passkey Auth",
     repo: "garden-co/jazz/examples/passkey-svelte",
   },
-  "nextjs-demo-auth": {
-    name: "Next.js + Jazz + Demo Auth",
-    repo: "garden-co/jazz/examples/book-shelf",
-  },
   "react-native-expo-clerk-auth": {
     name: "React Native Expo + Jazz + Clerk Auth",
     repo: "garden-co/jazz/examples/chat-rn-clerk",
   },
   "react-passphrase-auth": {
     name: "[To Be Implemented] React + Jazz + Passphrase Auth",
+    repo: undefined,
+  },
+  "nextjs-demo-auth": {
+    name: "[To Be Implemented] Next.js + Jazz + Demo Auth",
     repo: undefined,
   },
   "nextjs-passkey-auth": {

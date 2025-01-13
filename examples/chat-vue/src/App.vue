@@ -9,9 +9,9 @@
 </template>
 
 <script setup lang="ts">
+import { useAccount } from "jazz-vue";
 import AppContainer from "./components/AppContainer.vue";
 import TopBar from "./components/TopBar.vue";
-import { useAccount } from "./main";
 
 const { me, logOut } = useAccount();
 </script>

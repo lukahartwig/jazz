@@ -64,9 +64,9 @@
 
 <script setup lang="ts">
 import { Group, type ID } from "jazz-tools";
+import { useAccount, useCoState } from "jazz-vue";
 import { ref, toRaw, watch } from "vue";
 import { computed } from "vue";
-import { useAccount, useCoState } from "../main";
 import { Folder, FolderList, ToDoItem, ToDoList } from "../schema";
 
 const { me } = useAccount();

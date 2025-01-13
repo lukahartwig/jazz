@@ -12,19 +12,21 @@ export function DocNav({ className }: { className?: string }) {
   const items = docNavigationItems.map((headerItem) => {
     return {
       ...headerItem,
-      items: headerItem.items.map((item) => {
-        if (!item.href?.startsWith("/docs")) return item;
+      items: headerItem.items
+        .filter((item) => !item.framework || item.framework === framework)
+        .map((item) => {
+          if (!item.href?.startsWith("/docs")) return item;
 
-        let done =
-          typeof item.done === "number" ? item.done : item.done[framework];
-        let href = item.href.replace("/docs", `/docs/${framework}`);
+          let done =
+            typeof item.done === "number" ? item.done : item.done[framework];
+          let href = item.href.replace("/docs", `/docs/${framework}`);
 
-        return {
-          ...item,
-          href,
-          done,
-        };
-      }),
+          return {
+            ...item,
+            href,
+            done,
+          };
+        }),
     };
   });
 

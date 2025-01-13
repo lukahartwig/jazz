@@ -24,7 +24,7 @@ export function webSocketWithReconnection(
 
       const wsPeer: Peer = createWebSocketPeer({
         id: "upstream",
-        websocket: new WebSocket(peer),
+        websocket: new WebSocket(peer) as any,
         role: "server",
         onClose: handleClose,
       });

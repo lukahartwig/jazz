@@ -6,14 +6,16 @@ import {
   MAX_RECOMMENDED_TX_SIZE,
   idforHeader,
 } from "./coValueCore.js";
-import { ControlledAgent, RawControlledAccount } from "./coValues/account.js";
 import {
+  ControlledAgent,
   RawAccount,
+  RawControlledAccount,
   RawProfile,
   accountHeaderForInitialAgentSecret,
 } from "./coValues/account.js";
-import { RawCoList } from "./coValues/coList.js";
+import { OpID, RawCoList } from "./coValues/coList.js";
 import { RawCoMap } from "./coValues/coMap.js";
+import { RawCoPlainText, stringifyOpID } from "./coValues/coPlainText.js";
 import {
   CoStreamItem,
   RawBinaryCoStream,
@@ -137,6 +139,8 @@ export {
   isRawCoID,
   LSMStorage,
   emptyKnownState,
+  RawCoPlainText,
+  stringifyOpID,
 };
 
 export type {
@@ -151,6 +155,7 @@ export type {
   CoValueUniqueness,
   Stringified,
   CoStreamItem,
+  OpID,
 };
 
 // eslint-disable-next-line @typescript-eslint/no-namespace

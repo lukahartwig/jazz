@@ -30,7 +30,7 @@ export type AuthResult =
     }
   | {
       type: "new";
-      creationProps: { name: string };
+      creationProps: { name: string; anonymous?: boolean };
       initialSecret?: AgentSecret;
       saveCredentials: (credentials: Credentials) => Promise<void>;
       onSuccess: () => void;

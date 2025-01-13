@@ -1,19 +1,31 @@
 import { AgentSecret } from "cojson";
 import { Account, ID } from "jazz-tools";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { RNDemoAuth } from "../auth/DemoAuthMethod";
+import { RNDemoAuth, encodeUsername } from "../auth/DemoAuthMethod";
 import { KvStore, KvStoreContext } from "../storage/kv-store-context";
 
 // Initialize mock storage
 const mockStorage: { [key: string]: string } = {};
 
+function validateKey(key: string) {
+  if (key.includes("+") || key.includes("/") || key.includes("=")) {
+    throw new Error("Invalid key");
+  }
+}
+
 // Mock KvStore implementation
 const mockKvStore: KvStore = {
-  get: vi.fn(async (key: string) => mockStorage[key] || null),
+  get: vi.fn(async (key: string) => {
+    validateKey(key);
+    return mockStorage[key] || null;
+  }),
   set: vi.fn(async (key: string, value: string) => {
+    validateKey(key);
+
     mockStorage[key] = value;
   }),
   delete: vi.fn(async (key: string) => {
+    validateKey(key);
     delete mockStorage[key];
   }),
   clearAll: vi.fn(async () => {
@@ -61,7 +73,7 @@ describe("RNDemoAuth", () => {
         "testUser",
       );
       expect(mockKvStore.set).toHaveBeenCalledWith(
-        "demo-auth-existing-users-" + btoa("testUser"),
+        "demo-auth-existing-users-" + encodeUsername("testUser"),
         expect.any(String),
       );
     });
@@ -73,6 +85,21 @@ describe("RNDemoAuth", () => {
 
       mockDriver.onReady = vi.fn(({ signUp }) => {
         signUp("testUser");
+      });
+
+      const auth = await RNDemoAuth.init(mockDriver);
+      const result = await auth.start();
+
+      expect(mockDriver.onReady).toHaveBeenCalled();
+      expect(result.type).toBe("new");
+      expect(result.saveCredentials).toBeDefined();
+    });
+
+    it("should convert unsupported chars from base64 to a valid key", async () => {
+      const { mockDriver } = setup();
+
+      mockDriver.onReady = vi.fn(({ signUp }) => {
+        signUp(atob("+/=="));
       });
 
       const auth = await RNDemoAuth.init(mockDriver);
@@ -145,7 +172,7 @@ describe("RNDemoAuth", () => {
       });
 
       expect(mockKvStore.set).toHaveBeenCalledWith(
-        "demo-auth-existing-users-" + btoa("testUser"),
+        "demo-auth-existing-users-" + encodeUsername("testUser"),
         expect.any(String),
       );
 
@@ -168,7 +195,7 @@ describe("RNDemoAuth", () => {
         accountSecret: "test-secret" as AgentSecret,
       };
 
-      mockStorage["demo-auth-existing-users-" + btoa("testUser")] =
+      mockStorage["demo-auth-existing-users-" + encodeUsername("testUser")] =
         JSON.stringify(credentials);
 
       mockDriver.onReady = vi.fn(({ logInAs }) => {
@@ -214,7 +241,7 @@ describe("RNDemoAuth", () => {
       });
 
       expect(mockKvStore.set).toHaveBeenCalledWith(
-        "demo-auth-existing-users-" + btoa("testUser-2"),
+        "demo-auth-existing-users-" + encodeUsername("testUser-2"),
         expect.any(String),
       );
 
@@ -265,7 +292,7 @@ describe("RNDemoAuth", () => {
       await RNDemoAuth.init(mockDriver);
 
       expect(mockKvStore.set).toHaveBeenCalledWith(
-        "demo-auth-existing-users-" + btoa("testUser"),
+        "demo-auth-existing-users-" + encodeUsername("testUser"),
         value,
       );
 

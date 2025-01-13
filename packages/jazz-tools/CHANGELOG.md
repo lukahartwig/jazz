@@ -1,5 +1,27 @@
 # jazz-tools
 
+## 0.9.1
+
+### Patch Changes
+
+- 1b71969: Add Onboarding auth to handle users onboarding without an auth screen
+
+## 0.9.0
+
+### Patch Changes
+
+- 8eda792: Optimize the subscribe to resolve the CoValues stored in memory synchronously
+- Updated dependencies [8eda792]
+- Updated dependencies [1ef3226]
+  - cojson@0.9.0
+
+## 0.8.51
+
+### Patch Changes
+
+- dc62b95: Return field name on \_edits
+- 1de26f8: Simplify the .create calls by accepting directly "Account | Group" as second param
+
 ## 0.8.50
 
 ### Patch Changes

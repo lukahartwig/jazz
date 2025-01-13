@@ -15,11 +15,15 @@
       "types": "./src/index.native.ts",
       "default": "./dist/index.native.js"
     },
+    "./testing": {
+      "types": "./src/testing.ts",
+      "default": "./dist/testing.js"
+    },
     "./src/*": "./src/*"
   },
   "type": "module",
   "license": "MIT",
-  "version": "0.8.50",
+  "version": "0.9.1",
   "dependencies": {
     "cojson": "workspace:*"
   },

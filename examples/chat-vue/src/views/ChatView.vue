@@ -26,12 +26,12 @@
 
 <script lang="ts">
 import type { ID } from "jazz-tools";
+import { useCoState } from "jazz-vue";
 import { type PropType, computed, defineComponent, ref } from "vue";
 import ChatBody from "../components/ChatBody.vue";
 import ChatBubble from "../components/ChatBubble.vue";
 import ChatInput from "../components/ChatInput.vue";
 import EmptyChatMessage from "../components/EmptyChatMessage.vue";
-import { useCoState } from "../main";
 import { Chat, Message } from "../schema";
 
 export default defineComponent({

@@ -1,5 +1,23 @@
 # create-jazz-app
 
+## 0.1.5
+
+### Patch Changes
+
+- f78c234: Fix metro config for the RN starter
+
+## 0.1.4
+
+### Patch Changes
+
+- 09d32ee: Remove nextjs starter
+
+## 0.1.3
+
+### Patch Changes
+
+- d4d98c4: Simplify starter app for react demo auth
+
 ## 0.1.2
 
 ### Patch Changes

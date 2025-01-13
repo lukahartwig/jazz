@@ -1,5 +1,69 @@
 # jazz-react-native-auth-clerk
 
+## 0.9.6
+
+### Patch Changes
+
+- Updated dependencies [8a390d2]
+  - jazz-react-native@0.9.6
+
+## 0.9.5
+
+### Patch Changes
+
+- Updated dependencies [c871912]
+  - jazz-react-native@0.9.5
+
+## 0.9.4
+
+### Patch Changes
+
+- jazz-react-native@0.9.4
+
+## 0.9.3
+
+### Patch Changes
+
+- Updated dependencies [7cd691f]
+  - jazz-react-native@0.9.3
+
+## 0.9.2
+
+### Patch Changes
+
+- Updated dependencies [80fd3e9]
+  - jazz-react-native@0.9.2
+
+## 0.9.1
+
+### Patch Changes
+
+- Updated dependencies [1b71969]
+  - jazz-tools@0.9.1
+  - jazz-react-native@0.9.1
+
+## 0.9.0
+
+### Patch Changes
+
+- Updated dependencies [8eda792]
+- Updated dependencies [1da4d55]
+- Updated dependencies [8eda792]
+- Updated dependencies [1ef3226]
+- Updated dependencies [1e5e3a1]
+  - cojson@0.9.0
+  - jazz-react-native@0.9.0
+  - jazz-tools@0.9.0
+
+## 0.8.51
+
+### Patch Changes
+
+- Updated dependencies [dc62b95]
+- Updated dependencies [1de26f8]
+  - jazz-tools@0.8.51
+  - jazz-react-native@0.8.51
+
 ## 0.8.50
 
 ### Patch Changes

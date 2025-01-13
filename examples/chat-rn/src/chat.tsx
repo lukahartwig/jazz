@@ -14,50 +14,40 @@ import React, {
   Alert,
 } from "react-native";
 
-import { useAccount, useCoState } from "./jazz";
+import { useAccount, useCoState } from "jazz-react-native";
 import { Chat, Message } from "./schema";
 
 export default function ChatScreen({ navigation }: { navigation: any }) {
   const { me, logOut } = useAccount();
-  const [chat, setChat] = useState<Chat>();
+  const [chatId, setChatId] = useState<ID<Chat>>();
+  const loadedChat = useCoState(Chat, chatId, [{}]);
   const [message, setMessage] = useState("");
-  const loadedChat = useCoState(Chat, chat?.id, [{}]);
 
   useEffect(() => {
     navigation.setOptions({
       headerRight: () => <Button onPress={logOut} title="Logout" />,
       headerLeft: () =>
-        chat ? (
+        loadedChat ? (
           <Button
             onPress={() => {
-              if (chat?.id) {
+              if (loadedChat?.id) {
                 Clipboard.setStringAsync(
-                  `https://chat.jazz.tools/#/chat/${chat.id}`,
+                  `https://chat.jazz.tools/#/chat/${loadedChat.id}`,
                 );
-                Alert.alert("Copied to clipboard", `Chat ID: ${chat.id}`);
+                Alert.alert("Copied to clipboard", `Chat ID: ${loadedChat.id}`);
               }
             }}
             title="Share"
           />
         ) : null,
     });
-  }, [navigation, chat]);
+  }, [navigation, loadedChat]);
 
   const createChat = () => {
     const group = Group.create({ owner: me });
     group.addMember("everyone", "writer");
     const chat = Chat.create([], { owner: group });
-    setChat(chat);
-  };
-
-  const loadChat = async (chatId: ID<Chat>) => {
-    try {
-      const chat = await Chat.load(chatId, me, []);
-      setChat(chat);
-    } catch (error) {
-      console.log("Error loading chat", error);
-      Alert.alert("Error", `Error loading chat: ${error}`);
-    }
+    setChatId(chat.id);
   };
 
   const joinChat = () => {
@@ -73,7 +63,7 @@ export default function ChatScreen({ navigation }: { navigation: any }) {
           text: "Join",
           onPress: (chatId) => {
             if (chatId) {
-              loadChat(chatId as ID<Chat>);
+              setChatId(chatId as ID<Chat>);
             } else {
               Alert.alert("Error", "Chat ID cannot be empty.");
             }
@@ -85,9 +75,11 @@ export default function ChatScreen({ navigation }: { navigation: any }) {
   };
 
   const sendMessage = () => {
-    if (!chat) return;
+    if (!loadedChat) return;
     if (message.trim()) {
-      chat.push(Message.create({ text: message }, { owner: chat._owner }));
+      loadedChat.push(
+        Message.create({ text: message }, { owner: loadedChat?._owner }),
+      );
       setMessage("");
     }
   };
@@ -137,7 +129,7 @@ export default function ChatScreen({ navigation }: { navigation: any }) {
 
   return (
     <View className="flex flex-col h-full">
-      {!chat ? (
+      {!loadedChat ? (
         <View className="flex flex-col h-full items-center justify-center">
           <TouchableOpacity
             onPress={createChat}

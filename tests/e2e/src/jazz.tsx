@@ -1,6 +1,4 @@
-import { createJazzReactApp, useDemoAuth } from "jazz-react";
-import { useEffect, useRef } from "react";
-import { PingPong } from "./pages/Inbox";
+import { JazzProvider, useOnboardingAuth } from "jazz-react";
 
 const url = new URL(window.location.href);
 
@@ -18,43 +16,16 @@ if (import.meta.env.VITE_WS_PEER) {
   peer = import.meta.env.VITE_WS_PEER;
 }
 
-const Jazz = createJazzReactApp({
-  InboxMessageSchema: PingPong,
-});
-
-export const {
-  useAccount,
-  useCoState,
-  useAcceptInvite,
-  experimental: { useInboxListener, useInboxSender },
-} = Jazz;
-
 function getUserInfo() {
   return url.searchParams.get("userName") ?? "Mister X";
 }
 
 export function AuthAndJazz({ children }: { children: React.ReactNode }) {
-  const [auth, state] = useDemoAuth();
-
-  const signedUp = useRef(false);
-
-  useEffect(() => {
-    if (state.state === "ready" && !signedUp.current) {
-      const userName = getUserInfo();
-
-      if (state.existingUsers.includes(userName)) {
-        state.logInAs(userName);
-      } else {
-        state.signUp(userName);
-      }
-
-      signedUp.current = true;
-    }
-  }, [state.state]);
+  const [auth] = useOnboardingAuth();
 
   return (
-    <Jazz.Provider auth={auth} peer={`${peer}?key=${key}`}>
+    <JazzProvider auth={auth} peer={`${peer}?key=${key}`}>
       {children}
-    </Jazz.Provider>
+    </JazzProvider>
   );
 }

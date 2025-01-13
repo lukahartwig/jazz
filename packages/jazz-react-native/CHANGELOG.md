@@ -1,5 +1,77 @@
 # jazz-browser
 
+## 0.9.6
+
+### Patch Changes
+
+- 8a390d2: Fix the account type registration using the sources for the typescript definitions
+
+## 0.9.5
+
+### Patch Changes
+
+- c871912: Add clearUserCredentials API to programmatically delete the current user stored credentials
+
+## 0.9.4
+
+### Patch Changes
+
+- Updated dependencies [0f57687]
+  - jazz-react-core@0.8.48
+
+## 0.9.3
+
+### Patch Changes
+
+- 7cd691f: Fix auth when using custom KV implementation
+- Updated dependencies [2be47d6]
+  - cojson-storage-rn-sqlite@0.8.51
+
+## 0.9.2
+
+### Patch Changes
+
+- 80fd3e9: Add local persistence with "@op-engineering/op-sqlite".
+
+  Disabled by default, follow the upgrade guide to enable it.
+
+  https://jazz.tools/docs/react-native/upgrade/react-native-local-persistence
+
+## 0.9.1
+
+### Patch Changes
+
+- Updated dependencies [1b71969]
+  - jazz-tools@0.9.1
+  - jazz-react-core@0.8.47
+
+## 0.9.0
+
+### Minor Changes
+
+- 1e5e3a1: Change the way the JazzProvider is created and make the hooks available as top-level imports.
+
+### Patch Changes
+
+- 1da4d55: Fix username key hashing in DemoAuth
+  Improve error handling when loading an existing account fails
+  Fix the double context creation in Reacc development mode
+- Updated dependencies [8eda792]
+- Updated dependencies [8eda792]
+- Updated dependencies [1ef3226]
+  - cojson@0.9.0
+  - jazz-tools@0.9.0
+  - cojson-transport-ws@0.9.0
+  - jazz-react-core@0.8.46
+
+## 0.8.51
+
+### Patch Changes
+
+- Updated dependencies [dc62b95]
+- Updated dependencies [1de26f8]
+  - jazz-tools@0.8.51
+
 ## 0.8.50
 
 ### Patch Changes

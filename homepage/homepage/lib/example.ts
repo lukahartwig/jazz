@@ -13,7 +13,6 @@ export type Example = {
 
 export const tech = {
   react: "React",
-  nextjs: "Next.js",
   reactNative: "React Native",
   vue: "Vue",
   svelte: "Svelte",

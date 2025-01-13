@@ -50,6 +50,19 @@ export const docNavigationItems = [
         href: "/docs/project-setup/server-side",
         done: 80,
       },
+      {
+        // upgrade guides
+        name: "Enable local persistence",
+        href: "/docs/upgrade/react-native-local-persistence",
+        done: 100,
+        framework: "react-native",
+      },
+      {
+        // upgrade guides
+        name: "Upgrade to Jazz 0.9.0",
+        href: "/docs/upgrade/0-9-0",
+        done: 100,
+      },
     ],
   },
   {
@@ -63,7 +76,7 @@ export const docNavigationItems = [
       {
         name: "Accounts & migrations",
         href: "/docs/schemas/accounts-and-migrations",
-        done: 0,
+        done: 20,
       },
     ],
   },

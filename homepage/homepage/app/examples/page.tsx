@@ -1,7 +1,6 @@
 import { ExampleCard } from "@/components/examples/ExampleCard";
 import { ExampleDemo } from "@/components/examples/ExampleDemo";
 import { ClerkFullLogo } from "@/components/icons/ClerkFullLogo";
-import { NextjsLogo } from "@/components/icons/NextjsLogo";
 import { ReactLogo } from "@/components/icons/ReactLogo";
 import { ReactNativeLogo } from "@/components/icons/ReactNativeLogo";
 import { SvelteLogo } from "@/components/icons/SvelteLogo";
@@ -145,6 +144,53 @@ const OrganizationIllustration = () => (
   </div>
 );
 
+const VersionHistoryIllustration = () => (
+  <div className="flex flex-col justify-center items-center h-full">
+    <ul className="inline-flex flex-col gap-2 max-w-96 md:gap-4">
+      {[
+        {
+          userInitial: "B",
+          color: "orange-600",
+          user: "Bob",
+          action: "changed status to",
+          value: "Backlog",
+        },
+        {
+          userInitial: "A",
+          color: "rose-600",
+          user: "Alice",
+          action: "changed status to",
+          value: "In progress",
+        },
+        {
+          userInitial: "A",
+          color: "rose-600",
+          user: "Alice",
+          action: "changed estimate to",
+          value: "5",
+        },
+      ].map((change, index) => (
+        <li
+          key={index}
+          className="flex items-center gap-2 text-sm sm:text-base md:gap-3"
+        >
+          <span
+            className={`size-5 shrink-0 text-xs inline-flex items-center justify-center font-medium rounded-full text-white bg-${change.color} sm:size-6`}
+          >
+            {change.userInitial}
+          </span>
+          <p>
+            {change.user} {change.action}{" "}
+            <span className="font-medium text-stone-900 dark:text-white">
+              {change.value}
+            </span>
+          </p>
+        </li>
+      ))}
+    </ul>
+  </div>
+);
+
 const MusicIllustration = () => (
   <div className="flex flex-col items-center justify-center h-full p-8">
     <div className="p-3 w-[12rem] h-[8rem] border border-dashed border-blue dark:border-blue-500 rounded-lg flex gap-2 flex-col items-center justify-center">
@@ -186,29 +232,6 @@ const ReactionsIllustration = () => (
         >
           {emoji}
         </button>
-      ))}
-    </div>
-  </div>
-);
-
-const BookShelfIllustration = () => (
-  <div className="h-full max-w-[30rem] mx-auto flex flex-col justify-center p-6 md:p-5">
-    <div className="flex justify-between items-baseline">
-      <p className="font-display font-medium tracking-tight  text-sm text-stone-900 dark:text-white">
-        Your book shelf
-      </p>
-
-      <MockButton>Add book</MockButton>
-    </div>
-
-    <div className="grid grid-cols-3 gap-4 mt-3">
-      {["malibu.jpg", "pathless.jpg", "upgrade.jpg"].map((book) => (
-        <img
-          key={book}
-          src={`/book-covers/${book}`}
-          alt=""
-          className="w-full h-full object-cover rounded-r-md shadow-sm border dark:border-none"
-        />
       ))}
     </div>
   </div>
@@ -426,19 +449,13 @@ const reactExamples: Example[] = [
     features: [features.inviteLink],
     illustration: <OrganizationIllustration />,
   },
-];
-
-const nextExamples: Example[] = [
   {
-    name: "Book shelf",
-    slug: "book-shelf",
+    name: "Version history",
+    slug: "version-history",
     description:
-      "Track and rate the books you read, readable by everyone with the link.",
-    tech: [tech.nextjs],
-    features: [features.imageUpload],
-    demoUrl: "https://books-demo.jazz.tools",
-    imageUrl: "/books.jpg",
-    illustration: <BookShelfIllustration />,
+      "Track and restore previous versions of your data, and see who made the changes.",
+    tech: [tech.react],
+    illustration: <VersionHistoryIllustration />,
   },
 ];
 
@@ -507,12 +524,6 @@ const categories = [
     id: "react",
     logo: ReactLogo,
     examples: reactExamples,
-  },
-  {
-    name: "Next.js",
-    id: "next",
-    logo: NextjsLogo,
-    examples: nextExamples,
   },
   {
     name: "React Native",

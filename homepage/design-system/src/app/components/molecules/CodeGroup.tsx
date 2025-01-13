@@ -89,7 +89,7 @@ export function CodeGroup({
     <div className={clsx(className, "group relative")}>
       <pre
         className={clsx(
-          "h-full border p-0 bg-stone-50 dark:bg-stone-900",
+          "h-full border p-0 bg-stone-50 dark:bg-stone-925",
           "text-black dark:text-white",
           {
             "text-sm": size === "sm",

@@ -22,6 +22,7 @@ import {
 } from "./account.js";
 import { RawCoList } from "./coList.js";
 import { RawCoMap } from "./coMap.js";
+import { RawCoPlainText } from "./coPlainText.js";
 import { RawBinaryCoStream, RawCoStream } from "./coStream.js";
 
 export const EVERYONE = "everyone" as const;
@@ -662,9 +663,7 @@ export class RawGroup<
       .getCurrentContent() as M;
 
     if (init) {
-      for (const [key, value] of Object.entries(init)) {
-        map.set(key, value, initPrivacy);
-      }
+      map.assign(init, initPrivacy);
     }
 
     return map;
@@ -694,13 +693,41 @@ export class RawGroup<
       })
       .getCurrentContent() as L;
 
-    if (init) {
-      for (const item of init) {
-        list.append(item, undefined, initPrivacy);
-      }
+    if (init?.length) {
+      list.appendItems(init, undefined, initPrivacy);
     }
 
     return list;
+  }
+
+  /**
+   * Creates a new `CoList` within this group, with the specified specialized
+   * `CoList` type `L` and optional static metadata.
+   *
+   * @category 3. Value creation
+   */
+  createPlainText<T extends RawCoPlainText>(
+    init?: string,
+    meta?: T["headerMeta"],
+    initPrivacy: "trusting" | "private" = "private",
+  ): T {
+    const text = this.core.node
+      .createCoValue({
+        type: "coplaintext",
+        ruleset: {
+          type: "ownedByGroup",
+          group: this.id,
+        },
+        meta: meta || null,
+        ...this.core.crypto.createdNowUnique(),
+      })
+      .getCurrentContent() as T;
+
+    if (init) {
+      text.insertAfter(0, init, initPrivacy);
+    }
+
+    return text;
   }
 
   /** @category 3. Value creation */

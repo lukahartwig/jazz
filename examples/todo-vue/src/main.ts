@@ -1,13 +1,15 @@
-import { DemoAuthBasicUI, createJazzVueApp, useDemoAuth } from "jazz-vue";
+import { DemoAuthBasicUI, JazzProvider, useDemoAuth } from "jazz-vue";
 import { createApp, defineComponent, h } from "vue";
 import App from "./App.vue";
 import "./assets/main.css";
 import router from "./router";
 import { ToDoAccount } from "./schema";
 
-const Jazz = createJazzVueApp<ToDoAccount>({ AccountSchema: ToDoAccount });
-export const { useAccount, useCoState } = Jazz;
-const { JazzProvider } = Jazz;
+declare module "jazz-vue" {
+  interface Register {
+    Account: ToDoAccount;
+  }
+}
 
 const RootComponent = defineComponent({
   name: "RootComponent",
@@ -18,6 +20,7 @@ const RootComponent = defineComponent({
       h(
         JazzProvider,
         {
+          AccountSchema: ToDoAccount,
           auth: authMethod.value,
           peer: "wss://cloud.jazz.tools/?key=vue-todo-example-jazz@garden.co",
         },
