@@ -107,6 +107,8 @@ export function bridgeExternalSystem<ExtID extends string>(options: {
     invalidateExt(id: ExtID[] | "all") {},
     updateRoot(root: CoValue, id: ExtID, currentToken: string): Promise<void> {
       const mapping = mappingFor(root);
+
+      throw new Error("Not implemented");
     },
   };
 }
