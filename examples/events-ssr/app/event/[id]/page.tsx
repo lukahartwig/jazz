@@ -1,19 +1,22 @@
-"use client";
-
 import { Event } from "@/app/schema";
-import { useCoState } from "jazz-react";
+import { startWorker } from "jazz-nodejs";
 import { ID } from "jazz-tools";
+import EventComponent from "./eventComponent";
 
-export default function EventPage({ params }: { params: { id: ID<Event> } }) {
+export default async function EventPage({
+  params,
+}: { params: { id: ID<Event> } }) {
+  await startWorker({
+    accountID: process.env.JAZZ_WORKER_ID,
+    accountSecret: process.env.JAZZ_WORKER_SECRET,
+  });
+
   const { id } = params;
-  const event = useCoState(Event, id);
+  const event = await Event.load(id, {});
 
-  return (
-    <div>
-      <h1 className="text-2xl font-bold">{event?.name}</h1>
-      <p>{event?.description}</p>
-      <p>{event?.location}</p>
-      <p>{event?.date.toLocaleString()}</p>
-    </div>
-  );
+  if (!event) {
+    return <div>Event not found</div>;
+  }
+
+  return <EventComponent prefetchedEvent={event} />;
 }

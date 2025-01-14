@@ -10,7 +10,9 @@ export default function EventList() {
   return (
     <div className="flex flex-col gap-4">
       <h2 className="text-2xl font-bold">Events</h2>
-      <Button>Create Event</Button>
+      <Button asChild>
+        <Link href="/event/create">Create Event</Link>
+      </Button>
       <div className="flex flex-col gap-2">
         {me?.root.events.map((event) => (
           <Link

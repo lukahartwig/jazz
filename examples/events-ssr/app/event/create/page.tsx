@@ -6,6 +6,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useAccount } from "jazz-react";
+import { Group } from "jazz-tools";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -35,12 +36,15 @@ export default function CreateEvent() {
     dateTime.setMinutes(parseInt(form.time.value.split(":")[1]));
     dateTime.setSeconds(0);
 
-    const event = Event.create({
-      name: form.name.value,
-      description: form.description.value,
-      date: dateTime,
-      location: form.location.value,
-    });
+    const event = Event.create(
+      {
+        name: form.name.value,
+        description: form.description.value,
+        date: dateTime,
+        location: form.location.value,
+      },
+      { owner: Group.create().addMember("everyone", "reader") },
+    );
 
     me.root.events.push(event);
 

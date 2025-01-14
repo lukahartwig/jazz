@@ -57,6 +57,16 @@ export function useCoState<V extends CoValue, D>(
   return value;
 }
 
+export function useHydratedCoState<V extends CoValue, D>(
+  Schema: CoValueClass<V>,
+  depth: D & DepthsIn<V>,
+  hydrateWith: DeeplyLoaded<V, D>,
+): DeeplyLoaded<V, D> | undefined {
+  const locallyLoaded = useCoState(Schema, (hydrateWith as V).id, depth);
+
+  return locallyLoaded || hydrateWith;
+}
+
 export function createUseAccountHooks<Acc extends Account>() {
   function useAccount(): {
     me: Acc;

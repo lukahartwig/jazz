@@ -5,7 +5,7 @@ import { createUseAccountHooks, useJazzContext } from "jazz-react-core";
 import { CoValue, CoValueClass, ID } from "jazz-tools";
 import { RegisteredAccount } from "./provider.js";
 
-export { useCoState } from "jazz-react-core";
+export { useCoState, useHydratedCoState } from "jazz-react-core";
 
 export const { useAccount, useAccountOrGuest } =
   createUseAccountHooks<RegisteredAccount>();

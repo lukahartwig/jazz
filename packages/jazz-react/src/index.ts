@@ -4,6 +4,7 @@ export {
   useAccount,
   useAccountOrGuest,
   useCoState,
+  useHydratedCoState,
   useAcceptInvite,
   experimental_useInboxSender,
 } from "./hooks.js";

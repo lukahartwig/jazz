@@ -501,6 +501,9 @@ importers:
       date-fns:
         specifier: ^4.1.0
         version: 4.1.0
+      jazz-nodejs:
+        specifier: ^0.9.8
+        version: 0.9.8
       jazz-react:
         specifier: workspace:*
         version: link:../../packages/jazz-react
@@ -6244,6 +6247,12 @@ packages:
     resolution: {integrity: sha512-QVb0dM5HvG+uaxitm8wONl7jltx8dqhfU33DcqtOZcLSVIKSDDLDi7+0LbAKiyI8hD9u42m2YxXSkMGWThaecQ==}
     engines: {iojs: '>= 1.0.0', node: '>= 0.12.0'}
 
+  cojson-transport-ws@0.9.0:
+    resolution: {integrity: sha512-C+f3a0IFKLyHyOMX3PPTxJ0tiWy7O6ns4OWonB3H4odvivtSh3fk6cQ+KeqEu2JJyIV5A8BYD3rbtGuqrdUmww==}
+
+  cojson@0.9.0:
+    resolution: {integrity: sha512-xeXTBOHNer8IdC7f/iJdrbRmreXZUl8yCmR+99zmCWZ+V6Tu+/bTpvJttyT+oW8MH2EEk2kUD7PQmtQ5IDvKsw==}
+
   collect-v8-coverage@1.0.2:
     resolution: {integrity: sha512-lHl4d5/ONEbLlJvaJNtsF/Lz+WvB07u2ycqTYbdrq7UypDXailES4valYb2eWiJFxZlVmpGekfqoxQhzyFdT4Q==}
 
@@ -7969,6 +7978,12 @@ packages:
 
   jackspeak@3.4.3:
     resolution: {integrity: sha512-OGlZQpz2yfahA/Rd1Y8Cd9SIEsqvXkLVoSw/cgwhnhFMDbsQFeZYoJJ7bIZBS9BcamUW96asq/npPWugM+RQBw==}
+
+  jazz-nodejs@0.9.8:
+    resolution: {integrity: sha512-3NOLkB+MRBNsjOgOV10yLrYAcCz2kzrMTwOQ7bzeyIvyK0uOUFQUHslcVvljrybFHcgnLfMhODtwjjWr09XVJA==}
+
+  jazz-tools@0.9.8:
+    resolution: {integrity: sha512-NJVOSX/d+tIcMEPUMX107L40x8pu64GPBQ5/tmHjt3IZJ8SwjcQhlIknSTFQlOp5JtZPdsplqTaytSEElfHNgQ==}
 
   jest-changed-files@29.7.0:
     resolution: {integrity: sha512-fEArFiwf1BpQ+4bXSprcDc3/x4HSzL4al2tozwVpDFpsxALjLYdyiIK4e5Vz66GQJIbXJ82+35PtysofptNX2w==}
@@ -16425,6 +16440,23 @@ snapshots:
 
   co@4.6.0: {}
 
+  cojson-transport-ws@0.9.0:
+    dependencies:
+      cojson: 0.9.0
+      typescript: 5.6.3
+
+  cojson@0.9.0:
+    dependencies:
+      '@hazae41/berith': 1.2.6
+      '@noble/ciphers': 0.1.4
+      '@noble/curves': 1.7.0
+      '@noble/hashes': 1.6.1
+      '@opentelemetry/api': 1.9.0
+      '@scure/base': 1.2.1
+      hash-wasm: 4.12.0
+      neverthrow: 7.2.0
+      queueueue: 4.1.2
+
   collect-v8-coverage@1.0.2: {}
 
   color-convert@1.9.3:
@@ -18246,6 +18278,20 @@ snapshots:
       '@isaacs/cliui': 8.0.2
     optionalDependencies:
       '@pkgjs/parseargs': 0.11.0
+
+  jazz-nodejs@0.9.8:
+    dependencies:
+      cojson: 0.9.0
+      cojson-transport-ws: 0.9.0
+      jazz-tools: 0.9.8
+      ws: 8.18.0
+    transitivePeerDependencies:
+      - bufferutil
+      - utf-8-validate
+
+  jazz-tools@0.9.8:
+    dependencies:
+      cojson: 0.9.0
 
   jest-changed-files@29.7.0:
     dependencies:
