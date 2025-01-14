@@ -1,10 +1,10 @@
 "use client";
 
-import { Event } from "@/app/schema";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Event } from "@/schema";
 import { useAccount } from "jazz-react";
 import { Group } from "jazz-tools";
 import { useRouter } from "next/navigation";

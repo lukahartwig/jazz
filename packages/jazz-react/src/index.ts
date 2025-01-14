@@ -9,6 +9,11 @@ export {
   experimental_useInboxSender,
 } from "./hooks.js";
 
+export {
+  serializePrefetched,
+  type Prefetched,
+} from "jazz-react-core";
+
 export { createInviteLink, parseInviteLink } from "jazz-browser";
 
 export * from "./auth/auth.js";

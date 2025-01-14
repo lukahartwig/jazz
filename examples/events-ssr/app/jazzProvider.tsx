@@ -3,7 +3,7 @@
 import { DemoAuthBasicUI, useDemoAuth } from "jazz-react";
 
 import { JazzProvider } from "jazz-react";
-import { EventAccount } from "./schema";
+import { EventAccount } from "../schema";
 
 export function JazzAndAuth({ children }: { children: React.ReactNode }) {
   const [demoAuth, demoAuthState] = useDemoAuth({});
@@ -13,6 +13,7 @@ export function JazzAndAuth({ children }: { children: React.ReactNode }) {
         auth={demoAuth}
         peer="wss://cloud.jazz.tools/?key=you@example.com"
         AccountSchema={EventAccount}
+        exposeCredentialsToServer={true}
       >
         {children}
       </JazzProvider>
