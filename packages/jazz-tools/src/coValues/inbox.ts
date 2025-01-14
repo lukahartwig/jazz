@@ -7,6 +7,7 @@ import {
   SessionID,
 } from "cojson";
 import { CoStreamItem, RawCoStream } from "cojson";
+import { activeAccountContext } from "../implementation/activeAccountContext.js";
 import { type Account } from "./account.js";
 import { CoValue, CoValueClass, ID, loadCoValue } from "./interfaces.js";
 
@@ -312,7 +313,9 @@ export class InboxSender<I extends CoValue, O extends CoValue | undefined> {
   static async load<
     I extends CoValue,
     O extends CoValue | undefined = undefined,
-  >(inboxOwnerID: ID<Account>, currentAccount: Account) {
+  >(inboxOwnerID: ID<Account>, currentAccount?: Account) {
+    currentAccount ||= activeAccountContext.get();
+
     const node = currentAccount._raw.core.node;
 
     const inboxOwnerRaw = await node.load(
@@ -347,7 +350,9 @@ export class InboxSender<I extends CoValue, O extends CoValue | undefined> {
   }
 }
 
-async function acceptInvite(invite: string, account: Account) {
+async function acceptInvite(invite: string, account?: Account) {
+  account ||= activeAccountContext.get();
+
   const id = invite.slice(0, invite.indexOf("/")) as CoID<MessagesStream>;
 
   const inviteSecret = invite.slice(invite.indexOf("/") + 1) as InviteSecret;

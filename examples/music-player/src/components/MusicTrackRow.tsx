@@ -43,7 +43,7 @@ export function MusicTrackRow({
 
   function handleAddToPlaylist(playlist: Playlist) {
     if (!track) return;
-    addTrackToPlaylist(playlist, track, me);
+    addTrackToPlaylist(playlist, track);
   }
 
   return (

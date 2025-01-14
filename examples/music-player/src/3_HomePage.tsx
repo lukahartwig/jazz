@@ -31,19 +31,15 @@ export function HomePage({ mediaPlayer }: { mediaPlayer: MediaPlayer }) {
   const { toast } = useToast();
 
   async function handleFileLoad(files: FileList) {
-    if (!me) return;
-
     /**
      * Follow this function definition to see how we update
      * values in Jazz and manage files!
      */
-    await uploadMusicTracks(me, files);
+    await uploadMusicTracks(files);
   }
 
   async function handleCreatePlaylist() {
-    if (!me) return;
-
-    const playlist = await createNewPlaylist(me);
+    const playlist = await createNewPlaylist();
 
     navigate(`/playlist/${playlist.id}`);
   }

@@ -65,7 +65,7 @@ function JazzAndAuth({ children }: { children: React.ReactNode }) {
   return (
     <>
       <JazzProvider
-        storage={["singleTabOPFS", "indexedDB"]}
+        storage="indexedDB"
         auth={auth}
         peer={peer}
         AccountSchema={MusicaAccount}

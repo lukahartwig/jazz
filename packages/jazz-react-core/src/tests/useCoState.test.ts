@@ -12,14 +12,13 @@ describe("useCoState", () => {
       value = co.string;
     }
 
-    const account = await createJazzTestAccount();
+    const account = await createJazzTestAccount({
+      isCurrentActiveAccount: true,
+    });
 
-    const map = TestMap.create(
-      {
-        value: "123",
-      },
-      { owner: account },
-    );
+    const map = TestMap.create({
+      value: "123",
+    });
 
     const { result } = renderHook(() => useCoState(TestMap, map.id, {}), {
       account,
@@ -33,14 +32,13 @@ describe("useCoState", () => {
       value = co.string;
     }
 
-    const account = await createJazzTestAccount();
+    const account = await createJazzTestAccount({
+      isCurrentActiveAccount: true,
+    });
 
-    const map = TestMap.create(
-      {
-        value: "123",
-      },
-      { owner: account },
-    );
+    const map = TestMap.create({
+      value: "123",
+    });
 
     const { result } = renderHook(() => useCoState(TestMap, map.id, {}), {
       account,
@@ -65,20 +63,16 @@ describe("useCoState", () => {
       nested = co.ref(TestNestedMap);
     }
 
-    const account = await createJazzTestAccount();
+    const account = await createJazzTestAccount({
+      isCurrentActiveAccount: true,
+    });
 
-    const map = TestMap.create(
-      {
-        value: "123",
-        nested: TestNestedMap.create(
-          {
-            value: "456",
-          },
-          { owner: account },
-        ),
-      },
-      { owner: account },
-    );
+    const map = TestMap.create({
+      value: "123",
+      nested: TestNestedMap.create({
+        value: "456",
+      }),
+    });
 
     const { result } = renderHook(
       () =>
@@ -104,20 +98,16 @@ describe("useCoState", () => {
       nested = co.ref(TestNestedMap);
     }
 
-    const account = await createJazzTestAccount();
+    const account = await createJazzTestAccount({
+      isCurrentActiveAccount: true,
+    });
 
-    const map = TestMap.create(
-      {
-        value: "123",
-        nested: TestNestedMap.create(
-          {
-            value: "456",
-          },
-          { owner: account },
-        ),
-      },
-      { owner: account },
-    );
+    const map = TestMap.create({
+      value: "123",
+      nested: TestNestedMap.create({
+        value: "456",
+      }),
+    });
 
     const { result } = renderHook(() => useCoState(TestMap, map.id, {}), {
       account,

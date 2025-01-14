@@ -74,14 +74,60 @@ test("Can insert and delete in CoPlainText", () => {
   content.insertAfter(5, " world", "trusting");
   expect(content.toString()).toEqual("hello world");
 
+  content.insertAfter(0, "Hello, ", "trusting");
+  expect(content.toString()).toEqual("Hello, hello world");
+
   console.log("first delete");
-  content.deleteRange({ from: 3, to: 8 }, "trusting");
-  expect(content.toString()).toEqual("helrld");
+  content.deleteRange({ from: 6, to: 12 }, "trusting");
+  expect(content.toString()).toEqual("Hello, world");
 
   content.insertAfter(2, "😍", "trusting");
-  expect(content.toString()).toEqual("he😍lrld");
+  expect(content.toString()).toEqual("He😍llo, world");
 
   console.log("second delete");
   content.deleteRange({ from: 2, to: 4 }, "trusting");
-  expect(content.toString()).toEqual("helrld");
+  expect(content.toString()).toEqual("Hello, world");
+});
+
+test("Multiple items appended after start appear in correct order", () => {
+  const node = new LocalNode(...randomAnonymousAccountAndSessionID(), Crypto);
+
+  const coValue = node.createCoValue({
+    type: "coplaintext",
+    ruleset: { type: "unsafeAllowAll" },
+    meta: null,
+    ...Crypto.createdNowUnique(),
+  });
+
+  const content = expectPlainText(coValue.getCurrentContent());
+
+  // Add multiple items in a single transaction, all after start
+  content.insertAfter(0, "h", "trusting");
+  content.insertAfter(1, "e", "trusting");
+  content.insertAfter(2, "y", "trusting");
+
+  // They should appear in insertion order (hey), not reversed (yeh)
+  expect(content.toString()).toEqual("hey");
+});
+
+test("Items inserted at start appear with latest first", () => {
+  const node = new LocalNode(...randomAnonymousAccountAndSessionID(), Crypto);
+
+  const coValue = node.createCoValue({
+    type: "coplaintext",
+    ruleset: { type: "unsafeAllowAll" },
+    meta: null,
+    ...Crypto.createdNowUnique(),
+  });
+
+  const content = expectPlainText(coValue.getCurrentContent());
+
+  // Insert multiple items at the start
+  content.insertAfter(0, "first", "trusting");
+  content.insertAfter(0, "second", "trusting");
+  content.insertAfter(0, "third", "trusting");
+
+  // They should appear in reverse chronological order
+  // because newer items should appear before older items
+  expect(content.toString()).toEqual("thirdsecondfirst");
 });

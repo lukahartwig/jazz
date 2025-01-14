@@ -33,6 +33,7 @@ export {
   Marks,
   type TreeLeaf,
   type TreeNode,
+  type ResolvedMark,
 } from "./coValues/coRichText.js";
 export { ImageDefinition } from "./coValues/extensions/imageDef.js";
 export { Group } from "./coValues/group.js";

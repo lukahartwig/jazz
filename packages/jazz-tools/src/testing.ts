@@ -2,6 +2,7 @@ import { AgentSecret, CryptoProvider, Peer } from "cojson";
 import { cojsonInternals } from "cojson";
 import { PureJSCrypto } from "cojson/crypto";
 import { Account, type AccountClass } from "./exports.js";
+import { activeAccountContext } from "./implementation/activeAccountContext.js";
 import {
   type AnonymousJazzAgent,
   type CoValueClass,
@@ -42,6 +43,7 @@ class TestJSCrypto extends PureJSCrypto {
 }
 
 export async function createJazzTestAccount<Acc extends Account>(options?: {
+  isCurrentActiveAccount?: boolean;
   AccountSchema?: CoValueClass<Acc>;
 }): Promise<Acc> {
   const AccountSchema = (options?.AccountSchema ??
@@ -52,8 +54,15 @@ export async function createJazzTestAccount<Acc extends Account>(options?: {
     },
     crypto: await TestJSCrypto.create(),
   });
+  if (options?.isCurrentActiveAccount) {
+    activeAccountContext.set(account);
+  }
 
   return account;
+}
+
+export function setActiveAccount(account: Account) {
+  activeAccountContext.set(account);
 }
 
 export async function createJazzTestGuest() {

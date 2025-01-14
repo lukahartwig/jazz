@@ -14,6 +14,7 @@ import {
   isControlledAccount,
 } from "../index.web.js";
 import { randomSessionProvider } from "../internal.js";
+import { createJazzTestAccount } from "../testing.js";
 import { setupTwoNodes } from "./utils.js";
 
 const Crypto = await WasmCrypto.create();
@@ -498,5 +499,17 @@ describe("waitForSync", async () => {
     const loadedStream = await serverNode.load(stream._raw.id);
 
     expect(loadedStream).not.toBe("unavailable");
+  });
+
+  test("should rely on the current active account if no account is provided", async () => {
+    const account = await createJazzTestAccount({
+      isCurrentActiveAccount: true,
+    });
+
+    const stream = FileStream.create();
+    expect(stream._owner._type).toEqual("Group");
+    expect(stream._owner.castAs(Group)._raw.roleOf(account._raw.id)).toEqual(
+      "admin",
+    );
   });
 });

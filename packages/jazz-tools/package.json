@@ -23,7 +23,7 @@
   },
   "type": "module",
   "license": "MIT",
-  "version": "0.9.1",
+  "version": "0.9.9",
   "dependencies": {
     "cojson": "workspace:*",
     "fast-myers-diff": "^3.2.0"

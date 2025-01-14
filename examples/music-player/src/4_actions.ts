@@ -22,14 +22,22 @@ import {
  * pattern that best fits your app.
  */
 
-export async function uploadMusicTracks(
-  account: MusicaAccount,
-  files: Iterable<File>,
-) {
+export async function uploadMusicTracks(files: Iterable<File>) {
+  const me = await MusicaAccount.getMe().ensureLoaded({
+    root: {
+      rootPlaylist: {
+        tracks: [],
+      },
+      playlists: [],
+    },
+  });
+
+  if (!me) return;
+
   for (const file of files) {
     // The ownership object defines the user that owns the created coValues
     // We are creating a group for each CoValue in order to be able to share them via Playlist
-    const group = Group.create(account);
+    const group = Group.create();
 
     const data = await getAudioFileData(file);
 
@@ -50,15 +58,23 @@ export async function uploadMusicTracks(
 
     // The newly created musicTrack can be associated to the
     // user track list using a simple push call
-    account.root?.rootPlaylist?.tracks?.push(musicTrack);
+    me.root.rootPlaylist.tracks.push(musicTrack);
   }
 }
 
-export async function createNewPlaylist(account: MusicaAccount) {
+export async function createNewPlaylist() {
+  const me = await MusicaAccount.getMe().ensureLoaded({
+    root: {
+      playlists: [],
+    },
+  });
+
+  if (!me) throw new Error("Current playlist not resolved");
+
   // Since playlists are meant to be shared we associate them
   // to a group which will contain the keys required to get
   // access to the "owned" values
-  const playlistGroup = Group.create(account);
+  const playlistGroup = Group.create();
 
   const playlist = Playlist.create(
     {
@@ -70,7 +86,7 @@ export async function createNewPlaylist(account: MusicaAccount) {
 
   // Again, we associate the new playlist to the
   // user by pushing it into the playlists CoList
-  account.root?.playlists?.push(playlist);
+  me.root.playlists.push(playlist);
 
   return playlist;
 }
@@ -78,10 +94,7 @@ export async function createNewPlaylist(account: MusicaAccount) {
 export async function addTrackToPlaylist(
   playlist: Playlist,
   track: MusicTrack,
-  account: MusicaAccount | undefined,
 ) {
-  if (!account) return;
-
   const alreadyAdded = playlist.tracks?.some(
     (t) => t?.id === track.id || t?._refs.sourceTrack?.id === track.id,
   );
@@ -108,12 +121,8 @@ export async function addTrackToPlaylist(
    *
    * Doing this for backwards compatibility for when the Group inheritance wasn't possible
    */
-  const blob = await FileStream.loadAsBlob(track._refs.file.id, account);
-  const waveform = await MusicTrackWaveform.load(
-    track._refs.waveform.id,
-    account,
-    {},
-  );
+  const blob = await FileStream.loadAsBlob(track._refs.file.id);
+  const waveform = await MusicTrackWaveform.load(track._refs.waveform.id, {});
 
   if (!blob || !waveform) return;
 
@@ -142,13 +151,25 @@ export async function updateMusicTrackTitle(track: MusicTrack, title: string) {
   track.title = title;
 }
 
-export async function updateActivePlaylist(
-  playlist: Playlist,
-  me: MusicaAccount,
-) {
-  me.root!.activePlaylist = playlist ?? me.root!.rootPlaylist;
+export async function updateActivePlaylist(playlist?: Playlist) {
+  const me = await MusicaAccount.getMe().ensureLoaded({
+    root: {
+      activePlaylist: {},
+      rootPlaylist: {},
+    },
+  });
+
+  if (!me) return;
+
+  me.root.activePlaylist = playlist ?? me.root.rootPlaylist;
 }
 
-export async function updateActiveTrack(track: MusicTrack, me: MusicaAccount) {
-  me.root!.activeTrack = track;
+export async function updateActiveTrack(track: MusicTrack) {
+  const me = await MusicaAccount.getMe().ensureLoaded({
+    root: {},
+  });
+
+  if (!me) return;
+
+  me.root.activeTrack = track;
 }

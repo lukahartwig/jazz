@@ -1,11 +1,6 @@
 import { CoValueCore } from "../coValueCore.js";
 import { JsonObject } from "../jsonValue.js";
-import {
-  DeletionOpPayload,
-  InsertionOpPayload,
-  OpID,
-  RawCoList,
-} from "./coList.js";
+import { DeletionOpPayload, OpID, RawCoList } from "./coList.js";
 
 export type StringifiedOpID = string & { __stringifiedOpID: true };
 
@@ -88,33 +83,22 @@ export class RawCoPlainText<
     text: string,
     privacy: "private" | "trusting" = "private",
   ) {
-    const ops: InsertionOpPayload<string>[] = [];
-    let prevOpId: OpID | "start" | undefined = this.mapping.opIDbeforeIdx[idx];
-    if (!prevOpId) {
-      if (idx === 0) {
-        prevOpId = "start";
-      } else {
-        throw new Error("Invalid idx");
+    const graphemes = [...this._segmenter.segment(text)].map((g) => g.segment);
+
+    if (idx === 0) {
+      // For insertions at start, just prepend each character, in reverse
+      for (const grapheme of graphemes.reverse()) {
+        this.prepend(grapheme, 0, privacy);
+      }
+    } else {
+      // For other insertions, use append after the specified index
+      // We append in forward order to maintain the text order
+      let after = idx - 1;
+      for (const grapheme of graphemes) {
+        this.append(grapheme, after, privacy);
+        after++; // Move the insertion point forward for each grapheme
       }
     }
-    const nextTxId = this.core.nextTransactionID();
-    let changeIdx = 0;
-    for (const grapheme of this._segmenter.segment(text)) {
-      ops.push({
-        op: "app",
-        value: grapheme.segment,
-        after: prevOpId,
-      });
-      prevOpId = {
-        sessionID: nextTxId.sessionID,
-        txIndex: nextTxId.txIndex,
-        changeIdx,
-      };
-      changeIdx++;
-    }
-    this.core.makeTransaction(ops, privacy);
-
-    this.rebuildFromCore();
   }
 
   deleteRange(
@@ -131,7 +115,6 @@ export class RawCoPlainText<
         op: "del",
         insertion,
       });
-      console.log("deleting idx", idx);
       let nextIdx = idx + 1;
       while (!this.mapping.opIDbeforeIdx[nextIdx] && nextIdx < to) {
         nextIdx++;

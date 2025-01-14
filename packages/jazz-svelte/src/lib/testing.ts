@@ -28,5 +28,6 @@ export function createJazzTestContext<Acc extends Account>({ account }: {
 export {
   createJazzTestAccount,
   createJazzTestGuest,
-  linkAccounts
+  linkAccounts,
+  setActiveAccount,
 } from "jazz-tools/testing";

@@ -16,9 +16,9 @@ export function App() {
 
   const createChat = () => {
     if (!me) return;
-    const group = Group.create({ owner: me });
+    const group = Group.create();
     group.addMember("everyone", "writer");
-    const chat = Chat.create([], { owner: group });
+    const chat = Chat.create([], group);
     router.navigate("/#/chat/" + chat.id);
 
     // for https://jazz.tools marketing site demo only

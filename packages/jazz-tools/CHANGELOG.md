@@ -1,5 +1,19 @@
 # jazz-tools
 
+## 0.9.9
+
+### Patch Changes
+
+- 8eb9247: Add CoRichText support
+- Updated dependencies [8eb9247]
+  - cojson@0.9.9
+
+## 0.9.8
+
+### Patch Changes
+
+- d1d773b: Make possible to call the load/subscribe/create API without passing me
+
 ## 0.9.1
 
 ### Patch Changes

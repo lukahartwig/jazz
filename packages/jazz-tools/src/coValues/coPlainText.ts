@@ -4,9 +4,11 @@ import {
   type RawCoPlainText,
   stringifyOpID,
 } from "cojson";
+import { activeAccountContext } from "../implementation/activeAccountContext.js";
 import type { CoValue, CoValueClass, ID } from "../internal.js";
 import {
   inspect,
+  isAccountInstance,
   loadCoValue,
   subscribeToCoValue,
   subscribeToExistingCoValue,
@@ -61,6 +63,10 @@ export class CoPlainText extends String implements CoValue {
     return new this({ text, owner: options.owner });
   }
 
+  get length() {
+    return this._raw.toString().length;
+  }
+
   toString() {
     return this._raw.toString();
   }
@@ -111,30 +117,14 @@ export class CoPlainText extends String implements CoValue {
   /**
    * Load a `CoPlainText` with a given ID, as a given account.
    *
-   * `depth` specifies which (if any) fields that reference other CoValues to load as well before resolving.
-   * The `DeeplyLoaded` return type guarantees that corresponding referenced CoValues are loaded to the specified depth.
-   *
-   * You can pass `[]` or `{}` for shallowly loading only this CoPlainText, or `{ fieldA: depthA, fieldB: depthB }` for recursively loading referenced CoValues.
-   *
-   * Check out the `load` methods on `CoMap`/`CoList`/`CoStream`/`Group`/`Account` to see which depth structures are valid to nest.
-   *
-   * @example
-   * ```ts
-   * const person = await Person.load(
-   *   "co_zdsMhHtfG6VNKt7RqPUPvUtN2Ax",
-   *   me,
-   *   { pet: {} }
-   * );
-   * ```
-   *
    * @category Subscription & Loading
    */
   static load<T extends CoPlainText>(
     this: CoValueClass<T>,
     id: ID<T>,
-    as: Account,
+    as?: Account,
   ): Promise<T | undefined> {
-    return loadCoValue(this, id, as, []);
+    return loadCoValue(this, id, as ?? activeAccountContext.get(), []);
   }
 
   //   /**
@@ -152,14 +142,9 @@ export class CoPlainText extends String implements CoValue {
   //   }
 
   /**
-   * Load and subscribe to a `CoMap` with a given ID, as a given account.
+   * Load and subscribe to a `CoPlainText` with a given ID, as a given account.
    *
    * Automatically also subscribes to updates to all referenced/nested CoValues as soon as they are accessed in the listener.
-   *
-   * `depth` specifies which (if any) fields that reference other CoValues to load as well before calling `listener` for the first time.
-   * The `DeeplyLoaded` return type guarantees that corresponding referenced CoValues are loaded to the specified depth.
-   *
-   * You can pass `[]` or `{}` for shallowly loading only this CoMap, or `{ fieldA: depthA, fieldB: depthB }` for recursively loading referenced CoValues.
    *
    * Check out the `load` methods on `CoMap`/`CoList`/`CoStream`/`Group`/`Account` to see which depth structures are valid to nest.
    *
@@ -167,25 +152,36 @@ export class CoPlainText extends String implements CoValue {
    *
    * Also see the `useCoState` hook to reactively subscribe to a CoValue in a React component.
    *
-   * @example
-   * ```ts
-   * const unsub = Person.subscribe(
-   *   "co_zdsMhHtfG6VNKt7RqPUPvUtN2Ax",
-   *   me,
-   *   { pet: {} },
-   *   (person) => console.log(person)
-   * );
-   * ```
-   *
    * @category Subscription & Loading
    */
   static subscribe<T extends CoPlainText>(
     this: CoValueClass<T>,
     id: ID<T>,
+    listener: (value: T) => void,
+  ): () => void;
+  static subscribe<T extends CoPlainText>(
+    this: CoValueClass<T>,
+    id: ID<T>,
     as: Account,
     listener: (value: T) => void,
+  ): () => void;
+  static subscribe<T extends CoPlainText>(
+    this: CoValueClass<T>,
+    id: ID<T>,
+    asOrListener: Account | ((value: T) => void),
+    listener?: (value: T) => void,
   ): () => void {
-    return subscribeToCoValue(this, id, as, [], listener);
+    if (isAccountInstance(asOrListener)) {
+      return subscribeToCoValue(this, id, asOrListener, [], listener!);
+    }
+
+    return subscribeToCoValue(
+      this,
+      id,
+      activeAccountContext.get(),
+      [],
+      listener!,
+    );
   }
 
   //   /**
@@ -203,9 +199,9 @@ export class CoPlainText extends String implements CoValue {
   //   }
 
   /**
-   * Given an already loaded `CoMap`, subscribe to updates to the `CoMap` and ensure that the specified fields are loaded to the specified depth.
+   * Given an already loaded `CoPlainText`, subscribe to updates to the `CoPlainText` and ensure that the specified fields are loaded to the specified depth.
    *
-   * Works like `CoMap.subscribe()`, but you don't need to pass the ID or the account to load as again.
+   * Works like `CoPlainText.subscribe()`, but you don't need to pass the ID or the account to load as again.
    *
    * Returns an unsubscribe function that you should call when you no longer need updates.
    *

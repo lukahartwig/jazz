@@ -12,6 +12,7 @@ import {
 import { type Account, type AccountClass } from "../coValues/account.js";
 import { RegisteredSchemas } from "../coValues/registeredSchemas.js";
 import type { ID } from "../internal.js";
+import { activeAccountContext } from "./activeAccountContext.js";
 import { AnonymousJazzAgent } from "./anonymousJazzAgent.js";
 
 export type Credentials = {
@@ -169,11 +170,14 @@ export async function createJazzContext<Acc extends Account>(
                 fromRaw: rawAccount,
               }) as Acc;
 
+              activeAccountContext.set(account);
+
               await account.applyMigration(creationProps);
             },
           });
 
           const account = AccountSchema.fromNode(node);
+          activeAccountContext.set(account);
 
           if (authResult.saveCredentials) {
             await authResult.saveCredentials({
@@ -217,12 +221,14 @@ export async function createJazzContext<Acc extends Account>(
             const account = new AccountSchema({
               fromRaw: rawAccount,
             }) as Acc;
+            activeAccountContext.set(account);
 
             await account.applyMigration(creationProps);
           },
         });
 
         const account = AccountSchema.fromNode(node);
+        activeAccountContext.set(account);
 
         await authResult.saveCredentials({
           accountID: node.account.id as unknown as ID<Account>,
@@ -266,6 +272,8 @@ export async function createAnonymousJazzContext({
   for (const peer of peersToLoadFrom) {
     node.syncManager.addPeer(peer);
   }
+
+  activeAccountContext.setGuestMode();
 
   return {
     agent: new AnonymousJazzAgent(node),
