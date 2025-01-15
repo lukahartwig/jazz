@@ -1,5 +1,3 @@
-import { type DB, open } from "@op-engineering/op-sqlite";
-
 import {
   type IncomingSyncStream,
   type OutgoingSyncQueue,
@@ -8,17 +6,22 @@ import {
 } from "cojson";
 import { SyncManager } from "cojson-storage";
 import { SQLiteClient } from "./client.js";
+import { SQLiteAdapter } from "./sqliteAdapter.js";
+
+export interface SQLiteConfig {
+  adapter: SQLiteAdapter;
+}
 
 export class SQLiteReactNative {
   private readonly syncManager: SyncManager;
   private readonly dbClient: SQLiteClient;
 
   constructor(
-    db: DB,
+    adapter: SQLiteAdapter,
     fromLocalNode: IncomingSyncStream,
     toLocalNode: OutgoingSyncQueue,
   ) {
-    this.dbClient = new SQLiteClient(db, toLocalNode);
+    this.dbClient = new SQLiteClient(adapter, toLocalNode);
     this.syncManager = new SyncManager(this.dbClient, toLocalNode);
 
     const processMessages = async () => {
@@ -32,11 +35,6 @@ export class SQLiteReactNative {
 
           await this.syncManager.handleSyncMessage(msg);
 
-          // Since better-sqlite3 is synchronous there may be the case
-          // where a bulk of messages are processed using only microtasks
-          // which may block other peers from sending messages.
-
-          // To avoid this we schedule a timer to downgrade the priority of the storage peer work
           if (performance.now() - lastTimer > 500) {
             lastTimer = performance.now();
             await new Promise((resolve) => setTimeout(resolve, 0));
@@ -64,102 +62,30 @@ export class SQLiteReactNative {
     );
   }
 
-  static async asPeer({
-    filename,
-    trace,
-    localNodeName = "local",
-  }: {
-    filename: string;
-    trace?: boolean;
-    localNodeName?: string;
-  }): Promise<Peer> {
+  static async asPeer(config: SQLiteConfig): Promise<Peer> {
+    if (!config.adapter) {
+      throw new Error("SQLite adapter is required");
+    }
+
     const [localNodeAsPeer, storageAsPeer] = cojsonInternals.connectedPeers(
-      localNodeName,
+      "localNode",
       "storage",
-      { peer1role: "client", peer2role: "storage", trace, crashOnClose: true },
+      {
+        peer1role: "client",
+        peer2role: "storage",
+        trace: false,
+        crashOnClose: true,
+      },
     );
 
-    await SQLiteReactNative.open(
-      filename,
+    await config.adapter.initialize();
+
+    const instance = new SQLiteReactNative(
+      config.adapter,
       localNodeAsPeer.incoming,
       localNodeAsPeer.outgoing,
     );
 
     return { ...storageAsPeer, priority: 100 };
-  }
-
-  static async open(
-    filename: string,
-    fromLocalNode: IncomingSyncStream,
-    toLocalNode: OutgoingSyncQueue,
-  ) {
-    const db = open({
-      name: filename,
-    });
-
-    await db.execute("PRAGMA journal_mode = WAL;"); // or OFF
-
-    const oldVersion =
-      Number((await db.execute("PRAGMA user_version")).rows[0]?.user_version) ??
-      0;
-
-    if (oldVersion === 0) {
-      await db.execute(
-        `CREATE TABLE IF NOT EXISTS transactions (
-                    ses INTEGER,
-                    idx INTEGER,
-                    tx TEXT NOT NULL,
-                    PRIMARY KEY (ses, idx)
-                ) WITHOUT ROWID;`,
-      );
-
-      await db.execute(
-        `CREATE TABLE IF NOT EXISTS sessions (
-                    rowID INTEGER PRIMARY KEY,
-                    coValue INTEGER NOT NULL,
-                    sessionID TEXT NOT NULL,
-                    lastIdx INTEGER,
-                    lastSignature TEXT,
-                    UNIQUE (sessionID, coValue)
-                );`,
-      );
-
-      await db.execute(
-        `CREATE INDEX IF NOT EXISTS sessionsByCoValue ON sessions (coValue);`,
-      );
-
-      await db.execute(
-        `CREATE TABLE IF NOT EXISTS coValues (
-                    rowID INTEGER PRIMARY KEY,
-                    id TEXT NOT NULL UNIQUE,
-                    header TEXT NOT NULL UNIQUE
-                );`,
-      );
-
-      await db.execute(
-        `CREATE INDEX IF NOT EXISTS coValuesByID ON coValues (id);`,
-      );
-
-      await db.execute("PRAGMA user_version = 1");
-    }
-
-    if (oldVersion <= 2) {
-      await db.execute(
-        `CREATE TABLE IF NOT EXISTS signatureAfter (
-                    ses INTEGER,
-                    idx INTEGER,
-                    signature TEXT NOT NULL,
-                    PRIMARY KEY (ses, idx)
-                ) WITHOUT ROWID;`,
-      );
-
-      await db.execute(
-        `ALTER TABLE sessions ADD COLUMN bytesSinceLastSignature INTEGER;`,
-      );
-
-      await db.execute("PRAGMA user_version = 3");
-    }
-
-    return new SQLiteReactNative(db, fromLocalNode, toLocalNode);
   }
 }
