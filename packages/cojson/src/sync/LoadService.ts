@@ -1,6 +1,6 @@
 import { CoValueCore } from "../coValueCore.js";
 import { CO_VALUE_LOADING_TIMEOUT, CoValueEntry } from "../coValueEntry.js";
-import { LocalNode } from "../exports.js";
+import { LocalNode } from "../localNode.js";
 import { PeerEntry, getPeersWithoutErrors } from "../peer/index.js";
 import { emptyKnownState } from "./types.js";
 

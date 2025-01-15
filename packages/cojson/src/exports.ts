@@ -49,8 +49,8 @@ import { FileSystem } from "./storage/FileSystem.js";
 import { BlockFilename, LSMStorage, WalFilename } from "./storage/index.js";
 import { Channel, connectedPeers } from "./streamUtils.js";
 import { DisconnectedError, PingTimeoutError } from "./sync.js";
-import type { SyncMessage } from "./sync/index.js";
-import { emptyKnownState } from "./sync/index.js";
+import type { SyncMessage } from "./sync/types.js";
+import { emptyKnownState } from "./sync/types.js";
 import { accountOrAgentIDfromSessionID } from "./typeUtils/accountOrAgentIDfromSessionID.js";
 import { expectGroup } from "./typeUtils/expectGroup.js";
 import { isAccountID } from "./typeUtils/isAccountID.js";
@@ -158,14 +158,14 @@ export type {
 
 // eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace CojsonInternalTypes {
-  export type KnownStateMessage = import("./sync/index.js").KnownStateMessage;
-  export type CoValueKnownState = import("./sync/index.js").CoValueKnownState;
-  export type CoValueContent = import("./sync/index.js").CoValueContent;
-  export type NewContentMessage = import("./sync/index.js").NewContentMessage;
-  export type PullMessage = import("./sync/index.js").PullMessage;
-  export type PushMessage = import("./sync/index.js").PushMessage;
-  export type DataMessage = import("./sync/index.js").DataMessage;
-  export type AckMessage = import("./sync/index.js").AckMessage;
+  export type KnownStateMessage = import("./sync/types.js").KnownStateMessage;
+  export type CoValueKnownState = import("./sync/types.js").CoValueKnownState;
+  export type CoValueContent = import("./sync/types.js").CoValueContent;
+  export type NewContentMessage = import("./sync/types.js").NewContentMessage;
+  export type PullMessage = import("./sync/types.js").PullMessage;
+  export type PushMessage = import("./sync/types.js").PushMessage;
+  export type DataMessage = import("./sync/types.js").DataMessage;
+  export type AckMessage = import("./sync/types.js").AckMessage;
   export type SessionNewContent = import("./coValueCore.js").SessionNewContent;
   export type CoValueHeader = import("./coValueCore.js").CoValueHeader;
   export type Transaction = import("./coValueCore.js").Transaction;

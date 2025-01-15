@@ -1,6 +1,6 @@
 import { isTryAddTransactionsException } from "../coValueCore.js";
 import { CoValueAvailableState } from "../coValueEntry.js";
-import { LocalNode } from "../exports.js";
+import { LocalNode } from "../localNode.js";
 import { AbstractMessageHandler } from "./AbstractMessageHandler.js";
 import { DependencyService } from "./DependencyService.js";
 import { SyncService } from "./SyncService.js";

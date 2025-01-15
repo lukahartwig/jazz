@@ -3,18 +3,19 @@ import { CoValueEntry } from "./coValueEntry.js";
 import { RawCoID } from "./ids.js";
 import { LocalNode } from "./localNode.js";
 import { PeerEntry, PeerID } from "./peer/index.js";
+
+import { AckResponseHandler } from "./sync/AckResponseHandler.js";
+import { DataResponseHandler } from "./sync/DataResponseHandler.js";
 import { DependencyService } from "./sync/DependencyService.js";
+import { LoadService } from "./sync/LoadService.js";
+import { PullRequestHandler } from "./sync/PullRequestHandler.js";
+import { PushRequestHandler } from "./sync/PushRequestHandler.js";
+import { SyncService } from "./sync/SyncService.js";
 import {
-  AckResponseHandler,
   CoValueKnownState,
-  DataResponseHandler,
-  LoadService,
   MessageHandlerInterface,
-  PullRequestHandler,
-  PushRequestHandler,
   SyncMessage,
-  SyncService,
-} from "./sync/index.js";
+} from "./sync/types.js";
 
 export type DisconnectedError = "Disconnected";
 

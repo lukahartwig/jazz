@@ -1,12 +1,11 @@
 import { CoID, RawCoValue } from "../coValue.js";
 import { CoValueHeader, Transaction } from "../coValueCore.js";
 import { Signature } from "../crypto/crypto.js";
-import { CojsonInternalTypes } from "../exports.js";
 import { RawCoID } from "../ids.js";
 import { IncomingSyncStream, OutgoingSyncQueue } from "../localNode.js";
 import { Peer } from "../peer/index.js";
 import { connectedPeers } from "../streamUtils.js";
-import { CoValueKnownState, DataMessage } from "../sync/types.js";
+import { CoValueKnownState, DataMessage, PushMessage } from "../sync/types.js";
 import {
   BlockFilename,
   FileSystem,
@@ -19,7 +18,6 @@ import {
   writeToWal,
 } from "./FileSystem.js";
 import { contentSinceChunk, mergeChunks } from "./chunksAndKnownStates.js";
-import PushMessage = CojsonInternalTypes.PushMessage;
 export type { BlockFilename, WalFilename } from "./FileSystem.js";
 
 const MAX_N_LEVELS = 3;

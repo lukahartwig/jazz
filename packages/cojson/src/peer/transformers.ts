@@ -1,7 +1,7 @@
-import { unknownDataMessage } from "../exports.js";
 import { SessionID } from "../ids.js";
 
 import { CoValueContent, SyncMessage } from "../sync/types.js";
+import { unknownDataMessage } from "./PeerOperations.js";
 
 export const transformOutgoingMessageToPeer = (
   msg: SyncMessage,

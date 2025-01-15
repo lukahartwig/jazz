@@ -159,7 +159,7 @@ export class Inbox {
             const id = item.value;
 
             node
-              .load<InboxMessage<I, O>>(id)
+              .load(id)
               .then((message) => {
                 if (message === "unavailable") {
                   return Promise.reject(
@@ -246,16 +246,16 @@ export class Inbox {
 
     const node = account._raw.core.node;
 
-    const root = await node.load<InboxRoot>(profile.inbox);
+    const root = await node.load(profile.inbox);
 
     if (root === "unavailable") {
       throw new Error("Inbox not found");
     }
 
     const [messages, processed, failed] = await Promise.all([
-      node.load<MessagesStream>(root.get("messages")!),
-      node.load<TxKeyStream>(root.get("processed")!),
-      node.load<FailedMessagesStream>(root.get("failed")!),
+      node.load(root.get("messages")!),
+      node.load(root.get("processed")!),
+      node.load(root.get("failed")!),
     ]);
 
     if (
@@ -318,7 +318,9 @@ export class InboxSender<I extends CoValue, O extends CoValue | undefined> {
 
     const node = currentAccount._raw.core.node;
 
-    const inboxOwnerRaw = await node.load<RawAccount>(inboxOwnerID);
+    const inboxOwnerRaw = await node.load(
+      inboxOwnerID as unknown as CoID<RawAccount>,
+    );
 
     if (inboxOwnerRaw === "unavailable") {
       throw new Error("Failed to load the inbox owner");

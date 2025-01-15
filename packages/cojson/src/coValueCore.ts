@@ -35,7 +35,7 @@ import { accountOrAgentIDfromSessionID } from "./typeUtils/accountOrAgentIDfromS
 import { expectGroup } from "./typeUtils/expectGroup.js";
 import { isAccountID } from "./typeUtils/isAccountID.js";
 import CoValueContent = CojsonInternalTypes.CoValueContent;
-import { CoValueKnownState } from "./sync/index.js";
+import { CoValueKnownState } from "./sync/types.js";
 
 /**
     In order to not block other concurrently syncing CoValues we introduce a maximum size of transactions,
@@ -936,18 +936,18 @@ export class CoValueCore {
 
   // TODO M.O. do cache addContentSince for a while?
   newContentSince(knownState: CoValueKnownState): CoValueContent[] | undefined {
-    const shouldSendEverything =
+    const isKnownStateEmpty =
       !knownState.header ||
       !knownState.sessions ||
       !Object.keys(knownState.sessions).length;
 
-    if (shouldSendEverything && this._cachedNewContentSinceEmpty) {
+    if (isKnownStateEmpty && this._cachedNewContentSinceEmpty) {
       return this._cachedNewContentSinceEmpty;
     }
 
     let currentPiece: CoValueContent = {
       id: this.id,
-      header: shouldSendEverything ? this.header : undefined,
+      header: isKnownStateEmpty ? this.header : undefined,
       priority: getPriorityFromHeader(this.header),
       new: {},
     };
@@ -1051,7 +1051,7 @@ export class CoValueCore {
       return undefined;
     }
 
-    if (shouldSendEverything) {
+    if (isKnownStateEmpty) {
       this._cachedNewContentSinceEmpty = piecesWithContent;
     }
 

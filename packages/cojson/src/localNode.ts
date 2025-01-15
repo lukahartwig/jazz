@@ -338,38 +338,31 @@ export class LocalNode {
    * Loads a CoValue's content, syncing from peers as necessary and resolving the returned
    * promise once a first version has been loaded. See `coValue.subscribe()` and `node.useTelepathicData()`
    * for listening to subsequent updates to the CoValue.
-   *
-   * @category 3. Low-level
    */
-  async load<T extends RawCoValue>(
-    id: RawCoID,
-    returnCore?: false,
-  ): Promise<"unavailable" | T>;
-  async load<T extends RawCoValue>(
-    id: RawCoID,
-    returnCore: true,
-  ): Promise<"unavailable" | CoValueCore>;
-  async load<T extends RawCoValue>(
-    id: RawCoID,
-    returnCore: boolean = false,
-  ): Promise<"unavailable" | CoValueCore | T> {
+  async load<T extends RawCoValue>(id: CoID<T>): Promise<T | "unavailable"> {
+    const coValueCore = await this.loadCoValueCore(id);
+
+    if (coValueCore === "unavailable") {
+      return "unavailable";
+    }
+
+    return coValueCore.getCurrentContent() as T;
+  }
+
+  async loadCoValueCore(id: RawCoID): Promise<CoValueCore | "unavailable"> {
     if (this.crashed) {
       throw new Error("Trying to load CoValue after node has crashed", {
         cause: this.crashed,
       });
     }
 
-    const core = await this.syncManager.loadCoValue(id);
+    const coValueCore = await this.syncManager.loadCoValue(id);
 
-    if (core === "unavailable") {
+    if (coValueCore === "unavailable") {
       return "unavailable";
     }
 
-    if (returnCore) {
-      return core;
-    }
-
-    return core.getCurrentContent() as T;
+    return coValueCore;
   }
 
   getLoaded<T extends RawCoValue>(id: CoID<T>): T | undefined {

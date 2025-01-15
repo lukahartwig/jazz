@@ -1,11 +1,16 @@
 import { CoValueCore, isTryAddTransactionsException } from "../coValueCore.js";
 import { CoValueAvailableState } from "../coValueEntry.js";
-import { LocalNode } from "../exports.js";
+import { LocalNode } from "../localNode.js";
 import { AbstractMessageHandler } from "./AbstractMessageHandler.js";
 import { DependencyService } from "./DependencyService.js";
 import { SyncService } from "./SyncService.js";
 import { PushMessageHandlerInput, emptyKnownState } from "./types.js";
 
+/**
+ * "Push" request
+ * - must be followed by "ack" message response according to the protocol.
+ * - may carry along new data txs to be added
+ */
 export class PushRequestHandler extends AbstractMessageHandler {
   constructor(
     protected readonly syncService: SyncService,

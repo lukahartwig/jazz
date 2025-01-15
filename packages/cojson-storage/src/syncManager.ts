@@ -170,10 +170,23 @@ export class SyncManager {
     return messageMap;
   }
 
+  /**
+   * "Pull" request must be followed by "data" message response according to the protocol:
+   * - Sends new content if it exists.
+   * - Sends an empty data message otherwise.
+   * - Sends an empty data message with `{ known: false }` in the message if the `coValue` is unknown by local node.
+   *
+   * Handler initiates a new "pull" requests to load the coValue from peers if it is not known by the node.
+   */
   handlePull(msg: CojsonInternalTypes.PullMessage) {
     return this.sendNewContent(msg);
   }
 
+  /**
+   * "Push" request
+   * - must be followed by "ack" message response according to the protocol.
+   * - may carry along new data txs to be added
+   */
   async handlePush(msg: PushMessage) {
     const coValueRow = await this.dbClient.getCoValue(msg.id);
 
@@ -205,6 +218,11 @@ export class SyncManager {
     });
   }
 
+  /**
+   * "Data" is a response to our "pull" message. It's always some data we asked for, initially.
+   * It's a terminal message which must not be responded to.
+   * At this stage the coValue state is considered synced between the peer and the node.
+   */
   async handleData(msg: DataMessage) {
     const coValueRow = await this.dbClient.getCoValue(msg.id);
 
