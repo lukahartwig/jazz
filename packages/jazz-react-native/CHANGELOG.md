@@ -1,5 +1,63 @@
 # jazz-browser
 
+## 0.9.9
+
+### Patch Changes
+
+- Updated dependencies [8eb9247]
+- Updated dependencies [8eb9247]
+  - jazz-tools@0.9.9
+  - cojson@0.9.9
+  - jazz-react-core@0.8.50
+  - cojson-storage-rn-sqlite@0.8.52
+  - cojson-transport-ws@0.9.9
+
+## 0.9.8
+
+### Patch Changes
+
+- Updated dependencies [f7f461d]
+- Updated dependencies [d1d773b]
+  - jazz-react-core@0.8.49
+  - jazz-tools@0.9.8
+
+## 0.9.6
+
+### Patch Changes
+
+- 8a390d2: Fix the account type registration using the sources for the typescript definitions
+
+## 0.9.5
+
+### Patch Changes
+
+- c871912: Add clearUserCredentials API to programmatically delete the current user stored credentials
+
+## 0.9.4
+
+### Patch Changes
+
+- Updated dependencies [0f57687]
+  - jazz-react-core@0.8.48
+
+## 0.9.3
+
+### Patch Changes
+
+- 7cd691f: Fix auth when using custom KV implementation
+- Updated dependencies [2be47d6]
+  - cojson-storage-rn-sqlite@0.8.51
+
+## 0.9.2
+
+### Patch Changes
+
+- 80fd3e9: Add local persistence with "@op-engineering/op-sqlite".
+
+  Disabled by default, follow the upgrade guide to enable it.
+
+  https://jazz.tools/docs/react-native/upgrade/react-native-local-persistence
+
 ## 0.9.1
 
 ### Patch Changes

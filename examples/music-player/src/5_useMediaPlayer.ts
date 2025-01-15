@@ -8,26 +8,26 @@ import { updateActivePlaylist, updateActiveTrack } from "./4_actions";
 import { getNextTrack, getPrevTrack } from "./lib/getters";
 
 export function useMediaPlayer() {
-  const { me } = useAccount();
+  const { me } = useAccount({
+    root: {},
+  });
 
   const playState = usePlayState();
   const playMedia = usePlayMedia();
 
   const [loading, setLoading] = useState<ID<MusicTrack> | null>(null);
 
-  const activeTrackId = me?.root?._refs.activeTrack?.id;
+  const activeTrackId = me?.root._refs.activeTrack?.id;
 
   // Reference used to avoid out-of-order track loads
   const lastLoadedTrackId = useRef<ID<MusicTrack> | null>(null);
 
   async function loadTrack(track: MusicTrack) {
-    if (!me.root) return;
-
     lastLoadedTrackId.current = track.id;
 
     setLoading(track.id);
 
-    const file = await FileStream.loadAsBlob(track._refs.file.id, me);
+    const file = await FileStream.loadAsBlob(track._refs.file.id);
 
     if (!file) {
       setLoading(null);
@@ -40,7 +40,7 @@ export function useMediaPlayer() {
       return;
     }
 
-    updateActiveTrack(track, me);
+    updateActiveTrack(track);
 
     await playMedia(file);
 
@@ -48,20 +48,16 @@ export function useMediaPlayer() {
   }
 
   async function playNextTrack() {
-    if (!me?.root) return;
-
-    const track = await getNextTrack(me);
+    const track = await getNextTrack();
 
     if (track) {
-      updateActiveTrack(track, me);
+      updateActiveTrack(track);
       await loadTrack(track);
     }
   }
 
   async function playPrevTrack() {
-    if (!me?.root) return;
-
-    const track = await getPrevTrack(me);
+    const track = await getPrevTrack();
 
     if (track) {
       await loadTrack(track);
@@ -69,14 +65,12 @@ export function useMediaPlayer() {
   }
 
   async function setActiveTrack(track: MusicTrack, playlist?: Playlist) {
-    if (!me?.root) return;
-
     if (activeTrackId === track.id && lastLoadedTrackId.current !== null) {
       playState.toggle();
       return;
     }
 
-    updateActivePlaylist(playlist!, me);
+    updateActivePlaylist(playlist);
 
     await loadTrack(track);
 

@@ -107,6 +107,9 @@ importers:
       '@azure/core-asynciterator-polyfill':
         specifier: ^1.0.2
         version: 1.0.2
+      '@op-engineering/op-sqlite':
+        specifier: ^11.2.12
+        version: 11.2.12(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.18)(react@18.3.1))(react@18.3.1)
       '@react-native-community/netinfo':
         specifier: ^11.4.1
         version: 11.4.1(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.18)(react@18.3.1))
@@ -219,6 +222,9 @@ importers:
       '@expo/vector-icons':
         specifier: ^14.0.2
         version: 14.0.4
+      '@op-engineering/op-sqlite':
+        specifier: ^11.2.12
+        version: 11.2.12(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.18)(react@18.3.1))(react@18.3.1)
       '@react-native-community/netinfo':
         specifier: ^11.4.1
         version: 11.4.1(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.18)(react@18.3.1))
@@ -261,6 +267,9 @@ importers:
       expo-font:
         specifier: ~13.0.1
         version: 13.0.2(expo@52.0.21(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@expo/metro-runtime@4.0.0(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.18)(react@18.3.1)))(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.18)(react@18.3.1))(react@18.3.1))(react@18.3.1)
+      expo-image-picker:
+        specifier: ~16.0.4
+        version: 16.0.4(expo@52.0.21(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@expo/metro-runtime@4.0.0(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.18)(react@18.3.1)))(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.18)(react@18.3.1))(react@18.3.1))
       expo-linking:
         specifier: ~7.0.3
         version: 7.0.3(expo@52.0.21(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@expo/metro-runtime@4.0.0(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.18)(react@18.3.1)))(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.18)(react@18.3.1))(react@18.3.1))(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.18)(react@18.3.1))(react@18.3.1)
@@ -444,7 +453,7 @@ importers:
         specifier: workspace:*
         version: link:../../packages/jazz-react
       jazz-react-auth-clerk:
-        specifier: workspace:0.9.1
+        specifier: workspace:0.9.9
         version: link:../../packages/jazz-react-auth-clerk
       jazz-tools:
         specifier: workspace:*
@@ -673,10 +682,10 @@ importers:
         specifier: ^2.0.0
         version: 2.1.1
       cojson:
-        specifier: workspace:0.9.0
+        specifier: workspace:0.9.9
         version: link:../../packages/cojson
       cojson-transport-ws:
-        specifier: workspace:0.9.0
+        specifier: workspace:0.9.9
         version: link:../../packages/cojson-transport-ws
       hash-slash:
         specifier: workspace:0.2.1
@@ -758,10 +767,10 @@ importers:
         specifier: ^2.0.0
         version: 2.1.1
       jazz-react:
-        specifier: workspace:0.9.1
+        specifier: workspace:0.9.9
         version: link:../../packages/jazz-react
       jazz-tools:
-        specifier: workspace:0.9.1
+        specifier: workspace:0.9.9
         version: link:../../packages/jazz-tools
       lucide-react:
         specifier: ^0.274.0
@@ -1015,10 +1024,10 @@ importers:
   examples/password-manager:
     dependencies:
       jazz-react:
-        specifier: workspace:0.9.1
+        specifier: workspace:0.9.9
         version: link:../../packages/jazz-react
       jazz-tools:
-        specifier: workspace:0.9.1
+        specifier: workspace:0.9.9
         version: link:../../packages/jazz-tools
       react:
         specifier: 18.3.1
@@ -1079,13 +1088,13 @@ importers:
         specifier: ^2.0.0
         version: 2.1.1
       jazz-browser-media-images:
-        specifier: workspace:0.9.1
+        specifier: workspace:0.9.9
         version: link:../../packages/jazz-browser-media-images
       jazz-react:
-        specifier: workspace:0.9.1
+        specifier: workspace:0.9.9
         version: link:../../packages/jazz-react
       jazz-tools:
-        specifier: workspace:0.9.1
+        specifier: workspace:0.9.9
         version: link:../../packages/jazz-tools
       lucide-react:
         specifier: ^0.274.0
@@ -1140,7 +1149,7 @@ importers:
         specifier: ^3.0.1
         version: 3.0.1
       jazz-run:
-        specifier: workspace:0.9.1
+        specifier: workspace:0.9.9
         version: link:../../packages/jazz-run
       postcss:
         specifier: ^8.4.27
@@ -1219,10 +1228,10 @@ importers:
         specifier: ^2.0.0
         version: 2.1.1
       jazz-react:
-        specifier: workspace:0.9.1
+        specifier: workspace:0.9.9
         version: link:../../packages/jazz-react
       jazz-tools:
-        specifier: workspace:0.9.1
+        specifier: workspace:0.9.9
         version: link:../../packages/jazz-tools
       lucide-react:
         specifier: ^0.274.0
@@ -1468,13 +1477,29 @@ importers:
         specifier: ^8.15.0
         version: 8.41.0
 
+  packages/cojson-storage-rn-sqlite:
+    dependencies:
+      cojson:
+        specifier: workspace:*
+        version: link:../cojson
+      cojson-storage:
+        specifier: workspace:*
+        version: link:../cojson-storage
+    devDependencies:
+      '@op-engineering/op-sqlite':
+        specifier: ^11.2.12
+        version: 11.2.12(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.18)(react@18.3.1))(react@18.3.1)
+      typescript:
+        specifier: ~5.6.2
+        version: 5.6.3
+
   packages/cojson-storage-sqlite:
     dependencies:
       better-sqlite3:
         specifier: ^11.7.0
         version: 11.7.0
       cojson:
-        specifier: workspace:0.9.0
+        specifier: workspace:0.9.9
         version: link:../cojson
       cojson-storage:
         specifier: workspace:*
@@ -1490,7 +1515,7 @@ importers:
   packages/cojson-transport-ws:
     dependencies:
       cojson:
-        specifier: workspace:0.9.0
+        specifier: workspace:0.9.9
         version: link:../cojson
       typescript:
         specifier: ~5.6.2
@@ -1499,6 +1524,8 @@ importers:
       '@types/ws':
         specifier: 8.5.10
         version: 8.5.10
+
+  packages/coverage: {}
 
   packages/create-jazz-app:
     dependencies:
@@ -1552,16 +1579,16 @@ importers:
         specifier: ^1.3.0
         version: 1.5.0
       cojson:
-        specifier: workspace:0.9.0
+        specifier: workspace:0.9.9
         version: link:../cojson
       cojson-storage-indexeddb:
-        specifier: workspace:0.9.0
+        specifier: workspace:0.9.9
         version: link:../cojson-storage-indexeddb
       cojson-transport-ws:
-        specifier: workspace:0.9.0
+        specifier: workspace:0.9.9
         version: link:../cojson-transport-ws
       jazz-tools:
-        specifier: workspace:0.9.1
+        specifier: workspace:0.9.9
         version: link:../jazz-tools
       typescript:
         specifier: ~5.6.2
@@ -1570,13 +1597,13 @@ importers:
   packages/jazz-browser-auth-clerk:
     dependencies:
       cojson:
-        specifier: workspace:0.9.0
+        specifier: workspace:0.9.9
         version: link:../cojson
       jazz-browser:
-        specifier: workspace:0.9.1
+        specifier: workspace:0.9.9
         version: link:../jazz-browser
       jazz-tools:
-        specifier: workspace:0.9.1
+        specifier: workspace:0.9.9
         version: link:../jazz-tools
     devDependencies:
       typescript:
@@ -1592,10 +1619,10 @@ importers:
         specifier: ^4.1.0
         version: 4.1.0
       jazz-browser:
-        specifier: workspace:0.9.1
+        specifier: workspace:0.9.9
         version: link:../jazz-browser
       jazz-tools:
-        specifier: workspace:0.9.1
+        specifier: workspace:0.9.9
         version: link:../jazz-tools
       pica:
         specifier: ^9.0.1
@@ -1611,13 +1638,13 @@ importers:
   packages/jazz-nodejs:
     dependencies:
       cojson:
-        specifier: workspace:0.9.0
+        specifier: workspace:0.9.9
         version: link:../cojson
       cojson-transport-ws:
-        specifier: workspace:0.9.0
+        specifier: workspace:0.9.9
         version: link:../cojson-transport-ws
       jazz-tools:
-        specifier: workspace:0.9.1
+        specifier: workspace:0.9.9
         version: link:../jazz-tools
       ws:
         specifier: ^8.14.2
@@ -1639,16 +1666,16 @@ importers:
         specifier: ^1.3.0
         version: 1.5.0
       cojson:
-        specifier: workspace:0.9.0
+        specifier: workspace:0.9.9
         version: link:../cojson
       jazz-browser:
-        specifier: workspace:0.9.1
+        specifier: workspace:0.9.9
         version: link:../jazz-browser
       jazz-react-core:
         specifier: workspace:*
         version: link:../jazz-react-core
       jazz-tools:
-        specifier: workspace:0.9.1
+        specifier: workspace:0.9.9
         version: link:../jazz-tools
     devDependencies:
       '@testing-library/dom':
@@ -1676,16 +1703,16 @@ importers:
   packages/jazz-react-auth-clerk:
     dependencies:
       cojson:
-        specifier: workspace:0.9.0
+        specifier: workspace:0.9.9
         version: link:../cojson
       jazz-browser-auth-clerk:
-        specifier: workspace:0.9.1
+        specifier: workspace:0.9.9
         version: link:../jazz-browser-auth-clerk
       jazz-react:
-        specifier: workspace:0.9.1
+        specifier: workspace:0.9.9
         version: link:../jazz-react
       jazz-tools:
-        specifier: workspace:0.9.1
+        specifier: workspace:0.9.9
         version: link:../jazz-tools
       react:
         specifier: 18.3.1
@@ -1737,6 +1764,9 @@ importers:
       cojson:
         specifier: workspace:*
         version: link:../cojson
+      cojson-storage-rn-sqlite:
+        specifier: workspace:*
+        version: link:../cojson-storage-rn-sqlite
       cojson-transport-ws:
         specifier: workspace:*
         version: link:../cojson-transport-ws
@@ -1819,19 +1849,19 @@ importers:
         specifier: ^0.25.5
         version: 0.25.8(effect@3.11.9)
       cojson:
-        specifier: workspace:0.9.0
+        specifier: workspace:0.9.9
         version: link:../cojson
       cojson-storage-sqlite:
-        specifier: workspace:0.9.0
+        specifier: workspace:0.9.9
         version: link:../cojson-storage-sqlite
       cojson-transport-ws:
-        specifier: workspace:0.9.0
+        specifier: workspace:0.9.9
         version: link:../cojson-transport-ws
       effect:
         specifier: ^3.6.5
         version: 3.11.9
       jazz-tools:
-        specifier: workspace:0.9.1
+        specifier: workspace:0.9.9
         version: link:../jazz-tools
       ws:
         specifier: ^8.14.2
@@ -1991,6 +2021,9 @@ importers:
       '@biomejs/biome':
         specifier: 1.9.4
         version: 1.9.4
+      '@playwright/test':
+        specifier: ^1.46.1
+        version: 1.49.1
       '@types/react':
         specifier: ^18.3.12
         version: 18.3.18
@@ -2006,6 +2039,9 @@ importers:
       globals:
         specifier: ^15.11.0
         version: 15.14.0
+      is-ci:
+        specifier: ^3.0.1
+        version: 3.0.1
       postcss:
         specifier: ^8.4.27
         version: 8.4.49
@@ -2082,6 +2118,9 @@ importers:
       '@azure/core-asynciterator-polyfill':
         specifier: ^1.0.2
         version: 1.0.2
+      '@op-engineering/op-sqlite':
+        specifier: ^11.2.12
+        version: 11.2.12(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.18)(react@18.3.1))(react@18.3.1)
       '@react-native-community/netinfo':
         specifier: ^11.4.1
         version: 11.4.1(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.18)(react@18.3.1))
@@ -3844,6 +3883,12 @@ packages:
   '@npmcli/fs@3.1.1':
     resolution: {integrity: sha512-q9CRWjpHCMIh5sVyefoD1cA7PkvILqCZsnSOEUUivORLjxCO/Irmue2DprETiNgEqktDBZaM1Bi+jrarx1XdCg==}
     engines: {node: ^14.17.0 || ^16.13.0 || >=18.0.0}
+
+  '@op-engineering/op-sqlite@11.2.12':
+    resolution: {integrity: sha512-X3qv/H8oCTkk0MyoaMa7Et+0Z8Rkbe8PTBAIBLwwocIc1b84T1Q6wn9DRrS346p2wOgP8j7EYLFqtm0+1tCtkA==}
+    peerDependencies:
+      react: 18.3.1
+      react-native: '*'
 
   '@opentelemetry/api@1.9.0':
     resolution: {integrity: sha512-3giAOQvZiH5F9bMlMiv8+GSPMeqg0dbaeo58/0SlA9sxSqZhnUtxzX9/2FzyhS9sWQf5S0GJE0AKBrFqjpeYcg==}
@@ -6753,6 +6798,16 @@ packages:
     peerDependencies:
       expo: '*'
       react: 18.3.1
+
+  expo-image-loader@5.0.0:
+    resolution: {integrity: sha512-Eg+5FHtyzv3Jjw9dHwu2pWy4xjf8fu3V0Asyy42kO+t/FbvW/vjUixpTjPtgKQLQh+2/9Nk4JjFDV6FwCnF2ZA==}
+    peerDependencies:
+      expo: '*'
+
+  expo-image-picker@16.0.4:
+    resolution: {integrity: sha512-LeTdQxL+kS8wiFOf+mTxDZmr0Ok3KwcpvCaDnXwCdCQuszVd4sSml7lg+oaJfkWj793u74M+8j0hQaEDHCgkxg==}
+    peerDependencies:
+      expo: '*'
 
   expo-json-utils@0.14.0:
     resolution: {integrity: sha512-xjGfK9dL0B1wLnOqNkX0jM9p48Y0I5xEPzHude28LY67UmamUyAACkqhZGaPClyPNfdzczk7Ej6WaRMT3HfXvw==}
@@ -13486,6 +13541,11 @@ snapshots:
     dependencies:
       semver: 7.6.3
 
+  '@op-engineering/op-sqlite@11.2.12(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.18)(react@18.3.1))(react@18.3.1)':
+    dependencies:
+      react: 18.3.1
+      react-native: 0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.18)(react@18.3.1)
+
   '@opentelemetry/api@1.9.0': {}
 
   '@opentelemetry/core@1.30.0(@opentelemetry/api@1.9.0)':
@@ -16773,6 +16833,15 @@ snapshots:
       expo: 52.0.21(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@expo/metro-runtime@4.0.0(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.18)(react@18.3.1)))(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.18)(react@18.3.1))(react@18.3.1)
       fontfaceobserver: 2.3.0
       react: 18.3.1
+
+  expo-image-loader@5.0.0(expo@52.0.21(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@expo/metro-runtime@4.0.0(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.18)(react@18.3.1)))(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.18)(react@18.3.1))(react@18.3.1)):
+    dependencies:
+      expo: 52.0.21(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@expo/metro-runtime@4.0.0(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.18)(react@18.3.1)))(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.18)(react@18.3.1))(react@18.3.1)
+
+  expo-image-picker@16.0.4(expo@52.0.21(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@expo/metro-runtime@4.0.0(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.18)(react@18.3.1)))(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.18)(react@18.3.1))(react@18.3.1)):
+    dependencies:
+      expo: 52.0.21(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@expo/metro-runtime@4.0.0(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.18)(react@18.3.1)))(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.18)(react@18.3.1))(react@18.3.1)
+      expo-image-loader: 5.0.0(expo@52.0.21(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@expo/metro-runtime@4.0.0(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.18)(react@18.3.1)))(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.18)(react@18.3.1))(react@18.3.1))
 
   expo-json-utils@0.14.0: {}
 

@@ -132,3 +132,22 @@ test("init the list correctly", () => {
     "hello",
   ]);
 });
+
+test("Items prepended to start appear with latest first", () => {
+  const node = new LocalNode(...randomAnonymousAccountAndSessionID(), Crypto);
+
+  const coValue = node.createCoValue({
+    type: "colist",
+    ruleset: { type: "unsafeAllowAll" },
+    meta: null,
+    ...Crypto.createdNowUnique(),
+  });
+
+  const content = expectList(coValue.getCurrentContent());
+
+  content.prepend("first", 0, "trusting");
+  content.prepend("second", 0, "trusting");
+  content.prepend("third", 0, "trusting");
+
+  expect(content.toJSON()).toEqual(["third", "second", "first"]);
+});

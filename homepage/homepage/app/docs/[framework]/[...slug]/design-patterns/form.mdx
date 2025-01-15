@@ -125,7 +125,7 @@ export function CreateOrder() {
   const [draft, setDraft] = useState<DraftBubbleTeaOrder>();
 
   useEffect(() => {
-    setDraft(DraftBubbleTeaOrder.create({}, { owner: me }));
+    setDraft(DraftBubbleTeaOrder.create({}));
   }, [me?.id]);
 
   const onSave = (e: React.FormEvent<HTMLFormElement>) => {
@@ -179,7 +179,7 @@ export function CreateOrder() { // old
   const [draft, setDraft] = useState<DraftBubbleTeaOrder>(); // old
 
   useEffect(() => { // old
-    setDraft(DraftBubbleTeaOrder.create({}, { owner: me })); // old
+    setDraft(DraftBubbleTeaOrder.create({})); // old
   }, [me?.id]); // old
 
   const onSave = (e: React.FormEvent<HTMLFormElement>) => { // old
@@ -229,14 +229,10 @@ export class JazzAccount extends Account {
   root = co.ref(AccountRoot);
 
   migrate(this: JazzAccount, creationProps?: { name: string }) {
-    super.migrate(creationProps);
+    if (this.root === undefined) {
+      const draft = DraftBubbleTeaOrder.create({});
 
-    if (!this._refs.root) {
-      const ownership = { owner: this };
-
-      const draft = DraftBubbleTeaOrder.create({}, ownership);
-
-      this.root = AccountRoot.create({ draft }, ownership);
+      this.root = AccountRoot.create({ draft });
     }
   }
 }
@@ -303,11 +299,11 @@ export function CreateOrder() {// old
 
     // create a new empty draft
     me.root.draft = DraftBubbleTeaOrder.create(
-      {}, { owner: me },
+      {},
     );
   };// old
 
-  return <CreateOrderForm id={me?.root?.draft.id} onSave={onSave} />
+  return <CreateOrderForm id={me.root.draft.id} onSave={onSave} />
 } // old
 
 function CreateOrderForm({

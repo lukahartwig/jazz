@@ -7,11 +7,13 @@ const pica = new Pica();
 /** @category Image creation */
 export async function createImage(
   imageBlobOrFile: Blob | File,
-  options: {
-    owner: Group | Account;
+  options?: {
+    owner?: Group | Account;
     maxSize?: 256 | 1024 | 2048;
   },
 ): Promise<ImageDefinition> {
+  const owner = options?.owner;
+
   let originalWidth!: number;
   let originalHeight!: number;
   const Reducer = new ImageBlobReduce({ pica });
@@ -36,7 +38,7 @@ export async function createImage(
       originalSize: [originalWidth, originalHeight],
       placeholderDataURL,
     },
-    { owner: options.owner },
+    owner,
   );
   setTimeout(async () => {
     const max256 = await Reducer.toBlob(imageBlobOrFile, { max: 256 });
@@ -51,16 +53,15 @@ export async function createImage(
           ? 256
           : Math.round(256 * (originalHeight / originalWidth));
 
-      const binaryStream = await FileStream.createFromBlob(max256, {
-        owner: options.owner,
-      });
+      const binaryStream = await FileStream.createFromBlob(max256, owner);
 
+      console.log(`${width}x${height}`);
       imageDefinition[`${width}x${height}`] = binaryStream;
     }
 
     await new Promise((resolve) => setTimeout(resolve, 0));
 
-    if (options.maxSize === 256) return;
+    if (options?.maxSize === 256) return;
 
     const max1024 = await Reducer.toBlob(imageBlobOrFile, { max: 1024 });
 
@@ -74,16 +75,14 @@ export async function createImage(
           ? 1024
           : Math.round(1024 * (originalHeight / originalWidth));
 
-      const binaryStream = await FileStream.createFromBlob(max1024, {
-        owner: options.owner,
-      });
+      const binaryStream = await FileStream.createFromBlob(max1024, owner);
 
       imageDefinition[`${width}x${height}`] = binaryStream;
     }
 
     await new Promise((resolve) => setTimeout(resolve, 0));
 
-    if (options.maxSize === 1024) return;
+    if (options?.maxSize === 1024) return;
 
     const max2048 = await Reducer.toBlob(imageBlobOrFile, { max: 2048 });
 
@@ -97,20 +96,18 @@ export async function createImage(
           ? 2048
           : Math.round(2048 * (originalHeight / originalWidth));
 
-      const binaryStream = await FileStream.createFromBlob(max2048, {
-        owner: options.owner,
-      });
+      const binaryStream = await FileStream.createFromBlob(max2048, owner);
 
       imageDefinition[`${width}x${height}`] = binaryStream;
     }
 
     await new Promise((resolve) => setTimeout(resolve, 0));
 
-    if (options.maxSize === 2048) return;
+    if (options?.maxSize === 2048) return;
 
     const originalBinaryStream = await FileStream.createFromBlob(
       imageBlobOrFile,
-      { owner: options.owner },
+      owner,
     );
 
     imageDefinition[`${originalWidth}x${originalHeight}`] =

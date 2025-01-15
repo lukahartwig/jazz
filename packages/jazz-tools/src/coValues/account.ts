@@ -12,6 +12,7 @@ import {
   SessionID,
   cojsonInternals,
 } from "cojson";
+import { activeAccountContext } from "../implementation/activeAccountContext.js";
 import {
   AnonymousJazzAgent,
   type CoValue,
@@ -29,7 +30,8 @@ import {
   ensureCoValueLoaded,
   inspect,
   loadCoValue,
-  subscribeToCoValue,
+  loadCoValueWithoutMe,
+  subscribeToCoValueWithoutMe,
   subscribeToExistingCoValue,
   subscriptionsScopes,
 } from "../internal.js";
@@ -192,6 +194,10 @@ export class Account extends CoValueBase implements CoValue {
     return this.fromNode(node) as A;
   }
 
+  static getMe<A extends Account>(this: CoValueClass<A> & typeof Account) {
+    return activeAccountContext.get() as A;
+  }
+
   static async createAs<A extends Account>(
     this: CoValueClass<A> & typeof Account,
     as: Account,
@@ -269,21 +275,53 @@ export class Account extends CoValueBase implements CoValue {
   static load<A extends Account, Depth>(
     this: CoValueClass<A>,
     id: ID<A>,
+    depth: Depth & DepthsIn<A>,
+  ): Promise<DeeplyLoaded<A, Depth> | undefined>;
+  static load<A extends Account, Depth>(
+    this: CoValueClass<A>,
+    id: ID<A>,
     as: Account,
     depth: Depth & DepthsIn<A>,
+  ): Promise<DeeplyLoaded<A, Depth> | undefined>;
+  static load<A extends Account, Depth>(
+    this: CoValueClass<A>,
+    id: ID<A>,
+    asOrDepth: Account | (Depth & DepthsIn<A>),
+    depth?: Depth & DepthsIn<A>,
   ): Promise<DeeplyLoaded<A, Depth> | undefined> {
-    return loadCoValue(this, id, as, depth);
+    return loadCoValueWithoutMe(this, id, asOrDepth, depth);
   }
 
   /** @category Subscription & Loading */
   static subscribe<A extends Account, Depth>(
     this: CoValueClass<A>,
     id: ID<A>,
+    depth: Depth & DepthsIn<A>,
+    listener: (value: DeeplyLoaded<A, Depth>) => void,
+  ): () => void;
+  static subscribe<A extends Account, Depth>(
+    this: CoValueClass<A>,
+    id: ID<A>,
     as: Account,
     depth: Depth & DepthsIn<A>,
     listener: (value: DeeplyLoaded<A, Depth>) => void,
+  ): () => void;
+  static subscribe<A extends Account, Depth>(
+    this: CoValueClass<A>,
+    id: ID<A>,
+    asOrDepth: Account | (Depth & DepthsIn<A>),
+    depthOrListener:
+      | (Depth & DepthsIn<A>)
+      | ((value: DeeplyLoaded<A, Depth>) => void),
+    listener?: (value: DeeplyLoaded<A, Depth>) => void,
   ): () => void {
-    return subscribeToCoValue<A, Depth>(this, id, as, depth, listener);
+    return subscribeToCoValueWithoutMe<A, Depth>(
+      this,
+      id,
+      asOrDepth,
+      depthOrListener,
+      listener!,
+    );
   }
 
   /** @category Subscription & Loading */

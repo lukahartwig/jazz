@@ -1,6 +1,6 @@
 {
   "name": "jazz-react-native",
-  "version": "0.9.1",
+  "version": "0.9.9",
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
@@ -9,17 +9,17 @@
   "exports": {
     ".": {
       "react-native": "./dist/index.js",
-      "types": "./dist/index.d.ts",
+      "types": "./src/index.ts",
       "default": "./dist/index.js"
     },
     "./crypto": {
       "react-native": "./dist/crypto/index.js",
-      "types": "./dist/crypto/index.d.ts",
+      "types": "./src/crypto/index.ts",
       "default": "./dist/crypto/index.js"
     },
     "./testing": {
       "react-native": "./dist/testing.js",
-      "types": "./dist/testing.d.ts",
+      "types": "./src/testing.ts",
       "default": "./dist/testing.js"
     }
   },
@@ -29,6 +29,7 @@
     "jazz-react-core": "workspace:*",
     "cojson": "workspace:*",
     "cojson-transport-ws": "workspace:*",
+    "cojson-storage-rn-sqlite": "workspace:*",
     "jazz-tools": "workspace:*",
     "react-native-quick-crypto": "1.0.0-beta.9"
   },

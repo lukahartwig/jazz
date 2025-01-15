@@ -13,6 +13,7 @@ function JazzAndAuth({ children }: { children: React.ReactNode }) {
       <JazzProvider
         auth={auth}
         peer="wss://cloud.jazz.tools/?key=react-demo-auth-tailwind@garden.co"
+        AccountSchema={JazzAccount}
       >
         {children}
       </JazzProvider>

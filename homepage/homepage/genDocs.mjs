@@ -3,12 +3,11 @@ import { Application } from "typedoc";
 for (const { packageName, entryPoint, tsconfig, typedocOptions } of [
   {
     packageName: "jazz-tools",
-    entryPoint: "index.web.ts",
-    tsconfig: "tsconfig.web.json",
+    entryPoint: "exports.ts",
   },
   {
     packageName: "jazz-react",
-    entryPoint: "index.tsx",
+    entryPoint: "index.ts",
     typedocOptions: {
       skipErrorChecking: true, // TODO: remove this. Temporary workaround
     },

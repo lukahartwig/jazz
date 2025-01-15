@@ -1,4 +1,4 @@
-import React, { useCallback, useRef } from "react";
+import React, { useCallback, useContext, useRef } from "react";
 
 import {
   Account,
@@ -14,7 +14,7 @@ import {
 import { JazzContext, JazzContextType } from "./provider.js";
 
 export function useJazzContext<Acc extends Account>() {
-  const value = React.useContext(JazzContext) as JazzContextType<Acc>;
+  const value = useContext(JazzContext) as JazzContextType<Acc>;
 
   if (!value) {
     throw new Error(
@@ -127,7 +127,7 @@ export function experimental_useInboxSender<
   }
 
   const me = context.me;
-  const inboxRef = useRef<Promise<InboxSender<I, O>> | undefined>();
+  const inboxRef = useRef<Promise<InboxSender<I, O>> | undefined>(undefined);
 
   const sendMessage = useCallback(
     async (message: I) => {

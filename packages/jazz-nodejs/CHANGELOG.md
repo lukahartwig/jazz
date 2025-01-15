@@ -1,5 +1,28 @@
 # jazz-autosub
 
+## 0.9.9
+
+### Patch Changes
+
+- Updated dependencies [8eb9247]
+- Updated dependencies [8eb9247]
+  - jazz-tools@0.9.9
+  - cojson@0.9.9
+  - cojson-transport-ws@0.9.9
+
+## 0.9.8
+
+### Patch Changes
+
+- Updated dependencies [d1d773b]
+  - jazz-tools@0.9.8
+
+## 0.9.7
+
+### Patch Changes
+
+- a172f61: Cast the WebSocket type to any
+
 ## 0.9.1
 
 ### Patch Changes

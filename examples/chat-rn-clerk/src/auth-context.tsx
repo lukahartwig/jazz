@@ -50,6 +50,7 @@ export function JazzAndAuth({ children }: PropsWithChildren) {
       {auth && clerk.user ? (
         <JazzProvider
           auth={auth}
+          storage="sqlite"
           peer="wss://cloud.jazz.tools/?key=chat-rn-clerk-example-jazz@garden.co"
         >
           {children}

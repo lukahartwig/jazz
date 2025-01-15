@@ -148,18 +148,16 @@ export class MyAppAccount extends Account {
   root = co.ref(MyAppRoot);
 
   async migrate() {
-    const me = this;
-
     // we specifically need to check for undefined, 
     // because the root might simply be not loaded (`null`) yet
-    if (me.root === undefined) {
-      me.root = MyAppRoot.create({
+    if (this.root === undefined) {
+      this.root = MyAppRoot.create({
         // Using a group to set the owner is always a good idea.
         // This way if in the future we want to share 
         // this coValue we can do so easily.
-        myChats: ListOfChats.create([], Group.create(me)),
-        myContacts: ListOfAccounts.create([], Group.create(me))
-      }, Group.create(me));
+        myChats: ListOfChats.create([], Group.create()),
+        myContacts: ListOfAccounts.create([], Group.create())
+      });
     }
   }
 }
@@ -182,17 +180,15 @@ export class MyAppAccount extends Account {
     root = co.ref(MyAppRoot);// old
 
     async migrate() { // old
-      const me = this; // old
-
-      if (me.root === undefined) {  // old
-        me.root = MyAppRoot.create({  // old
-          myChats: ListOfChats.create([], Group.create(me)),  // old
-          myContacts: ListOfAccounts.create([], Group.create(me)) // old
-        }, Group.create(me)); // old
+      if (this.root === undefined) {  // old
+        this.root = MyAppRoot.create({  // old
+          myChats: ListOfChats.create([], Group.create()),  // old
+          myContacts: ListOfAccounts.create([], Group.create()) // old
+        }); // old
       } // old
 
       // We need to load the root field to check for the myContacts field
-      const result = await me.ensureLoaded({
+      const result = await this.ensureLoaded({
         root: {},
       });
 
@@ -203,7 +199,7 @@ export class MyAppAccount extends Account {
       // we specifically need to check for undefined, 
       // because myBookmarks might simply be not loaded (`null`) yet 
       if (root.myBookmarks === undefined) {
-        root.myBookmarks = ListOfBookmarks.create([], Group.create(me));
+        root.myBookmarks = ListOfBookmarks.create([], Group.create());
       }
     }
   }

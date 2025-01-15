@@ -1,3 +1,4 @@
+import { SQLiteStorage } from "cojson-storage-rn-sqlite";
 import {
   Account,
   AgentID,
@@ -47,7 +48,7 @@ export type ReactNativeContextOptions<Acc extends Account> = {
 export type BaseReactNativeContextOptions = {
   peer: `wss://${string}` | `ws://${string}`;
   reconnectionTimeout?: number;
-  storage?: "indexedDB" | "singleTabOPFS";
+  storage?: "sqlite" | "disabled";
   CryptoProvider?: typeof PureJSCrypto | typeof RNQuickCrypto;
 };
 
@@ -74,18 +75,28 @@ export async function createJazzRNContext<Acc extends Account>(
 
   const CryptoProvider = options.CryptoProvider || PureJSCrypto;
 
+  const peersToLoadFrom = [websocketPeer.peer];
+
+  if (options.storage === "sqlite") {
+    const storage = await SQLiteStorage.asPeer({
+      filename: "jazz-storage",
+      trace: false,
+    });
+    peersToLoadFrom.push(storage);
+  }
+
   const context =
     "auth" in options
       ? await createJazzContext({
           AccountSchema: options.AccountSchema,
           auth: options.auth,
           crypto: await CryptoProvider.create(),
-          peersToLoadFrom: [websocketPeer.peer],
+          peersToLoadFrom,
           sessionProvider: provideLockSession,
         })
       : await createJazzContext({
           crypto: await CryptoProvider.create(),
-          peersToLoadFrom: [websocketPeer.peer],
+          peersToLoadFrom,
         });
 
   const node =

@@ -54,11 +54,9 @@ export class JazzAccount extends Account {
   root = co.ref(JazzAccountRoot);
 
   async migrate() {
-    if (!this._refs.root) {
+    if (this.root === undefined) {
       // Using a Group as an owner allows you to give access to other users
-      const initialOrganizationOwnership = {
-        owner: Group.create({ owner: this }),
-      };
+      const organizationGroup = Group.create();
 
       const organizations = ListOfOrganizations.create(
         [
@@ -66,17 +64,15 @@ export class JazzAccount extends Account {
           Organization.create(
             {
               name: "My organization",
-              projects: ListOfProjects.create([], initialOrganizationOwnership),
+              projects: ListOfProjects.create([], organizationGroup),
             },
-            initialOrganizationOwnership,
+            organizationGroup,
           ),
         ],
-        { owner: this },
       );
 
       this.root = JazzAccountRoot.create(
         { organizations },
-        { owner: this },
       );
     }
   }
@@ -101,22 +97,27 @@ When the user accepts the invite, add the `Organization` to the user's `organiza
 
 <CodeGroup>
 ```ts
-const onAccept = (organizationId: ID<Organization>) => {
-  if (me?.root?.organizations) {
-    Organization.load(organizationId, me, []).then((organization) => {
-      if (organization) {
-        // Avoid duplicates
-        const ids = me.root.organizations.map(
-          (organization) => organization?.id,
-        );
+const onAccept = async (organizationId: ID<Organization>) => {
+  const me = await MusicaAccount.getMe().ensureLoaded({
+    root: {
+      organizations: [],
+    },
+  });
 
-        if (ids.includes(organizationId)) return;
+  if (!me) throw new Error("Failed to load account data");
 
-        me.root.organizations.push(organization);
-        navigate("/organizations/" + organizationId);
-      }
-    });
-  }
+  const organization = await Organization.load(organizationId, []);
+
+  if (!organization) throw new Error("Failed to load organization data");
+
+  const ids = me.root.organizations.map(
+    (organization) => organization?.id,
+  );
+
+  if (ids.includes(organizationId)) return;
+
+  me.root.organizations.push(organization);
+  navigate("/organizations/" + organizationId);
 };
 
 useAcceptInvite({

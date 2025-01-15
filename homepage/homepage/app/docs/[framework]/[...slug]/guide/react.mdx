@@ -186,10 +186,8 @@ Now, finally, let's implement creating an issue:
 import { useState } from "react"; // old
 import { Issue } from "./schema"; // old
 import { IssueComponent } from "./components/Issue.tsx"; // old
-import { useAccount } from "jazz-react";
 // old
 function App() {// old
-    const { me } = useAccount();
     const [issue, setIssue] = useState<Issue>(); // old
     // old
     const createIssue = () => {
@@ -200,7 +198,6 @@ function App() {// old
                 estimate: 5,
                 status: "backlog",
             },
-            { owner: me },
         );
         setIssue(newIssue);
     };
@@ -234,7 +231,7 @@ We'll already notice one interesting thing here:
 
 -   We have to create every CoValue with an `owner`!
     -   this will determine access rights on the CoValue, which we'll learn about in "Groups & Permissions"
-    -   here we set `owner` to the current user `me`, which we get from the Jazz context / `useAccount`
+    -   here the `owner` is set automatically to a group managed by the current user because we have not declared any
 
 **Behind the scenes, Jazz not only creates the Issue in memory but also automatically syncs an encrypted version to the cloud and persists it locally. The Issue also has a globally unique ID.**
 
@@ -260,11 +257,10 @@ Let's modify `src/App.tsx`:
 import { useState } from "react"; // old
 import { Issue } from "./schema"; // old
 import { IssueComponent } from "./components/Issue.tsx"; // old
-import { useAccount, useCoState } from "jazz-react";
+import { useCoState } from "jazz-react";
 import { ID } from "jazz-tools"
 // old
 function App() { // old
-    const { me } = useAccount(); // old
     const [issueID, setIssueID] = useState<ID<Issue>>();
     // old
     const issue = useCoState(Issue, issueID);
@@ -277,7 +273,6 @@ function App() { // old
                 estimate: 5, // old
                 status: "backlog", // old
             }, // old
-            { owner: me }, // old
         ); // old
         setIssueID(newIssue.id);
     }; // old
@@ -381,10 +376,9 @@ This works because CoValues
   <CodeGroup size="sm">
             ```ts
             function useCoState<V extends CoValue>(Schema: CoValueClass<V>, id?: ID<V>): V | undefined {
-                const { me } = useAccount();
                 const [value, setValue] = useState<V>();
 
-                useEffect(() => Schema.subscribe(id, me, [], setValue), [id]);
+                useEffect(() => Schema.subscribe(id, [], setValue), [id]);
 
                 return value;
             }
@@ -409,11 +403,10 @@ So let's store the ID in the browser's URL and make sure our useState is in sync
 import { useState } from "react"; // old
 import { Issue } from "./schema"; // old
 import { IssueComponent } from "./components/Issue.tsx"; // old
-import { useAccount, useCoState } from "jazz-react"; // old
+import { useCoState } from "jazz-react"; // old
 import { ID } from "jazz-tools" // old
 // old
 function App() { // old
-    const { me } = useAccount(); // old
     const [issueID, setIssueID] = useState<ID<Issue> | undefined>(
         (window.location.search?.replace("?issue=", "") || undefined) as ID<Issue> | undefined,
     );
@@ -428,7 +421,6 @@ function App() { // old
                 estimate: 5, // old
                 status: "backlog", // old
             }, // old
-            { owner: me }, // old
         ); // old
         setIssueID(newIssue.id); // old
         window.history.pushState({}, "", `?issue=${newIssue.id}`);
@@ -470,7 +462,7 @@ All we have to do is create a new group to own each new issue and add "everyone"
 import { useState } from "react"; // old
 import { Issue } from "./schema"; // old
 import { IssueComponent } from "./components/Issue.tsx"; // old
-import { useAccount, useCoState } from "jazz-react"; // old
+import { useCoState } from "jazz-react"; // old
 import { ID, Group } from "jazz-tools"
 // old
 function App() { // old
@@ -564,11 +556,9 @@ First, we'll change `App.tsx` to create and render `Project`s instead of `Issue`
 import { useState } from "react"; // old
 import { Project, ListOfIssues } from "./schema";
 import { ProjectComponent } from "./components/Project.tsx";
-import { useAccount } from "jazz-react";
 import { ID, Group } from "jazz-tools"
 // old
 function App() { // old
-    const { me } = useAccount(); // old
     const [projectID, setProjectID] = useState<ID<Project> | undefined>(
         (window.location.search?.replace("?project=", "") || undefined) as ID<Project> | undefined
     );
@@ -576,7 +566,7 @@ function App() { // old
     const issue = useCoState(Issue, issueID); // *bin*
     // old
     const createProject = () => {
-        const group = Group.create({ owner: me });
+        const group = Group.create();
         group.addMember("everyone", "writer");
 
         const newProject = Project.create(
@@ -584,7 +574,7 @@ function App() { // old
                 name: "New Project",
                 issues: ListOfIssues.create([], { owner: group })
             },
-            { owner: group },
+            group,
         );
         setProjectID(newProject.id);
         window.history.pushState({}, "", `?project=${newProject.id}`);
@@ -622,7 +612,7 @@ export function ProjectComponent({ projectID }: { projectID: ID<Project> }) {
             description: "",
             estimate: 0,
             status: "backlog",
-        }, { owner: project._owner }));
+        },  project._owner));
     };
 
     return project ? (
@@ -673,7 +663,7 @@ export function ProjectComponent({ projectID }: { projectID: ID<Project> }) {// 
             description: "",// old
             estimate: 0,// old
             status: "backlog",// old
-        }, { owner: project._owner }));// old
+        }, project._owner));// old
     };// old
 // old
     return project ? (// old
@@ -731,17 +721,15 @@ Turns out, we're already mostly there! First, let's remove making the Project pu
 import { useState } from "react"; // old
 import { Project, ListOfIssues } from "./schema"; // old
 import { ProjectComponent } from "./components/Project.tsx"; // old
-import { useAccount } from "jazz-react"; // old
 import { ID, Group } from "jazz-tools" // old
 // old
 function App() { // old
-    const { me } = useAccount(); // old
     const [projectID, setProjectID] = useState<ID<Project> | undefined>( // old
         (window.location.search?.replace("?project=", "") || undefined) as ID<Project> | undefined, // old
     ); // old
     // old
     const createProject = () => { // old
-        const group = Group.create({ owner: me }); // old
+        const group = Group.create(); // old
         group.addMember("everyone", "writer"); // *bin*
         // old
         const newProject = Project.create( // old
@@ -749,7 +737,7 @@ function App() { // old
                 name: "New Project", // old
                 issues: ListOfIssues.create([], { owner: group }) // old
             }, // old
-            { owner: group }, // old
+            group, // old
         ); // old
         setProjectID(newProject.id); // old
         window.history.pushState({}, "", `?project=${newProject.id}`); // old
@@ -792,7 +780,7 @@ export function ProjectComponent({ projectID }: { projectID: ID<Project> }) {// 
             description: "",// old
             estimate: 0,// old
             status: "backlog",// old
-        }, { owner: project._owner }));// old
+        }, project._owner));// old
     };// old
 // old
     return project ? (// old

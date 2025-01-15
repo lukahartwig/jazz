@@ -70,7 +70,6 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
         </JazzAndAuth>
       </div>
     </ThemeProvider>
-    ,
   </React.StrictMode>,
 );
 

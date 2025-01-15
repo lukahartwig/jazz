@@ -1,5 +1,6 @@
 import { expect, test } from "vitest";
 import { CoMap, co } from "../exports.js";
+import { createJazzTestAccount } from "../testing.js";
 import { setupTwoNodes } from "./utils.js";
 
 test("waitForAllCoValuesSync should resolve when all the values are synced", async () => {

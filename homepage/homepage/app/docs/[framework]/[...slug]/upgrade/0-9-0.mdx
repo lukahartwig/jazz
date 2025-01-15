@@ -21,7 +21,7 @@ export const metadata = { title: "Upgrade to Jazz 0.9.0" };
   <div>
     The `JazzProvider` is now imported from `jazz-react` instead of `createJazzReactApp`.
 
-    While `createJazzReactApp` was originally designed to setup strong typing for custom Account schemas in `useAccount`, 
+    While `createJazzReactApp` was originally designed to setup strong typing for custom Account schemas in `useAccount`,
     we found that this approach made the Jazz setup awkward and confusing for some users.
 
     So we decided to remove `createJazzReactApp` step and to provide the types through namespace declarations:
@@ -46,29 +46,29 @@ export const metadata = { title: "Upgrade to Jazz 0.9.0" };
                   <JazzProvider
                       auth={passkeyAuth} // old
                       peer="wss://cloud.jazz.tools/?key=you@example.com" // old
-                      AccountSchema={MyAppAccount} {/* The custom Account schema is passed here */}
+                      AccountSchema={MyAppAccount} {/* The custom Account schema is passed here */} // *add*
                   >
                       {children} // old
                   </JazzProvider>
                   <PasskeyAuthBasicUI state={passKeyState} /> // old
               </> // old
-          ); 
+          );
       }
 
       // Register the Account schema so `useAccount` returns our custom `MyAppAccount`
-      declare module "jazz-react" {
-          interface Register {
-              Account: MyAppAccount;
-          }
-      }
+      declare module "jazz-react" { // *add*
+          interface Register { // *add*
+              Account: MyAppAccount; // *add*
+          } // *add*
+      } // *add*
       ```
   </CodeGroup>
 
   <h3>Top level imports for hooks</h3>
 
   <div>
-    All Jazz hooks are now available as top-level imports from the `jazz-react` package. 
-    
+    All Jazz hooks are now available as top-level imports from the `jazz-react` package.
+
     This change improves IDE intellisense support and simplifies imports:
   </div>
 
@@ -86,7 +86,7 @@ export const metadata = { title: "Upgrade to Jazz 0.9.0" };
             <>
               Hello {me.profile?.name}
             </>
-        ); 
+        );
     }
     ```
   </CodeGroup>
@@ -105,7 +105,7 @@ export const metadata = { title: "Upgrade to Jazz 0.9.0" };
       ```tsx
       import { createJazzTestAccount, JazzTestProvider } from "jazz-react/testing";
       import { renderHook } from "@testing-library/react"; // old
-      import { usePlaylist } from "./usePlaylist"; // old 
+      import { usePlaylist } from "./usePlaylist"; // old
       import { Playlist, MusicAccount } from "./schema"; // old
 
       test("should load the playlist", async () => {
@@ -146,7 +146,7 @@ export const metadata = { title: "Upgrade to Jazz 0.9.0" };
   <div>
     The `JazzProvider` is now imported from `jazz-react-native` instead of `createJazzRNApp`.
 
-    While `createJazzRNApp` was originally designed to setup strong typing for custom Account schemas in `useAccount`, 
+    While `createJazzRNApp` was originally designed to setup strong typing for custom Account schemas in `useAccount`,
     we found that this approach made the Jazz setup awkward and confusing for some users.
 
     So we decided to remove `createJazzRNApp` step and to provide the types through namespace declarations:
@@ -177,7 +177,7 @@ export const metadata = { title: "Upgrade to Jazz 0.9.0" };
                   </JazzProvider>
                   <DemoAuthBasicUI appName="My App" state={state} /> // old
               </> // old
-          ); 
+          );
       }
 
       // Register the Account schema so `useAccount` returns our custom `MyAppAccount`
@@ -192,8 +192,8 @@ export const metadata = { title: "Upgrade to Jazz 0.9.0" };
   <h3>Top level imports for hooks</h3>
 
   <div>
-    All Jazz hooks are now available as top-level imports from the `jazz-react-native` package. 
-    
+    All Jazz hooks are now available as top-level imports from the `jazz-react-native` package.
+
     This change improves IDE intellisense support and simplifies imports:
   </div>
 
@@ -211,7 +211,7 @@ export const metadata = { title: "Upgrade to Jazz 0.9.0" };
             <>
               Hello {me.profile?.name}
             </>
-        ); 
+        );
     }
     ```
   </CodeGroup>
@@ -271,7 +271,7 @@ export const metadata = { title: "Upgrade to Jazz 0.9.0" };
   <div>
     The `JazzProvider` is now imported from `jazz-svelte` instead of `createJazzApp`.
 
-    While `createJazzApp` was originally designed to setup strong typing for custom Account schemas in `useAccount`, 
+    While `createJazzApp` was originally designed to setup strong typing for custom Account schemas in `useAccount`,
     we found that this approach made the Jazz setup awkward and confusing for some users.
 
     So we decided to remove `createJazzApp` step and to provide the types through namespace declarations:
@@ -302,7 +302,7 @@ export const metadata = { title: "Upgrade to Jazz 0.9.0" };
           let AccountSchema = MyAccount;
         </script>
 
-        <JazzProvider {auth} {peer} {AccountSchema}> 
+        <JazzProvider {auth} {peer} {AccountSchema}>
           <App />
         </JazzProvider>
         ```
@@ -311,8 +311,8 @@ export const metadata = { title: "Upgrade to Jazz 0.9.0" };
   <h3>Top level imports for hooks</h3>
 
   <div>
-    All Jazz hooks are now available as top-level imports from the `jazz-svelte` package. 
-    
+    All Jazz hooks are now available as top-level imports from the `jazz-svelte` package.
+
     This change improves IDE intellisense support and simplifies imports:
   </div>
 
@@ -387,7 +387,7 @@ export const metadata = { title: "Upgrade to Jazz 0.9.0" };
   <div>
     The `JazzProvider` is now imported from `jazz-vue` instead of `createJazzVueApp`.
 
-    While `createJazzReactApp` was originally designed to setup strong typing for custom Account schemas in `useAccount`, 
+    While `createJazzReactApp` was originally designed to setup strong typing for custom Account schemas in `useAccount`,
     we found that this approach made the Jazz setup awkward and confusing for some users.
 
     So we decided to remove `createJazzReactApp` step and to provide the types through namespace declarations:
@@ -409,7 +409,7 @@ export const { useAccount, useCoState } = Jazz; // *bin*
 const { JazzProvider } = Jazz; // *bin*
 
 const RootComponent = defineComponent({ // old
-  name: "RootComponent", // old 
+  name: "RootComponent", // old
   setup() { // old
     const { authMethod, state } = useDemoAuth(); // old
     return () => [  // old
@@ -449,8 +449,8 @@ app.mount("#app"); // old
   <h3>Top level imports for hooks</h3>
 
   <div>
-    All Jazz hooks are now available as top-level imports from the `jazz-vue` package. 
-    
+    All Jazz hooks are now available as top-level imports from the `jazz-vue` package.
+
     This change improves IDE intellisense support and simplifies imports:
   </div>
 

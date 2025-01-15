@@ -1,5 +1,6 @@
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { socials } from "@/lib/socials";
+import { useFramework } from "@/lib/use-framework";
 import { JazzLogo } from "gcmp-design-system/src/app/components/atoms/logos/JazzLogo";
 import { Nav } from "gcmp-design-system/src/app/components/organisms/Nav";
 import { DocNav } from "./docs/nav";

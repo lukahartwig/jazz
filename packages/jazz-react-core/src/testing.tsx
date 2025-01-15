@@ -21,4 +21,5 @@ export {
   createJazzTestAccount,
   createJazzTestGuest,
   linkAccounts,
+  setActiveAccount,
 } from "jazz-tools/testing";

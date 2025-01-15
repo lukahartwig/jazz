@@ -3,7 +3,7 @@
  * https://jazz.tools/docs/react/schemas/covalues
  */
 
-import { Account, CoMap, Profile, co } from "jazz-tools";
+import { Account, CoMap, Group, Profile, co } from "jazz-tools";
 
 /** The account profile is an app-specific per-user public `CoMap`
  *  where you can store top-level objects for that user */
@@ -39,12 +39,14 @@ export class JazzAccount extends Account {
    *  You can use it to set up the account root and any other initial CoValues you need.
    */
   migrate(this: JazzAccount) {
-    if (!this._refs.root) {
+    if (this.root === undefined) {
+      const group = Group.create();
+
       this.root = AccountRoot.create(
         {
           dateOfBirth: new Date("1/1/1990"),
         },
-        { owner: this },
+        group,
       );
     }
   }

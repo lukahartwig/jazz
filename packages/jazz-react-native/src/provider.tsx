@@ -1,6 +1,6 @@
 import { JazzContext, JazzContextType } from "jazz-react-core";
 import { Account, AccountClass, AuthMethod } from "jazz-tools";
-import { useState } from "react";
+import React, { useState } from "react";
 import { useEffect, useRef } from "react";
 import {
   BaseReactNativeContextOptions,
@@ -18,6 +18,7 @@ export type JazzProviderProps<Acc extends Account = RegisteredAccount> = {
   peer: `wss://${string}` | `ws://${string}`;
   AccountSchema?: AccountClass<Acc>;
   CryptoProvider?: BaseReactNativeContextOptions["CryptoProvider"];
+  storage?: BaseReactNativeContextOptions["storage"];
 };
 
 /** @category Context & Hooks */
@@ -27,6 +28,7 @@ export function JazzProvider<Acc extends Account = RegisteredAccount>({
   peer,
   AccountSchema = Account as unknown as AccountClass<Acc>,
   CryptoProvider,
+  storage,
 }: JazzProviderProps<Acc>) {
   const [ctx, setCtx] = useState<JazzContextType<Acc> | undefined>();
 
@@ -60,12 +62,14 @@ export function JazzProvider<Acc extends Account = RegisteredAccount>({
           ? {
               peer,
               CryptoProvider,
+              storage,
             }
           : {
               AccountSchema,
               auth: auth,
               peer,
               CryptoProvider,
+              storage,
             },
       );
 

@@ -4,6 +4,7 @@ import type {
   RawCoValue,
 } from "cojson";
 import { RawAccount } from "cojson";
+import { activeAccountContext } from "../implementation/activeAccountContext.js";
 import { AnonymousJazzAgent } from "../implementation/anonymousJazzAgent.js";
 import type { DeeplyLoaded, DepthsIn } from "../internal.js";
 import {
@@ -154,6 +155,24 @@ export class CoValueBase implements CoValue {
   }
 }
 
+export function loadCoValueWithoutMe<V extends CoValue, Depth>(
+  cls: CoValueClass<V>,
+  id: ID<V>,
+  asOrDepth: Account | AnonymousJazzAgent | (Depth & DepthsIn<V>),
+  depth?: Depth & DepthsIn<V>,
+) {
+  if (isAccountInstance(asOrDepth) || isAnonymousAgentInstance(asOrDepth)) {
+    if (!depth) {
+      throw new Error(
+        "Depth is required when loading a CoValue as an Account or AnonymousJazzAgent",
+      );
+    }
+    return loadCoValue(cls, id, asOrDepth, depth);
+  }
+
+  return loadCoValue(cls, id, activeAccountContext.get(), asOrDepth);
+}
+
 export function loadCoValue<V extends CoValue, Depth>(
   cls: CoValueClass<V>,
   id: ID<V>,
@@ -186,6 +205,41 @@ export function ensureCoValueLoaded<V extends CoValue, Depth>(
     existing.id,
     existing._loadedAs,
     depth,
+  );
+}
+
+export function subscribeToCoValueWithoutMe<V extends CoValue, Depth>(
+  cls: CoValueClass<V>,
+  id: ID<V>,
+  asOrDepth: Account | AnonymousJazzAgent | (Depth & DepthsIn<V>),
+  depthOrListener:
+    | (Depth & DepthsIn<V>)
+    | ((value: DeeplyLoaded<V, Depth>) => void),
+  listener?: (value: DeeplyLoaded<V, Depth>) => void,
+) {
+  if (isAccountInstance(asOrDepth) || isAnonymousAgentInstance(asOrDepth)) {
+    if (typeof depthOrListener !== "function") {
+      return subscribeToCoValue<V, Depth>(
+        cls,
+        id,
+        asOrDepth,
+        depthOrListener,
+        listener!,
+      );
+    }
+    throw new Error("Invalid arguments");
+  }
+
+  if (typeof depthOrListener !== "function") {
+    throw new Error("Invalid arguments");
+  }
+
+  return subscribeToCoValue<V, Depth>(
+    cls,
+    id,
+    activeAccountContext.get(),
+    asOrDepth,
+    depthOrListener,
   );
 }
 
@@ -304,20 +358,69 @@ export function subscribeToExistingCoValue<V extends CoValue, Depth>(
   );
 }
 
+export function isAccountInstance(instance: unknown): instance is Account {
+  if (typeof instance !== "object" || instance === null) {
+    return false;
+  }
+
+  return "_type" in instance && instance._type === "Account";
+}
+
+export function isAnonymousAgentInstance(
+  instance: unknown,
+): instance is AnonymousJazzAgent {
+  if (typeof instance !== "object" || instance === null) {
+    return false;
+  }
+
+  return "_type" in instance && instance._type === "Anonymous";
+}
+
 export function parseCoValueCreateOptions(
   options:
     | {
-        owner: Account | Group;
+        owner?: Account | Group;
         unique?: CoValueUniqueness["uniqueness"];
       }
     | Account
-    | Group,
+    | Group
+    | undefined,
 ) {
-  return "_type" in options &&
-    (options._type === "Account" || options._type === "Group")
-    ? { owner: options, uniqueness: undefined }
-    : {
-        owner: options.owner,
-        uniqueness: options.unique ? { uniqueness: options.unique } : undefined,
-      };
+  const Group = RegisteredSchemas["Group"];
+
+  if (!options) {
+    return { owner: Group.create(), uniqueness: undefined };
+  }
+
+  if ("_type" in options) {
+    if (options._type === "Account" || options._type === "Group") {
+      return { owner: options, uniqueness: undefined };
+    }
+  }
+
+  const uniqueness = options.unique
+    ? { uniqueness: options.unique }
+    : undefined;
+
+  return {
+    owner: options.owner ?? Group.create(),
+    uniqueness,
+  };
+}
+
+export function parseGroupCreateOptions(
+  options:
+    | {
+        owner?: Account;
+      }
+    | Account
+    | undefined,
+) {
+  if (!options) {
+    return { owner: activeAccountContext.get() };
+  }
+
+  return "_type" in options && isAccountInstance(options)
+    ? { owner: options }
+    : { owner: options.owner ?? activeAccountContext.get() };
 }

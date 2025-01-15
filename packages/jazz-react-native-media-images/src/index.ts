@@ -93,9 +93,9 @@ async function getImageDimensions(
 export async function createImage(
   base64ImageDataURI: string,
   options: {
-    owner: Group | Account;
+    owner?: Group | Account;
     maxSize?: 256 | 1024 | 2048;
-  },
+  } = {},
 ): Promise<ImageDefinition> {
   try {
     const { contentType } = base64DataURIToParts(base64ImageDataURI);
@@ -139,7 +139,7 @@ export async function createImage(
         originalSize: [originalWidth, originalHeight],
         placeholderDataURL,
       },
-      { owner: options.owner },
+      options.owner,
     );
 
     const addImageStream = async (

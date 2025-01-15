@@ -111,19 +111,21 @@ export class RNDemoAuth implements AuthMethod {
   ) {
     let kvStore = store;
 
-    if (!kvStore) {
-      const kvStoreContext = KvStoreContext.getInstance();
+    const kvStoreContext = KvStoreContext.getInstance();
 
-      if (!kvStoreContext.isInitialized()) {
+    if (!kvStoreContext.isInitialized()) {
+      if (!kvStore) {
         const { ExpoSecureStoreAdapter } = await import(
           "../storage/expo-secure-store-adapter.js"
         );
 
         kvStoreContext.initialize(new ExpoSecureStoreAdapter());
+      } else {
+        kvStoreContext.initialize(kvStore);
       }
-
-      kvStore = kvStoreContext.getStorage();
     }
+
+    kvStore = kvStoreContext.getStorage();
 
     await migrateExistingUsersKeys(kvStore);
 

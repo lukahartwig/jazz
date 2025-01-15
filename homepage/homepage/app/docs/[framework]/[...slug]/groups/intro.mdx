@@ -36,9 +36,9 @@ You can add group members by ID by using `Account.load` and `Group.addMember`.
 ```tsx
 import { Group, Account } from "jazz-tools";
 
-const group = Group.create({ owner: me });
+const group = Group.create();
 
-const bob = await Account.load(bobsID, me, []);
+const bob = await Account.load(bobsID, []);
 group.addMember(bob, "writer");
 ```
 </CodeGroup>
@@ -49,7 +49,7 @@ Note: if the account ID is of type `string`, because it comes from a URL paramet
 ```tsx
 import { Group, Account, ID } from "jazz-tools";
 
-const bob = await Account.load(bobsID as ID<Account>, me, []);
+const bob = await Account.load(bobsID as ID<Account>, []);
 group.addMember(bob, "writer");
 ```
 </CodeGroup>

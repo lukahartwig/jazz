@@ -33,7 +33,6 @@ function App() {
     "ChatScreen" | "HandleInviteScreen"
   >("ChatScreen");
   const navigationRef = useNavigationContainerRef();
-
   useEffect(() => {
     Linking.getInitialURL().then((url) => {
       if (url) {
@@ -52,6 +51,7 @@ function App() {
     <StrictMode>
       <JazzProvider
         auth={auth}
+        storage="sqlite"
         peer="wss://cloud.jazz.tools/?key=chat-rn-example-jazz@garden.co"
       >
         <NavigationContainer linking={linking} ref={navigationRef}>
