@@ -1,6 +1,6 @@
 import { isTryAddTransactionsException } from "../coValueCore.js";
 import { CoValueAvailableState } from "../coValueEntry.js";
-import { LocalNode } from "../localNode.js";
+import { Peers } from "../peer/index.js";
 import { AbstractMessageHandler } from "./AbstractMessageHandler.js";
 import { DependencyService } from "./DependencyService.js";
 import { SyncService } from "./SyncService.js";
@@ -15,6 +15,7 @@ export class DataResponseHandler extends AbstractMessageHandler {
   constructor(
     private readonly dependencyService: DependencyService,
     private readonly syncService: SyncService,
+    private readonly peers: Peers,
   ) {
     super();
   }
@@ -40,7 +41,7 @@ export class DataResponseHandler extends AbstractMessageHandler {
       void this.syncService.syncCoValue(
         entry,
         emptyKnownState(msg.id),
-        LocalNode.peers.getMany(unawarePeerIds),
+        this.peers.getMany(unawarePeerIds),
       );
     }
   }

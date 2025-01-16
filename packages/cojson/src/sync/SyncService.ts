@@ -1,6 +1,5 @@
 import { CoValuesStore } from "../CoValuesStore.js";
 import { CoValueEntry } from "../coValueEntry.js";
-import { LocalNode } from "../localNode.js";
 import { PeerEntry, PeerID } from "../peer/index.js";
 import { CoValueKnownState, emptyKnownState } from "./types.js";
 
@@ -44,15 +43,13 @@ export class SyncService {
   async syncCoValue(
     entry: CoValueEntry,
     peerKnownState: CoValueKnownState,
-    peers?: PeerEntry[],
+    peers: PeerEntry[],
   ) {
     if (entry.state.type !== "available") {
       throw new Error(`Can't sync unavailable coValue ${peerKnownState.id}`);
     }
 
-    const peersToSync = peers || LocalNode.peers.getInPriorityOrder();
-
-    for await (const peer of peersToSync) {
+    for await (const peer of peers) {
       if (peer.erroredCoValues.has(entry.id)) continue;
 
       await peer.send.push({

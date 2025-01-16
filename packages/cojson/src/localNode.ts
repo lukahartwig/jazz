@@ -28,7 +28,7 @@ import {
 import { AgentSecret, CryptoProvider } from "./crypto/crypto.js";
 import { TRACE_SYNC_MESSAGES } from "./globals.js";
 import { AgentID, RawCoID, SessionID, isAgentID } from "./ids.js";
-import { Peer, PeerEntry, Peers } from "./peer/index.js";
+import { Peer, PeerEntry } from "./peer/index.js";
 import { transformIncomingMessageFromPeer } from "./peer/transformers.js";
 import { DisconnectedError, PingTimeoutError, SyncManager } from "./sync.js";
 import { SyncMessage, emptyKnownState } from "./sync/types.js";
@@ -54,13 +54,6 @@ const { localNode } = useJazz();
 ```
 */
 export class LocalNode {
-  static peers = new Peers();
-  peersCounter = metrics.getMeter("cojson").createUpDownCounter("jazz.peers", {
-    description: "Amount of connected peers",
-    valueType: ValueType.INT,
-    unit: "peer",
-  });
-
   /** @internal */
   crypto: CryptoProvider;
   /** @internal */
@@ -72,6 +65,12 @@ export class LocalNode {
   /** @category 3. Low-level */
   syncManager = new SyncManager(this);
   crashed: Error | undefined = undefined;
+
+  peersCounter = metrics.getMeter("cojson").createUpDownCounter("jazz.peers", {
+    description: "Amount of connected peers",
+    valueType: ValueType.INT,
+    unit: "peer",
+  });
 
   /** @category 3. Low-level */
   constructor(
@@ -117,7 +116,7 @@ export class LocalNode {
   }
 
   async addPeer(peerData: Peer) {
-    const peer: PeerEntry = LocalNode.peers.add(peerData);
+    const peer: PeerEntry = this.syncManager.peers.add(peerData);
     this.peersCounter.add(1, { role: peer.role });
 
     if (peer.isServerOrStoragePeer()) {
@@ -140,12 +139,12 @@ export class LocalNode {
         }
       })
       .finally(() => {
-        const state = LocalNode.peers.get(peerData.id);
+        const state = this.syncManager.peers.get(peerData.id);
         state?.gracefulShutdown();
         this.peersCounter.add(-1, { role: peer.role });
 
         if (peerData.deletePeerStateOnClose) {
-          LocalNode.peers.delete(peer.id);
+          this.syncManager.peers.delete(peer.id);
         }
       });
   }
@@ -698,7 +697,7 @@ export class LocalNode {
   }
 
   gracefulShutdown() {
-    for (const peer of LocalNode.peers.getAll()) {
+    for (const peer of this.syncManager.peers.getAll()) {
       peer.gracefulShutdown();
     }
   }

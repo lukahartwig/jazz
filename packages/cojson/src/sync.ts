@@ -2,8 +2,7 @@ import { CoValueCore } from "./coValueCore.js";
 import { CoValueEntry } from "./coValueEntry.js";
 import { RawCoID } from "./ids.js";
 import { LocalNode } from "./localNode.js";
-import { PeerEntry, PeerID } from "./peer/index.js";
-
+import { PeerEntry, PeerID, Peers } from "./peer/index.js";
 import { AckResponseHandler } from "./sync/AckResponseHandler.js";
 import { DataResponseHandler } from "./sync/DataResponseHandler.js";
 import { DependencyService } from "./sync/DependencyService.js";
@@ -22,6 +21,9 @@ export type DisconnectedError = "Disconnected";
 export type PingTimeoutError = "PingTimeout";
 
 export class SyncManager {
+  // "peers" should reside on the local node instance, but it'd be problematic to move it over
+  // due to the node cloning and "testWithDifferentAccount" methods on the local node
+  peers = new Peers();
   local: LocalNode;
 
   requestedSyncs: {
@@ -48,7 +50,7 @@ export class SyncManager {
       },
     );
 
-    this.loadService = new LoadService();
+    this.loadService = new LoadService(this.peers);
     this.dependencyService = new DependencyService(this, this.loadService);
 
     this.pullRequestHandler = new PullRequestHandler(this.loadService);
@@ -57,6 +59,7 @@ export class SyncManager {
       // The reason for this ugly callback here is to avoid having the local node as a dependency in the handler,
       // This should be removed after CoValueCore is decoupled from the local node instance
       this.dependencyService,
+      this.peers,
     );
 
     this.ackResponseHandler = new AckResponseHandler(
@@ -69,6 +72,7 @@ export class SyncManager {
     this.dataResponseHandler = new DataResponseHandler(
       this.dependencyService,
       this.syncService,
+      this.peers,
     );
   }
 
@@ -89,7 +93,11 @@ export class SyncManager {
         queueMicrotask(async () => {
           delete this.requestedSyncs[coValue.id];
           const entry = this.local.coValuesStore.get(coValue.id);
-          await this.syncService.syncCoValue(entry, peersKnownState, peers);
+          await this.syncService.syncCoValue(
+            entry,
+            peersKnownState,
+            peers || this.peers.getInPriorityOrder(),
+          );
           resolve();
         });
       });
@@ -165,7 +173,7 @@ export class SyncManager {
   }
 
   async waitForSync(id: RawCoID, timeout = 30_000) {
-    const peers = LocalNode.peers.getAll();
+    const peers = this.peers.getAll();
 
     return Promise.all(
       peers.map((peer) => this.waitForUploadIntoPeer(peer.id, id, timeout)),

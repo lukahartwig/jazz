@@ -19,7 +19,7 @@ test("Should be able to initialize and load from empty DB", async () => {
 
   await new Promise((resolve) => setTimeout(resolve, 200));
 
-  expect(LocalNode.peers.get("indexedDB")).toBeDefined();
+  expect(node.syncManager.peers.get("indexedDB")).toBeDefined();
 });
 
 test("Should be able to sync data to database and then load that from a new node", async () => {
@@ -55,7 +55,6 @@ test("Should be able to sync data to database and then load that from a new node
   if (map2 === "unavailable") {
     throw new Error("Map is unavailable");
   }
-  // TODO fixme
-  //   expect(map2.get("hello")).toBe("world");
-  expect(false).toBeTruthy();
+
+  expect(map2.get("hello")).toBe("world");
 });

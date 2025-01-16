@@ -1,6 +1,6 @@
 import { CoValueCore, isTryAddTransactionsException } from "../coValueCore.js";
 import { CoValueAvailableState } from "../coValueEntry.js";
-import { LocalNode } from "../localNode.js";
+import { Peers } from "../peer/index.js";
 import { AbstractMessageHandler } from "./AbstractMessageHandler.js";
 import { DependencyService } from "./DependencyService.js";
 import { SyncService } from "./SyncService.js";
@@ -13,8 +13,9 @@ import { PushMessageHandlerInput, emptyKnownState } from "./types.js";
  */
 export class PushRequestHandler extends AbstractMessageHandler {
   constructor(
-    protected readonly syncService: SyncService,
-    protected readonly dependencyService: DependencyService,
+    private readonly syncService: SyncService,
+    private readonly dependencyService: DependencyService,
+    private readonly peers: Peers,
   ) {
     super();
   }
@@ -79,7 +80,7 @@ export class PushRequestHandler extends AbstractMessageHandler {
       return;
     }
 
-    const peers = LocalNode.peers.getInPriorityOrder({
+    const peers = this.peers.getInPriorityOrder({
       excludedId: peer.id,
     });
 
