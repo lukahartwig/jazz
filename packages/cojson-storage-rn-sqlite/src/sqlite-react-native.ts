@@ -13,18 +13,32 @@ export interface SQLiteConfig {
 }
 
 export class SQLiteReactNative {
-  private readonly syncManager: SyncManager;
-  private readonly dbClient: SQLiteClient;
+  private syncManager!: SyncManager;
+  private dbClient!: SQLiteClient;
+  private initialized: Promise<void>;
 
   constructor(
     adapter: SQLiteAdapter,
     fromLocalNode: IncomingSyncStream,
     toLocalNode: OutgoingSyncQueue,
   ) {
-    this.dbClient = new SQLiteClient(adapter, toLocalNode);
-    this.syncManager = new SyncManager(this.dbClient, toLocalNode);
+    // Initialize everything in sequence
+    this.initialized = (async () => {
+      // 1. First initialize the adapter
+      await adapter.initialize();
 
+      // 2. Create and initialize the client
+      this.dbClient = new SQLiteClient(adapter, toLocalNode);
+      await this.dbClient.ensureInitialized();
+
+      // 3. Only then create the sync manager
+      this.syncManager = new SyncManager(this.dbClient, toLocalNode);
+    })();
+
+    // Start processing messages only after initialization
     const processMessages = async () => {
+      await this.initialized;
+
       let lastTimer = performance.now();
 
       for await (const msg of fromLocalNode) {
@@ -67,6 +81,9 @@ export class SQLiteReactNative {
       throw new Error("SQLite adapter is required");
     }
 
+    // Initialize adapter before creating any connections
+    await config.adapter.initialize();
+
     const [localNodeAsPeer, storageAsPeer] = cojsonInternals.connectedPeers(
       "localNode",
       "storage",
@@ -78,13 +95,15 @@ export class SQLiteReactNative {
       },
     );
 
-    await config.adapter.initialize();
-
-    new SQLiteReactNative(
+    // Create SQLiteReactNative instance after adapter is initialized
+    const storage = new SQLiteReactNative(
       config.adapter,
       localNodeAsPeer.incoming,
       localNodeAsPeer.outgoing,
     );
+
+    // Wait for full initialization before returning peer
+    await storage.initialized;
 
     return { ...storageAsPeer, priority: 100 };
   }

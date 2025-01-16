@@ -6,12 +6,38 @@ export class OPSQLiteAdapter implements SQLiteAdapter {
   private db: any;
   private dbName: string;
   private opSQLite: OPSQLiteModule | null = null;
+  private initializationPromise: Promise<void> | null = null;
+  private isInitialized = false;
 
   constructor(dbName: string) {
     this.dbName = dbName;
   }
 
   private async ensureInitialized() {
+    // Return immediately if already initialized
+    if (this.isInitialized) {
+      return;
+    }
+
+    // If initialization is in progress, wait for it
+    if (this.initializationPromise) {
+      await this.initializationPromise;
+      return;
+    }
+
+    // Start initialization
+    this.initializationPromise = this.initializeInternal();
+    try {
+      await this.initializationPromise;
+      this.isInitialized = true;
+    } catch (error) {
+      // Clear the promise on failure so future attempts can retry
+      this.initializationPromise = null;
+      throw error;
+    }
+  }
+
+  private async initializeInternal() {
     if (!this.opSQLite) {
       try {
         this.opSQLite = await import("@op-engineering/op-sqlite");
@@ -22,11 +48,7 @@ export class OPSQLiteAdapter implements SQLiteAdapter {
         );
       }
     }
-    return this.opSQLite;
-  }
 
-  async initialize(): Promise<void> {
-    await this.ensureInitialized();
     await this.execute("PRAGMA journal_mode=WAL");
     const { rows } = await this.execute("PRAGMA user_version");
     const oldVersion = Number(rows[0]?.user_version) ?? 0;
@@ -89,8 +111,14 @@ export class OPSQLiteAdapter implements SQLiteAdapter {
     }
   }
 
+  async initialize(): Promise<void> {
+    await this.ensureInitialized();
+  }
+
   async execute(sql: string, params?: unknown[]): Promise<SQLResult> {
-    const opSQLite = await this.ensureInitialized();
+    if (!this.db) {
+      await this.ensureInitialized();
+    }
     const result = await this.db.execute(sql, params as any[]);
     return {
       rows: result.rows as SQLRow[],
@@ -101,8 +129,8 @@ export class OPSQLiteAdapter implements SQLiteAdapter {
   }
 
   executeSync(sql: string, params?: unknown[]): { rows: SQLRow[] } {
-    if (!this.db) {
-      throw new Error("OPSQLiteAdapter not initialized");
+    if (!this.isInitialized || !this.db) {
+      throw new Error("Database not initialized. Call initialize() first.");
     }
     const result = this.db.executeSync(sql, params as any[]);
     return {
@@ -111,7 +139,9 @@ export class OPSQLiteAdapter implements SQLiteAdapter {
   }
 
   async transaction(callback: () => Promise<void>): Promise<void> {
-    const opSQLite = await this.ensureInitialized();
+    if (!this.db) {
+      await this.ensureInitialized();
+    }
     await this.db.transaction(callback);
   }
 }

@@ -22,12 +22,38 @@ export class ExpoSQLiteAdapter implements SQLiteAdapter {
   private db: any;
   private dbName: string;
   private SQLite: typeof import("expo-sqlite") | null = null;
+  private initializationPromise: Promise<void> | null = null;
+  private isInitialized = false;
 
   constructor(dbName: string) {
     this.dbName = dbName;
   }
 
   private async ensureInitialized() {
+    // Return immediately if already initialized
+    if (this.isInitialized) {
+      return;
+    }
+
+    // If initialization is in progress, wait for it
+    if (this.initializationPromise) {
+      await this.initializationPromise;
+      return;
+    }
+
+    // Start initialization
+    this.initializationPromise = this.initializeInternal();
+    try {
+      await this.initializationPromise;
+      this.isInitialized = true;
+    } catch (error) {
+      // Clear the promise on failure so future attempts can retry
+      this.initializationPromise = null;
+      throw error;
+    }
+  }
+
+  private async initializeInternal() {
     if (!this.SQLite) {
       try {
         this.SQLite = await import("expo-sqlite");
@@ -44,6 +70,10 @@ export class ExpoSQLiteAdapter implements SQLiteAdapter {
     sql: string,
     params?: unknown[],
   ): Promise<SQLResult> {
+    if (!this.isInitialized) {
+      throw new Error("Database not initialized. Call initialize() first.");
+    }
+
     return new Promise((resolve, reject) => {
       this.db.transaction((tx: SQLiteTransaction) => {
         tx.executeSql(
