@@ -80,7 +80,7 @@ export class SQLiteReactNative {
 
     await config.adapter.initialize();
 
-    const instance = new SQLiteReactNative(
+    new SQLiteReactNative(
       config.adapter,
       localNodeAsPeer.incoming,
       localNodeAsPeer.outgoing,
