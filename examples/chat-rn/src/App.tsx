@@ -9,12 +9,9 @@ import * as Linking from "expo-linking";
 import React, { StrictMode, useEffect, useState } from "react";
 import HandleInviteScreen from "./invite";
 
-import {
-  DemoAuthBasicUI,
-  JazzProvider,
-  OPSQLiteAdapter,
-  useDemoAuth,
-} from "jazz-react-native";
+import { DemoAuthBasicUI, JazzProvider, useDemoAuth } from "jazz-react-native";
+
+import { OPSQLiteAdapter } from "cojson-storage-rn-op-sqlite-adapter";
 import ChatScreen from "./chat";
 
 const Stack = createNativeStackNavigator();

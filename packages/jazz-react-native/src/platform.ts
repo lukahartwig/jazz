@@ -82,6 +82,7 @@ export async function createJazzRNContext<Acc extends Account>(
     const storage = await SQLiteStorage.asPeer({
       adapter,
     });
+    console.log("[createJazzRNContext] storage initialized as peer", storage);
     peersToLoadFrom.push(storage);
   }
 

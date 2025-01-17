@@ -9,5 +9,3 @@ export {
   type SQLRow,
   type SQLResult,
 } from "./sqliteAdapter.js";
-export { OPSQLiteAdapter } from "./opSQLiteAdapter.js";
-export { ExpoSQLiteAdapter } from "./expoSQLiteAdapter.js";

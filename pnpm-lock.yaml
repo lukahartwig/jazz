@@ -125,6 +125,9 @@ importers:
       clsx:
         specifier: ^2.0.0
         version: 2.1.1
+      cojson-storage-rn-op-sqlite-adapter:
+        specifier: workspace:*
+        version: link:../../packages/cojson-storage-rn-op-sqlite-adapter
       expo:
         specifier: ^52.0.0
         version: 52.0.21(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@expo/metro-runtime@4.0.0(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.18)(react@18.3.1)))(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.18)(react@18.3.1))(react@18.3.1)
@@ -1480,6 +1483,32 @@ importers:
         specifier: ^8.15.0
         version: 8.41.0
 
+  packages/cojson-storage-rn-expo-sqlite-adapter:
+    dependencies:
+      cojson-storage-rn-sqlite:
+        specifier: workspace:*
+        version: link:../cojson-storage-rn-sqlite
+    devDependencies:
+      expo-sqlite:
+        specifier: ^13.2.0
+        version: 13.4.0(expo@52.0.21(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@expo/metro-runtime@4.0.0(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.18)(react@18.3.1)))(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.18)(react@18.3.1))(react@18.3.1))
+      typescript:
+        specifier: ~5.6.2
+        version: 5.6.3
+
+  packages/cojson-storage-rn-op-sqlite-adapter:
+    dependencies:
+      cojson-storage-rn-sqlite:
+        specifier: workspace:*
+        version: link:../cojson-storage-rn-sqlite
+    devDependencies:
+      '@op-engineering/op-sqlite':
+        specifier: ^11.2.12
+        version: 11.2.12(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.18)(react@18.3.1))(react@18.3.1)
+      typescript:
+        specifier: ~5.6.2
+        version: 5.6.3
+
   packages/cojson-storage-rn-sqlite:
     dependencies:
       cojson:
@@ -1489,12 +1518,6 @@ importers:
         specifier: workspace:*
         version: link:../cojson-storage
     devDependencies:
-      '@op-engineering/op-sqlite':
-        specifier: ^11.2.12
-        version: 11.2.12(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.18)(react@18.3.1))(react@18.3.1)
-      expo-sqlite:
-        specifier: ^13.2.0
-        version: 13.4.0(expo@52.0.21(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@expo/metro-runtime@4.0.0(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.18)(react@18.3.1)))(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.18)(react@18.3.1))(react@18.3.1))
       typescript:
         specifier: ~5.6.2
         version: 5.6.3

@@ -5,8 +5,3 @@ export * from "./hooks.js";
 export * from "./media.js";
 
 export { parseInviteLink, createInviteLink, setupKvStore } from "./platform.js";
-
-export {
-  ExpoSQLiteAdapter,
-  OPSQLiteAdapter,
-} from "cojson-storage-rn-sqlite";

@@ -25,24 +25,30 @@ export class SQLiteReactNative {
     // Initialize everything in sequence
     this.initialized = (async () => {
       // 1. First initialize the adapter
+      console.log("[SQLiteReactNative] initializing adapter");
       await adapter.initialize();
 
       // 2. Create and initialize the client
+      console.log("[SQLiteReactNative] creating client");
       this.dbClient = new SQLiteClient(adapter, toLocalNode);
       await this.dbClient.ensureInitialized();
 
       // 3. Only then create the sync manager
+      console.log("[SQLiteReactNative] creating sync manager");
       this.syncManager = new SyncManager(this.dbClient, toLocalNode);
     })();
 
     // Start processing messages only after initialization
     const processMessages = async () => {
+      console.log("[SQLiteReactNative] waiting for initialization");
       await this.initialized;
+      console.log("[SQLiteReactNative] initialization complete");
 
       let lastTimer = performance.now();
 
       for await (const msg of fromLocalNode) {
         try {
+          console.log("[SQLiteReactNative] processing message", msg);
           if (msg === "Disconnected" || msg === "PingTimeout") {
             throw new Error("Unexpected Disconnected message");
           }
@@ -82,8 +88,9 @@ export class SQLiteReactNative {
     }
 
     // Initialize adapter before creating any connections
+    console.log("[SQLiteReactNative] initializing adapter");
     await config.adapter.initialize();
-
+    console.log("[SQLiteReactNative] adapter initialized");
     const [localNodeAsPeer, storageAsPeer] = cojsonInternals.connectedPeers(
       "localNode",
       "storage",
@@ -103,7 +110,9 @@ export class SQLiteReactNative {
     );
 
     // Wait for full initialization before returning peer
+    console.log("[SQLiteReactNative] waiting for initialization");
     await storage.initialized;
+    console.log("[SQLiteReactNative] initialization complete");
 
     return { ...storageAsPeer, priority: 100 };
   }
