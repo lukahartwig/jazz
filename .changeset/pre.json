@@ -47,5 +47,9 @@
     "jazz-vue": "0.9.9",
     "jazz-tailwind-demo-auth-starter": "0.0.24"
   },
-  "changesets": []
+  "changesets": [
+    "famous-knives-cover",
+    "healthy-melons-drum",
+    "three-terms-talk"
+  ]
 }
