@@ -1806,7 +1806,7 @@ describe("SyncManager.addPeer", () => {
     });
 
     // Add new peer with different ID
-    client.syncManager.addPeer(brandNewPeer);
+    client.addPeer(brandNewPeer);
 
     // Verify that the new peer starts with empty known states
     const newPeerKnownStates =
