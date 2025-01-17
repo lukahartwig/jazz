@@ -1525,8 +1525,6 @@ importers:
         specifier: 8.5.10
         version: 8.5.10
 
-  packages/coverage: {}
-
   packages/create-jazz-app:
     dependencies:
       chalk:
@@ -1576,10 +1574,10 @@ importers:
   packages/jazz-bridge:
     dependencies:
       cojson:
-        specifier: workspace:0.9.0
+        specifier: workspace:0.9.9
         version: link:../cojson
       jazz-tools:
-        specifier: workspace:0.9.1
+        specifier: workspace:0.9.9
         version: link:../jazz-tools
     devDependencies:
       jazz-run:
