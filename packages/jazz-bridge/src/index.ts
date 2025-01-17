@@ -308,15 +308,16 @@ type ToJazzParams<
 
   updateFromExt: (id: ExtID, ext: ExtValue, coValue: C) => Promise<void>;
 
-  updateReferencesFromExt: (
+  updateReferencesFromExt?: (
     id: ExtID,
     ext: ExtValue,
     coValue: C,
+    token: string,
     updateOrCreateExtDep: <C extends CoValue>(
       coValueClass: CoValueClass<C>,
       id: ExtID,
       prefetchedExt?: any,
-    ) => Promise<void>,
+    ) => Promise<C>,
   ) => Promise<void>;
 };
 
