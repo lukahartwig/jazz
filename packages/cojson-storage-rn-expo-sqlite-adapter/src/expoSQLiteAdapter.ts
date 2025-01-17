@@ -22,29 +22,28 @@ export class ExpoSQLiteAdapter implements SQLiteAdapter {
   private async ensureInitialized() {
     // Return immediately if already initialized
     if (this.isInitialized) {
-      console.log("[ExpoSQLiteAdapter] Already initialized");
+      console.log("[ExpoSQLiteAdapter] already initialized");
       return;
     }
 
     // If initialization is in progress, wait for it
     if (this.initializationPromise) {
-      console.log("[ExpoSQLiteAdapter] Waiting for initialization");
+      console.log("[ExpoSQLiteAdapter] waiting for initialization");
       await this.initializationPromise;
-      console.log("[ExpoSQLiteAdapter] Initialization complete");
+      console.log("[ExpoSQLiteAdapter] initialization complete");
       return;
     }
 
     // Start initialization
     this.initializationPromise = this.initializeInternal();
     try {
-      console.log("[ExpoSQLiteAdapter] Starting initialization");
+      console.log("[ExpoSQLiteAdapter] starting initialization");
       await this.initializationPromise;
-      console.log("[ExpoSQLiteAdapter] Initialization complete");
+      console.log("[ExpoSQLiteAdapter] initialization complete");
       this.isInitialized = true;
     } catch (error) {
       // Clear the promise on failure so future attempts can retry
       this.initializationPromise = null;
-      console.error("[ExpoSQLiteAdapter] Initialization failed:", error);
       throw error;
     }
   }
@@ -143,7 +142,7 @@ export class ExpoSQLiteAdapter implements SQLiteAdapter {
     sql: string,
     params?: unknown[],
   ): Promise<SQLResult> {
-    if (!this.isInitialized || !this.db) {
+    if (!this.db) {
       throw new Error("Database not initialized. Call initialize() first.");
     }
 
@@ -189,7 +188,9 @@ export class ExpoSQLiteAdapter implements SQLiteAdapter {
   }
 
   async execute(sql: string, params?: unknown[]): Promise<SQLResult> {
-    await this.ensureInitialized();
+    if (!this.db) {
+      await this.ensureInitialized();
+    }
     return this.executeSql(sql, params);
   }
 

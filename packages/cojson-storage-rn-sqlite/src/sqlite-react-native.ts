@@ -16,14 +16,22 @@ export class SQLiteReactNative {
   private syncManager!: SyncManager;
   private dbClient!: SQLiteClient;
   private initialized: Promise<void>;
+  private isInitialized = false;
 
   constructor(
     adapter: SQLiteAdapter,
     fromLocalNode: IncomingSyncStream,
     toLocalNode: OutgoingSyncQueue,
   ) {
-    // Initialize everything in sequence
-    this.initialized = (async () => {
+    this.initialized = this.initialize(adapter, fromLocalNode, toLocalNode);
+  }
+
+  private async initialize(
+    adapter: SQLiteAdapter,
+    fromLocalNode: IncomingSyncStream,
+    toLocalNode: OutgoingSyncQueue,
+  ): Promise<void> {
+    try {
       // 1. First initialize the adapter
       console.log("[SQLiteReactNative] initializing adapter");
       await adapter.initialize();
@@ -33,22 +41,31 @@ export class SQLiteReactNative {
       this.dbClient = new SQLiteClient(adapter, toLocalNode);
       await this.dbClient.ensureInitialized();
 
-      // 3. Only then create the sync manager
+      // 3. Create the sync manager
       console.log("[SQLiteReactNative] creating sync manager");
       this.syncManager = new SyncManager(this.dbClient, toLocalNode);
-    })();
 
-    // Start processing messages only after initialization
-    const processMessages = async () => {
-      console.log("[SQLiteReactNative] waiting for initialization");
-      await this.initialized;
+      // 4. Start message processing
+      this.isInitialized = true;
+      this.startMessageProcessing(fromLocalNode);
+
       console.log("[SQLiteReactNative] initialization complete");
+    } catch (error) {
+      console.error("[SQLiteReactNative] initialization failed:", error);
+      throw error;
+    }
+  }
 
-      let lastTimer = performance.now();
+  private async startMessageProcessing(fromLocalNode: IncomingSyncStream) {
+    let lastTimer = performance.now();
 
+    try {
       for await (const msg of fromLocalNode) {
+        if (!this.isInitialized) {
+          await this.initialized;
+        }
+
         try {
-          console.log("[SQLiteReactNative] processing message", msg);
           if (msg === "Disconnected" || msg === "PingTimeout") {
             throw new Error("Unexpected Disconnected message");
           }
@@ -62,24 +79,19 @@ export class SQLiteReactNative {
         } catch (e) {
           console.error(
             new Error(
-              `Error reading from localNode, handling msg\n\n${JSON.stringify(
-                msg,
-                (k, v) =>
-                  k === "changes" || k === "encryptedChanges"
-                    ? `${v.slice(0, 20)}...`
-                    : v,
+              `Error processing message: ${JSON.stringify(msg, (k, v) =>
+                k === "changes" || k === "encryptedChanges"
+                  ? `${v.slice(0, 20)}...`
+                  : v,
               )}`,
               { cause: e },
             ),
           );
-          console.error(e);
         }
       }
-    };
-
-    processMessages().catch((e) =>
-      console.error("Error in processMessages in sqlite", e),
-    );
+    } catch (e) {
+      console.error("Error in message processing loop:", e);
+    }
   }
 
   static async asPeer(config: SQLiteConfig): Promise<Peer> {
@@ -91,6 +103,7 @@ export class SQLiteReactNative {
     console.log("[SQLiteReactNative] initializing adapter");
     await config.adapter.initialize();
     console.log("[SQLiteReactNative] adapter initialized");
+
     const [localNodeAsPeer, storageAsPeer] = cojsonInternals.connectedPeers(
       "localNode",
       "storage",
@@ -102,7 +115,6 @@ export class SQLiteReactNative {
       },
     );
 
-    // Create SQLiteReactNative instance after adapter is initialized
     const storage = new SQLiteReactNative(
       config.adapter,
       localNodeAsPeer.incoming,
@@ -110,9 +122,7 @@ export class SQLiteReactNative {
     );
 
     // Wait for full initialization before returning peer
-    console.log("[SQLiteReactNative] waiting for initialization");
     await storage.initialized;
-    console.log("[SQLiteReactNative] initialization complete");
 
     return { ...storageAsPeer, priority: 100 };
   }
