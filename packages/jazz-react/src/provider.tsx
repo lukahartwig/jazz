@@ -94,6 +94,10 @@ export function JazzProvider<Acc extends Account = RegisteredAccount>({
 
       const promise = createContext();
 
+      promise.catch((e) => {
+        console.error("Error creating Jazz context", e);
+      });
+
       // In development mode we don't return a cleanup function because otherwise
       // the double effect execution would mark the context as done immediately.
       if (process.env.NODE_ENV === "development") {

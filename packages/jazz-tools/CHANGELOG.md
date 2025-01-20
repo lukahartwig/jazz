@@ -1,5 +1,21 @@
 # jazz-tools
 
+## 0.9.11
+
+### Patch Changes
+
+- Updated dependencies [efbf3d8]
+- Updated dependencies [5863bad]
+  - cojson@0.9.11
+
+## 0.9.10
+
+### Patch Changes
+
+- 5e83864: Improve error management on initial auth, fixed an infinite loop when migration fails
+- Updated dependencies [4aa377d]
+  - cojson@0.9.10
+
 ## 0.9.9
 
 ### Patch Changes

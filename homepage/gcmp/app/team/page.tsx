@@ -62,14 +62,6 @@ const team: Array<TeamMember> = [
     github: "bensleveritt",
   },
   {
-    name: "Marina Orlova",
-    titles: ["Full-Stack Dev"],
-    location: "Tarragona, Spain ",
-    linkedin: "marina-orlova-52a34394",
-    github: "marinoska",
-    image: "marina.jpeg",
-  },
-  {
     name: "Giordano Ricci",
     titles: ["Full-Stack Dev", "DevOps"],
     location: "Lisbon, Portugal ",

@@ -16,6 +16,7 @@ import {
 import { AgentID } from "../ids.js";
 import { JsonObject } from "../jsonValue.js";
 import { LocalNode } from "../localNode.js";
+import { logger } from "../logger.js";
 import type { AccountRole } from "../permissions.js";
 import { RawCoMap } from "./coMap.js";
 import { InviteSecret, RawGroup } from "./group.js";
@@ -59,7 +60,7 @@ export class RawAccount<
       );
 
     if (agents.length !== 1) {
-      console.warn("Account has " + agents.length + " agents", this.id);
+      logger.warn("Account has " + agents.length + " agents", this.id);
     }
 
     this._cachedCurrentAgentID = agents[0];

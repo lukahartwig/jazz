@@ -13,10 +13,28 @@ class BaseWidget extends CoMap {
   type = co.string;
 }
 
-class ButtonWidget extends BaseWidget {
+class RedButtonWidget extends BaseWidget {
   type = co.literal("button");
+  color = co.literal("red");
   label = co.string;
 }
+
+class BlueButtonWidget extends BaseWidget {
+  type = co.literal("button");
+  color = co.literal("blue");
+  label = co.string;
+}
+
+const ButtonWidget = SchemaUnion.Of<BaseWidget>((raw) => {
+  switch (raw.get("color")) {
+    case "red":
+      return RedButtonWidget;
+    case "blue":
+      return BlueButtonWidget;
+    default:
+      throw new Error(`Unknown button color: ${raw.get("color")}`);
+  }
+});
 
 class SliderWidget extends BaseWidget {
   type = co.literal("slider");
@@ -57,8 +75,8 @@ describe("SchemaUnion", () => {
   });
 
   it("should instantiate the correct subclass based on schema and provided data", async () => {
-    const buttonWidget = ButtonWidget.create(
-      { type: "button", label: "Submit" },
+    const buttonWidget = RedButtonWidget.create(
+      { type: "button", color: "red", label: "Submit" },
       { owner: me },
     );
     const sliderWidget = SliderWidget.create(
@@ -89,14 +107,14 @@ describe("SchemaUnion", () => {
       {},
     );
 
-    expect(loadedButtonWidget).toBeInstanceOf(ButtonWidget);
+    expect(loadedButtonWidget).toBeInstanceOf(RedButtonWidget);
     expect(loadedSliderWidget).toBeInstanceOf(SliderWidget);
     expect(loadedCheckboxWidget).toBeInstanceOf(CheckboxWidget);
   });
 
   it("should integrate with subscribeToCoValue correctly", async () => {
-    const buttonWidget = ButtonWidget.create(
-      { type: "button", label: "Submit" },
+    const buttonWidget = BlueButtonWidget.create(
+      { type: "button", color: "blue", label: "Submit" },
       { owner: me },
     );
     let currentValue = "Submit";
@@ -106,7 +124,7 @@ describe("SchemaUnion", () => {
       me,
       {},
       (value: BaseWidget) => {
-        if (value instanceof ButtonWidget) {
+        if (value instanceof BlueButtonWidget) {
           expect(value.label).toBe(currentValue);
         } else {
           throw new Error("Unexpected widget type");

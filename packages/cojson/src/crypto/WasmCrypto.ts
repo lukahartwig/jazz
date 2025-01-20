@@ -15,6 +15,7 @@ import { base64URLtoBytes, bytesToBase64url } from "../base64url.js";
 import { RawCoID, TransactionID } from "../ids.js";
 import { Stringified, stableStringify } from "../jsonStringify.js";
 import { JsonValue } from "../jsonValue.js";
+import { logger } from "../logger.js";
 import {
   CryptoProvider,
   Encrypted,
@@ -240,7 +241,7 @@ export class WasmCrypto extends CryptoProvider<Uint8Array> {
     try {
       return JSON.parse(textDecoder.decode(plaintext));
     } catch (e) {
-      console.error("Failed to decrypt/parse sealed message", e);
+      logger.error("Failed to decrypt/parse sealed message", e);
       return undefined;
     }
   }

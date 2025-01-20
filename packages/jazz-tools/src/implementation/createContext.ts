@@ -128,129 +128,106 @@ export async function createJazzContext<Acc extends Account>(
 ): Promise<JazzContext<Acc>>;
 export async function createJazzContext<Acc extends Account>(
   options: ContextParamsWithAuth<Acc> | BaseContextParams,
-): Promise<JazzContext<Acc>> {
-  // eslint-disable-next-line no-constant-condition
-  while (true) {
-    if (!("auth" in options)) {
-      return createAnonymousJazzContext({
-        peersToLoadFrom: options.peersToLoadFrom,
-        crypto: options.crypto,
+): Promise<JazzContext<Acc> | JazzContextWithAgent> {
+  if (!("auth" in options)) {
+    return createAnonymousJazzContext({
+      peersToLoadFrom: options.peersToLoadFrom,
+      crypto: options.crypto,
+    });
+  }
+
+  const { auth, sessionProvider, peersToLoadFrom, crypto } = options;
+  const AccountSchema =
+    options.AccountSchema ??
+    (RegisteredSchemas["Account"] as unknown as AccountClass<Acc>);
+  const authResult = await auth.start(crypto);
+
+  if (authResult.type === "existing") {
+    const { sessionID, sessionDone } = await sessionProvider(
+      authResult.credentials.accountID,
+      crypto,
+    );
+
+    const node = await LocalNode.withLoadedAccount({
+      accountID: authResult.credentials
+        .accountID as unknown as CoID<RawAccount>,
+      accountSecret: authResult.credentials.secret,
+      sessionID: sessionID,
+      peersToLoadFrom: peersToLoadFrom,
+      crypto: crypto,
+      migration: async (rawAccount, _node, creationProps) => {
+        const account = new AccountSchema({
+          fromRaw: rawAccount,
+        }) as Acc;
+
+        activeAccountContext.set(account);
+
+        await account.applyMigration(creationProps);
+      },
+    });
+
+    const account = AccountSchema.fromNode(node);
+    activeAccountContext.set(account);
+
+    if (authResult.saveCredentials) {
+      await authResult.saveCredentials({
+        accountID: node.account.id as unknown as ID<Account>,
+        secret: node.account.agentSecret,
       });
     }
 
-    const { auth, sessionProvider, peersToLoadFrom, crypto } = options;
-    const AccountSchema =
-      options.AccountSchema ??
-      (RegisteredSchemas["Account"] as unknown as AccountClass<Acc>);
-    let authResult: AuthResult;
-    try {
-      authResult = await auth.start(crypto);
-    } catch (e) {
-      console.error("error", e);
-      throw e;
-    }
+    authResult.onSuccess();
 
-    if (authResult.type === "existing") {
-      try {
-        const { sessionID, sessionDone } = await sessionProvider(
-          authResult.credentials.accountID,
-          crypto,
-        );
-
-        try {
-          const node = await LocalNode.withLoadedAccount({
-            accountID: authResult.credentials
-              .accountID as unknown as CoID<RawAccount>,
-            accountSecret: authResult.credentials.secret,
-            sessionID: sessionID,
-            peersToLoadFrom: peersToLoadFrom,
-            crypto: crypto,
-            migration: async (rawAccount, _node, creationProps) => {
-              const account = new AccountSchema({
-                fromRaw: rawAccount,
-              }) as Acc;
-
-              activeAccountContext.set(account);
-
-              await account.applyMigration(creationProps);
-            },
-          });
-
-          const account = AccountSchema.fromNode(node);
-          activeAccountContext.set(account);
-
-          if (authResult.saveCredentials) {
-            await authResult.saveCredentials({
-              accountID: node.account.id as unknown as ID<Account>,
-              secret: node.account.agentSecret,
-            });
-          }
-
-          authResult.onSuccess();
-
-          return {
-            account,
-            done: () => {
-              node.gracefulShutdown();
-              sessionDone();
-            },
-            logOut: () => {
-              node.gracefulShutdown();
-              sessionDone();
-              authResult.logOut();
-            },
-          };
-        } catch (e) {
-          authResult.onError(new Error("Error loading account", { cause: e }));
-          sessionDone();
-        }
-      } catch (e) {
-        authResult.onError(
-          new Error("Error acquiring sessionID", { cause: e }),
-        );
-      }
-    } else if (authResult.type === "new") {
-      try {
-        // TODO: figure out a way to not "waste" the first SessionID
-        const { node } = await LocalNode.withNewlyCreatedAccount({
-          creationProps: authResult.creationProps,
-          peersToLoadFrom: peersToLoadFrom,
-          crypto: crypto,
-          initialAgentSecret: authResult.initialSecret,
-          migration: async (rawAccount, _node, creationProps) => {
-            const account = new AccountSchema({
-              fromRaw: rawAccount,
-            }) as Acc;
-            activeAccountContext.set(account);
-
-            await account.applyMigration(creationProps);
-          },
-        });
-
-        const account = AccountSchema.fromNode(node);
+    return {
+      account,
+      done: () => {
+        node.gracefulShutdown();
+        sessionDone();
+      },
+      logOut: () => {
+        node.gracefulShutdown();
+        sessionDone();
+        authResult.logOut();
+      },
+    };
+  } else if (authResult.type === "new") {
+    const { node } = await LocalNode.withNewlyCreatedAccount({
+      creationProps: authResult.creationProps,
+      peersToLoadFrom: peersToLoadFrom,
+      crypto: crypto,
+      initialAgentSecret: authResult.initialSecret,
+      migration: async (rawAccount, _node, creationProps) => {
+        const account = new AccountSchema({
+          fromRaw: rawAccount,
+        }) as Acc;
         activeAccountContext.set(account);
 
-        await authResult.saveCredentials({
-          accountID: node.account.id as unknown as ID<Account>,
-          secret: node.account.agentSecret,
-        });
+        await account.applyMigration(creationProps);
+      },
+    });
 
-        authResult.onSuccess();
-        return {
-          account,
-          done: () => {
-            node.gracefulShutdown();
-          },
-          logOut: () => {
-            node.gracefulShutdown();
-            authResult.logOut();
-          },
-        };
-      } catch (e) {
-        authResult.onError(new Error("Error creating account", { cause: e }));
-      }
-    }
+    const account = AccountSchema.fromNode(node);
+    activeAccountContext.set(account);
+
+    await authResult.saveCredentials({
+      accountID: node.account.id as unknown as ID<Account>,
+      secret: node.account.agentSecret,
+    });
+
+    authResult.onSuccess();
+    return {
+      account,
+      done: () => {
+        node.gracefulShutdown();
+      },
+      logOut: () => {
+        node.gracefulShutdown();
+        authResult.logOut();
+      },
+    };
   }
+
+  throw new Error("Invalid auth result");
 }
 
 export async function createAnonymousJazzContext({

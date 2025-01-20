@@ -74,6 +74,7 @@ import {
 
 type Value = JsonValue | AnyRawCoValue;
 
+import { logger } from "./logger.js";
 import { getPriorityFromHeader } from "./priority.js";
 import { FileSystem } from "./storage/FileSystem.js";
 import { BlockFilename, LSMStorage, WalFilename } from "./storage/index.js";
@@ -141,6 +142,7 @@ export {
   emptyKnownState,
   RawCoPlainText,
   stringifyOpID,
+  logger,
 };
 
 export type {

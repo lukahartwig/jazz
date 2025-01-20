@@ -87,26 +87,15 @@ export async function writeBlock<WH, RH, FS extends FileSystem<WH, RH>>(
   const headerBytes = textEncoder.encode(JSON.stringify(blockHeader));
   await fs.append(file, headerBytes);
 
-  // console.log(
-  //     "full file",
-  //     yield* $(
-  //         fs.read(file as unknown as RH, 0, offset + headerBytes.length),
-  //     ),
-  // );
-
   const filename: BlockFilename = `L${level}-${(blockNumber + "").padStart(
     3,
     "0",
   )}-${hash.digest().replace("hash_", "").slice(0, 15)}-H${
     headerBytes.length
   }.jsonl`;
-  // console.log("renaming to" + filename);
   await fs.closeAndRename(file, filename);
 
   return filename;
-
-  // console.log("Wrote block", filename, blockHeader);
-  // console.log("IDs in block", blockHeader.map(e => e.id));
 }
 
 export async function writeToWal<WH, RH, FS extends FileSystem<WH, RH>>(
@@ -120,6 +109,5 @@ export async function writeToWal<WH, RH, FS extends FileSystem<WH, RH>>(
     ...chunk,
   };
   const bytes = textEncoder.encode(JSON.stringify(walEntry) + "\n");
-  console.log("writing to WAL", handle, id, bytes.length);
   return fs.append(handle, bytes);
 }

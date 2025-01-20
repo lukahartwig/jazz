@@ -1,5 +1,31 @@
 # jazz-browser
 
+## 0.9.11
+
+### Patch Changes
+
+- Updated dependencies [efbf3d8]
+- Updated dependencies [5863bad]
+  - cojson@0.9.11
+  - cojson-transport-ws@0.9.11
+  - cojson-storage-rn-sqlite@0.8.54
+  - jazz-react-core@0.8.52
+  - jazz-tools@0.9.11
+
+## 0.9.10
+
+### Patch Changes
+
+- f76274c: Fix image handling in react-native
+- 5e83864: Improve error management on initial auth, fixed an infinite loop when migration fails
+- Updated dependencies [4aa377d]
+- Updated dependencies [5e83864]
+  - cojson@0.9.10
+  - jazz-tools@0.9.10
+  - cojson-storage-rn-sqlite@0.8.53
+  - cojson-transport-ws@0.9.10
+  - jazz-react-core@0.8.51
+
 ## 0.9.9
 
 ### Patch Changes

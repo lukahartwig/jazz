@@ -1985,6 +1985,25 @@ describe("waitForSyncWithPeer", () => {
   });
 });
 
+test("Should not crash when syncing an unknown coValue type", async () => {
+  const { client, jazzCloud } = createTwoConnectedNodes();
+
+  const coValue = client.createCoValue({
+    type: "ooops" as any,
+    ruleset: { type: "unsafeAllowAll" },
+    meta: null,
+    ...Crypto.createdNowUnique(),
+  });
+
+  await coValue.waitForSync();
+
+  const coValueOnTheOtherNode = await loadCoValueOrFail(
+    jazzCloud,
+    coValue.getCurrentContent().id,
+  );
+  expect(coValueOnTheOtherNode.id).toBe(coValue.id);
+});
+
 describe("metrics", () => {
   afterEach(() => {
     tearDownTestMetricReader();

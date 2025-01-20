@@ -1,3 +1,4 @@
+import { RawUnknownCoValue } from "./coValue.js";
 import type { CoValueCore } from "./coValueCore.js";
 import { RawAccount, RawControlledAccount } from "./coValues/account.js";
 import { RawCoList } from "./coValues/coList.js";
@@ -38,6 +39,6 @@ export function coreToCoValue(
       return new RawCoStream(core);
     }
   } else {
-    throw new Error(`Unknown coValue type ${core.header.type}`);
+    return new RawUnknownCoValue(core);
   }
 }

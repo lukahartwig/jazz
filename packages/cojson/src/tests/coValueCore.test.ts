@@ -1,11 +1,14 @@
 import { expect, test, vi } from "vitest";
-import { Transaction } from "../coValueCore.js";
+import { CoValueCore, Transaction } from "../coValueCore.js";
 import { MapOpPayload } from "../coValues/coMap.js";
 import { WasmCrypto } from "../crypto/WasmCrypto.js";
 import { stableStringify } from "../jsonStringify.js";
 import { LocalNode } from "../localNode.js";
 import { Role } from "../permissions.js";
-import { randomAnonymousAccountAndSessionID } from "./testUtils.js";
+import {
+  createTestNode,
+  randomAnonymousAccountAndSessionID,
+} from "./testUtils.js";
 
 const Crypto = await WasmCrypto.create();
 
@@ -190,4 +193,31 @@ test("New transactions in a group correctly update owned values, including subsc
   expect(listener.mock.calls[1][0].get("hello")).toBe(undefined);
 
   expect(map.core.getValidSortedTransactions().length).toBe(0);
+});
+
+test("creating a coValue with a group should't trigger automatically a content creation (performance)", () => {
+  const node = createTestNode();
+
+  const group = node.createGroup();
+
+  const getCurrentContentSpy = vi.spyOn(
+    CoValueCore.prototype,
+    "getCurrentContent",
+  );
+  const groupSpy = vi.spyOn(group.core, "getCurrentContent");
+
+  getCurrentContentSpy.mockClear();
+
+  node.createCoValue({
+    type: "comap",
+    ruleset: { type: "ownedByGroup", group: group.id },
+    meta: null,
+    ...Crypto.createdNowUnique(),
+  });
+
+  // It's called once for the group and never for the coValue
+  expect(getCurrentContentSpy).toHaveBeenCalledTimes(1);
+  expect(groupSpy).toHaveBeenCalledTimes(1);
+
+  getCurrentContentSpy.mockRestore();
 });

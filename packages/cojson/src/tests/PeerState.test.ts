@@ -49,12 +49,9 @@ describe("PeerState", () => {
 
   test("should perform graceful shutdown", () => {
     const { mockPeer, peerState } = setup();
-    const consoleSpy = vi.spyOn(console, "debug").mockImplementation(() => {});
     peerState.gracefulShutdown();
     expect(mockPeer.outgoing.close).toHaveBeenCalled();
     expect(peerState.closed).toBe(true);
-    expect(consoleSpy).toHaveBeenCalledWith("Gracefully closing", "test-peer");
-    consoleSpy.mockRestore();
   });
 
   test("should empty the queue when closing", async () => {

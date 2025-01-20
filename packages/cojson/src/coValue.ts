@@ -35,6 +35,43 @@ export interface RawCoValue {
   subscribe(listener: (coValue: this) => void): () => void;
 }
 
+export class RawUnknownCoValue implements RawCoValue {
+  id: CoID<this>;
+  core: CoValueCore;
+
+  constructor(core: CoValueCore) {
+    this.id = core.id as CoID<this>;
+    this.core = core;
+  }
+
+  get type() {
+    return this.core.header.type;
+  }
+
+  get headerMeta() {
+    return this.core.header.meta as JsonObject;
+  }
+
+  /** @category 6. Meta */
+  get group(): RawGroup {
+    return this.core.getGroup();
+  }
+
+  toJSON() {
+    return {};
+  }
+
+  atTime() {
+    return this;
+  }
+
+  subscribe(listener: (value: this) => void): () => void {
+    return this.core.subscribe((content) => {
+      listener(content as this);
+    });
+  }
+}
+
 export type AnyRawCoValue =
   | RawCoMap
   | RawGroup

@@ -4,6 +4,7 @@ import {
   OutgoingSyncQueue,
   Peer,
   cojsonInternals,
+  logger,
 } from "cojson";
 import { SyncManager, TransactionRow } from "cojson-storage";
 import { SQLiteClient } from "./sqliteClient.js";
@@ -40,25 +41,23 @@ export class SQLiteNode {
             await new Promise((resolve) => setTimeout(resolve, 0));
           }
         } catch (e) {
-          console.error(
-            new Error(
-              `Error reading from localNode, handling msg\n\n${JSON.stringify(
-                msg,
-                (k, v) =>
-                  k === "changes" || k === "encryptedChanges"
-                    ? v.slice(0, 20) + "..."
-                    : v,
-              )}`,
-              { cause: e },
-            ),
+          logger.error(
+            `Error reading from localNode, handling msg\n\n${JSON.stringify(
+              msg,
+              (k, v) =>
+                k === "changes" || k === "encryptedChanges"
+                  ? v.slice(0, 20) + "..."
+                  : v,
+            )}`,
+            e,
           );
         }
       }
-    };
 
-    processMessages().catch((e) =>
-      console.error("Error in processMessages in sqlite", e),
-    );
+      processMessages().catch((e) =>
+        logger.error("Error in processMessages in sqlite", e),
+      );
+    };
   }
 
   static async asPeer({
@@ -97,10 +96,7 @@ export class SQLiteNode {
       db.pragma("user_version") as [{ user_version: number }]
     )[0].user_version as number;
 
-    console.log("DB version", oldVersion);
-
     if (oldVersion === 0) {
-      console.log("Migration 0 -> 1: Basic schema");
       db.prepare(
         `CREATE TABLE IF NOT EXISTS transactions (
                     ses INTEGER,
@@ -138,15 +134,10 @@ export class SQLiteNode {
       ).run();
 
       db.pragma("user_version = 1");
-      console.log("Migration 0 -> 1: Basic schema - done");
     }
 
     if (oldVersion <= 1) {
       // fix embarrassing off-by-one error for transaction indices
-      console.log(
-        "Migration 1 -> 2: Fix off-by-one error for transaction indices",
-      );
-
       const txs = db
         .prepare(`SELECT * FROM transactions`)
         .all() as TransactionRow[];
@@ -163,14 +154,9 @@ export class SQLiteNode {
       }
 
       db.pragma("user_version = 2");
-      console.log(
-        "Migration 1 -> 2: Fix off-by-one error for transaction indices - done",
-      );
     }
 
     if (oldVersion <= 2) {
-      console.log("Migration 2 -> 3: Add signatureAfter");
-
       db.prepare(
         `CREATE TABLE IF NOT EXISTS signatureAfter (
                     ses INTEGER,
@@ -185,7 +171,6 @@ export class SQLiteNode {
       ).run();
 
       db.pragma("user_version = 3");
-      console.log("Migration 2 -> 3: Add signatureAfter - done!!");
     }
 
     return new SQLiteNode(db, fromLocalNode, toLocalNode);

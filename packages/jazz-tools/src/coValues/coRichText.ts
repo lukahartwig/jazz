@@ -372,6 +372,7 @@ export class CoRichText extends CoMap {
           end + 1,
           mark.endBefore,
           RangeClass,
+          // @ts-ignore Some Typescript versions flag this as an error
           {},
           {
             markOwner: mark.sourceMark._owner || this._owner,

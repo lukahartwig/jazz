@@ -2,6 +2,7 @@ import { CoID, RawCoValue } from "../coValue.js";
 import { CoValueHeader, Transaction } from "../coValueCore.js";
 import { Signature } from "../crypto/crypto.js";
 import { RawCoID } from "../ids.js";
+import { logger } from "../logger.js";
 import { connectedPeers } from "../streamUtils.js";
 import {
   CoValueKnownState,
@@ -68,7 +69,6 @@ export class LSMStorage<WH, RH, FS extends FileSystem<WH, RH>> {
 
     const processMessages = async () => {
       for await (const msg of fromLocalNode) {
-        console.log("Storage msg start", nMsg);
         try {
           if (msg === "Disconnected" || msg === "PingTimeout") {
             throw new Error("Unexpected Disconnected message");
@@ -83,32 +83,29 @@ export class LSMStorage<WH, RH, FS extends FileSystem<WH, RH>> {
             await this.sendNewContent(msg.id, msg, undefined);
           }
         } catch (e) {
-          console.error(
-            new Error(
-              `Error reading from localNode, handling msg\n\n${JSON.stringify(
-                msg,
-                (k, v) =>
-                  k === "changes" || k === "encryptedChanges"
-                    ? v.slice(0, 20) + "..."
-                    : v,
-              )}`,
-              { cause: e },
-            ),
+          logger.error(
+            `Error reading from localNode, handling msg\n\n${JSON.stringify(
+              msg,
+              (k, v) =>
+                k === "changes" || k === "encryptedChanges"
+                  ? v.slice(0, 20) + "..."
+                  : v,
+            )}`,
+            e,
           );
         }
-        console.log("Storage msg end", nMsg);
         nMsg++;
       }
     };
 
     processMessages().catch((e) =>
-      console.error("Error in processMessages in storage", e),
+      logger.error("Error in processMessages in storage", e),
     );
 
     setTimeout(
       () =>
         this.compact().catch((e) => {
-          console.error("Error while compacting", e);
+          logger.error("Error while compacting", e);
         }),
       20000,
     );
@@ -134,7 +131,7 @@ export class LSMStorage<WH, RH, FS extends FileSystem<WH, RH>> {
           sessions: {},
           asDependencyOf,
         })
-        .catch((e) => console.error("Error while pushing known", e));
+        .catch((e) => logger.error("Error while pushing known", e));
 
       return;
     }
@@ -190,13 +187,13 @@ export class LSMStorage<WH, RH, FS extends FileSystem<WH, RH>> {
         ...ourKnown,
         asDependencyOf,
       })
-      .catch((e) => console.error("Error while pushing known", e));
+      .catch((e) => logger.error("Error while pushing known", e));
 
     for (const message of newContentMessages) {
       if (Object.keys(message.new).length === 0) continue;
       this.toLocalNode
         .push(message)
-        .catch((e) => console.error("Error while pushing new content", e));
+        .catch((e) => logger.error("Error while pushing new content", e));
     }
 
     this.coValues[id] = coValue;
@@ -232,20 +229,19 @@ export class LSMStorage<WH, RH, FS extends FileSystem<WH, RH>> {
 
     if (!coValue) {
       if (newContent.header) {
-        // console.log("Creating in WAL", newContent.id);
         await this.withWAL((wal) =>
           writeToWal(wal, this.fs, newContent.id, newContentAsChunk),
         );
 
         this.coValues[newContent.id] = newContentAsChunk;
       } else {
-        console.warn("Incontiguous incoming update for " + newContent.id);
+        logger.warn("Incontiguous incoming update for " + newContent.id);
         return;
       }
     } else {
       const merged = mergeChunks(coValue, newContentAsChunk);
       if (merged === "nonContigous") {
-        console.warn(
+        logger.warn(
           "Non-contigous new content for " + newContent.id,
           Object.entries(coValue.sessionEntries).map(([session, entries]) =>
             entries.map((entry) => ({
@@ -264,7 +260,6 @@ export class LSMStorage<WH, RH, FS extends FileSystem<WH, RH>> {
           ),
         );
       } else {
-        // console.log("Appending to WAL", newContent.id);
         await this.withWAL((wal) =>
           writeToWal(wal, this.fs, newContent.id, newContentAsChunk),
         );
@@ -301,8 +296,6 @@ export class LSMStorage<WH, RH, FS extends FileSystem<WH, RH>> {
 
       const { handle, size } = await this.getBlockHandle(blockFile, fs);
 
-      // console.log("Attempting to load", id, blockFile);
-
       if (!cachedHeader) {
         cachedHeader = {};
         const header = await readHeader(blockFile, handle, size, fs);
@@ -317,15 +310,13 @@ export class LSMStorage<WH, RH, FS extends FileSystem<WH, RH>> {
       }
       const headerEntry = cachedHeader[id];
 
-      // console.log("Header entry", id, headerEntry);
-
       if (headerEntry) {
         const nextChunk = await readChunk(handle, headerEntry, fs);
         if (result) {
           const merged = mergeChunks(result, nextChunk);
 
           if (merged === "nonContigous") {
-            console.warn(
+            logger.warn(
               "Non-contigous chunks while loading " + id,
               result,
               nextChunk,
@@ -354,7 +345,6 @@ export class LSMStorage<WH, RH, FS extends FileSystem<WH, RH>> {
 
     const coValues = new Map<RawCoID, CoValueChunk>();
 
-    console.log("Compacting WAL files", walFiles);
     if (walFiles.length === 0) return;
 
     const oldWal = this.currentWal;
@@ -385,7 +375,7 @@ export class LSMStorage<WH, RH, FS extends FileSystem<WH, RH>> {
         if (existingChunk) {
           const merged = mergeChunks(existingChunk, chunk);
           if (merged === "nonContigous") {
-            console.log(
+            logger.info(
               "Non-contigous chunks in " + chunk.id + ", " + fileName,
               existingChunk,
               chunk,
@@ -410,8 +400,6 @@ export class LSMStorage<WH, RH, FS extends FileSystem<WH, RH>> {
       }
       return acc;
     }, 0);
-
-    console.log([...coValues.keys()], fileNames, highestBlockNumber);
 
     await writeBlock(coValues, MAX_N_LEVELS, highestBlockNumber + 1, this.fs);
 
@@ -438,15 +426,11 @@ export class LSMStorage<WH, RH, FS extends FileSystem<WH, RH>> {
       blockFilesByLevelInOrder[level]!.push(blockFile);
     }
 
-    console.log(blockFilesByLevelInOrder);
-
     for (let level = MAX_N_LEVELS; level > 0; level--) {
       const nBlocksDesired = Math.pow(2, level);
       const blocksInLevel = blockFilesByLevelInOrder[level];
 
       if (blocksInLevel && blocksInLevel.length > nBlocksDesired) {
-        console.log("Compacting blocks in level", level, blocksInLevel);
-
         const coValues = new Map<RawCoID, CoValueChunk>();
 
         for (const blockFile of blocksInLevel) {
@@ -465,7 +449,7 @@ export class LSMStorage<WH, RH, FS extends FileSystem<WH, RH>> {
             if (existingChunk) {
               const merged = mergeChunks(existingChunk, chunk);
               if (merged === "nonContigous") {
-                console.log(
+                logger.info(
                   "Non-contigous chunks in " + entry.id + ", " + blockFile,
                   existingChunk,
                   chunk,
@@ -517,7 +501,7 @@ export class LSMStorage<WH, RH, FS extends FileSystem<WH, RH>> {
     setTimeout(
       () =>
         this.compact().catch((e) => {
-          console.error("Error while compacting", e);
+          logger.error("Error while compacting", e);
         }),
       5000,
     );

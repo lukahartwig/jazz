@@ -14,6 +14,7 @@ import {
 } from "./ids.js";
 import { parseJSON } from "./jsonStringify.js";
 import { JsonValue } from "./jsonValue.js";
+import { logger } from "./logger.js";
 import { accountOrAgentIDfromSessionID } from "./typeUtils/accountOrAgentIDfromSessionID.js";
 import { expectGroup } from "./typeUtils/expectGroup.js";
 
@@ -46,7 +47,7 @@ function logPermissionError(...args: unknown[]) {
     return;
   }
 
-  console.warn(...args);
+  logger.warn("Permission error", ...args);
 }
 
 export function determineValidTransactions(
@@ -204,7 +205,6 @@ function determineValidTransactionsForGroup(
   const writeKeys = new Set<string>();
 
   for (const { sessionID, txIndex, tx } of allTransactionsSorted) {
-    // console.log("before", { memberState, validTransactions });
     const transactor = accountOrAgentIDfromSessionID(sessionID);
 
     if (tx.privacy === "private") {
@@ -458,8 +458,6 @@ function determineValidTransactionsForGroup(
 
     memberState[affectedMember] = change.value;
     validTransactions.push({ txID: { sessionID, txIndex }, tx });
-
-    // console.log("after", { memberState, validTransactions });
   }
 
   return { validTransactions, memberState };
@@ -473,7 +471,7 @@ function agentInAccountOrMemberInGroup(
     return groupAtTime.currentAgentID().match(
       (agentID) => agentID,
       (e) => {
-        console.error(
+        logger.error(
           "Error while determining current agent ID in valid transactions",
           e,
         );

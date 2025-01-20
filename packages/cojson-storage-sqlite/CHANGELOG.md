@@ -1,5 +1,23 @@
 # cojson-storage-sqlite
 
+## 0.9.11
+
+### Patch Changes
+
+- 5863bad: Wrap all the console logs with a logger class to make possible to customize the logger
+- Updated dependencies [efbf3d8]
+- Updated dependencies [5863bad]
+  - cojson@0.9.11
+  - cojson-storage@0.9.11
+
+## 0.9.10
+
+### Patch Changes
+
+- Updated dependencies [4aa377d]
+  - cojson@0.9.10
+  - cojson-storage@0.9.10
+
 ## 0.9.9
 
 ### Patch Changes

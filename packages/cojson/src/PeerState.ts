@@ -5,6 +5,7 @@ import {
 } from "./PriorityBasedMessageQueue.js";
 import { TryAddTransactionsError } from "./coValueCore.js";
 import { RawCoID } from "./ids.js";
+import { logger } from "./logger.js";
 import { CO_VALUE_PRIORITY } from "./priority.js";
 import { Peer, SyncMessage } from "./sync.js";
 
@@ -92,7 +93,7 @@ export class PeerState {
 
     this.processing = true;
 
-    let entry: QueueEntry | undefined;
+    let entry: QueueEntry<SyncMessage> | undefined;
     while ((entry = this.queue.pull())) {
       // Awaiting the push to send one message at a time
       // This way when the peer is "under pressure" we can enqueue all
@@ -129,7 +130,7 @@ export class PeerState {
   }
 
   private closeQueue() {
-    let entry: QueueEntry | undefined;
+    let entry: QueueEntry<SyncMessage> | undefined;
     while ((entry = this.queue.pull())) {
       // Using resolve here to avoid unnecessary noise in the logs
       entry.resolve();
@@ -137,7 +138,7 @@ export class PeerState {
   }
 
   gracefulShutdown() {
-    console.debug("Gracefully closing", this.id);
+    logger.debug("Gracefully closing", this.id);
     this.closeQueue();
     this.peer.outgoing.close();
     this.closed = true;
