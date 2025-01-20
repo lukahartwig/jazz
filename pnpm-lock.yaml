@@ -122,9 +122,6 @@ importers:
       clsx:
         specifier: ^2.0.0
         version: 2.1.1
-      cojson-storage-rn-expo-sqlite-adapter:
-        specifier: workspace:*
-        version: link:../../packages/cojson-storage-rn-expo-sqlite-adapter
       expo:
         specifier: ^52.0.0
         version: 52.0.21(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@expo/metro-runtime@4.0.0(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.18)(react@18.3.1)))(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.18)(react@18.3.1))(react@18.3.1)
@@ -288,9 +285,6 @@ importers:
       expo-splash-screen:
         specifier: ~0.29.16
         version: 0.29.18(expo@52.0.21(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@expo/metro-runtime@4.0.0(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.18)(react@18.3.1)))(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.18)(react@18.3.1))(react@18.3.1))
-      expo-sqlite:
-        specifier: ~15.0.6
-        version: 15.0.6(expo@52.0.21(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@expo/metro-runtime@4.0.0(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.18)(react@18.3.1)))(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.18)(react@18.3.1))(react@18.3.1))(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.18)(react@18.3.1))(react@18.3.1)
       expo-status-bar:
         specifier: ~2.0.0
         version: 2.0.0(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.18)(react@18.3.1))(react@18.3.1)
@@ -309,6 +303,9 @@ importers:
       jazz-react-native-media-images:
         specifier: workspace:*
         version: link:../../packages/jazz-react-native-media-images
+      jazz-react-native-storage-op-sqlite:
+        specifier: workspace:*
+        version: link:../../packages/jazz-react-native-storage-op-sqlite
       jazz-tools:
         specifier: workspace:*
         version: link:../../packages/jazz-tools
@@ -1559,6 +1556,8 @@ importers:
       '@types/ws':
         specifier: 8.5.10
         version: 8.5.10
+
+  packages/coverage: {}
 
   packages/create-jazz-app:
     dependencies:

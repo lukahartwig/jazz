@@ -1,6 +1,7 @@
 import { useClerk, useUser } from "@clerk/clerk-expo";
-import { JazzProvider, setupKvStore } from "jazz-react-native";
+import { setupKvStore } from "jazz-react-native";
 import { useJazzClerkAuth } from "jazz-react-native-auth-clerk";
+import { JazzProvider } from "jazz-react-native-storage-op-sqlite";
 import React, {
   createContext,
   PropsWithChildren,
@@ -50,7 +51,6 @@ export function JazzAndAuth({ children }: PropsWithChildren) {
       {auth && clerk.user ? (
         <JazzProvider
           auth={auth}
-          storage="sqlite"
           peer="wss://cloud.jazz.tools/?key=chat-rn-clerk-example-jazz@garden.co"
         >
           {children}

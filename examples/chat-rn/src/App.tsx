@@ -17,8 +17,6 @@ const Stack = createNativeStackNavigator();
 
 const prefix = Linking.createURL("/");
 
-const adapter = new ExpoSQLiteAdapter("jazz-storage");
-
 const linking = {
   prefixes: [prefix],
   config: {
@@ -55,7 +53,7 @@ function App() {
       <JazzProvider
         auth={auth}
         peer="wss://cloud.jazz.tools/?key=chat-rn-example-jazz@garden.co"
-        storage={adapter}
+        storage={new ExpoSQLiteAdapter()}
       >
         <NavigationContainer linking={linking} ref={navigationRef}>
           <Stack.Navigator initialRouteName={initialRoute}>
