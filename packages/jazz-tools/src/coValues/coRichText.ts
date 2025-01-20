@@ -45,8 +45,9 @@ export class Mark extends CoMap {
 
   /**
    * Validates and clamps mark positions to ensure they are in the correct order
+   * Given a zero-indexed text length, the positions must satisfy:
+   * -1 ≤ startAfter < startBefore ≤ endAfter < endBefore ≤ textLength
    * @returns Normalized positions or null if invalid
-   * 0 ≤ startAfter ≤ startBefore < endAfter ≤ endBefore ≤ textLength
    */
   validatePositions(
     textLength: number,
@@ -60,8 +61,8 @@ export class Mark extends CoMap {
 
     // Get positions with fallbacks
     const positions = {
-      startAfter: this.startAfter ? (idxBefore(this.startAfter) ?? 0) : 0,
-      startBefore: this.startBefore ? (idxAfter(this.startBefore) ?? 1) : 1,
+      startAfter: this.startAfter ? (idxBefore(this.startAfter) ?? -1) : -1,
+      startBefore: this.startBefore ? (idxAfter(this.startBefore) ?? 0) : 0,
       endAfter: this.endAfter
         ? (idxBefore(this.endAfter) ?? textLength - 1)
         : textLength - 1,
@@ -70,19 +71,19 @@ export class Mark extends CoMap {
         : textLength,
     };
 
-    // Then ensure proper ordering relative to each other
-    const startAfter = positions.startAfter;
-    const startBefore = Math.max(startAfter + 1, positions.startBefore);
-
-    // Clamp endBefore to text length
-    const endBefore = Math.min(positions.endBefore, textLength);
-
-    // - Clamp endAfter to text length
-    // - Ensure it's at least endBefore - 1
-    const endAfter = Math.min(
-      Math.min(positions.endAfter, endBefore - 1),
-      textLength - 1,
+    // First clamp startBefore and endAfter to text bounds
+    const startBefore = Math.max(
+      0,
+      Math.min(positions.startBefore, textLength - 1),
     );
+    const endAfter = Math.max(
+      startBefore,
+      Math.min(positions.endAfter, textLength - 1),
+    );
+
+    // Then derive startAfter and endBefore from them
+    const startAfter = Math.max(-1, startBefore - 1);
+    const endBefore = Math.min(endAfter + 1, textLength);
 
     return { startAfter, startBefore, endAfter, endBefore };
   }
@@ -257,7 +258,7 @@ export class CoRichText extends CoMap {
   }
 
   /**
-   * Insert a mark at a specific range.
+   * Insert a mark at a specific range, inclusive of the start and end positions.
    */
   insertMark<
     MarkClass extends {
@@ -292,10 +293,10 @@ export class CoRichText extends CoMap {
     const range = RangeClass.create(
       {
         ...extraArgs,
-        startAfter: this.posBefore(start),
-        startBefore: this.posAfter(start),
-        endAfter: this.posBefore(end),
-        endBefore: this.posAfter(end),
+        startAfter: this.posAfter(start - 1),
+        startBefore: this.posBefore(start),
+        endAfter: this.posAfter(end),
+        endBefore: this.posBefore(end + 1),
       },
       { owner },
     );
@@ -652,3 +653,68 @@ export const Marks = {
     tag = co.literal("em");
   },
 };
+
+/**
+ * Logs a visual representation of a CoRichText instance to the console
+ * @param text The CoRichText instance to visualize
+ * @param label Optional label for the visualization
+ */
+export function debugCoRichText(text: CoRichText, label?: string): void {
+  console.group(`CoRichText Structure${label ? ` (${label})` : ""}`);
+  const content = text.toString();
+  console.log(
+    `Content: "${content.replace(/\n/g, "↵")}" (length: ${text.length})`,
+  );
+
+  console.group("Marks");
+  const marks = text.resolveMarks();
+  if (marks.length === 0) {
+    console.log("(no marks)");
+  } else {
+    marks.forEach((mark: ResolvedMark) => {
+      const markRange = content.substring(mark.startBefore, mark.endAfter + 1);
+      console.log(
+        `${mark.sourceMark.tag} (${mark.startBefore}:${mark.endAfter}): "${markRange.replace(/\n/g, "↵")}"`,
+      );
+    });
+  }
+  console.groupEnd();
+
+  console.group("Coverage");
+  if (content.length > 0) {
+    // Create number scale
+    let scale = "";
+    for (let i = 0; i < content.length; i++) {
+      scale += i % 10 === 0 ? String(Math.floor(i / 10)) : " ";
+    }
+    console.log(scale);
+    let positions = "";
+    for (let i = 0; i < content.length; i++) {
+      positions += i % 10;
+    }
+    console.log(positions);
+
+    // Create text line with visible newlines
+    let textLine = "";
+    for (let i = 0; i < content.length; i++) {
+      textLine += content[i] === "\n" ? "↵" : content[i];
+    }
+    console.log(textLine);
+
+    // Create mark coverage lines
+    const markTypes = [...new Set(marks.map((m) => m.sourceMark.tag))];
+    markTypes.forEach((tag) => {
+      const relevantMarks = marks.filter((m) => m.sourceMark.tag === tag);
+      let coverageLine = "";
+      for (let i = 0; i < content.length; i++) {
+        const hasMarkAtPos = relevantMarks.some(
+          (m) => i >= m.startBefore && i <= m.endAfter,
+        );
+        coverageLine += hasMarkAtPos ? "─" : " ";
+      }
+      console.log(`${coverageLine} ${tag}`);
+    });
+  }
+  console.groupEnd();
+  console.groupEnd();
+}
