@@ -10,8 +10,8 @@ import React, { StrictMode, useEffect, useState } from "react";
 import HandleInviteScreen from "./invite";
 
 import { DemoAuthBasicUI, useDemoAuth } from "jazz-react-native";
-// import { JazzProvider } from "jazz-react-native-storage-expo-sqlite";
-import { JazzProvider } from "jazz-react-native-storage-op-sqlite";
+import { JazzProvider } from "jazz-react-native-storage-expo-sqlite";
+// import { JazzProvider } from "jazz-react-native-storage-op-sqlite";
 // import { OPSQLiteAdapter } from "cojson-storage-rn-op-sqlite-adapter";
 // import { ExpoSQLiteAdapter } from "cojson-storage-rn-expo-sqlite-adapter";
 import ChatScreen from "./chat";

@@ -22,24 +22,19 @@ export class ExpoSQLiteAdapter implements SQLiteAdapter {
   private async ensureInitialized() {
     // Return immediately if already initialized
     if (this.isInitialized) {
-      console.log("[ExpoSQLiteAdapter] already initialized");
       return;
     }
 
     // If initialization is in progress, wait for it
     if (this.initializationPromise) {
-      console.log("[ExpoSQLiteAdapter] waiting for initialization");
       await this.initializationPromise;
-      console.log("[ExpoSQLiteAdapter] initialization complete");
       return;
     }
 
     // Start initialization
     this.initializationPromise = this.initializeInternal();
     try {
-      console.log("[ExpoSQLiteAdapter] starting initialization");
       await this.initializationPromise;
-      console.log("[ExpoSQLiteAdapter] initialization complete");
       this.isInitialized = true;
     } catch (error) {
       // Clear the promise on failure so future attempts can retry
@@ -51,14 +46,23 @@ export class ExpoSQLiteAdapter implements SQLiteAdapter {
   private async initializeInternal() {
     try {
       console.log("[ExpoSQLiteAdapter] Opening database:", this.dbName);
-      this.db = await openDatabaseAsync(this.dbName);
-      // Check if database is accessible
-      const testResult = await this.executeSql("SELECT 1");
-      if (!testResult.rows || testResult.rows.length === 0) {
-        throw new Error("Database connection test failed");
+      const db = await openDatabaseAsync(this.dbName);
+
+      // Verify database connection before proceeding
+      const statement = await db.prepareAsync("SELECT 1");
+      try {
+        const result = await statement.executeAsync();
+        const rows = await result.getAllAsync();
+        if (!rows || rows.length === 0) {
+          throw new Error("Database connection test failed");
+        }
+      } finally {
+        await statement.finalizeAsync();
       }
 
-      console.log("[ExpoSQLiteAdapter] Checking schema version");
+      this.db = db;
+
+      // Schema version check and migrations
       const { rows } = await this.executeSql("PRAGMA user_version");
       const oldVersion = Number(rows[0]?.user_version) ?? 0;
 
@@ -73,7 +77,6 @@ export class ExpoSQLiteAdapter implements SQLiteAdapter {
           ) WITHOUT ROWID;`,
         );
 
-        console.log("[ExpoSQLiteAdapter] Creating sessions table");
         await this.executeSql(
           `CREATE TABLE IF NOT EXISTS sessions (
             rowID INTEGER PRIMARY KEY,
@@ -85,12 +88,10 @@ export class ExpoSQLiteAdapter implements SQLiteAdapter {
           );`,
         );
 
-        console.log("[ExpoSQLiteAdapter] Creating sessionsByCoValue index");
         await this.executeSql(
           `CREATE INDEX IF NOT EXISTS sessionsByCoValue ON sessions (coValue);`,
         );
 
-        console.log("[ExpoSQLiteAdapter] Creating coValues table");
         await this.executeSql(
           `CREATE TABLE IF NOT EXISTS coValues (
             rowID INTEGER PRIMARY KEY,
@@ -99,12 +100,10 @@ export class ExpoSQLiteAdapter implements SQLiteAdapter {
           );`,
         );
 
-        console.log("[ExpoSQLiteAdapter] Creating coValuesByID index");
         await this.executeSql(
           `CREATE INDEX IF NOT EXISTS coValuesByID ON coValues (id);`,
         );
 
-        console.log("[ExpoSQLiteAdapter] Setting user_version to 1");
         await this.executeSql("PRAGMA user_version = 1");
       }
 
@@ -119,9 +118,6 @@ export class ExpoSQLiteAdapter implements SQLiteAdapter {
           ) WITHOUT ROWID;`,
         );
 
-        console.log(
-          "[ExpoSQLiteAdapter] Adding bytesSinceLastSignature column",
-        );
         await this.executeSql(
           `ALTER TABLE sessions ADD COLUMN bytesSinceLastSignature INTEGER;`,
         );
@@ -143,7 +139,7 @@ export class ExpoSQLiteAdapter implements SQLiteAdapter {
     params?: unknown[],
   ): Promise<SQLResult> {
     if (!this.db) {
-      throw new Error("Database not initialized. Call initialize() first.");
+      throw new Error("Database not initialized");
     }
 
     try {
@@ -181,9 +177,7 @@ export class ExpoSQLiteAdapter implements SQLiteAdapter {
   }
 
   async execute(sql: string, params?: unknown[]): Promise<SQLResult> {
-    if (!this.db) {
-      await this.ensureInitialized();
-    }
+    await this.ensureInitialized();
     return this.executeSql(sql, params);
   }
 
