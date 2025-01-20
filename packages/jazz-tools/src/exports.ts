@@ -53,11 +53,10 @@ export {
 export {
   AnonymousJazzAgent,
   createAnonymousJazzContext,
-  createJazzContext,
-  ephemeralCredentialsAuth,
-  fixedCredentialsAuth,
+  JazzContextManager,
   randomSessionProvider,
-  type AuthMethod,
-  type AuthResult,
-  type Credentials,
+  type CreationAuthCredentials,
+  type AuthCredentials,
+  type ContextParams,
+  type AuthSecretStorage,
 } from "./internal.js";

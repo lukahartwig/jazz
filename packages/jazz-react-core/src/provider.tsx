@@ -1,12 +1,12 @@
 import React from "react";
 
-import { Account, AccountClass, AnonymousJazzAgent } from "jazz-tools";
+import { Account, AccountClass, AnonymousJazzAgent, JazzContextManager } from "jazz-tools";
 
 /** @category Context Creation */
 export type JazzAuthContext<Acc extends Account> = {
+  context: JazzContextManager<Acc>;
   me: Acc;
   toggleNetwork?: (enabled: boolean) => void;
-  refreshContext?: () => void;
   logOut: () => void;
   done: () => void;
 };

@@ -1,6 +1,5 @@
-import { CryptoProvider, RawAccountID, cojsonInternals } from "cojson";
-import { Account, AuthMethod, AuthResult, ID } from "jazz-tools";
-import { AuthSecretStorage } from "./AuthSecretStorage.js";
+import {  RawAccountID, cojsonInternals } from "cojson";
+import { Account, ID, JazzContextManager } from "jazz-tools";
 
 /**
  * `BrowserPasskeyAuth` provides a `JazzAuth` object for passkey authentication.
@@ -13,164 +12,63 @@ import { AuthSecretStorage } from "./AuthSecretStorage.js";
  *
  * @category Auth Providers
  */
-export class BrowserPasskeyAuth implements AuthMethod {
+export class BrowserPasskeyAuth {
   constructor(
-    public driver: BrowserPasskeyAuth.Driver,
+    private context: JazzContextManager<Account>,
     public appName: string,
     // TODO: is this a safe default?
     public appHostname: string = window.location.hostname,
   ) {}
 
-  /**
-   * @returns A `JazzAuth` object
-   */
-  async start(crypto: CryptoProvider): Promise<AuthResult> {
-    AuthSecretStorage.migrate();
+  async logIn() {
+    const webAuthNCredential = await this.getPasskeyCredentials();
 
-    const credentials = AuthSecretStorage.get();
+    if (!webAuthNCredential) return null;
 
-    if (credentials && !credentials.isAnonymous) {
-      const accountID = credentials.accountID;
-      const secret = credentials.accountSecret;
+    const webAuthNCredentialPayload = new Uint8Array(
+      webAuthNCredential.response.userHandle,
+    );
+    const accountSecretSeed = webAuthNCredentialPayload.slice(
+      0,
+      cojsonInternals.secretSeedLength,
+    );
 
-      return {
-        type: "existing",
-        credentials: { accountID, secret },
-        onSuccess: () => {
-          this.driver.onSignedIn({ logOut });
-        },
-        onError: (error: string | Error) => {
-          this.driver.onError(error);
-        },
-        logOut: () => {
-          AuthSecretStorage.clear();
-        },
-      } satisfies AuthResult;
-    } else {
-      return new Promise<AuthResult>((resolve) => {
-        this.driver.onReady({
-          signUp: async (username) => {
-            if (credentials?.isAnonymous) {
-              resolve({
-                type: "existing",
-                username,
-                credentials: {
-                  accountID: credentials.accountID,
-                  secret: credentials.accountSecret,
-                },
-                saveCredentials: async ({ accountID, secret }) => {
-                  await this.createPasskeyCredentials({
-                    accountID,
-                    secretSeed: credentials.secretSeed,
-                    username,
-                  });
+    const accountSecret = this.context.crypto.agentSecretFromSecretSeed(accountSecretSeed);
 
-                  AuthSecretStorage.set({
-                    accountID,
-                    secretSeed: credentials.secretSeed,
-                    accountSecret: secret,
-                  });
-                },
-                onSuccess: () => {
-                  this.driver.onSignedIn({ logOut });
-                },
-                onError: (error: string | Error) => {
-                  this.driver.onError(error);
-                },
-                logOut,
-              });
-              return;
-            } else {
-              const secretSeed = crypto.newRandomSecretSeed();
+    const accountID = cojsonInternals.rawCoIDfromBytes(
+      webAuthNCredentialPayload.slice(
+        cojsonInternals.secretSeedLength,
+        cojsonInternals.secretSeedLength +
+          cojsonInternals.shortHashLength,
+      ),
+    ) as ID<Account>;
 
-              resolve({
-                type: "new",
-                creationProps: { name: username },
-                initialSecret: crypto.agentSecretFromSecretSeed(secretSeed),
-                saveCredentials: async ({ accountID, secret }) => {
-                  await this.createPasskeyCredentials({
-                    accountID,
-                    secretSeed,
-                    username,
-                  });
+    return this.context.logIn({
+      accountID,
+      accountSecret,
+      secretSeed: accountSecretSeed,
+      isAnonymous: false,
+    });
+  }
 
-                  AuthSecretStorage.set({
-                    accountID,
-                    secretSeed,
-                    accountSecret: secret,
-                  });
-                },
-                onSuccess: () => {
-                  this.driver.onSignedIn({ logOut });
-                },
-                onError: (error: string | Error) => {
-                  this.driver.onError(error);
-                },
-                logOut,
-              });
-            }
-          },
-          logIn: async () => {
-            const webAuthNCredential = await this.getPasskeyCredentials().catch(
-              () => {
-                this.driver.onError(
-                  "Error while accessing the passkey credentials",
-                );
-                return "rejected" as const;
-              },
-            );
+  async registerCredentials(username: string) {
+    const credentials = await this.context.getCredentials();
 
-            if (webAuthNCredential === "rejected") {
-              return;
-            }
-
-            if (!webAuthNCredential) {
-              this.driver.onError(
-                "Error while accessing the passkey credentials",
-              );
-              return;
-            }
-
-            const webAuthNCredentialPayload = new Uint8Array(
-              webAuthNCredential.response.userHandle,
-            );
-            const accountSecretSeed = webAuthNCredentialPayload.slice(
-              0,
-              cojsonInternals.secretSeedLength,
-            );
-
-            const secret = crypto.agentSecretFromSecretSeed(accountSecretSeed);
-
-            const accountID = cojsonInternals.rawCoIDfromBytes(
-              webAuthNCredentialPayload.slice(
-                cojsonInternals.secretSeedLength,
-                cojsonInternals.secretSeedLength +
-                  cojsonInternals.shortHashLength,
-              ),
-            ) as ID<Account>;
-
-            resolve({
-              type: "existing",
-              credentials: { accountID, secret },
-              saveCredentials: async ({ accountID, secret }) => {
-                AuthSecretStorage.set({
-                  accountID,
-                  accountSecret: secret,
-                  secretSeed: accountSecretSeed,
-                });
-              },
-              onSuccess: () => {
-                this.driver.onSignedIn({ logOut });
-              },
-              onError: (error: string | Error) => {
-                this.driver.onError(error);
-              },
-              logOut,
-            });
-          },
-        });
-      });
+    if (!credentials) {
+      throw new Error("No credentials found");
     }
+
+    if (!credentials.secretSeed) {
+      throw new Error("No secret seed found");
+    }
+
+    await this.createPasskeyCredentials({
+      accountID: credentials.accountID,
+      secretSeed: credentials.secretSeed,
+      username,
+    });
+
+    await this.context.trackAuthUpgrade();
   }
 
   private async createPasskeyCredentials({
@@ -251,8 +149,4 @@ export namespace BrowserPasskeyAuth {
     onSignedIn: (next: { logOut: () => void }) => void;
     onError: (error: string | Error) => void;
   }
-}
-
-function logOut() {
-  AuthSecretStorage.clear();
 }

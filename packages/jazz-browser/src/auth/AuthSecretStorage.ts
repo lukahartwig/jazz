@@ -1,36 +1,22 @@
 import { AgentSecret } from "cojson";
-import { Account, ID } from "jazz-tools";
+import { Account, AuthSecretStorage, ID, AuthCredentials } from "jazz-tools";
 
 const STORAGE_KEY = "jazz-logged-in-secret";
 
-export type AuthCredentials =
-  | {
-      accountID: ID<Account>;
-      secretSeed?: Uint8Array;
-      accountSecret: AgentSecret;
-      isAnonymous: false;
-    }
-  | {
-      accountID: ID<Account>;
-      secretSeed: Uint8Array;
-      accountSecret: AgentSecret;
-      isAnonymous: true;
-    };
-
 export type AuthSetPayload =
   | {
-      accountID: ID<Account>;
-      secretSeed: Uint8Array;
-      accountSecret: AgentSecret;
-      isAnonymous?: boolean;
-    }
+    accountID: ID<Account>;
+    secretSeed: Uint8Array;
+    accountSecret: AgentSecret;
+    isAnonymous?: boolean;
+  }
   | {
-      accountID: ID<Account>;
-      accountSecret: AgentSecret;
-    };
+    accountID: ID<Account>;
+    accountSecret: AgentSecret;
+  };
 
-export class AuthSecretStorage {
-  static migrate() {
+export class BrowserAuthSecretStorage implements AuthSecretStorage {
+  async migrate() {
     if (!localStorage[STORAGE_KEY]) {
       const demoAuthSecret = localStorage["demo-auth-logged-in-secret"];
       if (demoAuthSecret) {
@@ -46,7 +32,7 @@ export class AuthSecretStorage {
     }
   }
 
-  static get(): AuthCredentials | null {
+  async get(): Promise<AuthCredentials | null> {
     const data = localStorage.getItem(STORAGE_KEY);
 
     if (!data) return null;
@@ -75,7 +61,8 @@ export class AuthSecretStorage {
     throw new Error("Invalid auth secret storage data");
   }
 
-  static set(payload: AuthSetPayload) {
+  // TODO: If available, keep the previous auth credentials somewhere in the storage
+  async set(payload: AuthSetPayload) {
     if ("secretSeed" in payload) {
       localStorage.setItem(
         STORAGE_KEY,
@@ -105,7 +92,7 @@ export class AuthSecretStorage {
     throw new Error("Invalid auth secret storage data");
   }
 
-  static isAnonymous() {
+  async isAnonymous() {
     const data = localStorage.getItem(STORAGE_KEY);
 
     if (!data) return false;
@@ -115,16 +102,16 @@ export class AuthSecretStorage {
     return Boolean(parsed.isAnonymous);
   }
 
-  static onUpdate(handler: () => void) {
+  onUpdate(handler: () => void) {
     window.addEventListener("jazz-auth-update", handler);
     return () => window.removeEventListener("jazz-auth-update", handler);
   }
 
-  static emitUpdate() {
+  emitUpdate() {
     window.dispatchEvent(new Event("jazz-auth-update"));
   }
 
-  static clear() {
+  async clear() {
     localStorage.removeItem(STORAGE_KEY);
     this.emitUpdate();
   }

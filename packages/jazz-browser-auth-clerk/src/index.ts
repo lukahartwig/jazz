@@ -1,6 +1,5 @@
 import { AgentSecret, CryptoProvider } from "cojson";
-import { AuthSecretStorage } from "jazz-browser";
-import { Account, AuthMethod, AuthResult, Credentials, ID } from "jazz-tools";
+import { Account, ID, JazzContextManager } from "jazz-tools";
 
 export type MinimalClerkClient = {
   user:
@@ -26,143 +25,47 @@ type ClerkCredentials = {
   jazzAccountSeed?: number[];
 };
 
-export class BrowserClerkAuth implements AuthMethod {
+export class BrowserClerkAuth {
   constructor(
-    public driver: BrowserClerkAuth.Driver,
+    private readonly context: JazzContextManager<Account>,
     private readonly clerkClient: MinimalClerkClient,
   ) {}
 
-  async start(crypto: CryptoProvider): Promise<AuthResult> {
-    AuthSecretStorage.migrate();
+  async logIn() {
+    const clerkCredentials = this.clerkClient.user?.unsafeMetadata as ClerkCredentials;
 
-    // Check local storage for credentials
-    const credentials = AuthSecretStorage.get();
-
-    if (credentials && !credentials.isAnonymous) {
-      try {
-        return {
-          type: "existing",
-          credentials: {
-            accountID: credentials.accountID,
-            secret: credentials.accountSecret,
-          },
-          saveCredentials: async () => {}, // No need to save credentials when recovering from local storage
-          onSuccess: () => {},
-          onError: (error: string | Error) => {
-            this.driver.onError(error);
-          },
-          logOut: () => {
-            AuthSecretStorage.clear();
-            void this.clerkClient.signOut();
-          },
-        };
-      } catch (e) {
-        console.error("Error parsing local storage credentials", e);
-      }
+    if (!clerkCredentials.jazzAccountID || !clerkCredentials.jazzAccountSecret) {
+      throw new Error("No credentials found");
     }
 
-    if (this.clerkClient.user) {
-      const username =
-        this.clerkClient.user.fullName ||
-        this.clerkClient.user.username ||
-        this.clerkClient.user.id;
-      // Check clerk user metadata for credentials
-      const clerkCredentials = this.clerkClient.user
-        .unsafeMetadata as ClerkCredentials;
-      if (clerkCredentials.jazzAccountID) {
-        if (!clerkCredentials.jazzAccountSecret) {
-          this.driver.onError("No secret for existing user");
-          throw new Error("No secret for existing user");
-        }
-        return {
-          type: "existing",
-          credentials: {
-            accountID: clerkCredentials.jazzAccountID as ID<Account>,
-            secret: clerkCredentials.jazzAccountSecret as AgentSecret,
-          },
-          saveCredentials: async ({ accountID, secret }: Credentials) => {
-            AuthSecretStorage.set({
-              accountID,
-              accountSecret: secret,
-              secretSeed: clerkCredentials.jazzAccountSeed
-                ? Uint8Array.from(clerkCredentials.jazzAccountSeed)
-                : undefined,
-            });
-          },
-          onSuccess: () => {},
-          onError: (error: string | Error) => {
-            this.driver.onError(error);
-          },
-          logOut: () => {
-            void this.clerkClient.signOut();
-          },
-        };
-      } else if (credentials?.isAnonymous) {
-        return {
-          type: "existing",
-          username,
-          credentials: {
-            accountID: credentials.accountID,
-            secret: credentials.accountSecret,
-          },
-          saveCredentials: async ({ accountID, secret }: Credentials) => {
-            AuthSecretStorage.set({
-              accountID,
-              accountSecret: secret,
-              secretSeed: credentials.secretSeed,
-            });
-            await this.clerkClient.user?.update({
-              unsafeMetadata: {
-                jazzAccountID: accountID,
-                jazzAccountSecret: secret,
-                jazzAccountSeed: Array.from(credentials.secretSeed),
-              } satisfies ClerkCredentials,
-            });
-          },
-          onSuccess: () => {},
-          onError: (error: string | Error) => {
-            this.driver.onError(error);
-          },
-          logOut: () => {
-            void this.clerkClient.signOut();
-          },
-        };
-      } else {
-        const secretSeed = crypto.newRandomSecretSeed();
-        // No credentials found, so we need to create new credentials
-        return {
-          type: "new",
-          creationProps: {
-            name: username,
-          },
-          initialSecret: crypto.agentSecretFromSecretSeed(secretSeed),
-          saveCredentials: async ({ accountID, secret }: Credentials) => {
-            AuthSecretStorage.set({
-              accountID,
-              secretSeed,
-              accountSecret: secret,
-            });
-            await this.clerkClient.user?.update({
-              unsafeMetadata: {
-                jazzAccountID: accountID,
-                jazzAccountSecret: secret,
-                jazzAccountSeed: Array.from(secretSeed),
-              } satisfies ClerkCredentials,
-            });
-          },
-          onSuccess: () => {},
-          onError: (error: string | Error) => {
-            this.driver.onError(error);
-          },
-          logOut: () => {
-            void this.clerkClient.signOut();
-          },
-        };
-      }
-    } else {
-      // Clerk user not found, so we can't authenticate
-      throw new Error("Not signed in");
+    return this.context.logIn({
+      accountID: clerkCredentials.jazzAccountID,
+      accountSecret: clerkCredentials.jazzAccountSecret,
+      secretSeed: clerkCredentials.jazzAccountSeed
+        ? Uint8Array.from(clerkCredentials.jazzAccountSeed)
+        : undefined,
+      isAnonymous: false,
+    });
+  }
+
+  async registerCredentials() {
+    const currentCredentials = await this.context.getCredentials();
+
+    if (!currentCredentials) {
+      throw new Error("No credentials found");
     }
+
+    await this.clerkClient.user?.update({
+      unsafeMetadata: {
+        jazzAccountID: currentCredentials.accountID,
+        jazzAccountSecret: currentCredentials.accountSecret,
+        jazzAccountSeed: currentCredentials.secretSeed
+          ? Array.from(currentCredentials.secretSeed)
+          : undefined,
+      } satisfies ClerkCredentials,
+    });
+
+    await this.context.trackAuthUpgrade();
   }
 }
 

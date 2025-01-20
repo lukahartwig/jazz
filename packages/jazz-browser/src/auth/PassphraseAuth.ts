@@ -1,7 +1,6 @@
 import * as bip39 from "@scure/bip39";
-import { CryptoProvider, cojsonInternals } from "cojson";
-import { Account, AuthMethod, AuthResult, ID } from "jazz-tools";
-import { AuthSecretStorage } from "./AuthSecretStorage.js";
+import { cojsonInternals } from "cojson";
+import { Account, ID, JazzContextManager } from "jazz-tools";
 
 /**
  * `BrowserPassphraseAuth` provides a `JazzAuth` object for passphrase authentication.
@@ -14,138 +13,52 @@ import { AuthSecretStorage } from "./AuthSecretStorage.js";
  *
  * @category Auth Providers
  */
-export class BrowserPassphraseAuth implements AuthMethod {
+export class BrowserPassphraseAuth {
   constructor(
-    public driver: BrowserPassphraseAuth.Driver,
+    private context: JazzContextManager<Account>,
     public wordlist: string[],
   ) {}
 
-  /**
-   * @returns A `JazzAuth` object
-   */
-  async start(crypto: CryptoProvider): Promise<AuthResult> {
-    AuthSecretStorage.migrate();
+  async logIn(passphrase: string) {
+    const secretSeed = bip39.mnemonicToEntropy(
+      passphrase,
+      this.wordlist,
+    );
+    const accountSecret = this.context.crypto.agentSecretFromSecretSeed(secretSeed);
 
-    const credentials = AuthSecretStorage.get();
-
-    if (credentials && !credentials.isAnonymous) {
-      const accountID = credentials.accountID;
-      const secret = credentials.accountSecret;
-
-      return {
-        type: "existing",
-        credentials: { accountID, secret },
-        onSuccess: () => {
-          this.driver.onSignedIn({ logOut });
-        },
-        onError: (error: string | Error) => {
-          this.driver.onError(error);
-        },
-        logOut: () => {
-          AuthSecretStorage.clear();
-        },
-      } satisfies AuthResult;
-    } else {
-      return new Promise<AuthResult>((resolve) => {
-        this.driver.onReady({
-          signUp: async (username, passphrase) => {
-            if (credentials?.isAnonymous) {
-              console.warn(
-                "Anonymous user upgrade is currently not supported on passphrase auth",
-              );
-            }
-
-            const secretSeed = bip39.mnemonicToEntropy(
-              passphrase,
-              this.wordlist,
-            );
-            const accountSecret = crypto.agentSecretFromSecretSeed(secretSeed);
-            if (!accountSecret) {
-              this.driver.onError("Invalid passphrase");
-              return;
-            }
-
-            resolve({
-              type: "new",
-              creationProps: { name: username },
-              initialSecret: accountSecret,
-              saveCredentials: async (credentials) => {
-                AuthSecretStorage.set({
-                  accountID: credentials.accountID,
-                  secretSeed,
-                  accountSecret,
-                });
-              },
-              onSuccess: () => {
-                this.driver.onSignedIn({ logOut });
-              },
-              onError: (error: string | Error) => {
-                this.driver.onError(error);
-              },
-              logOut: () => {
-                AuthSecretStorage.clear();
-              },
-            });
-          },
-          logIn: async (passphrase: string) => {
-            const secretSeed = bip39.mnemonicToEntropy(
-              passphrase,
-              this.wordlist,
-            );
-            const accountSecret = crypto.agentSecretFromSecretSeed(secretSeed);
-
-            if (!accountSecret) {
-              this.driver.onError("Invalid passphrase");
-              return;
-            }
-
-            const accountID = cojsonInternals.idforHeader(
-              cojsonInternals.accountHeaderForInitialAgentSecret(
-                accountSecret,
-                crypto,
-              ),
-              crypto,
-            ) as ID<Account>;
-
-            resolve({
-              type: "existing",
-              credentials: { accountID, secret: accountSecret },
-              saveCredentials: async ({ accountID }) => {
-                AuthSecretStorage.set({
-                  accountID,
-                  secretSeed,
-                  accountSecret,
-                });
-              },
-              onSuccess: () => {
-                this.driver.onSignedIn({ logOut });
-              },
-              onError: (error: string | Error) => {
-                this.driver.onError(error);
-              },
-              logOut: () => {
-                AuthSecretStorage.clear();
-              },
-            });
-          },
-        });
-      });
+    if (!accountSecret) {
+      throw new Error("Invalid passphrase");
     }
-  }
-}
 
-/** @internal */
-export namespace BrowserPassphraseAuth {
-  export interface Driver {
-    onReady: (next: {
-      signUp: (username: string, passphrase: string) => Promise<void>;
-      logIn: (passphrase: string) => Promise<void>;
-    }) => void;
-    onSignedIn: (next: { logOut: () => void }) => void;
-    onError: (error: string | Error) => void;
-  }
-}
+    const accountID = cojsonInternals.idforHeader(
+      cojsonInternals.accountHeaderForInitialAgentSecret(
+        accountSecret,
+        this.context.crypto,
+      ),
+      this.context.crypto,
+    ) as ID<Account>;
 
-function logOut() {
-  AuthSecretStorage.clear();
+    return this.context.logIn({
+      accountID,
+      accountSecret,
+      secretSeed,
+      isAnonymous: false,
+    });
+  }
+
+  async registerCredentials(username: string, passphrase: string) {
+    const secretSeed = bip39.mnemonicToEntropy(
+      passphrase,
+      this.wordlist,
+    );
+    const accountSecret = this.context.crypto.agentSecretFromSecretSeed(secretSeed);
+
+    return this.context.registerNewAccount({
+      accountSecret,
+      secretSeed,
+      isAnonymous: false,
+    }, {
+      name: username,
+    });
+  }
 }

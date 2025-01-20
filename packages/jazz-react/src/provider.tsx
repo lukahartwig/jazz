@@ -1,11 +1,11 @@
 import {
-  BaseBrowserContextOptions,
+  BrowserContextOptions,
   createJazzBrowserContext,
 } from "jazz-browser";
 import React, { useEffect, useRef, useState } from "react";
 
 import { JazzContext, JazzContextType } from "jazz-react-core";
-import { Account, AccountClass, AuthMethod } from "jazz-tools";
+import { Account, AccountClass } from "jazz-tools";
 
 export interface Register {}
 
@@ -18,7 +18,7 @@ export type JazzProviderProps<Acc extends Account = RegisteredAccount> = {
   auth?: AuthMethod | "guest";
   peer: `wss://${string}` | `ws://${string}`;
   localOnly?: boolean;
-  storage?: BaseBrowserContextOptions["storage"];
+  storage?: BrowserContextOptions["storage"];
   AccountSchema?: AccountClass<Acc>;
 };
 
@@ -59,34 +59,18 @@ export function JazzProvider<Acc extends Account = RegisteredAccount>({
       }
 
       async function createContext() {
-        const currentContext = await createJazzBrowserContext<Acc>(
-          auth === "guest"
-            ? {
-                guest: true,
-                peer,
-                storage,
-                localOnly,
-              }
-            : {
-                guest: false,
-                AccountSchema,
-                auth,
-                peer,
-                storage,
-                localOnly,
-              },
-        );
+        const currentContext = await createJazzBrowserContext<Acc>({
+          guestMode: auth === "guest",
+          AccountSchema,
+          peer,
+          storage,
+          localOnly,
+        });
 
         const logOut = () => {
-          currentContext.logOut();
+          currentContext.contextManager.logOut();
           setCtx(undefined);
           setSessionCount(sessionCount + 1);
-
-          if (process.env.NODE_ENV === "development") {
-            // In development mode we don't return a cleanup function
-            // so we mark the context as done here.
-            currentContext.done();
-          }
         };
 
         const refresh = () => {
@@ -101,10 +85,11 @@ export function JazzProvider<Acc extends Account = RegisteredAccount>({
         };
 
         setCtx({
-          ...currentContext,
-          AccountSchema,
+          context: currentContext.contextManager,
+          me: currentContext.contextManager.me,
           logOut,
-          refreshContext: refresh,
+          toggleNetwork: currentContext.toggleNetwork,
+          done: currentContext.contextManager.done,
         });
 
         return currentContext;

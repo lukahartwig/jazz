@@ -1,10 +1,8 @@
-import { LSMStorage, LocalNode, Peer, RawAccountID } from "cojson";
+import { LSMStorage, RawAccountID } from "cojson";
 import { IDBStorage } from "cojson-storage-indexeddb";
 import {
   Account,
   AgentID,
-  AnonymousJazzAgent,
-  AuthMethod,
   CoValue,
   CoValueClass,
   CryptoProvider,
@@ -13,83 +11,44 @@ import {
   SessionID,
   WasmCrypto,
   cojsonInternals,
-  createJazzContext,
+  JazzContextManager,
+  AccountClass,
 } from "jazz-tools";
 import { OPFSFilesystem } from "./OPFSFilesystem.js";
 import { createWebSocketPeerWithReconnection } from "./createWebSocketPeerWithReconnection.js";
 import { StorageConfig, getStorageOptions } from "./storageOptions.js";
-export { AuthSecretStorage } from "./auth/AuthSecretStorage.js";
-export { BrowserDemoAuth } from "./auth/DemoAuth.js";
-export { BrowserPasskeyAuth } from "./auth/PasskeyAuth.js";
-export { BrowserPassphraseAuth } from "./auth/PassphraseAuth.js";
-export { BrowserAnonymousAuth } from "./auth/AnonymousAuth.js";
-import { BrowserAnonymousAuth } from "./auth/AnonymousAuth.js";
 import { setupInspector } from "./utils/export-account-inspector.js";
+import { BrowserAuthSecretStorage } from "./auth/AuthSecretStorage.js";
 
 setupInspector();
 
-/** @category Context Creation */
-export type BrowserContext<Acc extends Account> = {
-  me: Acc;
-  toggleNetwork: (enabled: boolean) => void;
-  logOut: () => void;
-  // TODO: Symbol.dispose?
-  done: () => void;
-};
-
-export type BrowserGuestContext = {
-  guest: AnonymousJazzAgent;
-  toggleNetwork: (enabled: boolean) => void;
-  logOut: () => void;
-  done: () => void;
-};
-
 export type BrowserContextOptions<Acc extends Account> = {
-  auth?: AuthMethod;
-  AccountSchema?: CoValueClass<Acc> & {
-    fromNode: (typeof Account)["fromNode"];
-  };
-  guest: false;
-} & BaseBrowserContextOptions;
-
-export type BrowserGuestContextOptions = {
-  guest: true;
-} & BaseBrowserContextOptions;
-
-export type BaseBrowserContextOptions = {
+  AccountSchema?: AccountClass<Acc>;
   peer: `wss://${string}` | `ws://${string}`;
   reconnectionTimeout?: number;
   storage?: StorageConfig;
   crypto?: CryptoProvider;
   localOnly?: boolean;
+  guestMode?: boolean;
 };
-
-function getAnonymousUserAuth() {
-  const auth = new BrowserAnonymousAuth("Anonymous user", {
-    onSignedIn: () => {},
-    onError: () => {},
-  });
-
-  return auth;
-}
 
 /** @category Context Creation */
 export async function createJazzBrowserContext<Acc extends Account>(
-  options: BrowserContextOptions<Acc> | BrowserGuestContextOptions,
-): Promise<BrowserContext<Acc> | BrowserGuestContext> {
+  options: BrowserContextOptions<Acc>,
+) {
   const crypto = options.crypto || (await WasmCrypto.create());
-  let node: LocalNode | undefined = undefined;
 
-  let wsPeer:
-    | ReturnType<typeof createWebSocketPeerWithReconnection>
-    | undefined = undefined;
+  const contextManager = new JazzContextManager<Acc>({
+    crypto,
+    sessionProvider: provideBrowserLockSession,
+    AccountSchema: options.AccountSchema,
+    storage: new BrowserAuthSecretStorage(),
+  });
 
   const { useSingleTabOPFS, useIndexedDB } = getStorageOptions(options.storage);
 
-  const peersToLoadFrom: Peer[] = [];
-
   if (useSingleTabOPFS) {
-    peersToLoadFrom.push(
+    contextManager.addPeer(
       await LSMStorage.asPeer({
         fs: new OPFSFilesystem(crypto),
         // trace: true,
@@ -98,83 +57,53 @@ export async function createJazzBrowserContext<Acc extends Account>(
   }
 
   if (useIndexedDB) {
-    peersToLoadFrom.push(await IDBStorage.asPeer());
+    contextManager.addPeer(await IDBStorage.asPeer());
+  }
+
+  const wsPeer = createWebSocketPeerWithReconnection(
+    options.peer,
+    options.reconnectionTimeout,
+    contextManager,
+  );
+
+  if (!options.localOnly) {
+    wsPeer.enable();
   }
 
   function toggleNetwork(enabled: boolean) {
     if (enabled) {
-      if (wsPeer) {
-        return;
-      }
-
-      wsPeer = createWebSocketPeerWithReconnection(
-        options.peer,
-        options.reconnectionTimeout,
-        (peer) => {
-          if (node) {
-            node.syncManager.addPeer(peer);
-          }
-        },
-      );
-
-      if (node) {
-        node.syncManager.addPeer(wsPeer.peer);
-      } else {
-        peersToLoadFrom.push(wsPeer.peer);
-      }
+      wsPeer.enable();
     } else {
-      if (!wsPeer) {
-        return;
-      }
-
-      wsPeer.done();
-      wsPeer = undefined;
+      wsPeer.disable();
     }
   }
 
-  toggleNetwork(!options.localOnly);
+  const authCredentials = await contextManager.getCredentials();
 
-  const context =
-    options.guest !== true
-      ? await createJazzContext({
-          AccountSchema:
-            "AccountSchema" in options ? options.AccountSchema : undefined,
-          auth: options.auth ?? getAnonymousUserAuth(),
-          crypto,
-          peersToLoadFrom,
-          sessionProvider: provideBrowserLockSession,
-        })
-      : await createJazzContext({
-          crypto,
-          peersToLoadFrom,
-        });
+  if (options.guestMode) {
+    await contextManager.logInAsGuest();
+  } else if (authCredentials) {
+    await contextManager.logIn(authCredentials);
+  } else {
+    // Log in as anonymous user
+    const secretSeed = crypto.newRandomSecretSeed();
+    const initialSecret = crypto.agentSecretFromSecretSeed(secretSeed);
 
-  node =
-    "account" in context ? context.account._raw.core.node : context.agent.node;
+    const credentials = {
+      secretSeed,
+      accountSecret: initialSecret,
+      isAnonymous: true,
+    };
 
-  return "account" in context
-    ? {
-        me: context.account,
-        toggleNetwork,
-        done: () => {
-          wsPeer?.done();
-          context.done();
-        },
-        logOut: () => {
-          context.logOut();
-        },
-      }
-    : {
-        guest: context.agent,
-        toggleNetwork,
-        done: () => {
-          wsPeer?.done();
-          context.done();
-        },
-        logOut: () => {
-          context.logOut();
-        },
-      };
+    await contextManager.registerNewAccount(credentials, {
+      name: "Anonymous account",
+    });
+  }
+
+  return { 
+    contextManager,
+    toggleNetwork,
+  }
 }
 
 /** @category Auth Providers */
