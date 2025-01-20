@@ -198,63 +198,29 @@ Jazz React Native supports two SQLite adapters for local persistence:
 - `ExpoSQLiteAdapter` using `expo-sqlite`
 - `OPSQLiteAdapter` using `@op-engineering/op-sqlite`
 
-You have two ways to configure storage:
-
-#### Option 1: Manual Configuration
-
-Install the desired adapter:
-```bash
-# For Expo SQLite
-pnpm install cojson-storage-rn-expo-sqlite-adapter expo-sqlite
-
-# For op-sqlite
-pnpm install cojson-storage-rn-op-sqlite-adapter @op-engineering/op-sqlite
-```
-
-Then pass the adapter to the `JazzProvider`:
-
-```typescript
-import { JazzProvider } from 'jazz-react-native';
-import { ExpoSQLiteAdapter } from 'cojson-storage-rn-expo-sqlite-adapter';
-// OR
-import { OPSQLiteAdapter } from 'cojson-storage-rn-op-sqlite-adapter';
-
-function App() {
-  return (
-    <JazzProvider 
-      storage={new ExpoSQLiteAdapter()} // OR new OPSQLiteAdapter()
-      auth={auth}
-      peer="wss://cloud.jazz.tools"
-    >
-      <YourApp />
-    </JazzProvider>
-  );
-}
-```
-
 #### Option 2: Batteries-Included Approach
 
 For a simpler setup, use one of our pre-configured providers:
 
 ```bash
 # For Expo SQLite
-pnpm install jazz-react-native-storage-expo-sqlite expo-sqlite
+pnpm install jazz-expo expo-sqlite
 
 # For op-sqlite (higher performance)
-pnpm install jazz-react-native-storage-op-sqlite @op-engineering/op-sqlite
+pnpm install jazz-react-native @op-engineering/op-sqlite
 ```
 
 Then use the pre-configured provider:
 
 ```typescript
 // For Expo SQLite
-import { JazzProvider } from 'jazz-react-native-storage-expo-sqlite';
+import { JazzProvider } from 'jazz-expo';
 // OR for op-sqlite
-import { JazzProvider } from 'jazz-react-native-storage-op-sqlite';
+import { JazzProvider } from 'jazz-react-native';
 
 function App() {
   return (
-    <JazzProvider 
+    <JazzProvider
       auth={auth}
       peer="wss://cloud.jazz.tools"
     >

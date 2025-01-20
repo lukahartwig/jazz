@@ -24,48 +24,17 @@ Note: This package requires `@op-engineering/op-sqlite` as a peer dependency.
 
 There are two ways to use this adapter:
 
-### Option 1: Using jazz-react-native-storage-op-sqlite (Recommended)
+### Using jazz-react-native
 
-This is the simplest approach as it provides a pre-configured JazzProvider with op-sqlite storage:
-
-```typescript
-import { JazzProvider } from 'jazz-react-native-storage-op-sqlite';
-
-function App() {
-  return (
-    <JazzProvider 
-      auth={auth}
-      peer="wss://cloud.jazz.tools/?key=you@example.com"
-      AccountSchema={MyAppAccount}
-    >
-      <YourApp />
-    </JazzProvider>
-  );
-}
-```
-
-### Option 2: Manual Configuration with jazz-react-native
-
-If you need more control over the adapter configuration:
-
-1. Create and configure the adapter:
-
-```typescript
-import { OPSQLiteAdapter } from 'cojson-storage-rn-op-sqlite-adapter';
-
-const adapter = new OPSQLiteAdapter("jazz-storage");
-```
-
-2. Pass it to JazzProvider:
+This approach provides a pre-configured JazzProvider with op-sqlite storage:
 
 ```typescript
 import { JazzProvider } from 'jazz-react-native';
 
 function App() {
   return (
-    <JazzProvider 
+    <JazzProvider
       auth={auth}
-      storage={adapter}
       peer="wss://cloud.jazz.tools/?key=you@example.com"
       AccountSchema={MyAppAccount}
     >

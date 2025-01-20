@@ -21,50 +21,17 @@ Note: This package requires `expo-sqlite` as a peer dependency.
 
 ## Usage
 
-There are two ways to use this adapter:
+### Using jazz-expo
 
-### Option 1: Using jazz-react-native-storage-expo-sqlite (Recommended)
-
-This is the simplest approach as it provides a pre-configured JazzProvider with Expo SQLite storage:
+This approach provides a pre-configured JazzProvider with Expo SQLite storage:
 
 ```typescript
-import { JazzProvider } from 'jazz-react-native-storage-expo-sqlite';
-
-function App() {
-  return (
-    <JazzProvider 
-      auth={auth}
-      peer="wss://cloud.jazz.tools/?key=you@example.com"
-      AccountSchema={MyAppAccount}
-    >
-      <YourApp />
-    </JazzProvider>
-  );
-}
-```
-
-### Option 2: Manual Configuration with jazz-react-native
-
-If you need more control over the adapter configuration:
-
-1. Create and configure the adapter:
-
-```typescript
-import { ExpoSQLiteAdapter } from 'cojson-storage-rn-expo-sqlite-adapter';
-
-const adapter = new ExpoSQLiteAdapter("jazz-storage")
-```
-
-2. Pass it to JazzProvider:
-
-```typescript
-import { JazzProvider } from 'jazz-react-native';
+import { JazzProvider } from 'jazz-expo';
 
 function App() {
   return (
     <JazzProvider
       auth={auth}
-      storage={adapter}
       peer="wss://cloud.jazz.tools/?key=you@example.com"
       AccountSchema={MyAppAccount}
     >

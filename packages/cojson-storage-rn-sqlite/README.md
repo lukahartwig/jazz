@@ -1,6 +1,6 @@
 # CoJSON Storage SQLite for React Native
 
-This package provides the core SQLite implementation for CoJSON / Jazz (see [jazz.tools](https://jazz.tools)) in React Native applications. It serves as the foundation for specific SQLite adapters like `cojson-storage-rn-expo-sqlite-adapter` and `cojson-storage-rn-op-sqlite-adapter`.
+This package provides the core SQLite implementation for CoJSON / Jazz (see [jazz.tools](https://jazz.tools)) in React Native applications. It serves as the foundation for specific SQLite adapters like `jazz-react-native` (uses to op-sqlite) and `jazz-expo` (uses expo-sqlite).
 
 ## Overview
 
@@ -27,8 +27,8 @@ pnpm install cojson-storage-rn-sqlite
 ```
 
 Note: This is a base package. For actual usage, you should install one of the concrete implementations:
-- `cojson-storage-rn-expo-sqlite-adapter` for Expo SQLite
-- `cojson-storage-rn-op-sqlite-adapter` for op-sqlite
+- `jazz-expo` for Expo SQLite
+- `jazz-react-native` for op-sqlite
 
 ## Architecture
 
