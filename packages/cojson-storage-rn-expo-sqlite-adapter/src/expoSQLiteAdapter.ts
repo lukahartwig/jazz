@@ -15,7 +15,7 @@ export class ExpoSQLiteAdapter implements SQLiteAdapter {
   private initializationPromise: Promise<void> | null = null;
   private isInitialized = false;
 
-  constructor(dbName: string) {
+  constructor(dbName: string = "jazz-storage") {
     this.dbName = dbName;
   }
 

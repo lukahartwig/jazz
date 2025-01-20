@@ -19,7 +19,7 @@ export class OPSQLiteAdapter implements SQLiteAdapter {
   private initializationPromise: Promise<void> | null = null;
   private isInitialized = false;
 
-  constructor(dbName: string) {
+  constructor(dbName: string = "jazz-storage") {
     this.dbName = dbName;
     this.dbPath =
       Platform.OS === "ios" ? IOS_LIBRARY_PATH : ANDROID_DATABASE_PATH;

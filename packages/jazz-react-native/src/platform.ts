@@ -48,7 +48,7 @@ export type ReactNativeContextOptions<Acc extends Account> = {
 export type BaseReactNativeContextOptions = {
   peer: `wss://${string}` | `ws://${string}`;
   reconnectionTimeout?: number;
-  storage?: (new (...args: any[]) => SQLiteAdapter) | "disabled";
+  storage?: SQLiteAdapter | "disabled";
   CryptoProvider?: typeof PureJSCrypto | typeof RNQuickCrypto;
 };
 
@@ -78,9 +78,9 @@ export async function createJazzRNContext<Acc extends Account>(
   const peersToLoadFrom = [websocketPeer.peer];
 
   if (options.storage && options.storage !== "disabled") {
-    const adapter = new options.storage("jazz-storage");
+    // const adapter = new options.storage("jazz-storage");
     const storage = await SQLiteStorage.asPeer({
-      adapter,
+      adapter: options.storage,
     });
     console.log("[createJazzRNContext] storage initialized as peer", storage);
     peersToLoadFrom.push(storage);

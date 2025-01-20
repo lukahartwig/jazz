@@ -50,14 +50,14 @@ export function JazzProvider<Acc extends Account = RegisteredAccount>({
           ? {
               peer,
               CryptoProvider,
-              storage: ExpoSQLiteAdapter,
+              storage: new ExpoSQLiteAdapter(),
             }
           : {
               AccountSchema,
               auth: auth,
               peer,
               CryptoProvider,
-              storage: ExpoSQLiteAdapter,
+              storage: new ExpoSQLiteAdapter(),
             },
       );
 

@@ -104,7 +104,7 @@ module.exports = config;
 
 ### Additional Monorepo Configuration (for pnpm users)
 
-- Add node-linker=hoisted to the root .npmrc (create this file if it doesn’t exist).
+- Add node-linker=hoisted to the root .npmrc (create this file if it doesn't exist).
 - Add the following to the root package.json:
 
 ```json
@@ -191,6 +191,86 @@ export const { useAccount, useCoState, useAcceptInvite } = Jazz;
 ```
 
 You can optionally pass a custom `kvStore` and `AccountSchema` to `createJazzRNApp()`, otherwise, it defaults to `ExpoSecureStoreAdapter` and `Account`.
+
+### Storage Options
+
+Jazz React Native supports two SQLite adapters for local persistence:
+- `ExpoSQLiteAdapter` using `expo-sqlite`
+- `OPSQLiteAdapter` using `@op-engineering/op-sqlite`
+
+You have two ways to configure storage:
+
+#### Option 1: Manual Configuration
+
+Install the desired adapter:
+```bash
+# For Expo SQLite
+pnpm install cojson-storage-rn-expo-sqlite-adapter expo-sqlite
+
+# For op-sqlite
+pnpm install cojson-storage-rn-op-sqlite-adapter @op-engineering/op-sqlite
+```
+
+Then pass the adapter to the `JazzProvider`:
+
+```typescript
+import { JazzProvider } from 'jazz-react-native';
+import { ExpoSQLiteAdapter } from 'cojson-storage-rn-expo-sqlite-adapter';
+// OR
+import { OPSQLiteAdapter } from 'cojson-storage-rn-op-sqlite-adapter';
+
+function App() {
+  return (
+    <JazzProvider 
+      storage={new ExpoSQLiteAdapter()} // OR new OPSQLiteAdapter()
+      auth={auth}
+      peer="wss://cloud.jazz.tools"
+    >
+      <YourApp />
+    </JazzProvider>
+  );
+}
+```
+
+#### Option 2: Batteries-Included Approach
+
+For a simpler setup, use one of our pre-configured providers:
+
+```bash
+# For Expo SQLite
+pnpm install jazz-react-native-storage-expo-sqlite expo-sqlite
+
+# For op-sqlite (higher performance)
+pnpm install jazz-react-native-storage-op-sqlite @op-engineering/op-sqlite
+```
+
+Then use the pre-configured provider:
+
+```typescript
+// For Expo SQLite
+import { JazzProvider } from 'jazz-react-native-storage-expo-sqlite';
+// OR for op-sqlite
+import { JazzProvider } from 'jazz-react-native-storage-op-sqlite';
+
+function App() {
+  return (
+    <JazzProvider 
+      auth={auth}
+      peer="wss://cloud.jazz.tools"
+    >
+      <YourApp />
+    </JazzProvider>
+  );
+}
+```
+
+The batteries-included approach automatically:
+- Sets up the appropriate SQLite adapter
+- Handles development mode peculiarities
+- Manages session lifecycle and cleanup
+- Provides optimized database operations
+
+Choose op-sqlite for better performance or Expo SQLite for simpler setup with Expo's managed workflow.
 
 ### Choosing an Auth Method
 
