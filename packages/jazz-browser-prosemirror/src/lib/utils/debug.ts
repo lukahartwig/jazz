@@ -73,8 +73,9 @@ export function visualizeDoc(node: Node): string {
  * @param label Optional label for the visualization
  */
 export function debugDoc(doc: Node, label?: string): void {
-  console.log(`\nDocument Structure${label ? ` (${label})` : ""}:`);
+  console.group(`Document Structure${label ? ` (${label})` : ""}`);
   console.log(visualizeDoc(doc));
+  console.groupEnd();
 }
 
 /**
@@ -171,7 +172,61 @@ export function visualizeCoRichText(text: CoRichText): string {
  * @param label Optional label for the visualization
  */
 export function debugCoRichText(text: CoRichText, label?: string): void {
+  console.group(`CoRichText Structure${label ? ` (${label})` : ""}`);
+  const content = text.toString();
   console.log(
-    `CoRichText Structure${label ? ` (${label})` : ""}:${visualizeCoRichText(text)}`,
+    `Content: "${content.replace(/\n/g, "↵")}" (length: ${text.length})`,
   );
+
+  console.group("Marks");
+  const marks = text.resolveMarks();
+  if (marks.length === 0) {
+    console.log("(no marks)");
+  } else {
+    marks.forEach((mark: ResolvedMark) => {
+      const markRange = content.substring(mark.startBefore, mark.endAfter + 1);
+      console.log(
+        `${mark.sourceMark.tag} (${mark.startBefore}:${mark.endAfter}): "${markRange.replace(/\n/g, "↵")}"`,
+      );
+    });
+  }
+  console.groupEnd();
+
+  console.group("Coverage");
+  if (content.length > 0) {
+    // Create number scale
+    let scale = "";
+    for (let i = 0; i < content.length; i++) {
+      scale += i % 10 === 0 ? String(Math.floor(i / 10)) : " ";
+    }
+    console.log(scale);
+    let positions = "";
+    for (let i = 0; i < content.length; i++) {
+      positions += i % 10;
+    }
+    console.log(positions);
+
+    // Create text line with visible newlines
+    let textLine = "";
+    for (let i = 0; i < content.length; i++) {
+      textLine += content[i] === "\n" ? "↵" : content[i];
+    }
+    console.log(textLine);
+
+    // Create mark coverage lines
+    const markTypes = [...new Set(marks.map((m) => m.sourceMark.tag))];
+    markTypes.forEach((tag) => {
+      const relevantMarks = marks.filter((m) => m.sourceMark.tag === tag);
+      let coverageLine = "";
+      for (let i = 0; i < content.length; i++) {
+        const hasMarkAtPos = relevantMarks.some(
+          (m) => i >= m.startBefore && i <= m.endAfter,
+        );
+        coverageLine += hasMarkAtPos ? "─" : " ";
+      }
+      console.log(`${coverageLine} ${tag}`);
+    });
+  }
+  console.groupEnd();
+  console.groupEnd();
 }
