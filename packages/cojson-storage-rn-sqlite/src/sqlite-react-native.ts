@@ -33,23 +33,18 @@ export class SQLiteReactNative {
   ): Promise<void> {
     try {
       // 1. First initialize the adapter
-      console.log("[SQLiteReactNative] initializing adapter");
       await adapter.initialize();
 
       // 2. Create and initialize the client
-      console.log("[SQLiteReactNative] creating client");
       this.dbClient = new SQLiteClient(adapter, toLocalNode);
       await this.dbClient.ensureInitialized();
 
       // 3. Create the sync manager
-      console.log("[SQLiteReactNative] creating sync manager");
       this.syncManager = new SyncManager(this.dbClient, toLocalNode);
 
       // 4. Start message processing
       this.isInitialized = true;
       this.startMessageProcessing(fromLocalNode);
-
-      console.log("[SQLiteReactNative] initialization complete");
     } catch (error) {
       console.error("[SQLiteReactNative] initialization failed:", error);
       throw error;
@@ -100,9 +95,7 @@ export class SQLiteReactNative {
     }
 
     // Initialize adapter before creating any connections
-    console.log("[SQLiteReactNative] initializing adapter");
     await config.adapter.initialize();
-    console.log("[SQLiteReactNative] adapter initialized");
 
     const [localNodeAsPeer, storageAsPeer] = cojsonInternals.connectedPeers(
       "localNode",

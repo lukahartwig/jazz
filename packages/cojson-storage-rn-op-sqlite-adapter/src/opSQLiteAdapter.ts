@@ -26,7 +26,6 @@ export class OPSQLiteAdapter implements SQLiteAdapter {
   }
 
   private async initializeInternal() {
-    console.log("[OPSQLiteAdapter] initializing");
     try {
       // Open database first
       this.db = opSQLite.open({
@@ -52,8 +51,6 @@ export class OPSQLiteAdapter implements SQLiteAdapter {
           ) WITHOUT ROWID;`,
         );
 
-        console.log("[OPSQLiteAdapter] creating sessions table");
-
         await db.execute(
           `CREATE TABLE IF NOT EXISTS sessions (
             rowID INTEGER PRIMARY KEY,
@@ -65,13 +62,9 @@ export class OPSQLiteAdapter implements SQLiteAdapter {
           );`,
         );
 
-        console.log("[OPSQLiteAdapter] creating sessionsByCoValue index");
-
         await db.execute(
           `CREATE INDEX IF NOT EXISTS sessionsByCoValue ON sessions (coValue);`,
         );
-
-        console.log("[OPSQLiteAdapter] creating coValues table");
 
         await db.execute(
           `CREATE TABLE IF NOT EXISTS coValues (
@@ -81,20 +74,14 @@ export class OPSQLiteAdapter implements SQLiteAdapter {
           );`,
         );
 
-        console.log("[OPSQLiteAdapter] creating coValuesByID index");
-
         await db.execute(
           `CREATE INDEX IF NOT EXISTS coValuesByID ON coValues (id);`,
         );
-
-        console.log("[OPSQLiteAdapter] setting user_version to 1");
 
         await db.execute("PRAGMA user_version = 1");
       }
 
       if (oldVersion <= 2) {
-        console.log("[OPSQLiteAdapter] creating signatureAfter table");
-
         await db.execute(
           `CREATE TABLE IF NOT EXISTS signatureAfter (
             ses INTEGER,
@@ -104,17 +91,11 @@ export class OPSQLiteAdapter implements SQLiteAdapter {
           ) WITHOUT ROWID;`,
         );
 
-        console.log(
-          "[OPSQLiteAdapter] adding bytesSinceLastSignature column to sessions table",
-        );
-
         await db.execute(
           `ALTER TABLE sessions ADD COLUMN bytesSinceLastSignature INTEGER;`,
         );
 
         await db.execute("PRAGMA user_version = 3");
-
-        console.log("[OPSQLiteAdapter] setting user_version to 3");
       }
 
       console.log("[OPSQLiteAdapter] initialization complete");

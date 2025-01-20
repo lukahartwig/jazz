@@ -45,7 +45,6 @@ export class ExpoSQLiteAdapter implements SQLiteAdapter {
 
   private async initializeInternal() {
     try {
-      console.log("[ExpoSQLiteAdapter] Opening database:", this.dbName);
       const db = await openDatabaseAsync(this.dbName);
 
       // Verify database connection before proceeding
@@ -67,7 +66,6 @@ export class ExpoSQLiteAdapter implements SQLiteAdapter {
       const oldVersion = Number(rows[0]?.user_version) ?? 0;
 
       if (oldVersion === 0) {
-        console.log("[ExpoSQLiteAdapter] Creating initial schema");
         await this.executeSql(
           `CREATE TABLE IF NOT EXISTS transactions (
             ses INTEGER,
@@ -108,7 +106,6 @@ export class ExpoSQLiteAdapter implements SQLiteAdapter {
       }
 
       if (oldVersion <= 2) {
-        console.log("[ExpoSQLiteAdapter] Upgrading to schema version 3");
         await this.executeSql(
           `CREATE TABLE IF NOT EXISTS signatureAfter (
             ses INTEGER,
