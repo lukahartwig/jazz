@@ -9,10 +9,10 @@
     "cojson-storage-rn-sqlite": "workspace:*"
   },
   "peerDependencies": {
-    "expo-sqlite": "^13.2.0"
+    "expo-sqlite": "~15.0.6"
   },
   "devDependencies": {
-    "expo-sqlite": "^13.2.0",
+    "expo-sqlite": "~15.0.6",
     "typescript": "~5.6.2"
   },
   "scripts": {

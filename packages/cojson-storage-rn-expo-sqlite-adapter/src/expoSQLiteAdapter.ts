@@ -3,14 +3,14 @@ import type {
   SQLRow,
   SQLiteAdapter,
 } from "cojson-storage-rn-sqlite";
-import type { Database, SQLStatementArg } from "expo-sqlite";
-import * as SQLite from "expo-sqlite";
+import { deleteDatabaseAsync, openDatabaseAsync } from "expo-sqlite";
+import type { SQLiteBindValue, SQLiteDatabase } from "expo-sqlite";
 
 const SQLITE_CONSTRAINT = 6;
 const SQLITE_SYNTAX_ERR = 1;
 
 export class ExpoSQLiteAdapter implements SQLiteAdapter {
-  private db: Database | null = null;
+  private db: SQLiteDatabase | null = null;
   private dbName: string;
   private initializationPromise: Promise<void> | null = null;
   private isInitialized = false;
@@ -51,7 +51,7 @@ export class ExpoSQLiteAdapter implements SQLiteAdapter {
   private async initializeInternal() {
     try {
       console.log("[ExpoSQLiteAdapter] Opening database:", this.dbName);
-      this.db = SQLite.openDatabase(this.dbName);
+      this.db = await openDatabaseAsync(this.dbName);
       // Check if database is accessible
       const testResult = await this.executeSql("SELECT 1");
       if (!testResult.rows || testResult.rows.length === 0) {
@@ -146,41 +146,34 @@ export class ExpoSQLiteAdapter implements SQLiteAdapter {
       throw new Error("Database not initialized. Call initialize() first.");
     }
 
-    return new Promise((resolve, reject) => {
-      this.db!.transaction(
-        (tx) => {
-          tx.executeSql(
-            sql,
-            params as SQLStatementArg[],
-            (_, result) => {
-              resolve({
-                rows: [...Array(result.rows.length)].map((_, i) =>
-                  result.rows.item(i),
-                ),
-                insertId: result.insertId,
-                rowsAffected: result.rowsAffected,
-              });
-            },
-            (_, error) => {
-              console.error(
-                `[ExpoSQLiteAdapter] SQL Error: ${error.message} in query: ${sql}`,
-              );
-              if (error.code === SQLITE_CONSTRAINT) {
-                reject(new Error(`Constraint violation: ${error.message}`));
-              } else if (error.code === SQLITE_SYNTAX_ERR) {
-                reject(new Error(`SQL syntax error: ${error.message}`));
-              } else {
-                reject(error);
-              }
-              return false;
-            },
-          );
-        },
-        (error) => {
-          reject(new Error(`Transaction error: ${error.message}`));
-        },
+    try {
+      const statement = await this.db.prepareAsync(sql);
+      try {
+        const result = await statement.executeAsync(
+          params?.map((p) => p as SQLiteBindValue) ?? [],
+        );
+        const rows = await result.getAllAsync();
+        return {
+          rows: rows as SQLRow[],
+          insertId: result.lastInsertRowId,
+          rowsAffected: result.changes,
+        };
+      } finally {
+        await statement.finalizeAsync();
+      }
+    } catch (error) {
+      console.error(
+        `[ExpoSQLiteAdapter] SQL Error: ${error instanceof Error ? error.message : String(error)} in query: ${sql}`,
       );
-    });
+      if (error instanceof Error) {
+        if ((error as any).code === SQLITE_CONSTRAINT) {
+          throw new Error(`Constraint violation: ${error.message}`);
+        } else if ((error as any).code === SQLITE_SYNTAX_ERR) {
+          throw new Error(`SQL syntax error: ${error.message}`);
+        }
+      }
+      throw error;
+    }
   }
 
   async initialize(): Promise<void> {
@@ -200,58 +193,27 @@ export class ExpoSQLiteAdapter implements SQLiteAdapter {
 
   async transaction(callback: () => Promise<void>): Promise<void> {
     await this.ensureInitialized();
+    if (!this.db) throw new Error("Database not initialized");
 
-    return new Promise((resolve, reject) => {
-      this.db!.transaction(async (tx) => {
-        // Override execute to use transaction context
-        const originalExecute = this.execute.bind(this);
-        this.execute = async (sql: string, params?: unknown[]) => {
-          return new Promise((resolve, reject) => {
-            tx.executeSql(
-              sql,
-              params as SQLStatementArg[],
-              (_, result) => {
-                resolve({
-                  rows: [...Array(result.rows.length)].map((_, i) =>
-                    result.rows.item(i),
-                  ),
-                  insertId: result.insertId,
-                  rowsAffected: result.rowsAffected,
-                });
-              },
-              (_, error) => {
-                reject(error);
-                return false;
-              },
-            );
-          });
-        };
-
-        try {
-          await callback();
-          resolve();
-        } catch (error) {
-          reject(error);
-        } finally {
-          // Restore original execute
-          this.execute = originalExecute;
-        }
-      }, reject);
+    await this.db.withTransactionAsync(async () => {
+      await callback();
     });
   }
 
   async close(): Promise<void> {
-    // expo-sqlite doesn't support closing databases
-    this.db = null;
-    this.isInitialized = false;
-    this.initializationPromise = null;
+    if (this.db) {
+      await this.db.closeAsync();
+      this.db = null;
+      this.isInitialized = false;
+      this.initializationPromise = null;
+    }
   }
 
   async delete(): Promise<void> {
     if (this.db) {
+      const dbName = this.dbName;
       await this.close();
-      // expo-sqlite doesn't support deleting databases
-      this.db = null;
+      await deleteDatabaseAsync(dbName);
     }
   }
 }
