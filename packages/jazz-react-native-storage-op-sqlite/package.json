@@ -1,0 +1,35 @@
+{
+  "name": "jazz-react-native-storage-op-sqlite",
+  "version": "0.9.9",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "react-native": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "react-native": "./dist/index.js",
+      "types": "./src/index.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "license": "MIT",
+  "dependencies": {
+    "jazz-react-core": "workspace:*",
+    "jazz-tools": "workspace:*",
+    "jazz-react-native": "workspace:*",
+    "cojson-storage-rn-op-sqlite-adapter": "workspace:*"
+  },
+  "devDependencies": {
+    "react-native": "~0.76.3",
+    "typescript": "~5.6.2"
+  },
+  "scripts": {
+    "dev": "tsc --watch --sourceMap --outDir dist",
+    "format-and-lint": "biome check .",
+    "format-and-lint:fix": "biome check . --write",
+    "build": "rm -rf ./dist && tsc --sourceMap --outDir dist",
+    "prepublishOnly": "npm run build"
+  },
+  "gitHead": "33c27053293b4801b968c61d5c4c989f93a67d13"
+}
