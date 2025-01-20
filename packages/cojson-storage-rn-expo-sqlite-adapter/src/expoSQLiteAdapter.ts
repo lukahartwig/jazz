@@ -15,7 +15,7 @@ export class ExpoSQLiteAdapter implements SQLiteAdapter {
   private initializationPromise: Promise<void> | null = null;
   private isInitialized = false;
 
-  constructor(dbName: string = "jazz-storage") {
+  public constructor(dbName: string = "jazz-storage") {
     this.dbName = dbName;
   }
 
@@ -169,20 +169,47 @@ export class ExpoSQLiteAdapter implements SQLiteAdapter {
     }
   }
 
-  async initialize(): Promise<void> {
+  public async initialize(): Promise<void> {
     await this.ensureInitialized();
   }
 
-  async execute(sql: string, params?: unknown[]): Promise<SQLResult> {
+  public async execute(sql: string, params?: unknown[]): Promise<SQLResult> {
     await this.ensureInitialized();
     return this.executeSql(sql, params);
   }
 
-  executeSync(sql: string, params?: unknown[]): { rows: SQLRow[] } {
-    throw new Error("Synchronous execution is not supported by expo-sqlite");
+  public executeSync(sql: string, params?: unknown[]): { rows: SQLRow[] } {
+    if (!this.db || !this.isInitialized) {
+      throw new Error("Database not initialized");
+    }
+
+    try {
+      const statement = this.db.prepareSync(sql);
+      try {
+        const result = statement.executeSync(
+          params?.map((p) => p as SQLiteBindValue) ?? [],
+        );
+        const rows = result.getAllSync();
+        return { rows: rows as SQLRow[] };
+      } finally {
+        statement.finalizeSync();
+      }
+    } catch (error) {
+      console.error(
+        `[ExpoSQLiteAdapter] SQL Error: ${error instanceof Error ? error.message : String(error)} in query: ${sql}`,
+      );
+      if (error instanceof Error) {
+        if ((error as any).code === SQLITE_CONSTRAINT) {
+          throw new Error(`Constraint violation: ${error.message}`);
+        } else if ((error as any).code === SQLITE_SYNTAX_ERR) {
+          throw new Error(`SQL syntax error: ${error.message}`);
+        }
+      }
+      throw error;
+    }
   }
 
-  async transaction(callback: () => Promise<void>): Promise<void> {
+  public async transaction(callback: () => Promise<void>): Promise<void> {
     await this.ensureInitialized();
     if (!this.db) throw new Error("Database not initialized");
 
@@ -191,7 +218,7 @@ export class ExpoSQLiteAdapter implements SQLiteAdapter {
     });
   }
 
-  async close(): Promise<void> {
+  public async close(): Promise<void> {
     if (this.db) {
       await this.db.closeAsync();
       this.db = null;
@@ -200,7 +227,7 @@ export class ExpoSQLiteAdapter implements SQLiteAdapter {
     }
   }
 
-  async delete(): Promise<void> {
+  public async delete(): Promise<void> {
     if (this.db) {
       const dbName = this.dbName;
       await this.close();

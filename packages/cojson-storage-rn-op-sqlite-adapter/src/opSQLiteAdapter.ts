@@ -19,7 +19,7 @@ export class OPSQLiteAdapter implements SQLiteAdapter {
   private initializationPromise: Promise<void> | null = null;
   private isInitialized = false;
 
-  constructor(dbName: string = "jazz-storage") {
+  public constructor(dbName: string = "jazz-storage") {
     this.dbName = dbName;
     this.dbPath =
       Platform.OS === "ios" ? IOS_LIBRARY_PATH : ANDROID_DATABASE_PATH;
@@ -125,13 +125,11 @@ export class OPSQLiteAdapter implements SQLiteAdapter {
     await this.initializationPromise;
   }
 
-  async initialize(): Promise<void> {
-    console.log("[OPSQLiteAdapter] initializing");
+  public async initialize(): Promise<void> {
     await this.ensureInitialized();
-    console.log("[OPSQLiteAdapter] initialization complete");
   }
 
-  async execute(sql: string, params?: unknown[]): Promise<SQLResult> {
+  public async execute(sql: string, params?: unknown[]): Promise<SQLResult> {
     await this.ensureInitialized();
 
     const db = this.db;
@@ -140,7 +138,6 @@ export class OPSQLiteAdapter implements SQLiteAdapter {
     }
 
     try {
-      console.log("[OPSQLiteAdapter] executing", sql);
       const result = await db.execute(sql, params as any[]);
       return {
         rows: result.rows as SQLRow[],
@@ -156,24 +153,20 @@ export class OPSQLiteAdapter implements SQLiteAdapter {
     }
   }
 
-  executeSync(sql: string, params?: unknown[]): { rows: SQLRow[] } {
+  public executeSync(sql: string, params?: unknown[]): { rows: SQLRow[] } {
     if (!this.isInitialized || !this.db) {
       throw new Error("Database not initialized. Call initialize() first.");
     }
-    console.log("[OPSQLiteAdapter] executing sync", sql);
     const result = this.db.executeSync(sql, params as any[]);
-    console.log("[OPSQLiteAdapter] execution complete");
     return {
       rows: result.rows as SQLRow[],
     };
   }
 
-  async transaction(callback: () => Promise<void>): Promise<void> {
+  public async transaction(callback: () => Promise<void>): Promise<void> {
     if (!this.db) {
       await this.ensureInitialized();
     }
-    console.log("[OPSQLiteAdapter] transaction: calling callback");
     await this.db!.transaction(callback);
-    console.log("[OPSQLiteAdapter] transaction: callback complete");
   }
 }
