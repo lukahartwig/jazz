@@ -1,3 +1,4 @@
+import { OPSQLiteAdapter } from "cojson-storage-rn-op-sqlite-adapter";
 import { JazzContext, JazzContextType } from "jazz-react-core";
 import { Account, AccountClass, AuthMethod } from "jazz-tools";
 import React, { useState } from "react";
@@ -18,7 +19,6 @@ export type JazzProviderProps<Acc extends Account = RegisteredAccount> = {
   peer: `wss://${string}` | `ws://${string}`;
   AccountSchema?: AccountClass<Acc>;
   CryptoProvider?: BaseReactNativeContextOptions["CryptoProvider"];
-  storage?: BaseReactNativeContextOptions["storage"];
 };
 
 /** @category Context & Hooks */
@@ -28,7 +28,6 @@ export function JazzProvider<Acc extends Account = RegisteredAccount>({
   peer,
   AccountSchema = Account as unknown as AccountClass<Acc>,
   CryptoProvider,
-  storage,
 }: JazzProviderProps<Acc>) {
   const [ctx, setCtx] = useState<JazzContextType<Acc> | undefined>();
 
@@ -62,14 +61,14 @@ export function JazzProvider<Acc extends Account = RegisteredAccount>({
           ? {
               peer,
               CryptoProvider,
-              storage,
+              storage: new OPSQLiteAdapter(),
             }
           : {
               AccountSchema,
               auth: auth,
               peer,
               CryptoProvider,
-              storage,
+              storage: new OPSQLiteAdapter(),
             },
       );
 

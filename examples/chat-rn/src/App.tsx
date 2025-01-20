@@ -9,7 +9,6 @@ import * as Linking from "expo-linking";
 import React, { StrictMode, useEffect, useState } from "react";
 import HandleInviteScreen from "./invite";
 
-import { ExpoSQLiteAdapter } from "cojson-storage-rn-expo-sqlite-adapter";
 import { DemoAuthBasicUI, JazzProvider, useDemoAuth } from "jazz-react-native";
 import ChatScreen from "./chat";
 
@@ -53,7 +52,6 @@ function App() {
       <JazzProvider
         auth={auth}
         peer="wss://cloud.jazz.tools/?key=chat-rn-example-jazz@garden.co"
-        storage={new ExpoSQLiteAdapter()}
       >
         <NavigationContainer linking={linking} ref={navigationRef}>
           <Stack.Navigator initialRouteName={initialRoute}>

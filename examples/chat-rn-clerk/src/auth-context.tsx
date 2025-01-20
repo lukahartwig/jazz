@@ -1,7 +1,7 @@
 import { useClerk, useUser } from "@clerk/clerk-expo";
+import { JazzProvider } from "jazz-expo";
 import { setupKvStore } from "jazz-react-native";
 import { useJazzClerkAuth } from "jazz-react-native-auth-clerk";
-import { JazzProvider } from "jazz-react-native-storage-op-sqlite";
 import React, {
   createContext,
   PropsWithChildren,

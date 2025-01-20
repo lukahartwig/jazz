@@ -1,5 +1,5 @@
 {
-  "name": "jazz-react-native-storage-expo-sqlite",
+  "name": "jazz-expo",
   "version": "0.9.9",
   "type": "module",
   "main": "./dist/index.js",

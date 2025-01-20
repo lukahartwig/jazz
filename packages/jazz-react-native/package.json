@@ -30,6 +30,7 @@
     "cojson": "workspace:*",
     "cojson-transport-ws": "workspace:*",
     "cojson-storage-rn-sqlite": "workspace:*",
+    "cojson-storage-rn-op-sqlite-adapter": "workspace:*",
     "jazz-tools": "workspace:*",
     "react-native-quick-crypto": "1.0.0-beta.9"
   },

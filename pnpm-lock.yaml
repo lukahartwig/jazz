@@ -146,9 +146,6 @@ importers:
       expo-secure-store:
         specifier: ~14.0.0
         version: 14.0.0(expo@52.0.21(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@expo/metro-runtime@4.0.0(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.18)(react@18.3.1)))(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.18)(react@18.3.1))(react@18.3.1))
-      expo-sqlite:
-        specifier: ~15.0.6
-        version: 15.0.6(expo@52.0.21(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@expo/metro-runtime@4.0.0(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.18)(react@18.3.1)))(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.18)(react@18.3.1))(react@18.3.1))(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.18)(react@18.3.1))(react@18.3.1)
       expo-status-bar:
         specifier: ~2.0.0
         version: 2.0.0(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.18)(react@18.3.1))(react@18.3.1)
@@ -158,9 +155,6 @@ importers:
       jazz-react-native:
         specifier: workspace:*
         version: link:../../packages/jazz-react-native
-      jazz-react-native-storage-expo-sqlite:
-        specifier: workspace:*
-        version: link:../../packages/jazz-react-native-storage-expo-sqlite
       jazz-tools:
         specifier: workspace:*
         version: link:../../packages/jazz-tools
@@ -294,6 +288,9 @@ importers:
       expo-web-browser:
         specifier: ~14.0.1
         version: 14.0.1(expo@52.0.21(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@expo/metro-runtime@4.0.0(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.18)(react@18.3.1)))(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.18)(react@18.3.1))(react@18.3.1))(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.18)(react@18.3.1))
+      jazz-expo:
+        specifier: workspace:*
+        version: link:../../packages/jazz-expo
       jazz-react-native:
         specifier: workspace:*
         version: link:../../packages/jazz-react-native
@@ -303,9 +300,6 @@ importers:
       jazz-react-native-media-images:
         specifier: workspace:*
         version: link:../../packages/jazz-react-native-media-images
-      jazz-react-native-storage-op-sqlite:
-        specifier: workspace:*
-        version: link:../../packages/jazz-react-native-storage-op-sqlite
       jazz-tools:
         specifier: workspace:*
         version: link:../../packages/jazz-tools
@@ -1667,6 +1661,28 @@ importers:
         specifier: ^9.0.4
         version: 9.0.4
 
+  packages/jazz-expo:
+    dependencies:
+      cojson-storage-rn-expo-sqlite-adapter:
+        specifier: workspace:*
+        version: link:../cojson-storage-rn-expo-sqlite-adapter
+      jazz-react-core:
+        specifier: workspace:*
+        version: link:../jazz-react-core
+      jazz-react-native:
+        specifier: workspace:*
+        version: link:../jazz-react-native
+      jazz-tools:
+        specifier: workspace:*
+        version: link:../jazz-tools
+    devDependencies:
+      react-native:
+        specifier: ~0.76.3
+        version: 0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.18)(react@18.3.1)
+      typescript:
+        specifier: ~5.6.2
+        version: 5.6.3
+
   packages/jazz-inspector:
     dependencies:
       cojson:
@@ -1830,6 +1846,9 @@ importers:
       cojson:
         specifier: workspace:*
         version: link:../cojson
+      cojson-storage-rn-op-sqlite-adapter:
+        specifier: workspace:*
+        version: link:../cojson-storage-rn-op-sqlite-adapter
       cojson-storage-rn-sqlite:
         specifier: workspace:*
         version: link:../cojson-storage-rn-sqlite
@@ -1887,28 +1906,6 @@ importers:
       expo-file-system:
         specifier: ^18.0.4
         version: 18.0.6(expo@52.0.21(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@expo/metro-runtime@4.0.0(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.18)(react@18.3.1)))(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.18)(react@18.3.1))(react@18.3.1))(react-native@0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.18)(react@18.3.1))
-      react-native:
-        specifier: ~0.76.3
-        version: 0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.18)(react@18.3.1)
-      typescript:
-        specifier: ~5.6.2
-        version: 5.6.3
-
-  packages/jazz-react-native-storage-expo-sqlite:
-    dependencies:
-      cojson-storage-rn-expo-sqlite-adapter:
-        specifier: workspace:*
-        version: link:../cojson-storage-rn-expo-sqlite-adapter
-      jazz-react-core:
-        specifier: workspace:*
-        version: link:../jazz-react-core
-      jazz-react-native:
-        specifier: workspace:*
-        version: link:../jazz-react-native
-      jazz-tools:
-        specifier: workspace:*
-        version: link:../jazz-tools
-    devDependencies:
       react-native:
         specifier: ~0.76.3
         version: 0.76.5(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.18)(react@18.3.1)
