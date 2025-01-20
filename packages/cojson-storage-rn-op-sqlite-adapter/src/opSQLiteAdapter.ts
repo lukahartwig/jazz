@@ -25,128 +25,123 @@ export class OPSQLiteAdapter implements SQLiteAdapter {
       Platform.OS === "ios" ? IOS_LIBRARY_PATH : ANDROID_DATABASE_PATH;
   }
 
-  private async ensureInitialized() {
-    // Return immediately if already initialized
-    if (this.isInitialized) {
-      console.log("[OPSQLiteAdapter] already initialized");
-      return;
-    }
-
-    // If initialization is in progress, wait for it
-    if (this.initializationPromise) {
-      console.log("[OPSQLiteAdapter] waiting for initialization");
-      await this.initializationPromise;
-      console.log("[OPSQLiteAdapter] initialization complete");
-      return;
-    }
-
-    // Start initialization
-    this.initializationPromise = this.initializeInternal();
-    try {
-      console.log("[OPSQLiteAdapter] waiting for initialization");
-      await this.initializationPromise;
-      console.log("[OPSQLiteAdapter] initialization complete");
-      this.isInitialized = true;
-    } catch (error) {
-      // Clear the promise on failure so future attempts can retry
-      this.initializationPromise = null;
-      throw error;
-    }
-  }
-
   private async initializeInternal() {
     console.log("[OPSQLiteAdapter] initializing");
     try {
+      // Open database first
       this.db = opSQLite.open({
         name: this.dbName,
         location: this.dbPath,
       });
+
+      // Direct database operations during initialization - don't use execute()
+      const db = this.db;
+      if (!db) throw new Error("Failed to open database");
+
+      await db.execute("PRAGMA journal_mode=WAL");
+      const { rows } = await db.execute("PRAGMA user_version");
+      const oldVersion = Number(rows[0]?.user_version) ?? 0;
+
+      if (oldVersion === 0) {
+        await db.execute(
+          `CREATE TABLE IF NOT EXISTS transactions (
+            ses INTEGER,
+            idx INTEGER,
+            tx TEXT NOT NULL,
+            PRIMARY KEY (ses, idx)
+          ) WITHOUT ROWID;`,
+        );
+
+        console.log("[OPSQLiteAdapter] creating sessions table");
+
+        await db.execute(
+          `CREATE TABLE IF NOT EXISTS sessions (
+            rowID INTEGER PRIMARY KEY,
+            coValue INTEGER NOT NULL,
+            sessionID TEXT NOT NULL,
+            lastIdx INTEGER,
+            lastSignature TEXT,
+            UNIQUE (sessionID, coValue)
+          );`,
+        );
+
+        console.log("[OPSQLiteAdapter] creating sessionsByCoValue index");
+
+        await db.execute(
+          `CREATE INDEX IF NOT EXISTS sessionsByCoValue ON sessions (coValue);`,
+        );
+
+        console.log("[OPSQLiteAdapter] creating coValues table");
+
+        await db.execute(
+          `CREATE TABLE IF NOT EXISTS coValues (
+            rowID INTEGER PRIMARY KEY,
+            id TEXT NOT NULL UNIQUE,
+            header TEXT NOT NULL UNIQUE
+          );`,
+        );
+
+        console.log("[OPSQLiteAdapter] creating coValuesByID index");
+
+        await db.execute(
+          `CREATE INDEX IF NOT EXISTS coValuesByID ON coValues (id);`,
+        );
+
+        console.log("[OPSQLiteAdapter] setting user_version to 1");
+
+        await db.execute("PRAGMA user_version = 1");
+      }
+
+      if (oldVersion <= 2) {
+        console.log("[OPSQLiteAdapter] creating signatureAfter table");
+
+        await db.execute(
+          `CREATE TABLE IF NOT EXISTS signatureAfter (
+            ses INTEGER,
+            idx INTEGER,
+            signature TEXT NOT NULL,
+            PRIMARY KEY (ses, idx)
+          ) WITHOUT ROWID;`,
+        );
+
+        console.log(
+          "[OPSQLiteAdapter] adding bytesSinceLastSignature column to sessions table",
+        );
+
+        await db.execute(
+          `ALTER TABLE sessions ADD COLUMN bytesSinceLastSignature INTEGER;`,
+        );
+
+        await db.execute("PRAGMA user_version = 3");
+
+        console.log("[OPSQLiteAdapter] setting user_version to 3");
+      }
+
       console.log("[OPSQLiteAdapter] initialization complete");
     } catch (e) {
+      console.error("[OPSQLiteAdapter] initialization failed:", e);
       throw new Error(
-        "@op-engineering/op-sqlite is not installed. Please install it to use OPSQLiteAdapter.",
+        `Failed to initialize OPSQLiteAdapter: ${e instanceof Error ? e.message : String(e)}`,
       );
     }
+  }
 
-    await this.execute("PRAGMA journal_mode=WAL");
-    const { rows } = await this.execute("PRAGMA user_version");
-    console.log("[OPSQLiteAdapter] user_version", rows);
-    const oldVersion = Number(rows[0]?.user_version) ?? 0;
+  private async ensureInitialized() {
+    if (this.isInitialized) return;
 
-    if (oldVersion === 0) {
-      await this.execute(
-        `CREATE TABLE IF NOT EXISTS transactions (
-          ses INTEGER,
-          idx INTEGER,
-          tx TEXT NOT NULL,
-          PRIMARY KEY (ses, idx)
-        ) WITHOUT ROWID;`,
-      );
-
-      console.log("[OPSQLiteAdapter] creating sessions table");
-
-      await this.execute(
-        `CREATE TABLE IF NOT EXISTS sessions (
-          rowID INTEGER PRIMARY KEY,
-          coValue INTEGER NOT NULL,
-          sessionID TEXT NOT NULL,
-          lastIdx INTEGER,
-          lastSignature TEXT,
-          UNIQUE (sessionID, coValue)
-        );`,
-      );
-
-      console.log("[OPSQLiteAdapter] creating sessionsByCoValue index");
-
-      await this.execute(
-        `CREATE INDEX IF NOT EXISTS sessionsByCoValue ON sessions (coValue);`,
-      );
-
-      console.log("[OPSQLiteAdapter] creating coValues table");
-
-      await this.execute(
-        `CREATE TABLE IF NOT EXISTS coValues (
-          rowID INTEGER PRIMARY KEY,
-          id TEXT NOT NULL UNIQUE,
-          header TEXT NOT NULL UNIQUE
-        );`,
-      );
-
-      console.log("[OPSQLiteAdapter] creating coValuesByID index");
-
-      await this.execute(
-        `CREATE INDEX IF NOT EXISTS coValuesByID ON coValues (id);`,
-      );
-
-      console.log("[OPSQLiteAdapter] setting user_version to 1");
-
-      await this.execute("PRAGMA user_version = 1");
+    if (!this.initializationPromise) {
+      this.initializationPromise = (async () => {
+        try {
+          await this.initializeInternal();
+          this.isInitialized = true;
+        } catch (error) {
+          this.initializationPromise = null;
+          throw error;
+        }
+      })();
     }
 
-    if (oldVersion <= 2) {
-      console.log("[OPSQLiteAdapter] creating signatureAfter table");
-
-      await this.execute(
-        `CREATE TABLE IF NOT EXISTS signatureAfter (
-          ses INTEGER,
-          idx INTEGER,
-          signature TEXT NOT NULL,
-          PRIMARY KEY (ses, idx)
-        ) WITHOUT ROWID;`,
-      );
-
-      console.log(
-        "[OPSQLiteAdapter] adding bytesSinceLastSignature column to sessions table",
-      );
-
-      await this.execute(
-        `ALTER TABLE sessions ADD COLUMN bytesSinceLastSignature INTEGER;`,
-      );
-
-      await this.execute("PRAGMA user_version = 3");
-
-      console.log("[OPSQLiteAdapter] setting user_version to 3");
-    }
+    await this.initializationPromise;
   }
 
   async initialize(): Promise<void> {
@@ -156,14 +151,16 @@ export class OPSQLiteAdapter implements SQLiteAdapter {
   }
 
   async execute(sql: string, params?: unknown[]): Promise<SQLResult> {
-    console.log("[OPSQLiteAdapter] executing", sql);
-    if (!this.db) {
-      await this.ensureInitialized();
+    await this.ensureInitialized();
+
+    const db = this.db;
+    if (!db) {
+      throw new Error("Database not available after initialization");
     }
+
     try {
       console.log("[OPSQLiteAdapter] executing", sql);
-      const result = await this.db!.execute(sql, params as any[]);
-      console.log("[OPSQLiteAdapter] execution complete");
+      const result = await db.execute(sql, params as any[]);
       return {
         rows: result.rows as SQLRow[],
         insertId:

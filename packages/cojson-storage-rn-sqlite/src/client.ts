@@ -13,33 +13,51 @@ import { SQLiteAdapter } from "./sqliteAdapter.js";
 
 export class SQLiteClient implements DBClientInterface {
   private readonly adapter: SQLiteAdapter;
-  private initialized: Promise<void>;
+  private initializationPromise: Promise<void> | null = null;
+  private isInitialized = false;
 
   constructor(adapter: SQLiteAdapter, _: OutgoingSyncQueue) {
     this.adapter = adapter;
-    // Initialize adapter in constructor and store promise
-    this.initialized = this.adapter.initialize();
   }
 
-  async ensureInitialized() {
-    console.log("[SQLiteClient] ensuring initialized");
-    await this.initialized;
-    console.log("[SQLiteClient] initialization complete");
+  private async initializeInternal(): Promise<void> {
+    try {
+      console.log("[SQLiteClient] starting initialization");
+      await this.adapter.initialize();
+      this.isInitialized = true;
+      console.log("[SQLiteClient] initialization complete");
+    } catch (error) {
+      console.error("[SQLiteClient] initialization failed:", error);
+      this.initializationPromise = null;
+      throw error;
+    }
+  }
+
+  async ensureInitialized(): Promise<void> {
+    if (this.isInitialized) {
+      return;
+    }
+
+    if (!this.initializationPromise) {
+      this.initializationPromise = this.initializeInternal();
+    }
+
+    await this.initializationPromise;
   }
 
   async getCoValue(coValueId: RawCoID): Promise<StoredCoValueRow | undefined> {
     await this.ensureInitialized();
-    console.log("[SQLiteClient] getting coValue", coValueId);
-    const { rows } = await this.adapter.execute(
-      "SELECT * FROM coValues WHERE id = ?",
-      [coValueId],
-    );
-    console.log("[SQLiteClient] coValue", rows);
 
-    if (!rows || rows.length === 0) return;
-
-    const coValueRow = rows[0] as any & { rowID: number };
     try {
+      console.log("[SQLiteClient] getting coValue", coValueId);
+      const { rows } = await this.adapter.execute(
+        "SELECT * FROM coValues WHERE id = ?",
+        [coValueId],
+      );
+
+      if (!rows || rows.length === 0) return;
+
+      const coValueRow = rows[0] as any & { rowID: number };
       const parsedHeader =
         coValueRow?.header &&
         (JSON.parse(coValueRow.header) as CojsonInternalTypes.CoValueHeader);
@@ -49,7 +67,7 @@ export class SQLiteClient implements DBClientInterface {
         header: parsedHeader,
       };
     } catch (e) {
-      console.warn(coValueId, "Invalid JSON in header", e, coValueRow?.header);
+      console.warn("[SQLiteClient] Error getting coValue:", coValueId, e);
       return;
     }
   }
@@ -61,7 +79,6 @@ export class SQLiteClient implements DBClientInterface {
       "SELECT * FROM sessions WHERE coValue = ?",
       [coValueRowId],
     );
-    console.log("[SQLiteClient] coValueSessions");
     return rows as StoredSessionRow[];
   }
 
@@ -70,25 +87,25 @@ export class SQLiteClient implements DBClientInterface {
     firstNewTxIdx: number,
   ): Promise<TransactionRow[]> {
     await this.ensureInitialized();
-    console.log(
-      "[SQLiteClient] getting new transaction in session",
-      sessionRowId,
-      firstNewTxIdx,
-    );
-    const { rows } = await this.adapter.execute(
-      "SELECT * FROM transactions WHERE ses = ? AND idx >= ?",
-      [sessionRowId, firstNewTxIdx],
-    );
-    console.log("[SQLiteClient] new transaction in session");
-    if (!rows || rows.length === 0) return [];
-
     try {
+      console.log(
+        "[SQLiteClient] getting new transaction in session",
+        sessionRowId,
+        firstNewTxIdx,
+      );
+      const { rows } = await this.adapter.execute(
+        "SELECT * FROM transactions WHERE ses = ? AND idx >= ?",
+        [sessionRowId, firstNewTxIdx],
+      );
+
+      if (!rows || rows.length === 0) return [];
+
       return rows.map((row: any) => ({
         ...row,
         tx: JSON.parse(row.tx) as Transaction,
       }));
     } catch (e) {
-      console.warn("Invalid JSON in transaction", e);
+      console.warn("[SQLiteClient] Error in getNewTransactionInSession:", e);
       return [];
     }
   }
