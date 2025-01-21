@@ -655,66 +655,145 @@ export const Marks = {
 };
 
 /**
- * Logs a visual representation of a CoRichText instance to the console
- * @param text The CoRichText instance to visualize
- * @param label Optional label for the visualization
+ * Debug utilities for CoRichText visualization.
+ * Provides functions to visualize the structure of a CoRichText instance.
  */
-export function debugCoRichText(text: CoRichText, label?: string): void {
-  console.group(`CoRichText Structure${label ? ` (${label})` : ""}`);
-  const content = text.toString();
-  console.log(
-    `Content: "${content.replace(/\n/g, "↵")}" (length: ${text.length})`,
-  );
+export const CoRichTextDebug = {
+  /**
+   * Creates a visual ASCII representation of a tree structure
+   * @internal
+   */
+  _visualizeTree(
+    tree: TreeNode | TreeLeaf,
+    content: string,
+    prefix = "",
+    isLast = true,
+  ): string[] {
+    const lines: string[] = [];
+    const nodeContent = content
+      .slice(tree.start, tree.end + 1)
+      .replace(/\n/g, "↵");
+    const position = `[${tree.start}:${tree.end}]`;
+    const connector = isLast ? "└── " : "├── ";
 
-  console.group("Marks");
-  const marks = text.resolveMarks();
-  if (marks.length === 0) {
-    console.log("(no marks)");
-  } else {
-    marks.forEach((mark: ResolvedMark) => {
-      const markRange = content.substring(mark.startBefore, mark.endAfter + 1);
-      console.log(
-        `${mark.sourceMark.tag} (${mark.startBefore}:${mark.endAfter}): "${markRange.replace(/\n/g, "↵")}"`,
+    if (tree.type === "leaf") {
+      lines.push(`${prefix}${connector}Leaf ${position}: "${nodeContent}"`);
+    } else {
+      lines.push(
+        `${prefix}${connector}${tree.tag} ${position}: "${nodeContent}"`,
       );
-    });
-  }
-  console.groupEnd();
-
-  console.group("Coverage");
-  if (content.length > 0) {
-    // Create number scale
-    let scale = "";
-    for (let i = 0; i < content.length; i++) {
-      scale += i % 10 === 0 ? String(Math.floor(i / 10)) : " ";
-    }
-    console.log(scale);
-    let positions = "";
-    for (let i = 0; i < content.length; i++) {
-      positions += i % 10;
-    }
-    console.log(positions);
-
-    // Create text line with visible newlines
-    let textLine = "";
-    for (let i = 0; i < content.length; i++) {
-      textLine += content[i] === "\n" ? "↵" : content[i];
-    }
-    console.log(textLine);
-
-    // Create mark coverage lines
-    const markTypes = [...new Set(marks.map((m) => m.sourceMark.tag))];
-    markTypes.forEach((tag) => {
-      const relevantMarks = marks.filter((m) => m.sourceMark.tag === tag);
-      let coverageLine = "";
-      for (let i = 0; i < content.length; i++) {
-        const hasMarkAtPos = relevantMarks.some(
-          (m) => i >= m.startBefore && i <= m.endAfter,
+      const childPrefix = prefix + (isLast ? "    " : "│   ");
+      tree.children.forEach((child, index) => {
+        const childLines = this._visualizeTree(
+          child,
+          content,
+          childPrefix,
+          index === tree.children.length - 1,
         );
-        coverageLine += hasMarkAtPos ? "─" : " ";
+        lines.push(...childLines);
+      });
+    }
+    return lines;
+  },
+
+  /**
+   * Returns a string representation of a tree structure
+   * @param tree The tree to visualize
+   * @param content The text content associated with the tree
+   * @returns String containing the tree visualization
+   */
+  tree(tree: TreeNode | TreeLeaf, content: string): string {
+    return this._visualizeTree(tree, content).join("\n");
+  },
+
+  /**
+   * Returns a string representation of the CoRichText tree structure
+   * @param text The CoRichText instance to visualize
+   * @param tagPrecedence Array of tags in order of precedence
+   * @returns String containing the tree visualization
+   */
+  getTree(text: CoRichText, tagPrecedence: string[]): string {
+    const content = text.toString();
+    const tree = text.toTree(tagPrecedence);
+    return this.tree(tree, content);
+  },
+
+  /**
+   * Logs a visual representation of a CoRichText instance to the console
+   * @param text The CoRichText instance to visualize
+   * @param options Optional configuration for visualization
+   */
+  log(
+    text: CoRichText,
+    options?: {
+      label?: string;
+      showMarks?: boolean;
+      showTree?: boolean;
+      tagPrecedence?: string[];
+    },
+  ): void {
+    const content = text.toString();
+    console.group(`CoRichText${options?.label ? ` (${options.label})` : ""}`);
+    console.log(
+      `Content: "${content.replace(/\n/g, "↵")}" (length: ${text.length})`,
+    );
+
+    if (options?.showMarks !== false) {
+      console.group("Marks");
+      const marks = text.resolveMarks();
+      if (marks.length === 0) {
+        console.log("(no marks)");
+      } else {
+        marks.forEach((mark: ResolvedMark) => {
+          const markRange = content.substring(
+            mark.startBefore,
+            mark.endAfter + 1,
+          );
+          console.log(
+            `${mark.sourceMark.tag} (${mark.startBefore}:${mark.endAfter}): "${markRange.replace(/\n/g, "↵")}"`,
+          );
+        });
+
+        // Show coverage visualization
+        if (content.length > 0) {
+          console.group("Coverage");
+          let scale = "";
+          for (let i = 0; i < content.length; i++) {
+            scale += i % 10 === 0 ? String(Math.floor(i / 10)) : " ";
+          }
+          console.log(scale);
+          let positions = "";
+          for (let i = 0; i < content.length; i++) {
+            positions += i % 10;
+          }
+          console.log(positions);
+          console.log(content.replace(/\n/g, "↵"));
+
+          const markTypes = [...new Set(marks.map((m) => m.sourceMark.tag))];
+          markTypes.forEach((tag) => {
+            const relevantMarks = marks.filter((m) => m.sourceMark.tag === tag);
+            let coverageLine = "";
+            for (let i = 0; i < content.length; i++) {
+              const hasMarkAtPos = relevantMarks.some(
+                (m) => i >= m.startBefore && i <= m.endAfter,
+              );
+              coverageLine += hasMarkAtPos ? "─" : " ";
+            }
+            console.log(`${coverageLine} ${tag}`);
+          });
+          console.groupEnd();
+        }
       }
-      console.log(`${coverageLine} ${tag}`);
-    });
-  }
-  console.groupEnd();
-  console.groupEnd();
-}
+      console.groupEnd();
+    }
+
+    if (options?.showTree !== false && options?.tagPrecedence) {
+      console.group("Tree Structure");
+      const tree = text.toTree(options.tagPrecedence);
+      this._visualizeTree(tree, content).forEach((line) => console.log(line));
+      console.groupEnd();
+    }
+
+    console.groupEnd();
+  },
+};
