@@ -448,8 +448,8 @@ export class CoRichText extends CoMap {
           ]
         : []),
       {
-        start: range.startBefore - 1,
-        end: range.endAfter + 1,
+        start: range.startBefore,
+        end: range.endAfter,
         side: "certainMiddle" as const,
         sourceMark: range.sourceMark,
       },

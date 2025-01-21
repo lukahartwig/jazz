@@ -593,24 +593,45 @@ describe("CoRichText", async () => {
       if (!marks[0] || !marks[1]) return;
 
       // Check first mark boundaries
-      expect(marks[0]).toMatchObject({
-        start: marks[0].start,
-        end: marks[0].end,
-        side: "certainMiddle",
-      });
-      expect(text.toString().substring(marks[0].start + 1, marks[0].end)).toBe(
-        "Hello",
-      );
+      expect(marks[0].start).toBe(0);
+      expect(marks[0].end).toBe(4);
 
       // Check second mark boundaries
-      expect(marks[1]).toMatchObject({
-        start: marks[1].start,
-        end: marks[1].end,
-        side: "certainMiddle",
+      expect(marks[1].start).toBe(6);
+      expect(marks[1].end).toBe(10);
+    });
+
+    test("certainMiddle regions should not expand into uncertain territory", () => {
+      const text = CoRichText.createFromPlainText("Hello world", {
+        owner: me,
       });
-      expect(text.toString().substring(marks[1].start + 1, marks[1].end)).toBe(
-        "world",
+
+      // Mark "Hello" with strong
+      text.insertMark(0, 4, Marks.Strong, { tag: "strong" }); // "Hell"
+
+      const diffusedMarks = text.resolveAndDiffuseMarks();
+
+      // Find the certainMiddle region
+      const certainMiddle = diffusedMarks.find(
+        (m) => m.side === "certainMiddle",
       );
+      expect(certainMiddle).toBeDefined();
+
+      if (!certainMiddle) return;
+
+      // The certainMiddle region should exactly match the marked region
+      expect(certainMiddle.start).toBe(0); // Not -1
+      expect(certainMiddle.end).toBe(4); // Not 5
+
+      // The tree should reflect the exact marked region
+      const tree = text.toTree(["strong"]);
+      const strongNode = tree.children[0] as TreeNode;
+
+      // The tree node should include exactly "Hell"
+      const markedText = text
+        .toString()
+        .substring(strongNode.start, strongNode.end);
+      expect(markedText).toBe("Hell");
     });
   });
 
