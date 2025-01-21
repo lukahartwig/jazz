@@ -4,7 +4,7 @@ import {
   Node as ProsemirrorNode,
 } from "prosemirror-model";
 import { schema } from "prosemirror-schema-basic";
-import { MARK_TYPE_LOOKUP } from "./types.js";
+import { MARK_TYPE_LOOKUP, NODE_TYPE_LOOKUP } from "./types.js";
 
 /**
  * Recursively collects inline marks from a CoRichText tree node.
@@ -21,20 +21,36 @@ export function collectInlineMarks(
   currentMarks: ProsemirrorMark[],
 ): ProsemirrorNode {
   if (node.type === "leaf") {
-    return schema.text(fullString.slice(node.start, node.end), currentMarks);
+    return schema.text(
+      fullString.slice(node.start, node.end + 1), // +1 to include the end character as slice is end-exclusive and end is inclusive
+      currentMarks,
+    );
   } else {
-    if (!(node.tag in MARK_TYPE_LOOKUP)) {
-      throw new Error(`Unsupported tag '${node.tag}'`);
-    }
     if (!node.children[0]) {
       throw new Error("Node children must be non-empty");
     }
+
+    // Skip paragraph nodes in mark collection since they're handled at a higher level
+    if (node.tag === "paragraph") {
+      return collectInlineMarks(fullString, node.children[0], currentMarks);
+    }
+
+    if (!(node.tag in MARK_TYPE_LOOKUP)) {
+      throw new Error(`Unsupported tag '${node.tag}'`);
+    }
+
     const schemaMark = schema.mark(node.tag);
-    return collectInlineMarks(
-      fullString,
-      node.children[0],
-      currentMarks.concat(schemaMark),
-    );
+    const newMarks = currentMarks.concat(schemaMark);
+
+    // If this node has multiple children, combine their text since they share the same marks
+    if (node.children.length > 1) {
+      const text = node.children
+        .map((child) => fullString.slice(child.start, child.end + 1)) // +1 to include the end character as slice is end-exclusive and end is inclusive
+        .join("");
+      return schema.text(text, newMarks);
+    }
+
+    return collectInlineMarks(fullString, node.children[0], newMarks);
   }
 }
 
@@ -54,27 +70,30 @@ export function richTextToProsemirrorDoc(
 
   const asString = text.toString();
 
-  return schema.node("doc", {}, [
-    schema.node(
-      "paragraph",
-      {},
-      asString.length === 0
-        ? []
-        : text.toTree(Object.keys(MARK_TYPE_LOOKUP)).children.map((child) => {
-            if (
-              child.type === "node" &&
-              child.tag === "paragraph" &&
-              child.children.length > 0
-            ) {
-              if (!child.children[0]) {
-                throw new Error("Node children must be non-empty");
-              }
-              // Nodes are treated differently, passing their children directly
-              return collectInlineMarks(asString, child.children[0], []);
+  // Include both mark and node types in precedence list, with paragraph first
+  const tagPrecedence = [
+    ...Object.keys(NODE_TYPE_LOOKUP),
+    ...Object.keys(MARK_TYPE_LOOKUP),
+  ];
+
+  const tree = text.toTree(tagPrecedence);
+
+  // Process each child of the root node
+  const content =
+    asString.length === 0
+      ? []
+      : tree.children.map((child) => {
+          if (child.type === "node" && child.tag === "paragraph") {
+            // For paragraph nodes, process their children
+            if (!child.children[0]) {
+              throw new Error("Node children must be non-empty");
             }
-            // Marks are collected recursively, leaf nodes are plain text
-            return collectInlineMarks(asString, child, []);
-          }),
-    ),
-  ]);
+            return collectInlineMarks(asString, child.children[0], []);
+          }
+          // For other nodes (marks), collect them recursively
+          return collectInlineMarks(asString, child, []);
+        });
+
+  // Create the document with a single paragraph containing all content
+  return schema.node("doc", {}, [schema.node("paragraph", {}, content)]);
 }
