@@ -1,7 +1,6 @@
 import { PeerState } from "./PeerState.js";
 import { CoValueCore } from "./coValueCore.js";
 import { RawCoID } from "./ids.js";
-import { logger } from "./logger.js";
 import { PeerID } from "./sync.js";
 
 export const CO_VALUE_LOADING_MAX_RETRIES = 5;
@@ -283,7 +282,7 @@ async function loadCoValueFromPeers(
           ...coValueEntry.state.coValue.knownState(),
         })
         .catch((err) => {
-          logger.warn(`Failed to push load message to peer ${peer.id}`, err);
+          console.error(`Failed to push load message to peer ${peer.id}`, err);
         });
     } else {
       /**
@@ -297,14 +296,14 @@ async function loadCoValueFromPeers(
           sessions: {},
         })
         .catch((err) => {
-          logger.warn(`Failed to push load message to peer ${peer.id}`, err);
+          console.error(`Failed to push load message to peer ${peer.id}`, err);
         });
     }
 
     if (coValueEntry.state.type === "loading") {
       const timeout = setTimeout(() => {
         if (coValueEntry.state.type === "loading") {
-          logger.warn("Failed to load coValue from peer", peer.id);
+          console.error("Failed to load coValue from peer", peer.id);
           coValueEntry.dispatch({
             type: "not-found-in-peer",
             peerId: peer.id,
@@ -357,7 +356,7 @@ function sleep(ms: number) {
 function getPeersWithoutErrors(peers: PeerState[], coValueId: RawCoID) {
   return peers.filter((p) => {
     if (p.erroredCoValues.has(coValueId)) {
-      logger.warn(
+      console.error(
         `Skipping load on errored coValue ${coValueId} from peer ${p.id}`,
       );
       return false;

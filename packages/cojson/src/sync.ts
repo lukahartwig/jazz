@@ -6,7 +6,6 @@ import { CoValueCore } from "./coValueCore.js";
 import { Signature } from "./crypto/crypto.js";
 import { RawCoID, SessionID } from "./ids.js";
 import { LocalNode } from "./localNode.js";
-import { logger } from "./logger.js";
 import { CoValuePriority } from "./priority.js";
 
 export type CoValueKnownState = {
@@ -151,7 +150,7 @@ export class SyncManager {
 
   async handleSyncMessage(msg: SyncMessage, peer: PeerState) {
     if (peer.erroredCoValues.has(msg.id)) {
-      logger.warn(
+      console.error(
         `Skipping message ${msg.action} on errored coValue ${msg.id} from peer ${peer.id}`,
       );
       return;
@@ -183,7 +182,7 @@ export class SyncManager {
 
     if (entry.state.type !== "available") {
       entry.loadFromPeers([peer]).catch((e: unknown) => {
-        logger.error("Error sending load", e);
+        console.error("Error sending load", e);
       });
       return;
     }
@@ -200,7 +199,7 @@ export class SyncManager {
         action: "load",
         ...coValue.knownState(),
       }).catch((e: unknown) => {
-        logger.error("Error sending load", e);
+        console.error("Error sending load", e);
       });
     }
   }
@@ -230,7 +229,7 @@ export class SyncManager {
         asDependencyOf,
         ...coValue.knownState(),
       }).catch((e: unknown) => {
-        logger.error("Error sending known state", e);
+        console.error("Error sending known state", e);
       });
 
       peer.toldKnownState.add(id);
@@ -257,8 +256,15 @@ export class SyncManager {
       const sendPieces = async () => {
         let lastYield = performance.now();
         for (const [_i, piece] of newContentPieces.entries()) {
+          // console.log(
+          //     `${id} -> ${peer.id}: Sending content piece ${i + 1}/${
+          //         newContentPieces.length
+          //     } header: ${!!piece.header}`,
+          //     // Object.values(piece.new).map((s) => s.newTransactions)
+          // );
+
           this.trySendToPeer(peer, piece).catch((e: unknown) => {
-            logger.error("Error sending content piece", e);
+            console.error("Error sending content piece", e);
           });
 
           if (performance.now() - lastYield > 10) {
@@ -271,7 +277,7 @@ export class SyncManager {
       };
 
       sendPieces().catch((e) => {
-        logger.error("Error sending new content piece, retrying", e);
+        console.error("Error sending new content piece, retrying", e);
         peer.optimisticKnownStates.dispatch({
           type: "SET",
           id,
@@ -331,7 +337,7 @@ export class SyncManager {
           return;
         }
         if (msg === "PingTimeout") {
-          logger.error("Ping timeout from peer", peer.id);
+          console.error("Ping timeout from peer", peer.id);
           return;
         }
         try {
@@ -354,13 +360,13 @@ export class SyncManager {
     processMessages()
       .then(() => {
         if (peer.crashOnClose) {
-          logger.warn("Unexepcted close from peer", peer.id);
+          console.error("Unexepcted close from peer", peer.id);
           this.local.crashed = new Error("Unexpected close from peer");
           throw new Error("Unexpected close from peer");
         }
       })
       .catch((e) => {
-        logger.error("Error processing messages from peer", peer.id, e);
+        console.error("Error processing messages from peer", peer.id, e);
         if (peer.crashOnClose) {
           this.local.crashed = e;
           throw new Error(e);
@@ -400,13 +406,13 @@ export class SyncManager {
         // where we can get informations about the coValue
         if (msg.header || Object.keys(msg.sessions).length > 0) {
           entry.loadFromPeers([peer]).catch((e) => {
-            logger.error("Error loading coValue in handleLoad", e);
+            console.error("Error loading coValue in handleLoad", e);
           });
         }
         return;
       } else {
         this.local.loadCoValueCore(msg.id, peer.id).catch((e) => {
-          logger.error("Error loading coValue in handleLoad", e);
+          console.error("Error loading coValue in handleLoad", e);
         });
       }
     }
@@ -433,7 +439,7 @@ export class SyncManager {
               header: false,
               sessions: {},
             }).catch((e) => {
-              logger.error("Error sending known state back", e);
+              console.error("Error sending known state back", e);
             });
 
             return;
@@ -443,7 +449,7 @@ export class SyncManager {
           await this.sendNewContentIncludingDependencies(msg.id, peer);
         })
         .catch((e) => {
-          logger.error("Error loading coValue in handleLoad loading state", e);
+          console.error("Error loading coValue in handleLoad loading state", e);
         });
     }
 
@@ -478,7 +484,7 @@ export class SyncManager {
               peer.role === "storage" ? undefined : peer.id,
             )
             .catch((e) => {
-              logger.error(
+              console.error(
                 `Error loading coValue ${msg.id} to create loading state, as dependency of ${msg.asDependencyOf}`,
                 e,
               );
@@ -515,7 +521,7 @@ export class SyncManager {
 
     if (entry.state.type !== "available") {
       if (!msg.header) {
-        logger.error("Expected header to be sent in first message");
+        console.error("Expected header to be sent in first message");
         return;
       }
 
@@ -578,7 +584,7 @@ export class SyncManager {
               : t.changes.length,
           )
           .reduce((a, b) => a + b, 0);
-        logger.debug(
+        console.log(
           `Adding incoming transactions took ${(after - before).toFixed(
             2,
           )}ms for ${totalTxLength} bytes = bandwidth: ${(
@@ -596,7 +602,7 @@ export class SyncManager {
       // );
 
       if (result.isErr()) {
-        logger.error(
+        console.error(
           "Failed to add transactions from",
           peer.id,
           result.error,
@@ -627,7 +633,7 @@ export class SyncManager {
         isCorrection: true,
         ...coValue.knownState(),
       }).catch((e) => {
-        logger.error("Error sending known state correction", e);
+        console.error("Error sending known state correction", e);
       });
     } else {
       /**
@@ -641,7 +647,7 @@ export class SyncManager {
         action: "known",
         ...coValue.knownState(),
       }).catch((e: unknown) => {
-        logger.error("Error sending known state", e);
+        console.error("Error sending known state", e);
       });
     }
 
@@ -675,6 +681,9 @@ export class SyncManager {
       const done = new Promise<void>((resolve) => {
         queueMicrotask(async () => {
           delete this.requestedSyncs[coValue.id];
+          // if (entry.nRequestsThisTick >= 2) {
+          //     console.log("Syncing", coValue.id, "for", entry.nRequestsThisTick, "requests");
+          // }
           await this.actuallySyncCoValue(coValue);
           resolve();
         });

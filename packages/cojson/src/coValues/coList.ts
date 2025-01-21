@@ -133,6 +133,10 @@ export class RawCoListView<
                   change.before.txIndex
                 ]?.[change.before.changeIdx];
               if (!beforeEntry) {
+                // console.error(
+                //     "Insertion before missing op " +
+                //         change.before
+                // );
                 continue;
               }
               beforeEntry.predecessors.splice(0, 0, {
@@ -152,6 +156,9 @@ export class RawCoListView<
                   change.after.txIndex
                 ]?.[change.after.changeIdx];
               if (!afterEntry) {
+                // console.error(
+                //     "Insertion after missing op " + change.after
+                // );
                 continue;
               }
               afterEntry.successors.push({

@@ -13,7 +13,6 @@ import {
   isParentGroupReference,
 } from "../ids.js";
 import { JsonObject } from "../jsonValue.js";
-import { logger } from "../logger.js";
 import { AccountRole, Role } from "../permissions.js";
 import { expectGroup } from "../typeUtils/expectGroup.js";
 import {
@@ -154,7 +153,7 @@ export class RawGroup<
         child.state.type === "unavailable"
       ) {
         child.loadFromPeers(peers).catch(() => {
-          logger.error(`Failed to load child group ${id}`);
+          console.error(`Failed to load child group ${id}`);
         });
       }
 
@@ -322,7 +321,7 @@ export class RawGroup<
         const secret = this.core.getReadKey(keyID);
 
         if (!secret) {
-          logger.error("Can't find key", keyID);
+          console.error("Can't find key", keyID);
           continue;
         }
 

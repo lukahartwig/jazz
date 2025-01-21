@@ -6,7 +6,6 @@ import {
   SyncMessage,
   cojsonInternals,
   emptyKnownState,
-  logger,
 } from "cojson";
 import { collectNewTxs, getDependedOnCoValues } from "./syncUtils.js";
 import { DBClientInterface, StoredSessionRow } from "./types.js";
@@ -315,7 +314,7 @@ export class SyncManager {
     return this.toLocalNode
       .push(msg)
       .catch((e) =>
-        logger.error(`Error sending ${msg.action} state, id ${msg.id}`, e),
+        console.error(`Error sending ${msg.action} state, id ${msg.id}`, e),
       );
   }
 }

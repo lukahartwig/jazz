@@ -3,7 +3,6 @@ import { CoID, RawCoValue } from "../coValue.js";
 import { CoValueCore } from "../coValueCore.js";
 import { AgentID, SessionID, TransactionID } from "../ids.js";
 import { JsonObject, JsonValue } from "../jsonValue.js";
-import { logger } from "../logger.js";
 import { CoValueKnownState } from "../sync.js";
 import { accountOrAgentIDfromSessionID } from "../typeUtils/accountOrAgentIDfromSessionID.js";
 import { isAccountID } from "../typeUtils/isAccountID.js";
@@ -310,7 +309,7 @@ export class RawBinaryCoStreamView<
     const start = items[0];
 
     if (start?.type !== "start") {
-      logger.error("Invalid binary stream start", start);
+      console.error("Invalid binary stream start", start);
       return;
     }
 
@@ -329,7 +328,7 @@ export class RawBinaryCoStreamView<
       }
 
       if (item.type !== "chunk") {
-        logger.error("Invalid binary stream chunk", item);
+        console.error("Invalid binary stream chunk", item);
         return undefined;
       }
 
@@ -383,6 +382,7 @@ export class RawBinaryCoStream<
     chunk: Uint8Array,
     privacy: "private" | "trusting" = "private",
   ): void {
+    // const before = performance.now();
     this.push(
       {
         type: "chunk",
@@ -391,6 +391,11 @@ export class RawBinaryCoStream<
       privacy,
       false,
     );
+    // const after = performance.now();
+    // console.log(
+    //     "pushBinaryStreamChunk bandwidth in MB/s",
+    //     (1000 * chunk.length) / (after - before) / (1024 * 1024)
+    // );
   }
 
   endBinaryStream(privacy: "private" | "trusting" = "private") {

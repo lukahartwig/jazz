@@ -1,4 +1,4 @@
-import { SyncMessage, logger } from "cojson";
+import { SyncMessage } from "cojson";
 import { PingMsg } from "./types.js";
 
 export function addMessageToBacklog(backlog: string, message: SyncMessage) {
@@ -24,7 +24,7 @@ export function deserializeMessages(messages: unknown) {
         | PingMsg[],
     } as const;
   } catch (e) {
-    logger.error("Error while deserializing messages", e);
+    console.error("Error while deserializing messages", e);
     return {
       ok: false,
       error: e,

@@ -24,7 +24,6 @@ import {
 import { Stringified, parseJSON, stableStringify } from "./jsonStringify.js";
 import { JsonObject, JsonValue } from "./jsonValue.js";
 import { LocalNode, ResolveAccountAgentError } from "./localNode.js";
-import { logger } from "./logger.js";
 import {
   PermissionsDef as RulesetDef,
   determineValidTransactions,
@@ -210,10 +209,16 @@ export class CoValueCore {
       .andThen((agent) => {
         const signerID = this.crypto.getAgentSignerID(agent);
 
+        // const beforeHash = performance.now();
         const { expectedNewHash, newStreamingHash } = this.expectedNewHashAfter(
           sessionID,
           newTransactions,
         );
+        // const afterHash = performance.now();
+        // console.log(
+        //     "Hashing took",
+        //     afterHash - beforeHash
+        // );
 
         if (givenExpectedNewHash && givenExpectedNewHash !== expectedNewHash) {
           return err({
@@ -386,6 +391,7 @@ export class CoValueCore {
       streamingHash.update(transaction);
       const after = performance.now();
       if (after - before > 1) {
+        // console.log("Hashing blocked for", after - before);
         await new Promise((resolve) => setTimeout(resolve, 0));
         before = performance.now();
       }
@@ -534,7 +540,7 @@ export class CoValueCore {
       }
 
       if (!decryptedChanges) {
-        logger.error("Failed to decrypt transaction despite having key");
+        console.error("Failed to decrypt transaction despite having key");
         continue;
       }
 
@@ -679,7 +685,7 @@ export class CoValueCore {
           if (secret) {
             return secret as KeySecret;
           } else {
-            logger.warn(
+            console.error(
               `Encrypting ${encryptingKeyID} key didn't decrypt ${keyID}`,
             );
           }
@@ -719,7 +725,7 @@ export class CoValueCore {
               if (secret) {
                 return secret as KeySecret;
               } else {
-                logger.warn(
+                console.error(
                   `Encrypting parent ${parentKey.id} key didn't decrypt ${keyID}`,
                 );
               }
