@@ -573,6 +573,45 @@ describe("CoRichText", async () => {
         ],
       });
     });
+
+    test("mark boundaries are preserved in resolveAndDiffuseAndFocusMarks", () => {
+      const text = CoRichText.createFromPlainText("Hello world", {
+        owner: me,
+      });
+
+      // Add two non-overlapping marks
+      text.insertMark(0, 4, Marks.Strong, { tag: "strong" }); // "Hello"
+      text.insertMark(6, 10, Marks.Strong, { tag: "strong" }); // "world"
+
+      const marks = text.resolveAndDiffuseAndFocusMarks();
+      expect(marks).toHaveLength(2);
+
+      // Verify we have marks before proceeding
+      expect(marks[0]).toBeDefined();
+      expect(marks[1]).toBeDefined();
+
+      if (!marks[0] || !marks[1]) return;
+
+      // Check first mark boundaries
+      expect(marks[0]).toMatchObject({
+        start: marks[0].start,
+        end: marks[0].end,
+        side: "certainMiddle",
+      });
+      expect(text.toString().substring(marks[0].start + 1, marks[0].end)).toBe(
+        "Hello",
+      );
+
+      // Check second mark boundaries
+      expect(marks[1]).toMatchObject({
+        start: marks[1].start,
+        end: marks[1].end,
+        side: "certainMiddle",
+      });
+      expect(text.toString().substring(marks[1].start + 1, marks[1].end)).toBe(
+        "world",
+      );
+    });
   });
 
   describe("Resolution", () => {
@@ -808,11 +847,7 @@ describe("CoRichText", async () => {
       text.marks!.push(mark1);
       text.marks!.push(mark2);
 
-      debugCoRichText(text, "Before resolve");
-
       const marks = text.resolveMarks();
-
-      debugCoRichText(text, "After resolve");
 
       expect(marks).toHaveLength(2);
 
