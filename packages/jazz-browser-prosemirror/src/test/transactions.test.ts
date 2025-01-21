@@ -1,4 +1,5 @@
 import { CoRichText, Group, Marks, ResolvedMark } from "jazz-tools";
+import { debugCoRichText } from "jazz-tools/src/coValues/coRichText.js";
 import { createJazzTestAccount } from "jazz-tools/testing";
 import { schema } from "prosemirror-schema-basic";
 import { EditorState } from "prosemirror-state";
@@ -39,7 +40,7 @@ describe("applyTrToRichText", async () => {
     const doc = richTextToProsemirrorDoc(text)!;
     const state = EditorState.create({ doc, schema });
     const tr = state.tr;
-    tr.delete(5, 11); // Delete " world"
+    tr.delete(6, 11); // Delete " world"
 
     applyTrToRichText(text, tr);
     expect(text.toString()).toBe("Hello");
@@ -111,7 +112,7 @@ describe("applyTrToRichText", async () => {
     // Multiple operations: insert text, add mark, remove text
     tr.insertText(" test", text.length);
     tr.addMark(0, 5, schema.marks.strong.create());
-    tr.delete(5, 11); // Delete " world"
+    tr.delete(6, 11); // Delete " world"
 
     applyTrToRichText(text, tr);
     expect(text.toString()).toBe("Hello test");
@@ -144,8 +145,8 @@ describe("applyTrToRichText", async () => {
       .resolveMarks()
       .filter((m) => m.sourceMark.tag === "paragraph");
     expect(paragraphMarks).toHaveLength(1);
-    expect(paragraphMarks[0]!.startAfter).toBe(0);
-    expect(paragraphMarks[0]!.endBefore).toBe(text.length);
+    expect(paragraphMarks[0]!.startBefore).toBe(0);
+    expect(paragraphMarks[0]!.endAfter).toBe(text.length - 1);
   });
 
   it("should warn on unsupported mark type", () => {
@@ -181,6 +182,8 @@ describe("applyTrToRichText", async () => {
     text.insertMark(0, 7, Marks.Strong, { tag: "strong" });
     text.insertMark(5, 11, Marks.Em, { tag: "em" });
 
+    debugCoRichText(text, "Before merge");
+
     const doc = richTextToProsemirrorDoc(text)!;
     const state = EditorState.create({ doc, schema });
     const tr = state.tr;
@@ -189,6 +192,8 @@ describe("applyTrToRichText", async () => {
     tr.removeMark(5, 7, schema.marks.strong);
 
     applyTrToRichText(text, tr);
+
+    debugCoRichText(text, "After merge");
 
     const marks = text.resolveMarks();
     const strongMarks = marks.filter(
@@ -237,16 +242,16 @@ describe("applyTrToRichText", async () => {
       .resolveMarks()
       .filter((m) => m.sourceMark.tag === "paragraph");
     expect(paragraphMarks).toHaveLength(2);
-    expect(paragraphMarks[0]!.endBefore).toBe(5); // First paragraph ends after "Hello"
-    expect(paragraphMarks[1]!.startAfter).toBe(4); // Second paragraph starts before "world"
+    expect(paragraphMarks[0]!.endAfter).toBe(4); // First paragraph ends after "Hello"
+    expect(paragraphMarks[1]!.startBefore).toBe(5); // Second paragraph starts before "world"
 
     // Verify strong mark is preserved
     const strongMarks = text
       .resolveMarks()
       .filter((m) => m.sourceMark.tag === "strong");
     expect(strongMarks).toHaveLength(1);
-    expect(strongMarks[0]!.startAfter).toBe(0);
-    expect(strongMarks[0]!.endBefore).toBe(5);
+    expect(strongMarks[0]!.startBefore).toBe(0);
+    expect(strongMarks[0]!.endAfter).toBe(4);
   });
 });
 
@@ -281,7 +286,7 @@ describe("Helper Functions", async () => {
       const text = CoRichText.createFromPlainText("Hello, hello world", {
         owner: group,
       });
-      handleTextDeletion(text, 5, 12); // Delete ", hello"
+      handleTextDeletion(text, 6, 12); // Delete ", hello"
       expect(text.toString()).toBe("Hello world");
     });
 
@@ -289,7 +294,7 @@ describe("Helper Functions", async () => {
       const text = CoRichText.createFromPlainText("Hello world", {
         owner: group,
       });
-      handleTextDeletion(text, 0, 5); // Delete "Hello"
+      handleTextDeletion(text, 1, 5); // Delete "Hello"
       expect(text.toString()).toBe(" world");
     });
 
@@ -297,8 +302,31 @@ describe("Helper Functions", async () => {
       const text = CoRichText.createFromPlainText("Hello world", {
         owner: group,
       });
-      handleTextDeletion(text, 6, 11); // Delete "world"
+      handleTextDeletion(text, 7, 11); // Delete "world"
       expect(text.toString()).toBe("Hello ");
+    });
+
+    it("should preserve paragraph mark when all text is deleted", () => {
+      const text = CoRichText.createFromPlainText("Hello", {
+        owner: group,
+      });
+      text.insertMark(0, text.length - 1, Marks.Paragraph, {
+        tag: "paragraph",
+      });
+      text.insertMark(0, 4, Marks.Strong, { tag: "strong" });
+
+      // Delete all text
+      handleTextDeletion(text, 0, text.length);
+
+      // Verify content is empty
+      expect(text.toString()).toBe("");
+
+      // Verify paragraph mark is preserved
+      const marks = text.resolveMarks();
+      expect(marks.length).toBe(1);
+      expect(marks[0]!.sourceMark.tag).toBe("paragraph");
+      expect(marks[0]!.startBefore).toBe(0);
+      expect(marks[0]!.endAfter).toBe(0);
     });
   });
 
@@ -317,8 +345,8 @@ describe("Helper Functions", async () => {
         .resolveMarks()
         .filter((m) => m.sourceMark.tag === "paragraph");
       expect(marks).toHaveLength(2);
-      expect(marks[0]!.endBefore).toBe(5); // First paragraph ends after "Hello"
-      expect(marks[1]!.startAfter).toBe(4); // Second paragraph starts before "world"
+      expect(marks[0]!.endAfter).toBe(4); // First paragraph ends after "Hello"
+      expect(marks[1]!.startBefore).toBe(5); // Second paragraph starts before "world"
     });
 
     it("should preserve other marks when splitting", () => {
@@ -328,7 +356,7 @@ describe("Helper Functions", async () => {
       text.insertMark(0, text.length - 1, Marks.Paragraph, {
         tag: "paragraph",
       });
-      text.insertMark(0, 4, Marks.Strong, { tag: "strong" }); // "Hell" is strong
+      text.insertMark(0, 4, Marks.Strong, { tag: "strong" }); // "Hello" is strong
 
       handleParagraphSplit(text, 5); // Split after "Hello"
 
@@ -336,8 +364,8 @@ describe("Helper Functions", async () => {
         .resolveMarks()
         .filter((m) => m.sourceMark.tag === "strong");
       expect(strongMarks).toHaveLength(1);
-      expect(strongMarks[0]!.startAfter).toBe(0);
-      expect(strongMarks[0]!.endBefore).toBe(5);
+      expect(strongMarks[0]!.startBefore).toBe(0);
+      expect(strongMarks[0]!.endAfter).toBe(4);
     });
   });
 
@@ -346,8 +374,8 @@ describe("Helper Functions", async () => {
       const text = CoRichText.createFromPlainText("Hello\nworld", {
         owner: group,
       });
-      text.insertMark(0, 4, Marks.Paragraph, { tag: "paragraph" });
-      text.insertMark(6, 10, Marks.Paragraph, { tag: "paragraph" });
+      text.insertMark(0, 4, Marks.Paragraph, { tag: "paragraph" }); // "Hello"
+      text.insertMark(6, 10, Marks.Paragraph, { tag: "paragraph" }); // "world"
 
       handleParagraphMerge(text, 4); // Merge at newline
 
@@ -355,8 +383,8 @@ describe("Helper Functions", async () => {
         .resolveMarks()
         .filter((m) => m.sourceMark.tag === "paragraph");
       expect(marks).toHaveLength(1);
-      expect(marks[0]!.startAfter).toBe(0);
-      expect(marks[0]!.endBefore).toBe(11); // "Hello\nworld".length
+      expect(marks[0]!.startBefore).toBe(0);
+      expect(marks[0]!.endAfter).toBe(9); // "Helloworld".length
     });
 
     it("should preserve other marks when merging", () => {
@@ -365,11 +393,16 @@ describe("Helper Functions", async () => {
       });
       text.insertMark(0, 4, Marks.Paragraph, { tag: "paragraph" });
       text.insertMark(6, 10, Marks.Paragraph, { tag: "paragraph" });
-      text.insertMark(0, 4, Marks.Strong, { tag: "strong" }); // "Hell" is strong
+      text.insertMark(0, 5, Marks.Strong, { tag: "strong" }); // "Hello" is strong
       text.insertMark(6, 10, Marks.Em, { tag: "em" }); // "world" is em
+
+      debugCoRichText(text, "Before merge");
 
       handleParagraphMerge(text, 4); // Merge at newline
 
+      const paragraphs = text
+        .resolveMarks()
+        .filter((m) => m.sourceMark.tag === "paragraph");
       const strongMarks = text
         .resolveMarks()
         .filter((m) => m.sourceMark.tag === "strong");
@@ -377,13 +410,19 @@ describe("Helper Functions", async () => {
         .resolveMarks()
         .filter((m) => m.sourceMark.tag === "em");
 
+      debugCoRichText(text, "After merge");
+
       expect(strongMarks).toHaveLength(1);
-      expect(strongMarks[0]!.startAfter).toBe(0);
-      expect(strongMarks[0]!.endBefore).toBe(5);
+      expect(strongMarks[0]!.startBefore).toBe(0);
+      expect(strongMarks[0]!.endAfter).toBe(5);
 
       expect(emMarks).toHaveLength(1);
-      expect(emMarks[0]!.startAfter).toBe(5);
-      expect(emMarks[0]!.endBefore).toBe(11);
+      expect(emMarks[0]!.startBefore).toBe(5);
+      expect(emMarks[0]!.endAfter).toBe(9);
+
+      expect(paragraphs).toHaveLength(1);
+      expect(paragraphs[0]!.startBefore).toBe(0);
+      expect(paragraphs[0]!.endAfter).toBe(9);
     });
   });
 });

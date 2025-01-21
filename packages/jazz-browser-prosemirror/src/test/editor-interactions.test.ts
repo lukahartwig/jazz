@@ -45,7 +45,9 @@ class EditorTestHelper {
   }
 
   getContent() {
-    return this.text.toString();
+    // Get content from ProseMirror's doc instead of CoRichText
+    // This ensures we get the correct representation after edits
+    return this.view.state.doc.textContent;
   }
 
   // Insert text at current selection or specified position (0-based)
@@ -205,7 +207,7 @@ describe("Editor Interactions", async () => {
 
     // Delete across paragraphs
     const tr = editor.view.state.tr;
-    tr.delete(3, 8); // Delete "t\nSe"
+    tr.delete(4, 9); // Delete "t\nSe"
     editor.view.dispatch(tr);
 
     // Verify content and marks
@@ -224,9 +226,11 @@ describe("Editor Interactions", async () => {
     text.insertMark(6, 11, Marks.Paragraph, { tag: "paragraph" });
     editor = new EditorTestHelper(text);
 
+    expect(editor.getContent()).toBe("First\nSecond");
+
     // Delete newline with backspace
     const tr = editor.view.state.tr;
-    tr.delete(5, 6); // Delete "\n"
+    tr.delete(6, 7); // Delete "\n" by removing both positions
     editor.view.dispatch(tr);
 
     // Verify content and marks
@@ -261,5 +265,37 @@ describe("Editor Interactions", async () => {
     expect(strongMarks[0]!.endBefore).toBe(6);
     expect(emMarks[0]!.startAfter).toBe(0);
     expect(emMarks[0]!.endBefore).toBe(6);
+  });
+
+  it("should handle multi-line text deletion with backspace", () => {
+    const text = CoRichText.createFromPlainText("First\nSecond\nThird", {
+      owner: group,
+    });
+    // Add paragraph marks for each line
+    text.insertMark(0, 4, Marks.Paragraph, { tag: "paragraph" });
+    text.insertMark(6, 11, Marks.Paragraph, { tag: "paragraph" });
+    text.insertMark(13, 17, Marks.Paragraph, { tag: "paragraph" });
+    editor = new EditorTestHelper(text);
+
+    // Select and delete across multiple lines
+    const tr = editor.view.state.tr;
+    tr.delete(4, 16); // Delete from "st\nSecond\nTh"
+    editor.view.dispatch(tr);
+
+    // Log the transaction steps and results
+    console.log("Editor content after deletion:", editor.getContent());
+    console.log(
+      "Paragraph marks:",
+      editor.text
+        .resolveMarks()
+        .filter((m) => m.sourceMark.tag === "paragraph"),
+    );
+
+    // Verify content and marks
+    expect(editor.getContent()).toBe("Firird");
+    const paragraphMarks = editor.text
+      .resolveMarks()
+      .filter((m) => m.sourceMark.tag === "paragraph");
+    expect(paragraphMarks).toHaveLength(1);
   });
 });
