@@ -489,11 +489,12 @@ export class CoRichText extends CoMap {
 
     const text = this.text?.toString() || "";
 
+    // Initialize with a single leaf node covering the marked text
     let currentNodes: (TreeLeaf | TreeNode)[] = [
       {
         type: "leaf",
         start: 0,
-        end: text.length,
+        end: text.length - 1,
       },
     ];
 
@@ -505,11 +506,16 @@ export class CoRichText extends CoMap {
 
     // for each range, split the current nodes where necessary (no matter if leaf or already a node), wrapping the resulting "inside" parts in a node with the range's tag
     for (const range of rangesSortedLowToHighPrecedence) {
-      // console.log("currentNodes", currentNodes);
       const newNodes = currentNodes.flatMap((node) => {
+        // Double-split approach to isolate text for marking:
+        // 1. Split at range start: divides into "before" and "inOrAfter" sections
+        // 2. Split "inOrAfter" at range end: divides into "inside" (to be marked) and "after" sections
+        // Example: marking "wo" in "Hello world"
+        // First split:  "Hello " (before) | "world" (inOrAfter)
+        // Second split: "wo" (inside) | "rld" (after)
         const [before, inOrAfter] = splitNode(node, range.start);
         const [inside, after] = inOrAfter
-          ? splitNode(inOrAfter, range.end)
+          ? splitNode(inOrAfter, range.end + 1)
           : [undefined, undefined];
 
         return [
@@ -536,7 +542,7 @@ export class CoRichText extends CoMap {
       type: "node",
       tag: "root",
       start: 0,
-      end: text.length,
+      end: text.length - 1,
       children: currentNodes,
     };
   }
@@ -590,10 +596,10 @@ export function splitNode(
         ? {
             type: "leaf",
             start: node.start,
-            end: Math.min(at, node.end),
+            end: Math.min(at - 1, node.end),
           }
         : undefined,
-      at < node.end
+      at <= node.end
         ? {
             type: "leaf",
             start: Math.max(at, node.start),
@@ -609,13 +615,13 @@ export function splitNode(
             type: "node",
             tag: node.tag,
             start: node.start,
-            end: Math.min(at, node.end),
+            end: Math.min(at - 1, node.end),
             children: children
               .map((child) => splitNode(child, at)[0])
               .filter((c): c is Exclude<typeof c, undefined> => !!c),
           }
         : undefined,
-      at < node.end
+      at <= node.end
         ? {
             type: "node",
             tag: node.tag,

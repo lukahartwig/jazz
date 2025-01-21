@@ -1,6 +1,10 @@
 import { connectedPeers } from "cojson/src/streamUtils.ts";
 import { describe, expect, test } from "vitest";
-import { splitNode } from "../coValues/coRichText.js";
+import {
+  debugCoRichText,
+  debugRichTextTree,
+  splitNode,
+} from "../coValues/coRichText.js";
 import {
   Account,
   CoRichText,
@@ -163,12 +167,15 @@ describe("CoRichText", async () => {
           owner: me,
         });
 
-        text.insertMark(0, 10, Marks.Strong, { tag: "strong" });
-        text.insertMark(2, 8, Marks.Em, { tag: "em" });
+        text.insertMark(0, 10, Marks.Strong, { tag: "strong" }); // "hello world"
+        text.insertMark(2, 8, Marks.Em, { tag: "em" }); // "llo wor"
         text.insertMark(4, 6, Marks.Link, {
           tag: "link",
           url: "https://example.com",
-        });
+        }); // "o w"
+
+        debugCoRichText(text, "Before tree");
+        debugRichTextTree(text, ["strong", "em", "link"], "Before tree");
 
         const tree = text.toTree(["strong", "em", "link"]);
         // Verify the nesting structure is correct
@@ -177,7 +184,7 @@ describe("CoRichText", async () => {
           type: "node",
           tag: "root",
           start: 0,
-          end: 11,
+          end: 10,
           children: [
             {
               type: "node",
@@ -195,18 +202,18 @@ describe("CoRichText", async () => {
             {
               type: "node",
               tag: "strong",
-              start: 1,
+              start: 2,
               end: 3,
               children: [
                 {
                   type: "node",
                   tag: "em",
-                  start: 1,
+                  start: 2,
                   end: 3,
                   children: [
                     {
                       type: "leaf",
-                      start: 1,
+                      start: 2,
                       end: 3,
                     },
                   ],
@@ -216,25 +223,25 @@ describe("CoRichText", async () => {
             {
               type: "node",
               tag: "strong",
-              start: 3,
-              end: 7,
+              start: 4,
+              end: 6,
               children: [
                 {
                   type: "node",
                   tag: "em",
-                  start: 3,
-                  end: 7,
+                  start: 4,
+                  end: 6,
                   children: [
                     {
                       type: "node",
                       tag: "link",
-                      start: 3,
-                      end: 7,
+                      start: 4,
+                      end: 6,
                       children: [
                         {
                           type: "leaf",
-                          start: 3,
-                          end: 7,
+                          start: 4,
+                          end: 6,
                         },
                       ],
                     },
@@ -246,18 +253,18 @@ describe("CoRichText", async () => {
               type: "node",
               tag: "strong",
               start: 7,
-              end: 9,
+              end: 8,
               children: [
                 {
                   type: "node",
                   tag: "em",
                   start: 7,
-                  end: 9,
+                  end: 8,
                   children: [
                     {
                       type: "leaf",
                       start: 7,
-                      end: 9,
+                      end: 8,
                     },
                   ],
                 },
@@ -267,12 +274,12 @@ describe("CoRichText", async () => {
               type: "node",
               tag: "strong",
               start: 9,
-              end: 11,
+              end: 10,
               children: [
                 {
                   type: "leaf",
                   start: 9,
-                  end: 11,
+                  end: 10,
                 },
               ],
             },
@@ -448,12 +455,12 @@ describe("CoRichText", async () => {
         type: "node",
         tag: "root",
         start: 0,
-        end: 11,
+        end: 10,
         children: [
           {
             type: "leaf",
             start: 0,
-            end: 11,
+            end: 10,
           },
         ],
       });
@@ -474,19 +481,18 @@ describe("CoRichText", async () => {
       });
 
       // Add an outer mark spanning the whole text
-      text.insertMark(0, 11, Marks.Strong, { tag: "strong" });
+      text.insertMark(0, 10, Marks.Strong, { tag: "strong" });
 
       // Add an inner mark spanning part of the text
-      text.insertMark(6, 11, Marks.Em, { tag: "em" });
+      text.insertMark(6, 10, Marks.Em, { tag: "em" });
 
-      // Split at position 8 (between 'wo' and 'rld')
       const tree = text.toTree(["strong", "em"]);
 
       expect(tree).toEqual({
         type: "node",
         tag: "root",
         start: 0,
-        end: 11,
+        end: 10,
         children: [
           {
             type: "node",
@@ -504,19 +510,19 @@ describe("CoRichText", async () => {
           {
             type: "node",
             tag: "strong",
-            start: 5,
-            end: 11,
+            start: 6,
+            end: 10,
             children: [
               {
                 type: "node",
                 tag: "em",
-                start: 5,
-                end: 11,
+                start: 6,
+                end: 10,
                 children: [
                   {
                     type: "leaf",
-                    start: 5,
-                    end: 11,
+                    start: 6,
+                    end: 10,
                   },
                 ],
               },
@@ -525,26 +531,26 @@ describe("CoRichText", async () => {
         ],
       });
 
-      // Now verify splitting works by checking a specific position
+      // Now verify splitting works by checking a specific position (between 'wo' and 'rld')
       const [before, after] = splitNode(tree.children[1] as TreeNode, 8);
 
       // Verify the structure of the split nodes
       expect(before).toEqual({
         type: "node",
         tag: "strong",
-        start: 5,
-        end: 8,
+        start: 6,
+        end: 7,
         children: [
           {
             type: "node",
             tag: "em",
-            start: 5,
-            end: 8,
+            start: 6,
+            end: 7,
             children: [
               {
                 type: "leaf",
-                start: 5,
-                end: 8,
+                start: 6,
+                end: 7,
               },
             ],
           },
@@ -555,18 +561,18 @@ describe("CoRichText", async () => {
         type: "node",
         tag: "strong",
         start: 8,
-        end: 11,
+        end: 10,
         children: [
           {
             type: "node",
             tag: "em",
             start: 8,
-            end: 11,
+            end: 10,
             children: [
               {
                 type: "leaf",
                 start: 8,
-                end: 11,
+                end: 10,
               },
             ],
           },
@@ -620,8 +626,8 @@ describe("CoRichText", async () => {
       if (!certainMiddle) return;
 
       // The certainMiddle region should exactly match the marked region
-      expect(certainMiddle.start).toBe(0); // Not -1
-      expect(certainMiddle.end).toBe(4); // Not 5
+      expect(certainMiddle.start).toBe(0);
+      expect(certainMiddle.end).toBe(4);
 
       // The tree should reflect the exact marked region
       const tree = text.toTree(["strong"]);
