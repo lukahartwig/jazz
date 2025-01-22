@@ -54,11 +54,6 @@ export class Mark extends CoMap {
     idxAfter: (pos: TextPos) => number | undefined,
     idxBefore: (pos: TextPos) => number | undefined,
   ) {
-    if (!textLength) {
-      console.error("Cannot validate positions for empty text");
-      return null;
-    }
-
     // Get positions with fallbacks
     const positions = {
       startAfter: this.startAfter ? (idxBefore(this.startAfter) ?? -1) : -1,
