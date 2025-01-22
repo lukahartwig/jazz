@@ -1,5 +1,4 @@
-import { CoRichText, Marks } from "jazz-tools";
-import { debugCoRichText } from "jazz-tools/src/coValues/coRichText.js";
+import { CoRichText, CoRichTextDebug, Marks } from "jazz-tools";
 import { Node } from "prosemirror-model";
 import { Transaction } from "prosemirror-state";
 import {
@@ -19,9 +18,6 @@ export function handleParagraphMerge(text: CoRichText, pos: number) {
   const existingMarks = text.resolveMarks();
   const otherMarks = existingMarks.filter(
     (m) => m.sourceMark.tag !== "paragraph",
-  );
-  const paragraphMarks = existingMarks.filter(
-    (m) => m.sourceMark.tag === "paragraph",
   );
 
   // Normalize the text content by removing newlines
@@ -323,7 +319,7 @@ export function applyTrToRichText(text: CoRichText, tr: Transaction) {
     }
   });
 
-  debugCoRichText(text, "After transaction");
+  CoRichTextDebug.log(text, { label: "After transaction" });
 
   console.log("\nTransaction complete. Final text:", {
     content: text.toString(),

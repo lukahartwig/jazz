@@ -1,10 +1,6 @@
 import { connectedPeers } from "cojson/src/streamUtils.ts";
 import { describe, expect, test } from "vitest";
-import {
-  debugCoRichText,
-  debugRichTextTree,
-  splitNode,
-} from "../coValues/coRichText.js";
+import { CoRichTextDebug, splitNode } from "../coValues/coRichText.js";
 import {
   Account,
   CoRichText,
@@ -173,9 +169,6 @@ describe("CoRichText", async () => {
           tag: "link",
           url: "https://example.com",
         }); // "o w"
-
-        debugCoRichText(text, "Before tree");
-        debugRichTextTree(text, ["strong", "em", "link"], "Before tree");
 
         const tree = text.toTree(["strong", "em", "link"]);
         // Verify the nesting structure is correct

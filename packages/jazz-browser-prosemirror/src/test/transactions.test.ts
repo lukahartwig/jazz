@@ -1,5 +1,5 @@
 import { CoRichText, Group, Marks, ResolvedMark } from "jazz-tools";
-import { debugCoRichText } from "jazz-tools/src/coValues/coRichText.js";
+import { CoRichTextDebug } from "jazz-tools/src/coValues/coRichText.js";
 import { createJazzTestAccount } from "jazz-tools/testing";
 import { schema } from "prosemirror-schema-basic";
 import { EditorState } from "prosemirror-state";
@@ -182,7 +182,7 @@ describe("applyTrToRichText", async () => {
     text.insertMark(0, 7, Marks.Strong, { tag: "strong" });
     text.insertMark(5, 11, Marks.Em, { tag: "em" });
 
-    debugCoRichText(text, "Before merge");
+    CoRichTextDebug.log(text, { label: "Before merge" });
 
     const doc = richTextToProsemirrorDoc(text)!;
     const state = EditorState.create({ doc, schema });
@@ -193,7 +193,7 @@ describe("applyTrToRichText", async () => {
 
     applyTrToRichText(text, tr);
 
-    debugCoRichText(text, "After merge");
+    CoRichTextDebug.log(text, { label: "After merge" });
 
     const marks = text.resolveMarks();
     const strongMarks = marks.filter(
@@ -396,7 +396,7 @@ describe("Helper Functions", async () => {
       text.insertMark(0, 5, Marks.Strong, { tag: "strong" }); // "Hello" is strong
       text.insertMark(6, 10, Marks.Em, { tag: "em" }); // "world" is em
 
-      debugCoRichText(text, "Before merge");
+      CoRichTextDebug.log(text, { label: "Before merge" });
 
       handleParagraphMerge(text, 4); // Merge at newline
 
@@ -410,7 +410,7 @@ describe("Helper Functions", async () => {
         .resolveMarks()
         .filter((m) => m.sourceMark.tag === "em");
 
-      debugCoRichText(text, "After merge");
+      CoRichTextDebug.log(text, { label: "After merge" });
 
       expect(strongMarks).toHaveLength(1);
       expect(strongMarks[0]!.startBefore).toBe(0);
