@@ -15,11 +15,11 @@ You can either
 
 Create a new Jazz project, and use this example as a template.
 ```bash
-npm create jazz-app@latest --start clerk --project-name clerk
+npm create jazz-app@latest --example clerk --project-name clerk
 ```
 or
 ```bash
-npx create-jazz-app@latest --start clerk --project-name clerk
+npx create-jazz-app@latest --example clerk --project-name clerk
 ```
 
 Go to the new project directory.
