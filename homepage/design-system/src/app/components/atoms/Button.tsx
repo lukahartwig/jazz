@@ -1,11 +1,11 @@
 import { clsx } from "clsx";
 import Link from "next/link";
 import { forwardRef } from "react";
-import { Icon } from "../atoms/Icon";
+import { Icon } from "./Icon";
 import { Spinner } from "./Spinner";
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: "primary" | "secondary" | "tertiary";
+  variant?: "primary" | "secondary" | "tertiary" | "destructive" | "plain";
   size?: "sm" | "md" | "lg";
   href?: string;
   newTab?: boolean;
@@ -42,6 +42,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       loading,
       loadingText,
       icon,
+      type = "button",
       ...buttonProps
     },
     ref,
@@ -58,16 +59,21 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       secondary:
         "text-stone-900 border font-medium hover:border-stone-300 hover:dark:border-stone-700 dark:text-white",
       tertiary: "text-blue underline underline-offset-4",
+      destructive:
+        "bg-red-600 border-red-600 text-white font-medium hover:bg-red-700 hover:border-red-700",
     };
 
-    const classNames = clsx(
-      className,
-      "inline-flex items-center justify-center gap-2 rounded-lg text-center transition-colors",
-      "disabled:pointer-events-none disabled:opacity-70",
-      sizeClasses[size],
-      variantClasses[variant],
-      disabled && "opacity-50 cursor-not-allowed pointer-events-none",
-    );
+    const classNames =
+      variant === "plain"
+        ? className
+        : clsx(
+            className,
+            "inline-flex items-center justify-center gap-2 rounded-lg text-center transition-colors",
+            "disabled:pointer-events-none disabled:opacity-70",
+            sizeClasses[size],
+            variantClasses[variant],
+            disabled && "opacity-50 cursor-not-allowed pointer-events-none",
+          );
 
     if (href) {
       return (
@@ -95,6 +101,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         {...buttonProps}
         disabled={disabled || loading}
         className={classNames}
+        type={type}
       >
         <ButtonIcon icon={icon} loading={loading} />
 

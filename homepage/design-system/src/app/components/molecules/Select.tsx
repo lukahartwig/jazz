@@ -14,10 +14,9 @@ export function Select(
   const containerClassName = clsx("grid gap-1", className);
 
   const selectClassName = clsx(
-    "g-select",
     "w-full rounded-md border shadow-sm px-2 py-1.5 text-sm",
     "font-medium text-stone-900",
-    "dark:text-white",
+    "dark:text-white dark:bg-stone-925",
     "appearance-none",
   );
 
