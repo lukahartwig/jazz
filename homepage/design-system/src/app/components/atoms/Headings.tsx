@@ -36,19 +36,3 @@ export function H6(
 ) {
   return <Heading level={6} {...props} />;
 }
-
-export function Kicker({
-  children,
-  className,
-}: React.PropsWithChildren & { className?: string }) {
-  return (
-    <p
-      className={clsx(
-        className,
-        "uppercase text-blue tracking-widest text-sm font-medium dark:text-stone-400",
-      )}
-    >
-      {children}
-    </p>
-  );
-}

@@ -1,3 +1,4 @@
+import { H1 } from "gcmp-design-system/src/app/components/atoms/Headings";
 import { Icon } from "gcmp-design-system/src/app/components/atoms/Icon";
 import { Prose } from "gcmp-design-system/src/app/components/molecules/Prose";
 import Link from "next/link";
@@ -44,10 +45,10 @@ export function HeroSection() {
         <p className="uppercase text-blue tracking-widest text-sm font-medium dark:text-stone-400">
           Local-first development toolkit
         </p>
-        <h1 className="font-display text-stone-950 dark:text-white text-4xl md:text-5xl lg:text-6xl font-medium tracking-tighter">
+        <H1>
           <span className="inline-block">Ship top-tier apps</span>{" "}
           <span className="inline-block">at high tempo.</span>
-        </h1>
+        </H1>
 
         <Prose size="lg" className="text-pretty max-w-2xl dark:text-stone-200">
           <p>
