@@ -1,8 +1,10 @@
-import { CoList, CoMap, ImageDefinition, co } from "jazz-tools";
+import { j } from "jazz-tools/src/implementation/schema2.js";
 
-export class Message extends CoMap {
-  text = co.string;
-  image = co.optional.ref(ImageDefinition);
-}
+export const Message = j.CoMap({
+  text: j.string(),
+  image: j.media.ImageDef.optional()
+});
 
-export class Chat extends CoList.Of(co.ref(Message)) {}
+export const Chat = j.CoMap({
+  messages: j.CoList(Message),
+});
