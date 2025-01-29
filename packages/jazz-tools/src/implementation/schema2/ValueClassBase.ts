@@ -1,4 +1,4 @@
-import { RawCoValue, RawAccount } from "cojson";
+import { RawAccount, RawCoValue } from "cojson";
 import { RegisteredSchemas } from "../../coValues/registeredSchemas.js";
 import { ID } from "../../internal.js";
 import { inspect } from "../inspect.js";
@@ -13,9 +13,10 @@ export class ValueClassBase {
   declare _instanceID: string;
 
   get _owner(): Loaded<Account> | Loaded<Group> {
-    const owner = this._raw.group instanceof RawAccount
-      ? RegisteredSchemas["Account"].fromRaw(this._raw.group)
-      : RegisteredSchemas["Group"].fromRaw(this._raw.group);
+    const owner =
+      this._raw.group instanceof RawAccount
+        ? RegisteredSchemas["Account"].fromRaw(this._raw.group)
+        : RegisteredSchemas["Group"].fromRaw(this._raw.group);
 
     const subScope = subscriptionsScopes.get(this);
     if (subScope) {
@@ -31,7 +32,8 @@ export class ValueClassBase {
     const rawAccount = this._raw.core.node.account;
 
     if (rawAccount instanceof RawAccount) {
-      return coValuesCache.get(rawAccount, () => RegisteredSchemas["Account"].fromRaw(rawAccount)
+      return coValuesCache.get(rawAccount, () =>
+        RegisteredSchemas["Account"].fromRaw(rawAccount),
       );
     }
 
@@ -60,9 +62,7 @@ export class ValueClassBase {
   }
 
   /** @category Type Helpers */
-  castAs<Cl extends CoValueDef>(
-    cl: Cl
-  ): InstanceType<Cl> {
+  castAs<Cl extends CoValueDef>(cl: Cl): InstanceType<Cl> {
     const casted = cl.fromRaw(this._raw) as InstanceType<Cl>;
     const subscriptionScope = subscriptionsScopes.get(this);
     if (subscriptionScope) {

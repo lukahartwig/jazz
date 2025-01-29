@@ -1,7 +1,7 @@
 import { RawCoMap } from "cojson";
 import { ID, ItemsSym, Schema } from "../../internal.js";
-import { CoMapDef, sym } from "./schema2.js";
 import { ValueClassBase } from "./ValueClassBase.js";
+import { CoMapDef, sym } from "./schema2.js";
 
 export function makeCoMapValueClass<S extends CoMapDef<any>>(schema: S) {
   return class CoMapValueClass extends ValueClassBase {
