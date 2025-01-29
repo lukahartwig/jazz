@@ -1,5 +1,17 @@
 # cojson
 
+## 0.9.19
+
+### Patch Changes
+
+- 6ad0a9f: Export Json types
+
+## 0.9.18
+
+### Patch Changes
+
+- 8898b10: Export AccountRole type
+
 ## 0.9.13
 
 ### Patch Changes

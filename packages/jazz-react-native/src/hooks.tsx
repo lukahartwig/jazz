@@ -1,9 +1,8 @@
 import { useEffect } from "react";
 
 import { createUseAccountHooks, useJazzContext } from "jazz-react-core";
-import { CoValue, CoValueClass, ID } from "jazz-tools";
+import { CoValue, CoValueClass, ID, parseInviteLink } from "jazz-tools";
 import { Linking } from "react-native";
-import { parseInviteLink } from "./platform.js";
 import { RegisteredAccount } from "./provider.js";
 
 export { useCoState, experimental_useInboxSender } from "jazz-react-core";

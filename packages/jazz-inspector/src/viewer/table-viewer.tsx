@@ -1,10 +1,10 @@
 import { CoID, LocalNode, RawCoValue } from "cojson";
-import type { JsonObject } from "cojson/src/jsonValue.ts";
+import type { JsonObject } from "cojson";
 import { useMemo, useState } from "react";
-import { LinkIcon } from "../link-icon.tsx";
-import { PageInfo } from "./types.ts";
-import { useResolvedCoValues } from "./use-resolve-covalue.ts";
-import { ValueRenderer } from "./value-renderer.tsx";
+import { LinkIcon } from "../link-icon.js";
+import { PageInfo } from "./types.js";
+import { useResolvedCoValues } from "./use-resolve-covalue.js";
+import { ValueRenderer } from "./value-renderer.js";
 
 export function TableView({
   data,

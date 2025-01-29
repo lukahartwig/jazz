@@ -1,12 +1,12 @@
 import { CoID, LocalNode, RawCoStream, RawCoValue } from "cojson";
 import { useEffect, useState } from "react";
-import { CoStreamView } from "./co-stream-view.tsx";
-import { GridView } from "./grid-view.tsx";
-import { TableView } from "./table-viewer.tsx";
-import { TypeIcon } from "./type-icon.tsx";
-import { PageInfo } from "./types.ts";
-import { useResolvedCoValue } from "./use-resolve-covalue.ts";
-import { AccountOrGroupPreview } from "./value-renderer.tsx";
+import { CoStreamView } from "./co-stream-view.js";
+import { GridView } from "./grid-view.js";
+import { TableView } from "./table-viewer.js";
+import { TypeIcon } from "./type-icon.js";
+import { PageInfo } from "./types.js";
+import { useResolvedCoValue } from "./use-resolve-covalue.js";
+import { AccountOrGroupPreview } from "./value-renderer.js";
 
 type PageProps = {
   coId: CoID<RawCoValue>;

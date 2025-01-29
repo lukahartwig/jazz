@@ -41,13 +41,24 @@ export { CoValueBase } from "./coValues/interfaces.js";
 export { Profile } from "./coValues/profile.js";
 export { SchemaUnion } from "./coValues/schemaUnion.js";
 
-export type { CoValueClass, DeeplyLoaded, DepthsIn } from "./internal.js";
+export type {
+  CoValueClass,
+  DeeplyLoaded,
+  Resolved,
+  RefsToResolve,
+} from "./internal.js";
 
 export {
   createCoValueObservable,
   loadCoValue,
   subscribeToCoValue,
 } from "./internal.js";
+
+export {
+  createInviteLink,
+  parseInviteLink,
+  consumeInviteLink,
+} from "./implementation/invites.js";
 
 export {
   AnonymousJazzAgent,

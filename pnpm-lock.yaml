@@ -453,7 +453,7 @@ importers:
         specifier: workspace:*
         version: link:../../packages/jazz-react
       jazz-react-auth-clerk:
-        specifier: workspace:0.9.15
+        specifier: workspace:0.9.20
         version: link:../../packages/jazz-react-auth-clerk
       jazz-tools:
         specifier: workspace:*
@@ -682,10 +682,10 @@ importers:
         specifier: ^2.0.0
         version: 2.1.1
       cojson:
-        specifier: workspace:0.9.13
+        specifier: workspace:0.9.19
         version: link:../../packages/cojson
       cojson-transport-ws:
-        specifier: workspace:0.9.13
+        specifier: workspace:0.9.19
         version: link:../../packages/cojson-transport-ws
       hash-slash:
         specifier: workspace:0.2.1
@@ -770,10 +770,10 @@ importers:
         specifier: workspace:*
         version: link:../../packages/jazz-inspector
       jazz-react:
-        specifier: workspace:0.9.15
+        specifier: workspace:0.9.20
         version: link:../../packages/jazz-react
       jazz-tools:
-        specifier: workspace:0.9.15
+        specifier: workspace:0.9.20
         version: link:../../packages/jazz-tools
       lucide-react:
         specifier: ^0.274.0
@@ -1027,10 +1027,10 @@ importers:
   examples/password-manager:
     dependencies:
       jazz-react:
-        specifier: workspace:0.9.15
+        specifier: workspace:0.9.20
         version: link:../../packages/jazz-react
       jazz-tools:
-        specifier: workspace:0.9.15
+        specifier: workspace:0.9.20
         version: link:../../packages/jazz-tools
       react:
         specifier: 18.3.1
@@ -1091,13 +1091,13 @@ importers:
         specifier: ^2.0.0
         version: 2.1.1
       jazz-browser-media-images:
-        specifier: workspace:0.9.15
+        specifier: workspace:0.9.20
         version: link:../../packages/jazz-browser-media-images
       jazz-react:
-        specifier: workspace:0.9.15
+        specifier: workspace:0.9.20
         version: link:../../packages/jazz-react
       jazz-tools:
-        specifier: workspace:0.9.15
+        specifier: workspace:0.9.20
         version: link:../../packages/jazz-tools
       lucide-react:
         specifier: ^0.274.0
@@ -1152,7 +1152,7 @@ importers:
         specifier: ^3.0.1
         version: 3.0.1
       jazz-run:
-        specifier: workspace:0.9.15
+        specifier: workspace:0.9.20
         version: link:../../packages/jazz-run
       postcss:
         specifier: ^8.4.27
@@ -1231,10 +1231,10 @@ importers:
         specifier: ^2.0.0
         version: 2.1.1
       jazz-react:
-        specifier: workspace:0.9.15
+        specifier: workspace:0.9.20
         version: link:../../packages/jazz-react
       jazz-tools:
-        specifier: workspace:0.9.15
+        specifier: workspace:0.9.20
         version: link:../../packages/jazz-tools
       lucide-react:
         specifier: ^0.274.0
@@ -1502,7 +1502,7 @@ importers:
         specifier: ^11.7.0
         version: 11.7.0
       cojson:
-        specifier: workspace:0.9.13
+        specifier: workspace:0.9.19
         version: link:../cojson
       cojson-storage:
         specifier: workspace:*
@@ -1518,7 +1518,7 @@ importers:
   packages/cojson-transport-ws:
     dependencies:
       cojson:
-        specifier: workspace:0.9.13
+        specifier: workspace:0.9.19
         version: link:../cojson
       typescript:
         specifier: ~5.6.2
@@ -1580,16 +1580,16 @@ importers:
         specifier: ^1.3.0
         version: 1.5.0
       cojson:
-        specifier: workspace:0.9.13
+        specifier: workspace:0.9.19
         version: link:../cojson
       cojson-storage-indexeddb:
-        specifier: workspace:0.9.13
+        specifier: workspace:0.9.19
         version: link:../cojson-storage-indexeddb
       cojson-transport-ws:
-        specifier: workspace:0.9.13
+        specifier: workspace:0.9.19
         version: link:../cojson-transport-ws
       jazz-tools:
-        specifier: workspace:0.9.15
+        specifier: workspace:0.9.20
         version: link:../jazz-tools
       typescript:
         specifier: ~5.6.2
@@ -1598,13 +1598,13 @@ importers:
   packages/jazz-browser-auth-clerk:
     dependencies:
       cojson:
-        specifier: workspace:0.9.13
+        specifier: workspace:0.9.19
         version: link:../cojson
       jazz-browser:
-        specifier: workspace:0.9.15
+        specifier: workspace:0.9.20
         version: link:../jazz-browser
       jazz-tools:
-        specifier: workspace:0.9.15
+        specifier: workspace:0.9.20
         version: link:../jazz-tools
     devDependencies:
       typescript:
@@ -1620,10 +1620,10 @@ importers:
         specifier: ^4.1.0
         version: 4.1.0
       jazz-browser:
-        specifier: workspace:0.9.15
+        specifier: workspace:0.9.20
         version: link:../jazz-browser
       jazz-tools:
-        specifier: workspace:0.9.15
+        specifier: workspace:0.9.20
         version: link:../jazz-tools
       pica:
         specifier: ^9.0.1
@@ -1673,13 +1673,13 @@ importers:
   packages/jazz-nodejs:
     dependencies:
       cojson:
-        specifier: workspace:0.9.13
+        specifier: workspace:0.9.19
         version: link:../cojson
       cojson-transport-ws:
-        specifier: workspace:0.9.13
+        specifier: workspace:0.9.19
         version: link:../cojson-transport-ws
       jazz-tools:
-        specifier: workspace:0.9.15
+        specifier: workspace:0.9.20
         version: link:../jazz-tools
       ws:
         specifier: ^8.14.2
@@ -1701,16 +1701,16 @@ importers:
         specifier: ^1.3.0
         version: 1.5.0
       cojson:
-        specifier: workspace:0.9.13
+        specifier: workspace:0.9.19
         version: link:../cojson
       jazz-browser:
-        specifier: workspace:0.9.15
+        specifier: workspace:0.9.20
         version: link:../jazz-browser
       jazz-react-core:
         specifier: workspace:*
         version: link:../jazz-react-core
       jazz-tools:
-        specifier: workspace:0.9.15
+        specifier: workspace:0.9.20
         version: link:../jazz-tools
     devDependencies:
       '@testing-library/dom':
@@ -1738,16 +1738,16 @@ importers:
   packages/jazz-react-auth-clerk:
     dependencies:
       cojson:
-        specifier: workspace:0.9.13
+        specifier: workspace:0.9.19
         version: link:../cojson
       jazz-browser-auth-clerk:
-        specifier: workspace:0.9.15
+        specifier: workspace:0.9.20
         version: link:../jazz-browser-auth-clerk
       jazz-react:
-        specifier: workspace:0.9.15
+        specifier: workspace:0.9.20
         version: link:../jazz-react
       jazz-tools:
-        specifier: workspace:0.9.15
+        specifier: workspace:0.9.20
         version: link:../jazz-tools
       react:
         specifier: 18.3.1
@@ -1884,19 +1884,19 @@ importers:
         specifier: ^0.25.5
         version: 0.25.8(effect@3.11.9)
       cojson:
-        specifier: workspace:0.9.13
+        specifier: workspace:0.9.19
         version: link:../cojson
       cojson-storage-sqlite:
-        specifier: workspace:0.9.13
+        specifier: workspace:0.9.19
         version: link:../cojson-storage-sqlite
       cojson-transport-ws:
-        specifier: workspace:0.9.13
+        specifier: workspace:0.9.19
         version: link:../cojson-transport-ws
       effect:
         specifier: ^3.6.5
         version: 3.11.9
       jazz-tools:
-        specifier: workspace:0.9.15
+        specifier: workspace:0.9.20
         version: link:../jazz-tools
       ws:
         specifier: ^8.14.2
@@ -3137,8 +3137,8 @@ packages:
       expo-secure-store:
         optional: true
 
-  '@clerk/clerk-js@5.43.3':
-    resolution: {integrity: sha512-F+ovIOOLEvgJJquGeRcxTUMeVThUYoN9cBUjWUAxpd25NVb2wcuZz/n6yxEaKuhv8lHXdww5m1rlVQIdi1R6cg==}
+  '@clerk/clerk-js@5.47.0':
+    resolution: {integrity: sha512-0S3xHJCJLIN2/EeiWF7uk+JstbL92dRbQ2ccEolnQiyMJUKHjwv3NGC5QxVizq1tEQrRcxVYWz46fb0DFamFVA==}
     engines: {node: '>=18.17.0'}
     peerDependencies:
       react: 18.3.1
@@ -3151,9 +3151,21 @@ packages:
       react: 18.3.1
       react-dom: 18.3.1
 
-  '@clerk/localizations@3.9.4':
-    resolution: {integrity: sha512-VvaSvvXRZuivJWFGPQ5IJI4hhusnS0NQKn5yTF8vd0Y3zv2wCoDcSHrzGsLB5KOj1Qd89GyWb4Pd/50Fh3YCwQ==}
+  '@clerk/localizations@3.9.13':
+    resolution: {integrity: sha512-Uw3DqK3Fwns6a6jw8cjM4B3UXAlNDgwMRpI93pOnZlWNeaP7jTGrsRPrq1sBDX8BDGcXYKDoUfM4o73caUoyfQ==}
     engines: {node: '>=18.17.0'}
+
+  '@clerk/shared@2.20.12':
+    resolution: {integrity: sha512-uy9Z2h0VXbQ4xwjj8mKuQSwm8MEFTAec+3gu4MSTyc1WboaPfX3MnO3qjqJEwu/oQkakocVI0P3nViYbXokZtQ==}
+    engines: {node: '>=18.17.0'}
+    peerDependencies:
+      react: 18.3.1
+      react-dom: 18.3.1
+    peerDependenciesMeta:
+      react:
+        optional: true
+      react-dom:
+        optional: true
 
   '@clerk/shared@2.20.4':
     resolution: {integrity: sha512-1ndGEO+NejIMFkl47DCeSpVv3nmKh9BHD6wt2Sl3X1wv7sj3eWzSVC14Exkag7D8Og2VcN4LXOFLErsCXHS+YQ==}
@@ -3169,6 +3181,10 @@ packages:
 
   '@clerk/types@4.40.0':
     resolution: {integrity: sha512-9QdllXYujsjYLbvPg9Kq1rWOemX5FB0r6Ijy8HOxwjKN+TPlxUnGcs+t7IwU+M5gdmZ2KV6aA6d1a2q2FlSoiA==}
+    engines: {node: '>=18.17.0'}
+
+  '@clerk/types@4.42.0':
+    resolution: {integrity: sha512-SPBRHdP+ZggeudncbSj8KLOZ5PdVmtgZhL+tXremVJrETi9WHpf1UOYgnIHl+clp6GZC2IQM4tq57RSrHf0Oew==}
     engines: {node: '>=18.17.0'}
 
   '@coinbase/wallet-sdk@4.0.4':
@@ -12500,7 +12516,7 @@ snapshots:
 
   '@clerk/clerk-expo@2.6.5(dxzpvinlcnpqlc4vkhiczb2xvi)':
     dependencies:
-      '@clerk/clerk-js': 5.43.3(@types/react@18.3.18)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@clerk/clerk-js': 5.47.0(@types/react@18.3.18)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@clerk/clerk-react': 5.20.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@clerk/shared': 2.20.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@clerk/types': 4.40.0
@@ -12518,11 +12534,11 @@ snapshots:
       - '@types/react'
       - supports-color
 
-  '@clerk/clerk-js@5.43.3(@types/react@18.3.18)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+  '@clerk/clerk-js@5.47.0(@types/react@18.3.18)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:
-      '@clerk/localizations': 3.9.4
-      '@clerk/shared': 2.20.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@clerk/types': 4.40.0
+      '@clerk/localizations': 3.9.13
+      '@clerk/shared': 2.20.12(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@clerk/types': 4.42.0
       '@coinbase/wallet-sdk': 4.0.4
       '@emotion/cache': 11.11.0
       '@emotion/react': 11.11.1(@types/react@18.3.18)(react@18.3.1)
@@ -12553,9 +12569,21 @@ snapshots:
       react-dom: 18.3.1(react@18.3.1)
       tslib: 2.4.1
 
-  '@clerk/localizations@3.9.4':
+  '@clerk/localizations@3.9.13':
     dependencies:
-      '@clerk/types': 4.40.0
+      '@clerk/types': 4.42.0
+
+  '@clerk/shared@2.20.12(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+    dependencies:
+      '@clerk/types': 4.42.0
+      dequal: 2.0.3
+      glob-to-regexp: 0.4.1
+      js-cookie: 3.0.5
+      std-env: 3.8.0
+      swr: 2.2.5(react@18.3.1)
+    optionalDependencies:
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
 
   '@clerk/shared@2.20.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:
@@ -12570,6 +12598,10 @@ snapshots:
       react-dom: 18.3.1(react@18.3.1)
 
   '@clerk/types@4.40.0':
+    dependencies:
+      csstype: 3.1.1
+
+  '@clerk/types@4.42.0':
     dependencies:
       csstype: 3.1.1
 

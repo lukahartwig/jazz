@@ -2,8 +2,6 @@ import { AgentSecret } from "cojson";
 import type { KvStore } from "jazz-react-native";
 import { Account, AuthMethod, AuthResult, Credentials, ID } from "jazz-tools";
 
-const localStorageKey = "jazz-clerk-auth";
-
 export type MinimalClerkClient = {
   user:
     | {
@@ -11,6 +9,10 @@ export type MinimalClerkClient = {
         unsafeMetadata: Record<string, any>;
         fullName: string | null;
         username: string | null;
+        firstName: string | null;
+        primaryEmailAddress: {
+          emailAddress: string;
+        } | null;
         id: string;
         update: (args: {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -22,6 +24,8 @@ export type MinimalClerkClient = {
   signOut: () => Promise<void>;
 };
 
+const localStorageKey = "jazz-clerk-auth";
+
 function saveCredentialsToStorage(kvStore: KvStore, credentials: Credentials) {
   kvStore.set(
     localStorageKey,
@@ -32,6 +36,10 @@ function saveCredentialsToStorage(kvStore: KvStore, credentials: Credentials) {
   );
 }
 
+async function clearStoredCredentials(kvStore: KvStore) {
+  await kvStore.delete(localStorageKey);
+}
+
 export class ReactNativeClerkAuth implements AuthMethod {
   constructor(
     public driver: ReactNativeClerkAuth.Driver,
@@ -40,12 +48,27 @@ export class ReactNativeClerkAuth implements AuthMethod {
   ) {}
 
   async start(): Promise<AuthResult> {
-    // Check local storage for credentials
     const locallyStoredCredentials = await this.kvStore.get(localStorageKey);
-
-    if (locallyStoredCredentials) {
+    if (locallyStoredCredentials && this.clerkClient.user) {
       try {
-        const credentials = JSON.parse(locallyStoredCredentials) as Credentials;
+        const stored = JSON.parse(locallyStoredCredentials);
+        const clerkMetadata = this.clerkClient.user.unsafeMetadata;
+        if (clerkMetadata.jazzAccountID !== stored.accountID) {
+          await clearStoredCredentials(this.kvStore);
+        }
+      } catch (e) {
+        await clearStoredCredentials(this.kvStore);
+      }
+    }
+
+    const locallyStoredCredentialsAgain =
+      await this.kvStore.get(localStorageKey);
+
+    if (locallyStoredCredentialsAgain) {
+      try {
+        const credentials = JSON.parse(
+          locallyStoredCredentialsAgain,
+        ) as Credentials;
         return {
           type: "existing",
           credentials,
@@ -55,7 +78,7 @@ export class ReactNativeClerkAuth implements AuthMethod {
             this.driver.onError(error);
           },
           logOut: () => {
-            void this.kvStore.delete(localStorageKey);
+            void clearStoredCredentials(this.kvStore);
             void this.clerkClient.signOut();
           },
         };
@@ -88,6 +111,7 @@ export class ReactNativeClerkAuth implements AuthMethod {
             this.driver.onError(error);
           },
           logOut: () => {
+            void clearStoredCredentials(this.kvStore);
             void this.clerkClient.signOut();
           },
         };
@@ -98,8 +122,15 @@ export class ReactNativeClerkAuth implements AuthMethod {
           creationProps: {
             name:
               this.clerkClient.user.fullName ||
+              this.clerkClient.user.firstName ||
               this.clerkClient.user.username ||
+              this.clerkClient.user.primaryEmailAddress?.emailAddress?.split(
+                "@",
+              )[0] ||
               this.clerkClient.user.id,
+            other: {
+              email: this.clerkClient.user.primaryEmailAddress?.emailAddress,
+            },
           },
           saveCredentials: async ({ accountID, secret }: Credentials) => {
             saveCredentialsToStorage(this.kvStore, {
@@ -118,6 +149,7 @@ export class ReactNativeClerkAuth implements AuthMethod {
             this.driver.onError(error);
           },
           logOut: () => {
+            void clearStoredCredentials(this.kvStore);
             void this.clerkClient.signOut();
           },
         };
@@ -140,12 +172,7 @@ export namespace ReactNativeClerkAuth {
 
 import { useMemo, useState } from "react";
 
-export function useJazzClerkAuth(
-  clerk: MinimalClerkClient & {
-    signOut: () => Promise<unknown>;
-  },
-  kvStore: KvStore,
-) {
+export function useJazzClerkAuth(clerk: MinimalClerkClient, kvStore: KvStore) {
   const [state, setState] = useState<{ errors: string[] }>({ errors: [] });
 
   const authMethod = useMemo(() => {

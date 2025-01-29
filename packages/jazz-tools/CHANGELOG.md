@@ -1,5 +1,40 @@
 # jazz-tools
 
+## 0.9.20
+
+### Patch Changes
+
+- b01cc1f: Switches from symbols to prefixes strings for private properties
+
+## 0.9.19
+
+### Patch Changes
+
+- Updated dependencies [6ad0a9f]
+  - cojson@0.9.19
+
+## 0.9.18
+
+### Patch Changes
+
+- Updated dependencies [8898b10]
+  - cojson@0.9.18
+
+## 0.9.17
+
+### Patch Changes
+
+- c2ca1fe: Add cross-platform invite API
+- 1227047: Improve typescript types for group.addMember
+
+## 0.9.16
+
+### Patch Changes
+
+- 24b3b6a: Extract friendly user name for profile creation when authenticating using Clerk with a regular email address.
+  Email passed to creationProps when using Clerk auth
+  Clear stored Clerk credentials on logout
+
 ## 0.9.15
 
 ### Patch Changes

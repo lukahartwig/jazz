@@ -5,6 +5,7 @@ import {
   type CoValueClass,
   CoValueFromRaw,
   ItemsSym,
+  JazzToolsSymbol,
   MembersSym,
   SchemaInit,
   isCoValueClass,
@@ -23,7 +24,9 @@ export type CoMarker = { readonly __co: unique symbol };
 export type co<T> = T | (T & CoMarker);
 export type IfCo<C, R> = C extends infer _A | infer B
   ? B extends CoMarker
-    ? R
+    ? R extends JazzToolsSymbol // Exclude symbol properties like co.items or co.members from the refs/init types
+      ? never
+      : R
     : never
   : never;
 export type UnCo<T> = T extends co<infer A> ? A : T;

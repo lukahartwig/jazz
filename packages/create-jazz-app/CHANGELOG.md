@@ -1,5 +1,11 @@
 # create-jazz-app
 
+## 0.1.8
+
+### Patch Changes
+
+- 0fc4f24: fix create-jazz-app fails if no starter param
+
 ## 0.1.7
 
 ### Patch Changes

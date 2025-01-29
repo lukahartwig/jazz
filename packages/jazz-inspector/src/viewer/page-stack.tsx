@@ -1,5 +1,5 @@
 import { CoID, LocalNode, RawCoValue } from "cojson";
-import { Page } from "./page.tsx"; // Assuming you have a Page component
+import { Page } from "./page.js"; // Assuming you have a Page component
 
 // Define the structure of a page in the path
 interface PageInfo {

@@ -17,13 +17,6 @@ You can create a new Jazz app in two ways:
 ### Interactive mode
 
 Simply run:
-
-```bash
-npm create jazz-app@latest
-```
-
-or
-
 ```bash
 npx create-jazz-app@latest
 ```
@@ -38,7 +31,7 @@ Then follow the interactive prompts to select your:
 Or specify all options directly:
 
 ```bash
-npm create jazz-app@latest -- --starter react-demo-auth --project-name my-app --package-manager npm
+npx create-jazz-app@latest --starter react-demo-auth --project-name my-app --package-manager npm
 ```
 
 ### Start with an example app

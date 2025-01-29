@@ -3,7 +3,7 @@ import {
   CoJsonType,
   ExtendedCoJsonType,
   useResolvedCoValue,
-} from "./use-resolve-covalue.ts";
+} from "./use-resolve-covalue.js";
 
 export const TypeIcon = ({
   type,

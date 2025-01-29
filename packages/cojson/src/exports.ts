@@ -17,6 +17,8 @@ import { OpID, RawCoList } from "./coValues/coList.js";
 import { RawCoMap } from "./coValues/coMap.js";
 import { RawCoPlainText, stringifyOpID } from "./coValues/coPlainText.js";
 import {
+  BinaryStreamItem,
+  BinaryStreamStart,
   CoStreamItem,
   RawBinaryCoStream,
   RawCoStream,
@@ -38,7 +40,7 @@ import {
 } from "./ids.js";
 import { Stringified, parseJSON, stableStringify } from "./jsonStringify.js";
 import { LocalNode } from "./localNode.js";
-import type { Role } from "./permissions.js";
+import type { AccountRole, Role } from "./permissions.js";
 import { Channel, connectedPeers } from "./streamUtils.js";
 import { accountOrAgentIDfromSessionID } from "./typeUtils/accountOrAgentIDfromSessionID.js";
 import { expectGroup } from "./typeUtils/expectGroup.js";
@@ -57,7 +59,7 @@ import type {
 import type { InviteSecret } from "./coValues/group.js";
 import type { AgentSecret } from "./crypto/crypto.js";
 import type { AgentID, RawCoID, SessionID } from "./ids.js";
-import type { JsonValue } from "./jsonValue.js";
+import type { JsonObject, JsonValue } from "./jsonValue.js";
 import type * as Media from "./media.js";
 import { disablePermissionErrors } from "./permissions.js";
 import type {
@@ -128,6 +130,7 @@ export {
   ControlledAgent,
   RawControlledAccount,
   MAX_RECOMMENDED_TX_SIZE,
+  JsonObject,
   JsonValue,
   Peer,
   BinaryStreamInfo,
@@ -143,6 +146,8 @@ export {
   RawCoPlainText,
   stringifyOpID,
   logger,
+  base64URLtoBytes,
+  bytesToBase64url,
 };
 
 export type {
@@ -157,7 +162,10 @@ export type {
   CoValueUniqueness,
   Stringified,
   CoStreamItem,
+  BinaryStreamItem,
+  BinaryStreamStart,
   OpID,
+  AccountRole,
 };
 
 // eslint-disable-next-line @typescript-eslint/no-namespace

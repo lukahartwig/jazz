@@ -8,9 +8,8 @@ import {
   CoValueClass,
   CryptoProvider,
   ID,
-  InviteSecret,
   SessionID,
-  cojsonInternals,
+  createInviteLink as baseCreateInviteLink,
   createJazzContext,
 } from "jazz-tools";
 
@@ -155,58 +154,7 @@ export function createInviteLink<C extends CoValue>(
   role: "reader" | "writer" | "admin",
   { baseURL, valueHint }: { baseURL?: string; valueHint?: string } = {},
 ): string {
-  const coValueCore = value._raw.core;
-  let currentCoValue = coValueCore;
-
-  while (currentCoValue.header.ruleset.type === "ownedByGroup") {
-    currentCoValue = currentCoValue.getGroup().core;
-  }
-
-  if (currentCoValue.header.ruleset.type !== "group") {
-    throw new Error("Can't create invite link for object without group");
-  }
-
-  const group = cojsonInternals.expectGroup(currentCoValue.getCurrentContent());
-  const inviteSecret = group.createInvite(role);
-
-  return `${baseURL}/invite/${valueHint ? valueHint + "/" : ""}${
-    value.id
-  }/${inviteSecret}`;
-}
-
-/** @category Invite Links */
-// TODO: copied from jazz-browser, should be shared
-export function parseInviteLink<C extends CoValue>(
-  inviteURL: string,
-):
-  | {
-      valueID: ID<C>;
-      valueHint?: string;
-      inviteSecret: InviteSecret;
-    }
-  | undefined {
-  const url = new URL(inviteURL);
-  const parts = url.hash.split("/");
-
-  let valueHint: string | undefined;
-  let valueID: ID<C> | undefined;
-  let inviteSecret: InviteSecret | undefined;
-
-  if (parts[0] === "#" && parts[1] === "invite") {
-    if (parts.length === 5) {
-      valueHint = parts[2];
-      valueID = parts[3] as ID<C>;
-      inviteSecret = parts[4] as InviteSecret;
-    } else if (parts.length === 4) {
-      valueID = parts[2] as ID<C>;
-      inviteSecret = parts[3] as InviteSecret;
-    }
-
-    if (!valueID || !inviteSecret) {
-      return undefined;
-    }
-    return { valueID, inviteSecret, valueHint };
-  }
+  return baseCreateInviteLink(value, role, baseURL ?? "", valueHint);
 }
 
 export function setupKvStore(kvStore = new ExpoSecureStoreAdapter()) {

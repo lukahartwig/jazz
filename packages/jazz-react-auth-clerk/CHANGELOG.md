@@ -1,5 +1,56 @@
 # jazz-browser-media-images
 
+## 0.9.20
+
+### Patch Changes
+
+- Updated dependencies [b01cc1f]
+  - jazz-tools@0.9.20
+  - jazz-browser-auth-clerk@0.9.20
+  - jazz-react@0.9.20
+
+## 0.9.19
+
+### Patch Changes
+
+- Updated dependencies [6ad0a9f]
+  - cojson@0.9.19
+  - jazz-browser-auth-clerk@0.9.19
+  - jazz-react@0.9.19
+  - jazz-tools@0.9.19
+
+## 0.9.18
+
+### Patch Changes
+
+- Updated dependencies [8898b10]
+  - cojson@0.9.18
+  - jazz-browser-auth-clerk@0.9.18
+  - jazz-react@0.9.18
+  - jazz-tools@0.9.18
+
+## 0.9.17
+
+### Patch Changes
+
+- Updated dependencies [c2ca1fe]
+- Updated dependencies [1227047]
+  - jazz-tools@0.9.17
+  - jazz-browser-auth-clerk@0.9.17
+  - jazz-react@0.9.17
+
+## 0.9.16
+
+### Patch Changes
+
+- 24b3b6a: Extract friendly user name for profile creation when authenticating using Clerk with a regular email address.
+  Email passed to creationProps when using Clerk auth
+  Clear stored Clerk credentials on logout
+- Updated dependencies [24b3b6a]
+  - jazz-browser-auth-clerk@0.9.16
+  - jazz-tools@0.9.16
+  - jazz-react@0.9.16
+
 ## 0.9.15
 
 ### Patch Changes

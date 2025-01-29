@@ -263,7 +263,8 @@ async function promptUser(
   return {
     ...answers,
     ...partialOptions,
-    template: partialOptions.starter || partialOptions.example,
+    template:
+      answers.starter || partialOptions.starter || partialOptions.example,
   } as ScaffoldOptions;
 }
 

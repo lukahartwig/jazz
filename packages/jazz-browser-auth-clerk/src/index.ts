@@ -1,8 +1,6 @@
 import { AgentSecret } from "cojson";
 import { Account, AuthMethod, AuthResult, Credentials, ID } from "jazz-tools";
 
-const localStorageKey = "jazz-clerk-auth";
-
 export type MinimalClerkClient = {
   user:
     | {
@@ -10,6 +8,10 @@ export type MinimalClerkClient = {
         unsafeMetadata: Record<string, any>;
         fullName: string | null;
         username: string | null;
+        firstName: string | null;
+        primaryEmailAddress: {
+          emailAddress: string;
+        } | null;
         id: string;
         update: (args: {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -21,6 +23,8 @@ export type MinimalClerkClient = {
   signOut: () => Promise<void>;
 };
 
+const localStorageKey = "jazz-clerk-auth";
+
 function saveCredentialsToLocalStorage(credentials: Credentials) {
   localStorage.setItem(
     localStorageKey,
@@ -31,6 +35,10 @@ function saveCredentialsToLocalStorage(credentials: Credentials) {
   );
 }
 
+function clearStoredCredentials() {
+  localStorage.removeItem(localStorageKey);
+}
+
 export class BrowserClerkAuth implements AuthMethod {
   constructor(
     public driver: BrowserClerkAuth.Driver,
@@ -38,8 +46,21 @@ export class BrowserClerkAuth implements AuthMethod {
   ) {}
 
   async start(): Promise<AuthResult> {
-    // Check local storage for credentials
-    const locallyStoredCredentials = localStorage.getItem(localStorageKey);
+    // clear localStorage if the current Clerk user doesn't match stored credentials
+    let locallyStoredCredentials = localStorage.getItem(localStorageKey);
+    if (locallyStoredCredentials && this.clerkClient.user) {
+      try {
+        const stored = JSON.parse(locallyStoredCredentials);
+        const clerkMetadata = this.clerkClient.user.unsafeMetadata;
+        if (clerkMetadata.jazzAccountID !== stored.accountID) {
+          clearStoredCredentials();
+        }
+      } catch (e) {
+        clearStoredCredentials();
+      }
+    }
+
+    locallyStoredCredentials = localStorage.getItem(localStorageKey);
 
     if (locallyStoredCredentials) {
       try {
@@ -53,7 +74,7 @@ export class BrowserClerkAuth implements AuthMethod {
             this.driver.onError(error);
           },
           logOut: () => {
-            localStorage.removeItem(localStorageKey);
+            clearStoredCredentials();
             void this.clerkClient.signOut();
           },
         };
@@ -86,6 +107,7 @@ export class BrowserClerkAuth implements AuthMethod {
             this.driver.onError(error);
           },
           logOut: () => {
+            clearStoredCredentials();
             void this.clerkClient.signOut();
           },
         };
@@ -96,8 +118,15 @@ export class BrowserClerkAuth implements AuthMethod {
           creationProps: {
             name:
               this.clerkClient.user.fullName ||
+              this.clerkClient.user.firstName ||
               this.clerkClient.user.username ||
+              this.clerkClient.user.primaryEmailAddress?.emailAddress?.split(
+                "@",
+              )[0] ||
               this.clerkClient.user.id,
+            other: {
+              email: this.clerkClient.user.primaryEmailAddress?.emailAddress,
+            },
           },
           saveCredentials: async ({ accountID, secret }: Credentials) => {
             saveCredentialsToLocalStorage({
@@ -116,6 +145,7 @@ export class BrowserClerkAuth implements AuthMethod {
             this.driver.onError(error);
           },
           logOut: () => {
+            clearStoredCredentials();
             void this.clerkClient.signOut();
           },
         };

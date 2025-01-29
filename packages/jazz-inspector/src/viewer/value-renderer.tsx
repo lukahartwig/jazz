@@ -1,11 +1,11 @@
 import { CoID, JsonValue, LocalNode, RawCoValue } from "cojson";
 import React, { useEffect, useState } from "react";
-import { LinkIcon } from "../link-icon.tsx";
+import { LinkIcon } from "../link-icon.js";
 import {
   isBrowserImage,
   resolveCoValue,
   useResolvedCoValue,
-} from "./use-resolve-covalue.ts";
+} from "./use-resolve-covalue.js";
 
 // Is there a chance we can pass the actual CoValue here?
 export function ValueRenderer({

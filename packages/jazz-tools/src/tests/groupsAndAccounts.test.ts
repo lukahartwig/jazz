@@ -1,9 +1,16 @@
 import { WasmCrypto } from "cojson";
-import { describe, expect, test } from "vitest";
+import { beforeEach, describe, expect, test } from "vitest";
 import { Account, CoMap, Group, Profile, co } from "../exports.js";
+import { createJazzTestAccount } from "../testing.js";
 import { setupTwoNodes } from "./utils.js";
 
 const Crypto = await WasmCrypto.create();
+
+beforeEach(async () => {
+  await createJazzTestAccount({
+    isCurrentActiveAccount: true,
+  });
+});
 
 describe("Custom accounts and groups", async () => {
   class CustomProfile extends Profile {
@@ -112,18 +119,16 @@ describe("Group inheritance", () => {
 
     const mapInChild = TestMap.create({ title: "In Child" }, { owner: group });
 
-    const mapAsReader = await TestMap.load(mapInChild.id, reader, {});
+    const mapAsReader = await TestMap.load(mapInChild.id, { loadAs: reader });
     expect(mapAsReader?.title).toBe("In Child");
 
     parentGroup.removeMember(reader);
 
     mapInChild.title = "In Child (updated)";
 
-    const mapAsReaderAfterUpdate = await TestMap.load(
-      mapInChild.id,
-      reader,
-      {},
-    );
+    const mapAsReaderAfterUpdate = await TestMap.load(mapInChild.id, {
+      loadAs: reader,
+    });
     expect(mapAsReaderAfterUpdate?.title).toBe("In Child");
   });
 
@@ -151,18 +156,18 @@ describe("Group inheritance", () => {
       { owner: group },
     );
 
-    const mapAsReader = await TestMap.load(mapInGrandChild.id, reader, {});
+    const mapAsReader = await TestMap.load(mapInGrandChild.id, {
+      loadAs: reader,
+    });
     expect(mapAsReader?.title).toBe("In Grand Child");
 
     grandParentGroup.removeMember(reader);
 
     mapInGrandChild.title = "In Grand Child (updated)";
 
-    const mapAsReaderAfterUpdate = await TestMap.load(
-      mapInGrandChild.id,
-      reader,
-      {},
-    );
+    const mapAsReaderAfterUpdate = await TestMap.load(mapInGrandChild.id, {
+      loadAs: reader,
+    });
     expect(mapAsReaderAfterUpdate?.title).toBe("In Grand Child");
   });
 
@@ -179,5 +184,62 @@ describe("Group inheritance", () => {
     const loadedGroup = await serverNode.load(group._raw.id);
 
     expect(loadedGroup).not.toBe("unavailable");
+  });
+
+  test("everyone is valid only for reader and writer roles", () => {
+    const group = Group.create();
+    group.addMember("everyone", "reader");
+
+    expect(group.members).toContainEqual({
+      id: "everyone",
+      role: "reader",
+      account: undefined,
+      ref: undefined,
+    });
+
+    group.addMember("everyone", "writer");
+
+    expect(group.members).toContainEqual({
+      id: "everyone",
+      role: "writer",
+      account: undefined,
+      ref: undefined,
+    });
+
+    // @ts-expect-error - admin is not a valid role for everyone
+    expect(() => group.addMember("everyone", "admin")).toThrow();
+
+    expect(group.members).toContainEqual({
+      id: "everyone",
+      role: "writer",
+      account: undefined,
+      ref: undefined,
+    });
+
+    // @ts-expect-error - writeOnly is not a valid role for everyone
+    expect(() => group.addMember("everyone", "writeOnly")).toThrow();
+
+    expect(group.members).toContainEqual({
+      id: "everyone",
+      role: "writer",
+      account: undefined,
+      ref: undefined,
+    });
+  });
+
+  test("typescript should show an error when adding a member with a non-account role", async () => {
+    const account = await createJazzTestAccount({});
+
+    const group = Group.create();
+
+    // @ts-expect-error - Even though readerInvite is a valid role for an account, we don't allow it to not create confusion when using the intellisense
+    group.addMember(account, "readerInvite");
+
+    expect(group.members).toContainEqual(
+      expect.objectContaining({
+        id: account.id,
+        role: "readerInvite",
+      }),
+    );
   });
 });

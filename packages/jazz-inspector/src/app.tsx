@@ -1,1 +1,1 @@
-export { JazzInspector } from "./viewer/new-app.tsx";
+export { JazzInspector } from "./viewer/new-app.js";

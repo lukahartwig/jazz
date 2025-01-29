@@ -1,5 +1,5 @@
 import React from "react";
-import { PageInfo } from "./types.ts";
+import { PageInfo } from "./types.js";
 
 interface BreadcrumbsProps {
   path: PageInfo[];

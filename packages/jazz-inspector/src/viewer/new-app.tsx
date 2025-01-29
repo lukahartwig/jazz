@@ -1,9 +1,9 @@
 import { CoID, RawCoValue } from "cojson";
 import { createUseAccountHooks } from "jazz-react-core";
 import React, { useState } from "react";
-import { Breadcrumbs } from "./breadcrumbs.tsx";
-import { PageStack } from "./page-stack.tsx";
-import { usePagePath } from "./use-page-path.ts";
+import { Breadcrumbs } from "./breadcrumbs.js";
+import { PageStack } from "./page-stack.js";
+import { usePagePath } from "./use-page-path.js";
 
 const { useAccount } = createUseAccountHooks();
 

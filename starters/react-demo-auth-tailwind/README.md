@@ -6,7 +6,7 @@ A minimal starter template for building apps with **[Jazz](https://jazz.tools)**
 
 Create a new Jazz app.
 ```bash
-npx create-jazz-app
+npx create-jazz-app@latest
 ```
 
 Then select "React + Jazz + Demo Auth + Tailwind".

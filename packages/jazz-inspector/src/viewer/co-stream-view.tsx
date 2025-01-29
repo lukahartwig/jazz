@@ -5,16 +5,12 @@ import {
   RawCoStream,
   RawCoValue,
 } from "cojson";
-import { base64URLtoBytes } from "cojson/src/base64url.ts";
-import {
-  BinaryStreamItem,
-  BinaryStreamStart,
-  CoStreamItem,
-} from "cojson/src/coValues/coStream.ts";
-import type { JsonObject, JsonValue } from "cojson/src/jsonValue.ts";
+import { base64URLtoBytes } from "cojson";
+import { BinaryStreamItem, BinaryStreamStart, CoStreamItem } from "cojson";
+import type { JsonObject, JsonValue } from "cojson";
 import { useEffect, useState } from "react";
-import { PageInfo } from "./types.ts";
-import { AccountOrGroupPreview } from "./value-renderer.tsx";
+import { PageInfo } from "./types.js";
+import { AccountOrGroupPreview } from "./value-renderer.js";
 
 // typeguard for BinaryStreamStart
 function isBinaryStreamStart(item: unknown): item is BinaryStreamStart {
