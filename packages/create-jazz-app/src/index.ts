@@ -35,6 +35,7 @@ type PromptOptions = {
   example?: string;
   projectName?: string;
   packageManager?: PackageManager;
+  apiKey?: string;
 };
 
 async function getLatestPackageVersions(
