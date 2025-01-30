@@ -26,6 +26,7 @@ type ScaffoldOptions = {
   template: FrameworkAuthPair | string;
   projectName: string;
   packageManager: PackageManager;
+  apiKey?: string;
 };
 
 type PromptOptions = {
@@ -84,6 +85,7 @@ async function scaffoldProject({
   template,
   projectName,
   packageManager,
+  apiKey,
 }: ScaffoldOptions): Promise<void> {
   console.log("\n" + jazzGradient.multiline("Jazz App Creator\n"));
 
@@ -150,6 +152,50 @@ async function scaffoldProject({
   } catch (error) {
     depsSpinner.fail(chalk.red("Failed to update dependencies"));
     throw error;
+  }
+
+  // Replace API key if provided
+  if (apiKey) {
+    const replaceSpinner = ora({
+      text: chalk.blue("Updating API key..."),
+      spinner: "dots",
+    }).start();
+
+    try {
+      // Search for files that might contain the API key
+      const filesToSearch = [
+        "src/jazz.tsx",
+        "src/index.tsx",
+        "src/main.tsx",
+        "src/App.tsx",
+        "src/auth-context.tsx",
+        "src/main.ts",
+        "src/2_main.tsx",
+        "src/routes/+layout.svelte",
+      ];
+
+      for (const file of filesToSearch) {
+        const filePath = `${projectName}/${file}`;
+        if (fs.existsSync(filePath)) {
+          let content = fs.readFileSync(filePath, "utf8");
+          // Replace any Jazz API key pattern
+          const keyPattern = /key=([^&\s"']+)/g;
+          const updatedContent = content.replace(keyPattern, `key=${apiKey}`);
+
+          if (content !== updatedContent) {
+            fs.writeFileSync(filePath, updatedContent);
+          }
+        }
+      }
+      replaceSpinner.succeed(chalk.green("API key updated"));
+    } catch (error) {
+      replaceSpinner.fail(chalk.red("Failed to update API key"));
+      console.warn(
+        chalk.yellow(
+          "You may need to manually update the API key in your Jazz Provider.",
+        ),
+      );
+    }
   }
 
   // Step 4: Install dependencies
@@ -256,7 +302,6 @@ async function promptUser(
       choices = choices.filter(([key, value]) => key.startsWith(framework));
     }
 
-    // Then filter starters based on selected framework
     questions.push({
       type: "list",
       name: "starter",
@@ -345,6 +390,7 @@ program
     "-p, --package-manager <manager>",
     chalk.cyan("Package manager to use (npm, yarn, pnpm, bun, deno)"),
   )
+  .option("-k, --api-key <key>", chalk.cyan("Jazz Cloud API key"))
   .action(async (options) => {
     try {
       const partialOptions: PromptOptions = {};
@@ -365,6 +411,7 @@ program
         partialOptions.packageManager =
           options.packageManager as ScaffoldOptions["packageManager"];
       if (options.framework) partialOptions.framework = options.framework;
+      if (options.apiKey) partialOptions.apiKey = options.apiKey;
 
       // Get missing options through prompts
       const scaffoldOptions = await promptUser(partialOptions);
@@ -399,6 +446,12 @@ program.on("--help", () => {
   console.log(
     chalk.white(
       "  create-jazz-app --starter react-demo-auth --project-name my-app --package-manager npm\n",
+    ),
+  );
+  console.log(chalk.blue("With API key:"));
+  console.log(
+    chalk.white(
+      "  create-jazz-app --starter react-demo-auth --project-name my-app --api-key your-api-key@garden.co\n",
     ),
   );
 });
