@@ -9,7 +9,12 @@ import gradient from "gradient-string";
 import inquirer from "inquirer";
 import ora from "ora";
 
-import { type FrameworkAuthPair, frameworkToAuthExamples } from "./config.js";
+import {
+  Framework,
+  type FrameworkAuthPair,
+  frameworkToAuthExamples,
+  frameworks,
+} from "./config.js";
 
 const program = new Command();
 
@@ -24,6 +29,7 @@ type ScaffoldOptions = {
 };
 
 type PromptOptions = {
+  framework?: Framework;
   starter?: FrameworkAuthPair;
   example?: string;
   projectName?: string;
@@ -88,8 +94,7 @@ async function scaffoldProject({
     throw new Error(`Invalid template: ${template}`);
   }
 
-  const devCommand =
-    template === "react-native-expo-clerk-auth" ? "ios" : "dev";
+  const devCommand = template.includes("rn-clerk") ? "ios" : "dev";
 
   if (!starterConfig.repo) {
     throw new Error(
@@ -214,21 +219,52 @@ async function promptUser(
 
   const questions = [];
 
+  if (
+    partialOptions.framework &&
+    !frameworks.find(
+      (framework) => framework.value === partialOptions.framework,
+    )
+  ) {
+    throw new Error(`Invalid framework: ${partialOptions.framework}`);
+  }
+
   if (partialOptions.starter && partialOptions.example) {
     throw new Error("Please specify either a starter or an example, not both.");
   }
 
   if (!partialOptions.example && !partialOptions.starter) {
+    let framework = partialOptions.framework;
+
+    if (!partialOptions.framework) {
+      const answers = await inquirer.prompt([
+        {
+          type: "list",
+          name: "framework",
+          message: chalk.cyan("Choose a framework:"),
+          choices: Array.from(frameworks).map((framework) => ({
+            name: chalk.white(framework.name),
+            value: framework.value,
+          })),
+        },
+      ]);
+      framework = answers.framework;
+    }
+
+    let choices = Object.entries(frameworkToAuthExamples);
+
+    if (framework) {
+      choices = choices.filter(([key, value]) => key.startsWith(framework));
+    }
+
+    // Then filter starters based on selected framework
     questions.push({
       type: "list",
       name: "starter",
       message: chalk.cyan("Choose a starter:"),
-      choices: Object.entries(frameworkToAuthExamples)
-        .filter(([_, value]) => value.repo) // Only show implemented starters
-        .map(([key, value]) => ({
-          name: chalk.white(value.name),
-          value: key,
-        })),
+      choices: choices.map(([key, value]) => ({
+        name: chalk.white(value.name),
+        value: key,
+      })),
     });
   }
 
@@ -301,6 +337,7 @@ function validateOptions(options: PromptOptions): options is ScaffoldOptions {
 
 program
   .description(chalk.blue("CLI to generate Jazz starter projects"))
+  .option("-f, --framework <framework>", chalk.cyan("Framework to use"))
   .option("-s, --starter <starter>", chalk.cyan("Starter template to use"))
   .option("-e, --example <name>", chalk.cyan("Example project to use"))
   .option("-n, --project-name <name>", chalk.cyan("Name of the project"))
@@ -327,6 +364,7 @@ program
       if (options.packageManager)
         partialOptions.packageManager =
           options.packageManager as ScaffoldOptions["packageManager"];
+      if (options.framework) partialOptions.framework = options.framework;
 
       // Get missing options through prompts
       const scaffoldOptions = await promptUser(partialOptions);

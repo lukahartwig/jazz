@@ -1,6 +1,6 @@
 export type Environment = "browser" | "mobile";
 export type Engine = "browser" | "mobile" | "nodejs" | "deno" | "bun";
-export type Framework = "react" | "vue" | "svelte" | "react-native-expo";
+export type Framework = "react" | "vue" | "svelte" | "rn";
 export type AuthMethod =
   | "demo"
   | "passkey"
@@ -15,6 +15,25 @@ export type EngineConfig = {
     };
   };
 };
+
+export const frameworks = [
+  {
+    name: "React",
+    value: "react",
+  },
+  {
+    name: "React Native",
+    value: "rn",
+  },
+  {
+    name: "Svelte",
+    value: "svelte",
+  },
+  {
+    name: "Vue",
+    value: "vue",
+  },
+];
 
 export type ConfigStructure = Record<Environment, EngineConfig>;
 
@@ -43,7 +62,7 @@ export const configMap: ConfigStructure = {
   },
   mobile: {
     mobile: {
-      "react-native-expo": { auth: ["demo", "clerk"] },
+      rn: { auth: ["demo", "clerk"] },
     },
   },
 };
@@ -74,7 +93,7 @@ export const frameworkToAuthExamples: Partial<
     name: "Svelte + Jazz + Passkey Auth",
     repo: "garden-co/jazz/examples/passkey-svelte",
   },
-  "react-native-expo-clerk-auth": {
+  "rn-clerk-auth": {
     name: "React Native Expo + Jazz + Clerk Auth",
     repo: "garden-co/jazz/examples/chat-rn-clerk",
   },
