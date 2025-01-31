@@ -18,6 +18,7 @@ import {
 import { PetAccount, PetPost } from "./1_schema.ts";
 import { NewPetPostForm } from "./3_NewPetPostForm.tsx";
 import { RatePetPostUI } from "./4_RatePetPostUI.tsx";
+import { apiKey } from "./apiKey.ts";
 import {
   Button,
   ThemeProvider,
@@ -27,8 +28,7 @@ import {
 const peer =
   (new URL(window.location.href).searchParams.get(
     "peer",
-  ) as `ws://${string}`) ??
-  "wss://cloud.jazz.tools/?key=pets-example-jazz@garden.co";
+  ) as `ws://${string}`) ?? `wss://cloud.jazz.tools/?key=${apiKey}`;
 
 const appName = "Jazz Rate My Pet Example";
 

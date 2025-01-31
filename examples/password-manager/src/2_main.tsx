@@ -4,13 +4,14 @@ import ReactDOM from "react-dom/client";
 import { PasswordManagerAccount } from "./1_schema.ts";
 import App from "./5_App.tsx";
 import "./index.css";
+import { apiKey } from "./apiKey";
 
 function JazzAndAuth({ children }: { children: React.ReactNode }) {
   return (
     <JazzProvider
       AccountSchema={PasswordManagerAccount}
       sync={{
-        peer: "wss://cloud.jazz.tools/?key=password-manager-example-jazz@garden.co",
+        peer: `wss://cloud.jazz.tools/?key=${apiKey}`,
         when: "signedUp",
       }}
     >

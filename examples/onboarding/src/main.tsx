@@ -4,12 +4,12 @@ import { HRAccount } from "@/schema.ts";
 import { JazzProvider } from "jazz-react";
 import React from "react";
 import ReactDOM from "react-dom/client";
+import { apiKey } from "./apiKey";
 
 const peer =
   (new URL(window.location.href).searchParams.get(
     "peer",
-  ) as `ws://${string}`) ??
-  "wss://cloud.jazz.tools/?key=onboarding-example-jazz@garden.co";
+  ) as `ws://${string}`) ?? `wss://cloud.jazz.tools/?key=${apiKey}`;
 
 declare module "jazz-react" {
   interface Register {

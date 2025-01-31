@@ -10,6 +10,7 @@ import React, { StrictMode, useEffect, useState } from "react";
 import HandleInviteScreen from "./invite";
 
 import { JazzProvider } from "jazz-react-native";
+import { apiKey } from "./apiKey";
 import ChatScreen from "./chat";
 
 const Stack = createNativeStackNavigator();
@@ -47,7 +48,7 @@ function App() {
       <JazzProvider
         storage="sqlite"
         sync={{
-          peer: "wss://cloud.jazz.tools/?key=chat-rn-example-jazz@garden.co",
+          peer: `wss://cloud.jazz.tools/?key=${apiKey}`,
         }}
       >
         <NavigationContainer linking={linking} ref={navigationRef}>

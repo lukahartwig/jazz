@@ -2,6 +2,7 @@ import { JazzProvider } from "jazz-react";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "./index.css";
+import { apiKey } from "@/apiKey.ts";
 import { RouterProvider, createHashRouter } from "react-router-dom";
 import { AcceptInvitePage } from "./AcceptInvitePage.tsx";
 import { HomePage } from "./HomePage.tsx";
@@ -38,7 +39,7 @@ createRoot(document.getElementById("root")!).render(
     <JazzProvider
       AccountSchema={JazzAccount}
       sync={{
-        peer: "wss://cloud.jazz.tools/?key=organization-example@garden.co",
+        peer: `wss://cloud.jazz.tools/?key=${apiKey}`,
       }}
     >
       <Router />

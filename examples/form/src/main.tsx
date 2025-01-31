@@ -3,6 +3,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
+import { apiKey } from "./apiKey";
 import { JazzAccount } from "./schema.ts";
 
 declare module "jazz-react" {
@@ -15,7 +16,7 @@ createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <JazzProvider
       sync={{
-        peer: "wss://cloud.jazz.tools/?key=form-example@garden.co",
+        peer: `wss://cloud.jazz.tools/?key=${apiKey}`,
       }}
       AccountSchema={JazzAccount}
     >

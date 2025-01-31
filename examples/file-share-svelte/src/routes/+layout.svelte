@@ -12,6 +12,7 @@
   import { Toaster } from 'svelte-sonner';
   import '../app.css';
   import { FileShareAccount } from '$lib/schema';
+  import {apiKey} from '../apiKey';
 
   let { children } = $props();
 </script>
@@ -25,7 +26,7 @@
 <JazzProvider
   AccountSchema={FileShareAccount}
   sync={{
-    peer: "wss://cloud.jazz.tools/?key=minimal-svelte-auth-passkey@garden.co",
+    peer: `wss://cloud.jazz.tools/?key=${apiKey}`,
     when: "signedUp",
   }}
 >

@@ -2,6 +2,7 @@ import { DemoAuthBasicUI, JazzProvider } from "jazz-vue";
 import { createApp, defineComponent, h } from "vue";
 import App from "./App.vue";
 import "./index.css";
+import { apiKey } from "@/apiKey";
 import router from "./router";
 
 const RootComponent = defineComponent({
@@ -12,7 +13,7 @@ const RootComponent = defineComponent({
         JazzProvider,
         {
           sync: {
-            peer: "wss://cloud.jazz.tools/?key=vue-todo-example-jazz@garden.co",
+            peer: `wss://cloud.jazz.tools/?key=${apiKey}`,
           },
         },
         h(

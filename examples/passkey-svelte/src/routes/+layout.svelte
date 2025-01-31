@@ -1,12 +1,13 @@
 <script lang="ts">
   import { JazzProvider, PasskeyAuthBasicUI } from 'jazz-svelte';
+  import {apiKey} from '../apiKey';
 
   let { children } = $props();
 </script>
 
 <JazzProvider
   sync={{
-    peer: "wss://cloud.jazz.tools/?key=minimal-svelte-auth-passkey@garden.co",
+    peer: `wss://cloud.jazz.tools/?key={apiKey}`,
     when: "signedUp",
   }}
 >

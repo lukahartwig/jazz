@@ -1,3 +1,4 @@
+import { apiKey } from "@/apiKey.ts";
 import { getRandomUsername, inIframe, onChatLoad } from "@/util.ts";
 import { useIframeHashRouter } from "hash-slash";
 import { JazzProvider, useAccount } from "jazz-react";
@@ -54,7 +55,7 @@ createRoot(document.getElementById("root")!).render(
     <StrictMode>
       <JazzProvider
         sync={{
-          peer: "wss://cloud.jazz.tools/?key=chat-example-jazz@garden.co",
+          peer: `wss://cloud.jazz.tools/?key=${apiKey}`,
         }}
         defaultProfileName={defaultProfileName}
       >
