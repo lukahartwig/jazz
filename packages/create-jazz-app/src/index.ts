@@ -163,29 +163,18 @@ async function scaffoldProject({
     }).start();
 
     try {
-      // Search for files that might contain the API key
-      const filesToSearch = [
-        "src/jazz.tsx",
-        "src/index.tsx",
-        "src/main.tsx",
-        "src/App.tsx",
-        "src/auth-context.tsx",
-        "src/main.ts",
-        "src/2_main.tsx",
-        "src/routes/+layout.svelte",
-      ];
+      const apiKeyPath = `${projectName}/src/apiKey.ts`;
+      if (fs.existsSync(apiKeyPath)) {
+        let content = fs.readFileSync(apiKeyPath, "utf8");
+        // Replace the apiKey export value
+        const keyPattern = /export const apiKey = ["']([^"']+)["']/;
+        const updatedContent = content.replace(
+          keyPattern,
+          `export const apiKey = "${apiKey}"`,
+        );
 
-      for (const file of filesToSearch) {
-        const filePath = `${projectName}/${file}`;
-        if (fs.existsSync(filePath)) {
-          let content = fs.readFileSync(filePath, "utf8");
-          // Replace any Jazz API key pattern
-          const keyPattern = /key=([^&\s"']+)/g;
-          const updatedContent = content.replace(keyPattern, `key=${apiKey}`);
-
-          if (content !== updatedContent) {
-            fs.writeFileSync(filePath, updatedContent);
-          }
+        if (content !== updatedContent) {
+          fs.writeFileSync(apiKeyPath, updatedContent);
         }
       }
       replaceSpinner.succeed(chalk.green("API key updated"));
