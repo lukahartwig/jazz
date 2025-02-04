@@ -1239,12 +1239,12 @@ importers:
       hash-slash:
         specifier: workspace:*
         version: link:../../packages/hash-slash
+      jazz-browser-prosemirror:
+        specifier: workspace:*
+        version: link:../../packages/jazz-browser-prosemirror
       jazz-react:
         specifier: workspace:*
         version: link:../../packages/jazz-react
-      jazz-react-prosemirror:
-        specifier: workspace:*
-        version: link:../../packages/jazz-react-prosemirror
       jazz-tools:
         specifier: workspace:*
         version: link:../../packages/jazz-tools

@@ -1,7 +1,8 @@
 import { useIframeHashRouter } from "hash-slash";
 import { useAccount } from "jazz-react";
-import { DocumentComponent } from "jazz-react-prosemirror";
-import { CoRichText, ID } from "jazz-tools";
+import { ID } from "jazz-tools";
+import { CoRichText } from "jazz-tools";
+import { Document } from "./components/Document";
 
 export function App() {
   const { me, logOut } = useAccount();
@@ -29,10 +30,11 @@ export function App() {
         "/": () => createDocument(),
         "/doc/:id": (id) => (
           <div className="border">
-            <DocumentComponent docID={id as ID<CoRichText>} />
+            <Document docId={id as ID<CoRichText>} />
           </div>
         ),
       })}
+      <button onClick={createDocument}>New Document</button>
     </div>
   );
 }
