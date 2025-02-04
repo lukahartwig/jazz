@@ -1,4 +1,4 @@
-import { makeCoMapValueClass } from "./makeCoMapValueClass";
+import { makeCoMapValueClass } from "./makeCoMapValueClass.js";
 
 type Optionable = { optional<S extends Schema>(this: S): Optional<S> };
 
@@ -142,15 +142,12 @@ const jBase = {
   },
 };
 
-const ImageDef = jBase.CoMap({
+export const ImageDef = jBase.CoMap({
   originalResolution: jBase.string(),
 });
 
 export const j = {
   ...jBase,
-  media: {
-    ImageDef: ImageDef,
-  },
 };
 
 type InferJSON<T extends JSONSchema> = T extends Encoded<infer T>
@@ -181,3 +178,8 @@ export type Loaded<T extends Schema> = T extends CoMapDef<infer E>
       T extends JSONSchema
       ? InferJSON<T>
       : never;
+
+export const Message = j.CoMap({
+  text: j.string(),
+  image: j.media.ImageDef.optional(),
+});
