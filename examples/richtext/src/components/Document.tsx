@@ -39,7 +39,7 @@ export function Document({ docId }: DocumentProps) {
             doc: schema.node("doc", undefined, [
               schema.node("paragraph", undefined, undefined),
             ]),
-            schema: schema,
+            schema,
             plugins: [...setupPlugins, jazzPlugin],
           }),
         });
