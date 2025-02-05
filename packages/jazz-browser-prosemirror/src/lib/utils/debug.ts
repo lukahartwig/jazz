@@ -1,4 +1,5 @@
 import { Mark, Node } from "prosemirror-model";
+import { Transaction } from "prosemirror-state";
 
 /**
  * Creates a visual tree representation of a ProseMirror document with position indexes
@@ -103,3 +104,82 @@ export function debugPosition(doc: Node, pos: number): string {
 
   return `Position ${pos}: ${resolvedPos.depth} levels deep, offset ${parentOffset} in ${parentNode.type.name}\n${context}`;
 }
+
+const colors = {
+  add: "#4caf50",
+  remove: "#f44336",
+  structure: "#2196f3",
+  meta: "#9c27b0",
+};
+
+export function debugTransaction(tr: Transaction) {
+  // Skip if no steps
+  if (!tr.steps.length && !tr.docChanged) {
+    console.log("%c No changes in transaction", "color: gray");
+    return;
+  }
+
+  console.group("📝 Transaction");
+
+  // Log document changes
+  if (tr.docChanged) {
+    console.log(
+      "%c Document changed",
+      `color: ${colors.structure}; font-weight: bold`,
+    );
+    console.group("Changes");
+
+    // Show before/after
+    console.log("Before:", formatDoc(tr.before));
+    console.log("After:", formatDoc(tr.doc));
+
+    // Log each step
+    tr.steps.forEach((step, i) => {
+      console.group(`Step ${i + 1}`);
+      console.log("Type:", step.toJSON().stepType);
+      console.log("JSON:", step.toJSON());
+      console.groupEnd();
+    });
+
+    console.groupEnd();
+  }
+
+  // Log selection changes
+  if (tr.selectionSet) {
+    console.log("%c Selection changed", "color: #ff9800; font-weight: bold");
+    // console.log("From:", tr.before.selection.toJSON());
+    console.log("To:", tr.selection.toJSON());
+  }
+
+  // Log stored marks changes
+  if (tr.storedMarksSet) {
+    console.log("%c Stored marks changed", "color: #9c27b0; font-weight: bold");
+    console.log("Marks:", tr.storedMarks);
+  }
+
+  console.groupEnd();
+}
+
+// Helper to format document nodes
+function formatDoc(doc: Node): string {
+  return JSON.stringify(doc.toJSON(), null, 2);
+}
+
+// Usage example:
+/*
+import { debugTransaction } from './utils/debug'
+
+// In your plugin:
+new Plugin({
+  view(editorView) {
+    return {
+      update: (view, prevState) => {
+        const tr = view.state.tr
+        if (tr.docChanged) {
+          debugTransaction(tr)
+        }
+      }
+    }
+  }
+})
+*/
