@@ -1,8 +1,8 @@
-import { CoRichText } from "jazz-tools";
+import { Account, CoRichText, CoRichTextDebug, Group } from "jazz-tools";
 import { Node } from "prosemirror-model";
 import { EditorState, Plugin, PluginKey, Transaction } from "prosemirror-state";
 import { EditorView } from "prosemirror-view";
-import { richTextToProsemirrorDoc } from "./document.js";
+import { createMark, richTextToProsemirrorDoc } from "./document.js";
 
 export const jazzPluginKey = new PluginKey("jazz");
 
@@ -61,19 +61,107 @@ export function applyRichTextToTransaction(
   return tr;
 }
 
+// /**
+//  * Apply a ProseMirror transaction to a CoRichText
+//  * @param tr - ProseMirror transaction
+//  * @param text - CoRichText to apply
+//  */
+// export function applyDocumentToRichText(doc: Node, text: CoRichText) {
+//   text?.text?.applyDiff(doc.textBetween(0, doc.content.size, "\n"));
+//   text?.marks?.applyDiff([
+//     Marks.Strong.create({
+//       startAfter: text.posAfter(0)!,
+//       startBefore: text.posBefore(0)!,
+//       endAfter: text.posAfter(doc.content.size)!,
+//       endBefore: text.posBefore(doc.content.size)!,
+//       tag: "strong",
+//     }),
+//   ]);
+
+//   console.log("text", JSON.parse(JSON.stringify(text)));
+// }
+
 /**
- * Apply a ProseMirror transaction to a CoRichText
- * @param tr - ProseMirror transaction
- * @param text - CoRichText to apply
+ * Extract marks from a ProseMirror node
+ * @param node - The ProseMirror node to extract marks from
+ * @returns The extracted marks
  */
-export function applyDocToCoRichText(doc: Node, text: CoRichText) {
-  text?.text?.applyDiff(doc.textBetween(0, doc.content.size, "\n"));
+export function extractMarksFromProsemirror(node: Node) {
+  let fullText = "";
+  const marks: {
+    from: number;
+    to: number;
+    markType: string;
+    attrs: Record<string, any>;
+  }[] = [];
+  let offset = 0;
+
+  function traverse(node: Node) {
+    if (node.type.name === "text" && node.text) {
+      const text = node.text;
+      fullText += text;
+
+      node.marks?.forEach((mark) => {
+        marks.push({
+          from: offset,
+          to: offset + text.length,
+          markType: mark.type.name,
+          attrs: mark.attrs || {},
+        });
+      });
+      offset += text.length;
+    } else if (node.content) {
+      node.content.forEach(traverse);
+    }
+  }
+
+  traverse(node);
+
+  return { fullText, marks };
 }
 
-export function createJazzPlugin(text: CoRichText | undefined) {
+/**
+ * Apply a ProseMirror document to a CoRichText
+ * @param doc - The ProseMirror document to apply from
+ * @param text - The CoRichText to apply to
+ * @param owner - The owner of the CoRichText
+ */
+export function applyDocumentToRichText(
+  doc: Node,
+  text: CoRichText,
+  owner: Account | Group,
+) {
+  // Extract text and marks from ProseMirror doc
+  const { fullText, marks } = extractMarksFromProsemirror(doc);
+
+  // Create Marks
+  const marksToApply = marks
+    .map((mark) => {
+      return createMark(mark.markType, mark, owner);
+    })
+    .filter((mark) => mark !== null);
+
+  // Apply the diffs
+  text?.text?.applyDiff(fullText);
+  text?.marks?.applyDiff(marksToApply);
+}
+
+/**
+ * Create a ProseMirror plugin that applies a CoRichText to the editor
+ * Updates CoRichText when ProseMirror document changes
+ * Updates ProseMirror when CoRichText changes
+ * @param text - The CoRichText to apply
+ * @param owner - The owner of the CoRichText
+ * @returns The ProseMirror plugin
+ */
+export function createJazzPlugin(
+  text: CoRichText | undefined,
+  owner: Account | Group,
+) {
   let view: EditorView | undefined;
   let isUpdating = false;
 
+  // Update ProseMirror when CoRichText changes
   text?.subscribe({ text: [], marks: [{}] }, (text) => {
     if (!view) return;
     isUpdating = true;
@@ -87,6 +175,7 @@ export function createJazzPlugin(text: CoRichText | undefined) {
   return new Plugin({
     key: jazzPluginKey,
 
+    // Initialize the plugin with ProseMirror view
     view(editorView) {
       view = editorView;
       return {
@@ -97,14 +186,18 @@ export function createJazzPlugin(text: CoRichText | undefined) {
     },
 
     state: {
+      // Initialize the plugin with CoRichText
       init() {
         return {
           text,
         };
       },
+
+      // Update CoRichText when ProseMirror document changes
       apply(tr, value) {
         if (tr.docChanged && !isUpdating && text) {
-          applyDocToCoRichText(tr.doc, text);
+          applyDocumentToRichText(tr.doc, text, owner);
+          CoRichTextDebug.log(text);
         }
         return value;
       },

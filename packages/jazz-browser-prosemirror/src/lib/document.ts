@@ -1,10 +1,135 @@
-import { CoRichText, TreeLeaf, TreeNode } from "jazz-tools";
+import { Account, CoRichText, Group, TreeLeaf, TreeNode } from "jazz-tools";
+import { Marks } from "jazz-tools";
 import {
   Mark as ProsemirrorMark,
   Node as ProsemirrorNode,
 } from "prosemirror-model";
 import { schema } from "prosemirror-schema-basic";
 import { MARK_TYPE_LOOKUP, NODE_TYPE_LOOKUP } from "./types.js";
+
+export function createMark(
+  markType: string,
+  markData: any,
+  owner: Account | Group,
+) {
+  const init = {
+    tag: markType,
+    startAfter: markData.from - 1,
+    startBefore: markData.from,
+    endAfter: markData.to,
+    endBefore: markData.to + 1,
+    ...markData.attrs,
+  };
+
+  switch (markType) {
+    case "strong":
+      return Marks.Strong.create(init, { owner });
+    case "em":
+      return Marks.Em.create(init, { owner });
+    default:
+      console.warn(`Unsupported mark type: ${markType}`);
+      return null;
+  }
+}
+
+// function resolveMark(mark: ProsemirrorMark): typeof Marks.Strong | typeof Marks.Em | typeof Marks.Paragraph {
+//   switch (mark.type) {
+//     case schema.marks.strong:
+//       return Marks.Strong;
+//     case schema.marks.em:
+//       return Marks.Em;
+//     case schema.marks.paragraph:
+//       return Marks.Paragraph;
+//     default:
+//       throw new Error(`Unsupported mark type: ${mark.type}`);
+//   }
+// }
+
+// function resolvedMarks(marks: ProsemirrorMark[]): ResolvedMark[] {
+//   return marks.map((mark) => {
+//     const resolvedMark = resolveMark(mark);
+
+//     return {
+//       startAfter: mark.,
+//       startBefore: 0,
+//       endAfter: 0,
+//       endBefore: 0,
+//       tag: resolvedMark.tag,
+//   });
+// };
+
+// /**
+//  * Extracts text content and marks from a ProseMirror document.
+//  * Processes each paragraph node and its inline content, collecting text and mark information.
+//  *
+//  * @param prosemirrorDoc - The ProseMirror document node to process
+//  * @returns An object containing the extracted text and an array of mark positions and types
+//  */
+// export function doTheBartThing(prosemirrorDoc: ProsemirrorNode) {
+//   let fullText = "";
+//   const marks: Mark[] = [];
+//   let offset = 0;
+
+//   prosemirrorDoc.content.forEach((node) => {
+//     if (node.type.name === "paragraph") {
+//       node.content.forEach((inlineNode) => {
+//         if (inlineNode.isText) {
+//           const text = inlineNode.text;
+//           if (!text) {
+//             throw new Error("Text is undefined");
+//           }
+//           fullText += text;
+
+//           inlineNode.marks.forEach((mark) => {
+//             marks.push({
+//               startAfter: offset,
+//               startBefore: offset,
+//               endAfter: offset + text.length,
+//               endBefore: offset + text.length,
+//               tag: mark.type.name,
+//               attrs: mark.attrs,
+//             });
+//           });
+//           offset += text.length;
+//         }
+//       });
+//       fullText += "\n"; // Add newline between paragraphs
+//       offset += 1;
+//     }
+//   });
+
+//   return { text: fullText, marks };
+// }
+
+// /**
+//  * Recursively collects text and marks from a ProseMirror document node.
+//  * Handles leaf nodes (plain text) and mark nodes (strong, em).
+//  *
+//  * @param node - Current node being processed
+//  * @param currentText - Accumulated text from parent nodes
+//  * @param currentMarks - Accumulated marks from parent nodes
+//  * @returns An object containing the accumulated text and marks
+//  */
+// export function collectTextAndMarks(
+//   node: ProsemirrorNode,
+//   currentText: string,
+//   currentMarks: ProsemirrorMark[] = [],
+// ): { text: string; marks: ResolvedMark[] } {
+//   if (node.type === "text") {
+//     return { text: currentText + node.text, marks: currentMarks };
+//   }
+
+//   if (node.type === "paragraph") {
+//     return node.children.reduce(
+//       (acc, child) => {
+//         return collectTextAndMarks(child, acc.text, acc.marks);
+//       },
+//       { text: "", marks: [] },
+//     );
+//   }
+
+//   return { text: currentText, marks: currentMarks };
+// }
 
 /**
  * Recursively collects inline marks from a CoRichText tree node.

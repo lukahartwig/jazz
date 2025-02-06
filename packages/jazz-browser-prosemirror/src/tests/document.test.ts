@@ -1,6 +1,10 @@
 import { CoRichText, Group, Marks, TreeLeaf, TreeNode } from "jazz-tools";
 import { CoRichTextDebug } from "jazz-tools/src/coValues/coRichText.js";
 import { createJazzTestAccount } from "jazz-tools/testing";
+import {
+  Mark as ProsemirrorMark,
+  Node as ProsemirrorNode,
+} from "prosemirror-model";
 import { schema } from "prosemirror-schema-basic";
 import { describe, expect, it } from "vitest";
 import { richTextToProsemirrorDoc } from "../index.js";

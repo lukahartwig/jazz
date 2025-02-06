@@ -33,8 +33,8 @@ import type { Group } from "./group.js";
  * - Text inserted between startBefore and endAfter is definitely part of the mark
  *
  * Positions must satisfy:
- * 0 ≤ startAfter ≤ startBefore < endAfter ≤ endBefore ≤ textLength
- * A mark cannot be zero-length, so endAfter must be greater than startBefore.
+ * 0 ≤ startAfter ≤ startBefore ≤ endAfter ≤ endBefore ≤ textLength
+ * A mark can be zero-length.
  */
 export class Mark extends CoMap {
   startAfter = co.json<TextPos | null>();
@@ -46,7 +46,7 @@ export class Mark extends CoMap {
   /**
    * Validates and clamps mark positions to ensure they are in the correct order
    * Given a zero-indexed text length, the positions must satisfy:
-   * -1 ≤ startAfter < startBefore ≤ endAfter < endBefore ≤ textLength
+   * -1 ≤ startAfter ≤ startBefore ≤ endAfter ≤ endBefore ≤ textLength
    * @returns Normalized positions or null if invalid
    */
   validatePositions(

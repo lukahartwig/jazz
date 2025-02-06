@@ -30,6 +30,7 @@ export { CoMap, type CoMapInit } from "./coValues/coMap.js";
 export { CoPlainText, type TextPos } from "./coValues/coPlainText.js";
 export {
   CoRichText,
+  Mark,
   Marks,
   type TreeLeaf,
   type TreeNode,
