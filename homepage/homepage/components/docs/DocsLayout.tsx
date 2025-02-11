@@ -40,7 +40,7 @@ export default function DocsLayout({
             className={clsx(
               "py-8",
               "pr-3 md:col-span-4 lg:col-span-3",
-              "sticky align-start top-[65px] h-[calc(100vh-65px)] overflow-y-auto overflow-x-hidden",
+              "sticky align-start top-[72px] h-[calc(100vh-72px)] overflow-y-auto overflow-x-hidden",
               "hidden md:block",
             )}
           >
@@ -55,7 +55,7 @@ export default function DocsLayout({
             {toc && (
               <>
                 <TableOfContents
-                  className="pl-3 py-6 shrink-0 text-sm sticky align-start top-[65px] w-[16rem] h-[calc(100vh-65px)] overflow-y-auto overflow-x-hidden hidden lg:block"
+                  className="pl-3 py-6 shrink-0 text-sm sticky align-start top-[72px] w-[16rem] h-[calc(100vh-72px)] overflow-y-auto overflow-x-hidden hidden lg:block"
                   items={toc as Toc}
                 />
               </>

@@ -27,7 +27,7 @@ export default async function Page({
 
     return (
       <DocsLayout toc={tocItems} nav={<DocNav />}>
-        <Prose className="overflow-x-hidden lg:flex-1 py-8">
+        <Prose className="overflow-x-hidden lg:flex-1 py-10">
           <Content />
         </Prose>
       </DocsLayout>
@@ -35,7 +35,7 @@ export default async function Page({
   } catch (error) {
     return (
       <DocsLayout nav={<DocNav />}>
-        <Prose className="overflow-x-hidden lg:flex-1 py-8">
+        <Prose className="overflow-x-hidden lg:flex-1 py-10">
           <ComingSoonPage className="max-w-3xl mx-auto" />
         </Prose>
       </DocsLayout>

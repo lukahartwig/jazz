@@ -9,7 +9,7 @@ export default function Layout({
 }) {
   return (
     <DocsLayout nav={<DocNav />}>
-      <Prose className="max-w-3xl mx-auto lg:flex-1 py-8">{children}</Prose>
+      <Prose className="max-w-3xl mx-auto lg:flex-1 py-10">{children}</Prose>
     </DocsLayout>
   );
 }
