@@ -2,7 +2,7 @@ import { CoRichText, CoRichTextDebug } from "jazz-tools";
 import { Marks } from "jazz-tools";
 import { Node } from "prosemirror-model";
 import { EditorState, Plugin, PluginKey, Transaction } from "prosemirror-state";
-import { AllSelection, NodeSelection, TextSelection } from "prosemirror-state";
+import { TextSelection } from "prosemirror-state";
 import { EditorView } from "prosemirror-view";
 import { richTextToProsemirrorDoc } from "./document.js";
 
@@ -60,35 +60,17 @@ export function applyRichTextToTransaction(
   // Get the context of the current selection
   const $from = oldSelection.$from;
   const $to = oldSelection.$to;
-  const fromNodeDepth = $from.depth;
-  const fromParentIndex =
-    fromNodeDepth > 0 ? $from.index(fromNodeDepth - 1) : 0;
 
   // Replace document content
   tr.replaceWith(0, state.doc.content.size, doc);
 
   // Map the selection to the new document
   let newSelection;
-  if (oldSelection instanceof NodeSelection) {
-    // For node selections, try to select the node at the same index
-    const $pos = tr.doc.resolve(fromParentIndex > 0 ? fromParentIndex + 1 : 1);
-    const node = $pos.nodeAfter;
-    if (node && NodeSelection.isSelectable(node)) {
-      newSelection = NodeSelection.create(tr.doc, $pos.pos);
-    } else {
-      // Fallback to text selection at the start of the document
-      newSelection = TextSelection.create(tr.doc, 1);
-    }
-  } else if (oldSelection instanceof AllSelection) {
-    // For all selection, select the entire document
-    console.log("AllSelection");
-    newSelection = TextSelection.create(tr.doc, 0, tr.doc.content.size);
-  } else {
-    // For text selections, try to maintain the same relative position within the paragraph
-    const $newFrom = tr.doc.resolve(Math.min($from.pos, tr.doc.content.size));
-    const $newTo = tr.doc.resolve(Math.min($to.pos, tr.doc.content.size));
-    newSelection = TextSelection.create(tr.doc, $newFrom.pos, $newTo.pos);
-  }
+
+  // For text selections, try to maintain the same relative position within the paragraph
+  const $newFrom = tr.doc.resolve(Math.min($from.pos, tr.doc.content.size));
+  const $newTo = tr.doc.resolve(Math.min($to.pos, tr.doc.content.size));
+  newSelection = TextSelection.create(tr.doc, $newFrom.pos, $newTo.pos);
 
   tr.setSelection(newSelection);
   return tr;

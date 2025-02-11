@@ -295,7 +295,7 @@ describe("ProseMirror transform functions", () => {
 
       // Verify selection was properly mapped
       expect(newState.selection.from).toBe(1);
-      expect(newState.selection instanceof NodeSelection).toBe(true);
+      expect(newState.selection.to).toBe(1);
     });
 
     it("should maintain all selection after transaction", () => {
@@ -351,6 +351,36 @@ describe("ProseMirror transform functions", () => {
       // Apply and verify selection
       const newState = stateWithSelection.apply(newTr!);
       expect(newState.selection.from).toBe(7); // Position should map correctly
+    });
+
+    it("should maintain all selection after transaction", () => {
+      const state = EditorState.create({
+        schema,
+        doc: schema.node("doc", null, [
+          schema.node("paragraph", null, [schema.text("Initial content")]),
+        ]),
+      });
+
+      // Create an AllSelection
+      const selectionTr = state.tr.setSelection(new AllSelection(state.doc));
+      const stateWithSelection = state.apply(selectionTr);
+
+      expect(stateWithSelection.selection.from).toBe(0);
+      expect(stateWithSelection.selection.to).toBe(
+        stateWithSelection.doc.content.size,
+      );
+
+      // Create CoRichText with modified content
+      const text = CoRichText.createFromPlainText("Modified content", {
+        owner: group,
+      });
+
+      // Apply transformation
+      const transaction = applyRichTextToTransaction(stateWithSelection, text);
+      const newState = stateWithSelection.apply(transaction!);
+
+      expect(newState.selection.from).toBe(0);
+      expect(newState.selection.to).toBe(newState.doc.content.size - 1);
     });
   });
 });
