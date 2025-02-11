@@ -232,22 +232,6 @@ async function promptUser(
     });
   }
 
-  if (!partialOptions.packageManager) {
-    questions.push({
-      type: "list",
-      name: "packageManager",
-      message: chalk.cyan("Choose a package manager:"),
-      choices: [
-        { name: chalk.white("npm"), value: "npm" },
-        { name: chalk.white("yarn"), value: "yarn" },
-        { name: chalk.white("pnpm"), value: "pnpm" },
-        { name: chalk.white("bun"), value: "bun" },
-        { name: chalk.white("deno"), value: "deno" },
-      ],
-      default: "npm",
-    });
-  }
-
   if (!partialOptions.projectName) {
     questions.push({
       type: "input",
@@ -263,6 +247,7 @@ async function promptUser(
   return {
     ...answers,
     ...partialOptions,
+    packageManager: partialOptions.packageManager || "npm",
     template:
       answers.starter || partialOptions.starter || partialOptions.example,
   } as ScaffoldOptions;
