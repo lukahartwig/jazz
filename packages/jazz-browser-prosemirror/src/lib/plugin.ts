@@ -1,7 +1,13 @@
 import { CoRichText, CoRichTextDebug } from "jazz-tools";
 import { Marks } from "jazz-tools";
 import { Node } from "prosemirror-model";
-import { EditorState, Plugin, PluginKey, Transaction } from "prosemirror-state";
+import {
+  EditorState,
+  Plugin,
+  PluginKey,
+  TextSelection,
+  Transaction,
+} from "prosemirror-state";
 import { EditorView } from "prosemirror-view";
 import { richTextToProsemirrorDoc } from "./document.js";
 
@@ -54,10 +60,17 @@ export function applyRichTextToTransaction(
 
   // Create transaction and replace entire document
   const tr = state.tr;
+  const selection = state.selection;
+  const head = state.doc.resolve(selection.head);
+  const anchor = state.doc.resolve(selection.anchor);
 
   // Replace the entire document with new content
   // This will preserve marks since they're part of the doc's content
   tr.replaceRangeWith(0, tr.doc.content.size, doc);
+
+  // Preserve selection through document changes
+  const mappedSelection = TextSelection.create(tr.doc, head.pos, anchor.pos);
+  tr.setSelection(mappedSelection);
 
   return tr;
 }
