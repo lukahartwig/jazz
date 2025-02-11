@@ -1,25 +1,17 @@
 import { BrowserPasskeyAuth } from "jazz-browser";
+import {
+  useAuthSecretStorage,
+  useIsAuthenticated,
+  useJazzContext,
+} from "jazz-react-core";
 import { useMemo, useState } from "react";
-
-export type PasskeyAuthState = (
-  | { state: "uninitialized" }
-  | { state: "loading" }
-  | {
-      state: "ready";
-      logIn: () => void;
-      signUp: (username: string) => void;
-    }
-  | { state: "signedIn"; logOut: () => void }
-) & {
-  errors: string[];
-};
 
 /**
  * `usePasskeyAuth` hook provides a `JazzAuth` object for passkey authentication.
  *
  * @example
  * ```ts
- * const [auth, state] = usePasskeyAuth({ appName, appHostname });
+ * const auth = usePasskeyAuth({ appName, appHostname });
  * ```
  *
  * @category Auth Providers
@@ -31,59 +23,50 @@ export function usePasskeyAuth({
   appName: string;
   appHostname?: string;
 }) {
-  const [state, setState] = useState<PasskeyAuthState>({
-    state: "loading",
-    errors: [],
-  });
+  const context = useJazzContext();
+  const authSecretStorage = useAuthSecretStorage();
+
+  if ("guest" in context) {
+    throw new Error("Passkey auth is not supported in guest mode");
+  }
 
   const authMethod = useMemo(() => {
     return new BrowserPasskeyAuth(
-      {
-        onReady(next) {
-          setState({
-            state: "ready",
-            logIn: next.logIn,
-            signUp: next.signUp,
-            errors: [],
-          });
-        },
-        onSignedIn(next) {
-          setState({
-            state: "signedIn",
-            logOut: () => {
-              next.logOut();
-              setState({ state: "loading", errors: [] });
-            },
-            errors: [],
-          });
-        },
-        onError(error) {
-          setState((state) => ({
-            ...state,
-            errors: [...state.errors, error.toString()],
-          }));
-        },
-      },
+      context.node.crypto,
+      context.authenticate,
+      authSecretStorage,
       appName,
       appHostname,
     );
-  }, [appName, appHostname]);
+  }, [appName, appHostname, authSecretStorage]);
 
-  return [authMethod, state] as const;
+  const isAuthenticated = useIsAuthenticated();
+
+  return {
+    state: isAuthenticated ? "signedIn" : "anonymous",
+    logIn: authMethod.logIn,
+    signUp: authMethod.signUp,
+  } as const;
 }
 
-export const PasskeyAuthBasicUI = ({ state }: { state: PasskeyAuthState }) => {
+export const PasskeyAuthBasicUI = (props: {
+  appName: string;
+  appHostname?: string;
+  children?: React.ReactNode;
+}) => {
   const [username, setUsername] = useState<string>("");
+  const [error, setError] = useState<string | null>(null);
 
-  if (state.state === "signedIn") {
-    return null;
+  const auth = usePasskeyAuth({
+    appName: props.appName,
+    appHostname: props.appHostname,
+  });
+
+  if (auth.state === "signedIn") {
+    return props.children ?? null;
   }
 
-  if (state.state !== "ready") {
-    return <div>Loading...</div>;
-  }
-
-  const { logIn, signUp } = state;
+  const { logIn, signUp } = auth;
 
   return (
     <div
@@ -95,6 +78,7 @@ export const PasskeyAuthBasicUI = ({ state }: { state: PasskeyAuthState }) => {
         justifyContent: "center",
       }}
     >
+      {error && <div style={{ color: "red" }}>{error}</div>}
       <div
         style={{
           width: "18rem",
@@ -103,13 +87,6 @@ export const PasskeyAuthBasicUI = ({ state }: { state: PasskeyAuthState }) => {
           gap: "2rem",
         }}
       >
-        {state.errors.length > 0 && (
-          <div style={{ color: "red" }}>
-            {state.errors.map((error, index) => (
-              <div key={index}>{error}</div>
-            ))}
-          </div>
-        )}
         <form
           style={{
             width: "18rem",
@@ -119,7 +96,8 @@ export const PasskeyAuthBasicUI = ({ state }: { state: PasskeyAuthState }) => {
           }}
           onSubmit={(e) => {
             e.preventDefault();
-            signUp(username);
+            setError(null);
+            signUp(username).catch((error) => setError(error.message));
           }}
         >
           <input
@@ -147,7 +125,10 @@ export const PasskeyAuthBasicUI = ({ state }: { state: PasskeyAuthState }) => {
           />
         </form>
         <button
-          onClick={logIn}
+          onClick={() => {
+            setError(null);
+            logIn().catch((error) => setError(error.message));
+          }}
           style={{
             background: "#000",
             color: "#fff",

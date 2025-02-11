@@ -76,6 +76,7 @@ import {
 
 type Value = JsonValue | AnyRawCoValue;
 
+import { CO_VALUE_LOADING_CONFIG } from "./coValueState.js";
 import { logger } from "./logger.js";
 import { getPriorityFromHeader } from "./priority.js";
 import { FileSystem } from "./storage/FileSystem.js";
@@ -103,6 +104,7 @@ export const cojsonInternals = {
   getGroupDependentKeyList,
   getGroupDependentKey,
   disablePermissionErrors,
+  CO_VALUE_LOADING_CONFIG,
 };
 
 export {

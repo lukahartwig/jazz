@@ -7,7 +7,7 @@ import {
   BUFFER_LIMIT_POLLING_INTERVAL,
   CreateWebSocketPeerOpts,
   createWebSocketPeer,
-} from "../index.js";
+} from "../createWebSocketPeer.js";
 import { AnyWebSocket } from "../types.js";
 
 function setup(opts: Partial<CreateWebSocketPeerOpts> = {}) {

@@ -1,23 +1,49 @@
-import { BrowserClerkAuth, MinimalClerkClient } from "jazz-browser-auth-clerk";
-import { useMemo, useState } from "react";
+import { JazzClerkAuth, type MinimalClerkClient } from "jazz-auth-clerk";
+import {
+  JazzProvider,
+  JazzProviderProps,
+  useAuthSecretStorage,
+  useJazzContext,
+} from "jazz-react";
+import { useEffect, useMemo } from "react";
 
-export function useJazzClerkAuth(clerk: MinimalClerkClient) {
-  const [state, setState] = useState<{ errors: string[] }>({ errors: [] });
+function useJazzClerkAuth(clerk: MinimalClerkClient) {
+  const context = useJazzContext();
+  const authSecretStorage = useAuthSecretStorage();
+
+  if ("guest" in context) {
+    throw new Error("Clerk auth is not supported in guest mode");
+  }
 
   const authMethod = useMemo(() => {
-    return new BrowserClerkAuth(
-      {
-        onError: (error) => {
-          void clerk.signOut();
-          setState((state) => ({
-            ...state,
-            errors: [...state.errors, error.toString()],
-          }));
-        },
-      },
-      clerk,
-    );
-  }, [clerk.user]);
+    return new JazzClerkAuth(context.authenticate, authSecretStorage);
+  }, []);
 
-  return [authMethod, state] as const;
+  useEffect(() => {
+    // Need to use addListener because the clerk user object is not updated when the user logs in
+    return clerk.addListener((event) => {
+      authMethod.onClerkUserChange(event as Pick<MinimalClerkClient, "user">);
+    });
+  }, []);
 }
+
+function RegisterClerkAuth(props: {
+  clerk: MinimalClerkClient;
+  children: React.ReactNode;
+}) {
+  useJazzClerkAuth(props.clerk);
+
+  return props.children;
+}
+
+export const JazzProviderWithClerk = (
+  props: { clerk: MinimalClerkClient } & JazzProviderProps,
+) => {
+  return (
+    <JazzProvider {...props} onLogOut={props.clerk.signOut}>
+      <RegisterClerkAuth clerk={props.clerk}>
+        {props.children}
+      </RegisterClerkAuth>
+    </JazzProvider>
+  );
+};

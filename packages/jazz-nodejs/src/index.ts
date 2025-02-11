@@ -4,8 +4,7 @@ import {
   AccountClass,
   ID,
   Inbox,
-  createJazzContext,
-  fixedCredentialsAuth,
+  createJazzContextFromExistingCredentials,
   randomSessionProvider,
 } from "jazz-tools";
 import { webSocketWithReconnection } from "./webSocketWithReconnection.js";
@@ -14,6 +13,7 @@ type WorkerOptions<Acc extends Account> = {
   accountID?: string;
   accountSecret?: string;
   syncServer?: string;
+  WebSocket?: typeof WebSocket;
   AccountSchema?: AccountClass<Acc>;
 };
 
@@ -29,9 +29,13 @@ export async function startWorker<Acc extends Account>(
   } = options;
 
   let node: LocalNode | undefined = undefined;
-  const wsPeer = webSocketWithReconnection(syncServer, (peer) => {
-    node?.syncManager.addPeer(peer);
-  });
+  const wsPeer = webSocketWithReconnection(
+    syncServer,
+    (peer) => {
+      node?.syncManager.addPeer(peer);
+    },
+    options.WebSocket,
+  );
 
   if (!accountID) {
     throw new Error("No accountID provided");
@@ -46,11 +50,11 @@ export async function startWorker<Acc extends Account>(
     throw new Error("Invalid accountSecret");
   }
 
-  const context = await createJazzContext({
-    auth: fixedCredentialsAuth({
+  const context = await createJazzContextFromExistingCredentials({
+    credentials: {
       accountID: accountID as ID<Acc>,
       secret: accountSecret as AgentSecret,
-    }),
+    },
     AccountSchema,
     // TODO: locked sessions similar to browser
     sessionProvider: randomSessionProvider,

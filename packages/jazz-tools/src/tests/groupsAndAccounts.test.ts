@@ -122,7 +122,7 @@ describe("Group inheritance", () => {
     const mapAsReader = await TestMap.load(mapInChild.id, reader, {});
     expect(mapAsReader?.title).toBe("In Child");
 
-    parentGroup.removeMember(reader);
+    await parentGroup.removeMember(reader);
 
     mapInChild.title = "In Child (updated)";
 
@@ -161,7 +161,7 @@ describe("Group inheritance", () => {
     const mapAsReader = await TestMap.load(mapInGrandChild.id, reader, {});
     expect(mapAsReader?.title).toBe("In Grand Child");
 
-    grandParentGroup.removeMember(reader);
+    await grandParentGroup.removeMember(reader);
 
     mapInGrandChild.title = "In Grand Child (updated)";
 

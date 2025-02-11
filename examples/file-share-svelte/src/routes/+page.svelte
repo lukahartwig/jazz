@@ -28,7 +28,7 @@
     const input = event.target as HTMLInputElement;
     const files = input.files;
 
-    if (!files || !files.length || !me?.root?.sharedFiles || !me.root.publicGroup) return;
+    if (!files || !files.length || !me.root?.sharedFiles || !me.root.publicGroup) return;
 
     const file = files[0];
     const fileName = file.name;
@@ -129,12 +129,14 @@
       {#if sharedFiles.current}
         {#if !(sharedFiles.current.length === 0 && uploadingFiles.size === 0)}
           {#each [...sharedFiles.current, ...uploadingFiles.values()] as file (generateTempFileId(file?.name, file?.createdAt))}
-            <FileItem
-              {file}
-              loading={uploadingFiles.has(generateTempFileId(file?.name, file?.createdAt))}
-              onShare={shareFile}
-              onDelete={deleteFile}
-            />
+            {#if file}
+              <FileItem
+                {file}
+                loading={uploadingFiles.has(generateTempFileId(file?.name, file?.createdAt))}
+                onShare={shareFile}
+                onDelete={deleteFile}
+              />
+            {/if}
           {/each}
         {:else}
           <p class="text-center text-gray-500">No files yet</p>

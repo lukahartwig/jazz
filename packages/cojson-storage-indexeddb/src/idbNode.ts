@@ -7,6 +7,12 @@ import {
 import { SyncManager } from "cojson-storage";
 import { IDBClient } from "./idbClient.js";
 
+let DATABASE_NAME = "jazz-storage";
+
+export function internal_setDatabaseName(name: string) {
+  DATABASE_NAME = name;
+}
+
 export class IDBNode {
   private readonly dbClient: IDBClient;
   private readonly syncManager: SyncManager;
@@ -77,7 +83,7 @@ export class IDBNode {
     toLocalNode: OutgoingSyncQueue,
   ) {
     const dbPromise = new Promise<IDBDatabase>((resolve, reject) => {
-      const request = indexedDB.open("jazz-storage", 4);
+      const request = indexedDB.open(DATABASE_NAME, 4);
       request.onerror = () => {
         reject(request.error);
       };

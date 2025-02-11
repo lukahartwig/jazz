@@ -1,5 +1,5 @@
 const Crypto = await WasmCrypto.create();
-import { connectedPeers } from "cojson/src/streamUtils.ts";
+import { cojsonInternals } from "cojson";
 import { describe, expect, expectTypeOf, test } from "vitest";
 import {
   Account,
@@ -11,11 +11,12 @@ import {
   SessionID,
   WasmCrypto,
   co,
-  createJazzContext,
-  fixedCredentialsAuth,
+  createJazzContextFromExistingCredentials,
   isControlledAccount,
 } from "../index.web.js";
 import { randomSessionProvider } from "../internal.js";
+
+const { connectedPeers } = cojsonInternals;
 
 class TestMap extends CoMap {
   list = co.ref(TestList);
@@ -49,15 +50,16 @@ describe("Deep loading with depth arg", async () => {
     throw "me is not a controlled account";
   }
   me._raw.core.node.syncManager.addPeer(secondPeer);
-  const { account: meOnSecondPeer } = await createJazzContext({
-    auth: fixedCredentialsAuth({
-      accountID: me.id,
-      secret: me._raw.agentSecret,
-    }),
-    sessionProvider: randomSessionProvider,
-    peersToLoadFrom: [initialAsPeer],
-    crypto: Crypto,
-  });
+  const { account: meOnSecondPeer } =
+    await createJazzContextFromExistingCredentials({
+      credentials: {
+        accountID: me.id,
+        secret: me._raw.agentSecret,
+      },
+      sessionProvider: randomSessionProvider,
+      peersToLoadFrom: [initialAsPeer],
+      crypto: Crypto,
+    });
 
   test("loading a deeply nested object will wait until all required refs are loaded", async () => {
     const ownership = { owner: me };
@@ -202,15 +204,14 @@ class CustomAccount extends Account {
       root: { list: [] },
     });
     expectTypeOf(thisLoaded).toEqualTypeOf<
-      | (CustomAccount & {
-          profile: CustomProfile & {
-            stream: TestStream;
-          };
-          root: TestMap & {
-            list: TestList;
-          };
-        })
-      | undefined
+      CustomAccount & {
+        profile: CustomProfile & {
+          stream: TestStream;
+        };
+        root: TestMap & {
+          list: TestList;
+        };
+      }
     >();
   }
 }
@@ -226,19 +227,16 @@ test("Deep loading within account", async () => {
     root: { list: [] },
   });
   expectTypeOf(meLoaded).toEqualTypeOf<
-    | (CustomAccount & {
-        profile: CustomProfile & {
-          stream: TestStream;
-        };
-        root: TestMap & {
-          list: TestList;
-        };
-      })
-    | undefined
+    CustomAccount & {
+      profile: CustomProfile & {
+        stream: TestStream;
+      };
+      root: TestMap & {
+        list: TestList;
+      };
+    }
   >();
-  if (meLoaded === undefined) {
-    throw new Error("meLoaded is undefined");
-  }
+
   expect(meLoaded.profile.stream).not.toBe(null);
   expect(meLoaded.root.list).not.toBe(null);
 });
@@ -261,15 +259,16 @@ test("Deep loading a record-like coMap", async () => {
   }
 
   me._raw.core.node.syncManager.addPeer(secondPeer);
-  const { account: meOnSecondPeer } = await createJazzContext({
-    auth: fixedCredentialsAuth({
-      accountID: me.id,
-      secret: me._raw.agentSecret,
-    }),
-    sessionProvider: randomSessionProvider,
-    peersToLoadFrom: [initialAsPeer],
-    crypto: Crypto,
-  });
+  const { account: meOnSecondPeer } =
+    await createJazzContextFromExistingCredentials({
+      credentials: {
+        accountID: me.id,
+        secret: me._raw.agentSecret,
+      },
+      sessionProvider: randomSessionProvider,
+      peersToLoadFrom: [initialAsPeer],
+      crypto: Crypto,
+    });
 
   const record = RecordLike.create(
     {

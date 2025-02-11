@@ -1,13 +1,11 @@
 <script lang="ts">
-  import { JazzProvider } from "$lib/jazz.svelte.js";
+  import { JazzProvider } from "../../jazz.svelte.js";
 
-  const { auth } = $props();
+  const { guestMode } = $props();
 </script>
 
 <div data-testid="provider-test">
-  <JazzProvider {auth} peer="wss://cloud.jazz.tools/?key=jazz-svelte-test">
-    {#if auth}
-      <span data-testid="provider-auth-test">{JSON.stringify(auth)}</span>
-    {/if}
+  <JazzProvider {guestMode} peer="wss://cloud.jazz.tools/?key=jazz-svelte-test">
+    <span data-testid="provider-auth-test">Hello</span>
   </JazzProvider>
 </div>

@@ -17,6 +17,6 @@ export function formatFileSize(bytes: number): string {
  * @param createdAt The creation date
  * @returns A unique file ID string
  */
-export function generateTempFileId(fileName: string, createdAt: Date): string {
-  return `file-${fileName}-${createdAt.getTime()}`;
+export function generateTempFileId(fileName: string | undefined, createdAt: Date | undefined): string {
+  return `file-${fileName ?? 'unknown'}-${createdAt?.getTime() ?? 0}`;
 }

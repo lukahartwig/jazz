@@ -1,6 +1,5 @@
 import { createWebSocketPeer } from "cojson-transport-ws";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
-import { WebSocket } from "ws";
 import { webSocketWithReconnection } from "../webSocketWithReconnection";
 
 // Mock dependencies
@@ -13,14 +12,12 @@ vi.mock("cojson-transport-ws", () => ({
   })),
 }));
 
-vi.mock("ws", () => ({
-  WebSocket: vi.fn().mockImplementation(() => ({
-    addEventListener: vi.fn(),
-    removeEventListener: vi.fn(),
-    close: vi.fn(),
-    readyState: 1,
-  })),
-}));
+const WebSocketMock = vi.fn().mockImplementation(() => ({
+  addEventListener: vi.fn(),
+  removeEventListener: vi.fn(),
+  close: vi.fn(),
+  readyState: 1,
+})) as unknown as typeof WebSocket;
 
 describe("webSocketWithReconnection", () => {
   beforeEach(() => {
@@ -37,9 +34,10 @@ describe("webSocketWithReconnection", () => {
     const { peer } = webSocketWithReconnection(
       "ws://localhost:8080",
       addPeerMock,
+      WebSocketMock,
     );
 
-    expect(WebSocket).toHaveBeenCalledWith("ws://localhost:8080");
+    expect(WebSocketMock).toHaveBeenCalledWith("ws://localhost:8080");
     expect(createWebSocketPeer).toHaveBeenCalledWith(
       expect.objectContaining({
         id: "upstream",
@@ -51,7 +49,11 @@ describe("webSocketWithReconnection", () => {
 
   test("should attempt reconnection when websocket closes", async () => {
     const addPeerMock = vi.fn();
-    webSocketWithReconnection("ws://localhost:8080", addPeerMock);
+    webSocketWithReconnection(
+      "ws://localhost:8080",
+      addPeerMock,
+      WebSocketMock,
+    );
 
     // Get the onClose handler from the first createWebSocketPeer call
     const initialPeer = vi.mocked(createWebSocketPeer).mock.results[0]!.value;
@@ -62,7 +64,7 @@ describe("webSocketWithReconnection", () => {
     // Fast-forward timer to trigger reconnection
     await vi.advanceTimersByTimeAsync(1000);
 
-    expect(WebSocket).toHaveBeenCalledTimes(2);
+    expect(WebSocketMock).toHaveBeenCalledTimes(2);
     expect(createWebSocketPeer).toHaveBeenCalledTimes(2);
     expect(addPeerMock).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -76,6 +78,7 @@ describe("webSocketWithReconnection", () => {
     const { done } = webSocketWithReconnection(
       "ws://localhost:8080",
       addPeerMock,
+      WebSocketMock,
     );
 
     // Get the onClose handler
@@ -90,7 +93,7 @@ describe("webSocketWithReconnection", () => {
     vi.advanceTimersByTime(1000);
 
     // Should not attempt reconnection
-    expect(WebSocket).toHaveBeenCalledTimes(1);
+    expect(WebSocketMock).toHaveBeenCalledTimes(1);
     expect(createWebSocketPeer).toHaveBeenCalledTimes(1);
   });
 
@@ -99,6 +102,7 @@ describe("webSocketWithReconnection", () => {
     const { done } = webSocketWithReconnection(
       "ws://localhost:8080",
       addPeerMock,
+      WebSocketMock,
     );
 
     // Get the onClose handler
@@ -108,7 +112,7 @@ describe("webSocketWithReconnection", () => {
     initialPeer.onClose();
     await vi.advanceTimersByTimeAsync(1000);
 
-    expect(WebSocket).toHaveBeenCalledTimes(2);
+    expect(WebSocketMock).toHaveBeenCalledTimes(2);
 
     // Call done
     done();
@@ -118,6 +122,6 @@ describe("webSocketWithReconnection", () => {
     await vi.advanceTimersByTimeAsync(1000);
 
     // Should not create another connection
-    expect(WebSocket).toHaveBeenCalledTimes(2);
+    expect(WebSocketMock).toHaveBeenCalledTimes(2);
   });
 });

@@ -29,6 +29,8 @@ import { RawBinaryCoStream, RawCoStream } from "./coStream.js";
 export const EVERYONE = "everyone" as const;
 export type Everyone = "everyone";
 
+export type ParentGroupReferenceRole = "extend" | "reader" | "writer" | "admin";
+
 export type GroupShape = {
   profile: CoID<RawCoMap> | null;
   root: CoID<RawCoMap> | null;
@@ -42,7 +44,7 @@ export type GroupShape = {
     KeySecret,
     { encryptedID: KeyID; encryptingID: KeyID }
   >;
-  [parent: ParentGroupReference]: "extend";
+  [parent: ParentGroupReference]: ParentGroupReferenceRole;
   [child: ChildGroupReference]: "extend";
 };
 
@@ -98,15 +100,17 @@ export class RawGroup<
 
     const parentGroups = this.getParentGroups(this.atTimeFilter);
 
-    for (const parentGroup of parentGroups) {
-      const roleInParent = parentGroup.roleOfInternal(accountID);
+    for (const { group, role } of parentGroups) {
+      const parentRole = group.roleOfInternal(accountID)?.role;
 
-      if (
-        roleInParent &&
-        roleInParent.role !== "revoked" &&
-        isMorePermissiveAndShouldInherit(roleInParent.role, roleInfo?.role)
-      ) {
-        roleInfo = { role: roleInParent.role, via: parentGroup.id };
+      if (!isInheritableRole(parentRole)) {
+        continue;
+      }
+
+      const roleToInherit = role !== "extend" ? role : parentRole;
+
+      if (isMorePermissiveAndShouldInherit(roleToInherit, roleInfo?.role)) {
+        roleInfo = { role: roleToInherit, via: group.id };
       }
     }
 
@@ -114,7 +118,7 @@ export class RawGroup<
   }
 
   getParentGroups(atTime?: number) {
-    const groups: RawGroup[] = [];
+    const groups: { group: RawGroup; role: ParentGroupReferenceRole }[] = [];
 
     for (const key of this.keys()) {
       if (isParentGroupReference(key)) {
@@ -123,12 +127,13 @@ export class RawGroup<
           "Expected parent group to be loaded",
         );
 
-        const parentGroup = expectGroup(parent.getCurrentContent());
+        const group = expectGroup(parent.getCurrentContent());
+        const role = this.get(key)!;
 
         if (atTime) {
-          groups.push(parentGroup.atTime(atTime));
+          groups.push({ group: group.atTime(atTime), role });
         } else {
-          groups.push(parentGroup);
+          groups.push({ group, role });
         }
       }
     }
@@ -493,7 +498,7 @@ export class RawGroup<
      *
      * This way the members from the parent groups can still have access to this group
      */
-    for (const parent of parentGroups) {
+    for (const { group: parent } of parentGroups) {
       const { id: parentReadKeyID, secret: parentReadKeySecret } =
         parent.core.getCurrentReadKey();
 
@@ -545,7 +550,10 @@ export class RawGroup<
     return false;
   }
 
-  extend(parent: RawGroup) {
+  extend(
+    parent: RawGroup,
+    role: "reader" | "writer" | "admin" | "inherit" = "inherit",
+  ) {
     if (this.isSelfExtension(parent)) {
       return;
     }
@@ -563,11 +571,13 @@ export class RawGroup<
       parent.myRole() !== "writeOnly"
     ) {
       throw new Error(
-        "To extend a group, the current account must have access to the parent group",
+        "To extend a group, the current account must be a member of the parent group",
       );
     }
 
-    this.set(`parent_${parent.id}`, "extend", "trusting");
+    const value = role === "inherit" ? "extend" : role;
+
+    this.set(`parent_${parent.id}`, value, "trusting");
     parent.set(`child_${this.id}`, "extend", "trusting");
 
     const { id: parentReadKeyID, secret: parentReadKeySecret } =
@@ -771,19 +781,20 @@ export class RawGroup<
   }
 }
 
+export function isInheritableRole(
+  roleInParent: Role | undefined,
+): roleInParent is "admin" | "writer" | "reader" {
+  return (
+    roleInParent === "admin" ||
+    roleInParent === "writer" ||
+    roleInParent === "reader"
+  );
+}
+
 function isMorePermissiveAndShouldInherit(
-  roleInParent: Role,
+  roleInParent: "admin" | "writer" | "reader",
   roleInChild: Exclude<Role, "revoked"> | undefined,
 ) {
-  // invites should never be inherited
-  if (
-    roleInParent === "adminInvite" ||
-    roleInParent === "writerInvite" ||
-    roleInParent === "readerInvite"
-  ) {
-    return false;
-  }
-
   if (roleInParent === "admin") {
     return !roleInChild || roleInChild !== "admin";
   }

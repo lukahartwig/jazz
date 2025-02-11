@@ -139,16 +139,14 @@ export class Group extends CoValueBase implements CoValue {
     return this._raw.myRole();
   }
 
-  addMember(member: Everyone, role: "writer" | "reader"): Group;
-  addMember(member: Account, role: AccountRole): Group;
+  addMember(member: Everyone, role: "writer" | "reader"): void;
+  addMember(member: Account, role: AccountRole): void;
   addMember(member: Everyone | Account, role: AccountRole) {
     this._raw.addMember(member === "everyone" ? member : member._raw, role);
-    return this;
   }
 
   removeMember(member: Everyone | Account) {
-    this._raw.removeMember(member === "everyone" ? member : member._raw);
-    return this;
+    return this._raw.removeMember(member === "everyone" ? member : member._raw);
   }
 
   get members() {
@@ -181,8 +179,11 @@ export class Group extends CoValueBase implements CoValue {
       });
   }
 
-  extend(parent: Group) {
-    this._raw.extend(parent._raw);
+  extend(
+    parent: Group,
+    roleMapping?: "reader" | "writer" | "admin" | "inherit",
+  ) {
+    this._raw.extend(parent._raw, roleMapping);
     return this;
   }
 
@@ -243,7 +244,7 @@ export class Group extends CoValueBase implements CoValue {
   ensureLoaded<G extends Group, Depth>(
     this: G,
     depth: Depth & DepthsIn<G>,
-  ): Promise<DeeplyLoaded<G, Depth> | undefined> {
+  ): Promise<DeeplyLoaded<G, Depth>> {
     return ensureCoValueLoaded(this, depth);
   }
 

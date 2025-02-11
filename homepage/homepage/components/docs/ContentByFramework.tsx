@@ -15,7 +15,7 @@ export interface ContentByFrameworkProps {
  */
 
 export function ContentByFramework(props: {
-  framework: string;
+  framework: string | string[];
   children: React.ReactNode;
 }) {
   const framework = useFramework();
@@ -23,4 +23,10 @@ export function ContentByFramework(props: {
   if (framework == props.framework) {
     return props.children;
   }
+
+  if (Array.isArray(props.framework) && props.framework.includes(framework)) {
+    return props.children;
+  }
+
+  return null;
 }

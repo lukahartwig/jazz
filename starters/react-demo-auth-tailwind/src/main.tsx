@@ -1,29 +1,12 @@
-import { DemoAuthBasicUI, JazzProvider, useDemoAuth } from "jazz-react";
+import { JazzProvider } from "jazz-react";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
 import { JazzAccount } from "./schema.ts";
 
-function JazzAndAuth({ children }: { children: React.ReactNode }) {
-  const [auth, authState] = useDemoAuth();
-
-  return (
-    <>
-      <JazzProvider
-        auth={auth}
-        peer="wss://cloud.jazz.tools/?key=react-demo-auth-tailwind@garden.co"
-        AccountSchema={JazzAccount}
-      >
-        {children}
-      </JazzProvider>
-
-      {authState.state !== "signedIn" && (
-        <DemoAuthBasicUI appName="React + Demo Auth" state={authState} />
-      )}
-    </>
-  );
-}
+// We use this to identify the app in the passkey auth
+export const APPLICATION_NAME = "Jazz starter";
 
 declare module "jazz-react" {
   export interface Register {
@@ -33,8 +16,14 @@ declare module "jazz-react" {
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <JazzAndAuth>
+    <JazzProvider
+      sync={{
+        peer: "wss://cloud.jazz.tools/?key=react-demo-auth-tailwind@garden.co",
+        when: "signedUp", // This way when the user hasn't signed up we store the data only locally
+      }}
+      AccountSchema={JazzAccount}
+    >
       <App />
-    </JazzAndAuth>
+    </JazzProvider>
   </StrictMode>,
 );

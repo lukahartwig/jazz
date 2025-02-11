@@ -5,7 +5,15 @@ import { CoValue, CoValueClass, ID, parseInviteLink } from "jazz-tools";
 import { Linking } from "react-native";
 import { RegisteredAccount } from "./provider.js";
 
-export { useCoState, experimental_useInboxSender } from "jazz-react-core";
+export {
+  useCoState,
+  experimental_useInboxSender,
+  useDemoAuth,
+  usePassphraseAuth,
+  useJazzContext,
+  useAuthSecretStorage,
+  useIsAuthenticated,
+} from "jazz-react-core";
 
 export const { useAccount, useAccountOrGuest } =
   createUseAccountHooks<RegisteredAccount>();

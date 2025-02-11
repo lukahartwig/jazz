@@ -11,7 +11,7 @@
       "cojson-storage-sqlite",
       "cojson-transport-ws",
       "jazz-browser",
-      "jazz-browser-auth-clerk",
+      "jazz-auth-clerk",
       "jazz-browser-media-images",
       "jazz-nodejs",
       "jazz-react",

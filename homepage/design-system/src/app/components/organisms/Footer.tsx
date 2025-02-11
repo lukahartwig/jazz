@@ -4,6 +4,7 @@ import clsx from "clsx";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ComponentType, ReactNode } from "react";
+import { Copyright } from "../atoms/Copyright";
 import { NewsletterForm } from "./NewsletterForm";
 import { SocialLinks, SocialLinksProps } from "./SocialLinks";
 
@@ -18,35 +19,19 @@ type FooterSection = {
 
 type FooterProps = {
   logo: ReactNode;
-  companyName: string;
   sections: FooterSection[];
   socials: SocialLinksProps;
   themeToggle: ComponentType<{ className?: string }>;
 };
 
-function Copyright({
-  className,
-  companyName,
-}: {
-  companyName: string;
-  className?: string;
-}) {
-  return (
-    <p className={clsx(className, "text-sm")}>
-      © {new Date().getFullYear()} {companyName}
-    </p>
-  );
-}
-
 export function Footer({
   logo,
-  companyName,
   sections,
   socials,
   themeToggle: ThemeToggle,
 }: FooterProps) {
   return (
-    <footer className="w-full py-8 mt-12 md:mt-20">
+    <footer className="w-full pt-8 pb-20 mt-12 md:mt-20 md:pb-8">
       <div className="container grid gap-8 md:gap-12">
         <div className="grid grid-cols-12 gap-y-3 sm:items-center pb-8 border-b">
           <div className="col-span-full sm:col-span-6 md:col-span-8">
@@ -82,10 +67,7 @@ export function Footer({
             </div>
           ))}
 
-          <Copyright
-            className="order-last col-span-full self-center md:col-span-10 md:order-none"
-            companyName={companyName}
-          />
+          <Copyright className="text-sm order-last col-span-full self-center md:col-span-10 md:order-none" />
 
           <div className="col-span-full flex items-center justify-between gap-6 md:col-span-2">
             <SocialLinks {...socials}></SocialLinks>

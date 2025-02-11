@@ -391,7 +391,7 @@ export class CoFeed<Item = any> extends CoValueBase implements CoValue {
   ensureLoaded<S extends CoFeed, Depth>(
     this: S,
     depth: Depth & DepthsIn<S>,
-  ): Promise<DeeplyLoaded<S, Depth> | undefined> {
+  ): Promise<DeeplyLoaded<S, Depth>> {
     return ensureCoValueLoaded(this, depth);
   }
 

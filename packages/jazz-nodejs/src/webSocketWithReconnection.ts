@@ -1,14 +1,17 @@
 import { Peer } from "cojson";
 import { createWebSocketPeer } from "cojson-transport-ws";
-import { WebSocket } from "ws";
 
 export function webSocketWithReconnection(
   peer: string,
   addPeer: (peer: Peer) => void,
+  ws?: typeof WebSocket,
 ) {
   let done = false;
+
+  const WebSocketConstructor = ws ?? WebSocket;
+
   const wsPeer = createWebSocketPeer({
-    websocket: new WebSocket(peer),
+    websocket: new WebSocketConstructor(peer),
     id: "upstream",
     role: "server",
     onClose: handleClose,
@@ -20,11 +23,9 @@ export function webSocketWithReconnection(
 
     clearTimeout(timer);
     timer = setTimeout(() => {
-      console.log(new Date(), "Reconnecting to upstream " + peer);
-
       const wsPeer: Peer = createWebSocketPeer({
         id: "upstream",
-        websocket: new WebSocket(peer) as any,
+        websocket: new WebSocketConstructor(peer) as any,
         role: "server",
         onClose: handleClose,
       });

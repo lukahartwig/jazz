@@ -1,13 +1,7 @@
 import { expect, test } from "@playwright/test";
-import { LoginPage } from "./pages/LoginPage";
 
 test("create and edit an order", async ({ page }) => {
-  const loginPage = new LoginPage(page);
-
-  await loginPage.goto();
-  await loginPage.fillUsername("Alice");
-  await loginPage.signup();
-
+  await page.goto("/");
   // start an order
   await page.getByRole("link", { name: "Add new order" }).click();
   await page.getByLabel("Base tea").selectOption("Oolong");

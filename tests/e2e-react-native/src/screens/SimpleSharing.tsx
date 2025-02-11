@@ -26,8 +26,10 @@ export function SimpleSharing() {
 
     setId(coMap.id);
 
-    Clipboard.setStringAsync(`node validateCoValue.mjs ${invite}`);
-    Alert.alert("Validate command copied to clipboard");
+    Clipboard.setStringAsync(`node validateCoValue.mjs "${invite}"`);
+    Alert.alert(
+      "Validate command copied to clipboard, paste it in your terminal to check if the sync works!",
+    );
 
     setInvite(invite);
   }

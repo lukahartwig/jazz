@@ -1,14 +1,6 @@
-export type Environment = "browser" | "mobile" | "server";
+export type Environment = "browser" | "mobile";
 export type Engine = "browser" | "mobile" | "nodejs" | "deno" | "bun";
-export type Framework =
-  | "react"
-  | "vue"
-  | "svelte"
-  | "nextjs"
-  | "react-native-expo"
-  | "nodejs"
-  | "deno"
-  | "bun";
+export type Framework = "react" | "vue" | "svelte" | "rn";
 export type AuthMethod =
   | "demo"
   | "passkey"
@@ -23,6 +15,25 @@ export type EngineConfig = {
     };
   };
 };
+
+export const frameworks = [
+  {
+    name: "React",
+    value: "react",
+  },
+  {
+    name: "React Native",
+    value: "rn",
+  },
+  {
+    name: "Svelte",
+    value: "svelte",
+  },
+  {
+    name: "Vue",
+    value: "vue",
+  },
+];
 
 export type ConfigStructure = Record<Environment, EngineConfig>;
 
@@ -47,23 +58,11 @@ export const configMap: ConfigStructure = {
       react: { auth: ["demo", "passkey", "passphrase", "clerk"] },
       vue: { auth: ["demo"] },
       svelte: { auth: ["passkey"] },
-      nextjs: { auth: ["demo", "passkey", "passphrase", "clerk"] },
     },
   },
   mobile: {
     mobile: {
-      "react-native-expo": { auth: ["demo", "clerk"] },
-    },
-  },
-  server: {
-    nodejs: {
-      nodejs: { auth: ["keypair"] },
-    },
-    deno: {
-      deno: { auth: ["keypair"] },
-    },
-    bun: {
-      bun: { auth: ["keypair"] },
+      rn: { auth: ["demo", "clerk"] },
     },
   },
 };
@@ -94,45 +93,9 @@ export const frameworkToAuthExamples: Partial<
     name: "Svelte + Jazz + Passkey Auth",
     repo: "garden-co/jazz/examples/passkey-svelte",
   },
-  "react-native-expo-clerk-auth": {
+  "rn-clerk-auth": {
     name: "React Native Expo + Jazz + Clerk Auth",
     repo: "garden-co/jazz/examples/chat-rn-clerk",
-  },
-  "react-passphrase-auth": {
-    name: "[To Be Implemented] React + Jazz + Passphrase Auth",
-    repo: undefined,
-  },
-  "nextjs-demo-auth": {
-    name: "[To Be Implemented] Next.js + Jazz + Demo Auth",
-    repo: undefined,
-  },
-  "nextjs-passkey-auth": {
-    name: "[To Be Implemented] Next.js + Jazz + Passkey Auth",
-    repo: undefined,
-  },
-  "nextjs-passphrase-auth": {
-    name: "[To Be Implemented] Next.js + Jazz + Passphrase Auth",
-    repo: undefined,
-  },
-  "nextjs-clerk-auth": {
-    name: "[To Be Implemented] Next.js + Jazz + Clerk Auth",
-    repo: undefined,
-  },
-  "react-native-expo-demo-auth": {
-    name: "[To Be Implemented] React Native Expo + Jazz + Demo Auth",
-    repo: undefined,
-  },
-  "nodejs-keypair-auth": {
-    name: "[To Be Implemented] Node.js + Jazz + Keypair Auth",
-    repo: undefined,
-  },
-  "deno-keypair-auth": {
-    name: "[To Be Implemented] Deno + Jazz + Keypair Auth",
-    repo: undefined,
-  },
-  "bun-keypair-auth": {
-    name: "[To Be Implemented] Bun + Jazz + Keypair Auth",
-    repo: undefined,
   },
 };
 

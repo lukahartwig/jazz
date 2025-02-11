@@ -4,7 +4,13 @@ import { JazzTestProvider } from "../testing";
 
 export const withJazzTestSetup = <C extends (...args: any[]) => any>(
   composable: C,
-  { account }: { account: Account | { guest: AnonymousJazzAgent } },
+  {
+    account,
+    isAuthenticated,
+  }: {
+    account?: Account | { guest: AnonymousJazzAgent };
+    isAuthenticated?: boolean;
+  } = {},
 ) => {
   let result;
 
@@ -23,6 +29,7 @@ export const withJazzTestSetup = <C extends (...args: any[]) => any>(
           JazzTestProvider,
           {
             account,
+            isAuthenticated,
           },
           {
             default: () => h(wrapper),

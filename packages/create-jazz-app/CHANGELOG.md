@@ -1,5 +1,12 @@
 # create-jazz-app
 
+## 0.1.9
+
+### Patch Changes
+
+- 54eba82: Add framework and api-key param to create-jazz-app
+- cabce37: Correctly handle cd when the project name has spaces
+
 ## 0.1.8
 
 ### Patch Changes

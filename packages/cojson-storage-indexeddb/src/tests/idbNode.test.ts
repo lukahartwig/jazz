@@ -1,5 +1,3 @@
-import "fake-indexeddb/auto"; // Polyfill for IndexedDB
-
 import { ControlledAgent, LocalNode, WasmCrypto } from "cojson";
 import { expect, test } from "vitest";
 import { IDBStorage } from "../index.js";

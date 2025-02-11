@@ -10,7 +10,7 @@ export function InviteButton<T extends CoValue>({
   value,
   valueHint,
 }: {
-  value?: T;
+  value?: T | null;
   valueHint?: string;
 }) {
   const [existingInviteLink, setExistingInviteLink] = useState<string>();

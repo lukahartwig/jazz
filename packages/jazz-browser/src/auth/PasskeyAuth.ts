@@ -1,17 +1,10 @@
+import { CryptoProvider, RawAccountID, cojsonInternals } from "cojson";
 import {
-  AgentSecret,
-  CryptoProvider,
-  RawAccountID,
-  cojsonInternals,
-} from "cojson";
-import { Account, AuthMethod, AuthResult, ID } from "jazz-tools";
-
-type LocalStorageData = {
-  accountID: ID<Account>;
-  accountSecret: AgentSecret;
-};
-
-const localStorageKey = "jazz-logged-in-secret";
+  Account,
+  AuthSecretStorage,
+  AuthenticateAccountFunction,
+  ID,
+} from "jazz-tools";
 
 /**
  * `BrowserPasskeyAuth` provides a `JazzAuth` object for passkey authentication.
@@ -24,182 +17,148 @@ const localStorageKey = "jazz-logged-in-secret";
  *
  * @category Auth Providers
  */
-export class BrowserPasskeyAuth implements AuthMethod {
+export class BrowserPasskeyAuth {
   constructor(
-    public driver: BrowserPasskeyAuth.Driver,
+    private crypto: CryptoProvider,
+    private authenticate: AuthenticateAccountFunction,
+    private authSecretStorage: AuthSecretStorage,
     public appName: string,
-    // TODO: is this a safe default?
     public appHostname: string = window.location.hostname,
   ) {}
 
-  accountLoaded() {
-    this.driver.onSignedIn({ logOut });
-  }
+  static readonly id = "passkey";
 
-  onError(error: string | Error) {
-    this.driver.onError(error);
-  }
+  logIn = async () => {
+    const { crypto, authenticate } = this;
 
-  /**
-   * @returns A `JazzAuth` object
-   */
-  async start(crypto: CryptoProvider): Promise<AuthResult> {
-    if (localStorage[localStorageKey]) {
-      const localStorageData = JSON.parse(
-        localStorage[localStorageKey],
-      ) as LocalStorageData;
+    const webAuthNCredential = await this.getPasskeyCredentials();
 
-      const accountID = localStorageData.accountID as ID<Account>;
-      const secret = localStorageData.accountSecret;
+    if (!webAuthNCredential) {
+      return;
+    }
 
-      return {
-        type: "existing",
-        credentials: { accountID, secret },
-        onSuccess: () => {
-          this.driver.onSignedIn({ logOut });
-        },
-        onError: (error: string | Error) => {
-          this.driver.onError(error);
-        },
-        logOut: () => {
-          delete localStorage[localStorageKey];
-        },
-      } satisfies AuthResult;
-    } else {
-      return new Promise<AuthResult>((resolve) => {
-        this.driver.onReady({
-          signUp: async (username) => {
-            const secretSeed = crypto.newRandomSecretSeed();
+    const webAuthNCredentialPayload = new Uint8Array(
+      webAuthNCredential.response.userHandle,
+    );
+    const accountSecretSeed = webAuthNCredentialPayload.slice(
+      0,
+      cojsonInternals.secretSeedLength,
+    );
 
-            resolve({
-              type: "new",
-              creationProps: { name: username },
-              initialSecret: crypto.agentSecretFromSecretSeed(secretSeed),
-              saveCredentials: async ({ accountID, secret }) => {
-                const webAuthNCredentialPayload = new Uint8Array(
-                  cojsonInternals.secretSeedLength +
-                    cojsonInternals.shortHashLength,
-                );
+    const secret = crypto.agentSecretFromSecretSeed(accountSecretSeed);
 
-                webAuthNCredentialPayload.set(secretSeed);
-                webAuthNCredentialPayload.set(
-                  cojsonInternals.rawCoIDtoBytes(
-                    accountID as unknown as RawAccountID,
-                  ),
-                  cojsonInternals.secretSeedLength,
-                );
+    const accountID = cojsonInternals.rawCoIDfromBytes(
+      webAuthNCredentialPayload.slice(
+        cojsonInternals.secretSeedLength,
+        cojsonInternals.secretSeedLength + cojsonInternals.shortHashLength,
+      ),
+    ) as ID<Account>;
 
-                await navigator.credentials.create({
-                  publicKey: {
-                    challenge: Uint8Array.from([0, 1, 2]),
-                    rp: {
-                      name: this.appName,
-                      id: this.appHostname,
-                    },
-                    user: {
-                      id: webAuthNCredentialPayload,
-                      name: username + ` (${new Date().toLocaleString()})`,
-                      displayName: username,
-                    },
-                    pubKeyCredParams: [{ alg: -7, type: "public-key" }],
-                    authenticatorSelection: {
-                      authenticatorAttachment: "platform",
-                      requireResidentKey: true,
-                      residentKey: "required",
-                    },
-                    timeout: 60000,
-                    attestation: "direct",
-                  },
-                });
+    await authenticate({
+      accountID,
+      accountSecret: secret,
+    });
 
-                localStorage[localStorageKey] = JSON.stringify({
-                  accountID,
-                  accountSecret: secret,
-                } satisfies LocalStorageData);
-              },
-              onSuccess: () => {
-                this.driver.onSignedIn({ logOut });
-              },
-              onError: (error: string | Error) => {
-                this.driver.onError(error);
-              },
-              logOut: () => {
-                delete localStorage[localStorageKey];
-              },
-            });
+    await this.authSecretStorage.set({
+      accountID,
+      secretSeed: accountSecretSeed,
+      accountSecret: secret,
+      provider: "passkey",
+    });
+  };
+
+  signUp = async (username: string) => {
+    const credentials = await this.authSecretStorage.get();
+
+    if (!credentials?.secretSeed) {
+      throw new Error(
+        "Not enough credentials to register the account with passkey",
+      );
+    }
+
+    await this.createPasskeyCredentials({
+      accountID: credentials.accountID,
+      secretSeed: credentials.secretSeed,
+      username,
+    });
+
+    const currentAccount = await Account.getMe().ensureLoaded({
+      profile: {},
+    });
+
+    currentAccount.profile.name = username;
+
+    await this.authSecretStorage.set({
+      accountID: credentials.accountID,
+      secretSeed: credentials.secretSeed,
+      accountSecret: credentials.accountSecret,
+      provider: "passkey",
+    });
+  };
+
+  private async createPasskeyCredentials({
+    accountID,
+    secretSeed,
+    username,
+  }: {
+    accountID: ID<Account>;
+    secretSeed: Uint8Array;
+    username: string;
+  }) {
+    const webAuthNCredentialPayload = new Uint8Array(
+      cojsonInternals.secretSeedLength + cojsonInternals.shortHashLength,
+    );
+
+    webAuthNCredentialPayload.set(secretSeed);
+    webAuthNCredentialPayload.set(
+      cojsonInternals.rawCoIDtoBytes(accountID as unknown as RawAccountID),
+      cojsonInternals.secretSeedLength,
+    );
+
+    try {
+      await navigator.credentials.create({
+        publicKey: {
+          challenge: Uint8Array.from([0, 1, 2]),
+          rp: {
+            name: this.appName,
+            id: this.appHostname,
           },
-          logIn: async () => {
-            const webAuthNCredential = (await navigator.credentials.get({
-              publicKey: {
-                challenge: Uint8Array.from([0, 1, 2]),
-                rpId: this.appHostname,
-                allowCredentials: [],
-                timeout: 60000,
-              },
-            })) as unknown as {
-              response: { userHandle: ArrayBuffer };
-            };
-            if (!webAuthNCredential) {
-              throw new Error("Couldn't log in");
-            }
-
-            const webAuthNCredentialPayload = new Uint8Array(
-              webAuthNCredential.response.userHandle,
-            );
-            const accountSecretSeed = webAuthNCredentialPayload.slice(
-              0,
-              cojsonInternals.secretSeedLength,
-            );
-
-            const secret = crypto.agentSecretFromSecretSeed(accountSecretSeed);
-
-            const accountID = cojsonInternals.rawCoIDfromBytes(
-              webAuthNCredentialPayload.slice(
-                cojsonInternals.secretSeedLength,
-                cojsonInternals.secretSeedLength +
-                  cojsonInternals.shortHashLength,
-              ),
-            ) as ID<Account>;
-
-            resolve({
-              type: "existing",
-              credentials: { accountID, secret },
-              saveCredentials: async ({ accountID, secret }) => {
-                localStorage[localStorageKey] = JSON.stringify({
-                  accountID,
-                  accountSecret: secret,
-                } satisfies LocalStorageData);
-              },
-              onSuccess: () => {
-                this.driver.onSignedIn({ logOut });
-              },
-              onError: (error: string | Error) => {
-                this.driver.onError(error);
-              },
-              logOut: () => {
-                delete localStorage[localStorageKey];
-              },
-            });
+          user: {
+            id: webAuthNCredentialPayload,
+            name: username + ` (${new Date().toLocaleString()})`,
+            displayName: username,
           },
-        });
+          pubKeyCredParams: [{ alg: -7, type: "public-key" }],
+          authenticatorSelection: {
+            authenticatorAttachment: "platform",
+            requireResidentKey: true,
+            residentKey: "required",
+          },
+          timeout: 60000,
+          attestation: "direct",
+        },
       });
+    } catch (error) {
+      throw new Error("Passkey creation aborted", { cause: error });
     }
   }
-}
 
-/** @internal */
-// eslint-disable-next-line @typescript-eslint/no-namespace
-export namespace BrowserPasskeyAuth {
-  export interface Driver {
-    onReady: (next: {
-      signUp: (username: string) => Promise<void>;
-      logIn: () => Promise<void>;
-    }) => void;
-    onSignedIn: (next: { logOut: () => void }) => void;
-    onError: (error: string | Error) => void;
+  private async getPasskeyCredentials() {
+    try {
+      const value = await navigator.credentials.get({
+        publicKey: {
+          challenge: Uint8Array.from([0, 1, 2]),
+          rpId: this.appHostname,
+          allowCredentials: [],
+          timeout: 60000,
+        },
+      });
+
+      return value as
+        | (Credential & { response: { userHandle: ArrayBuffer } })
+        | null;
+    } catch (error) {
+      throw new Error("Passkey creation aborted", { cause: error });
+    }
   }
-}
-
-function logOut() {
-  delete localStorage[localStorageKey];
 }

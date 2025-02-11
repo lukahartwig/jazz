@@ -2,7 +2,11 @@
   "name": "jazz-monorepo",
   "private": true,
   "type": "module",
-  "workspaces": ["packages/*", "examples/*", "starters/*"],
+  "workspaces": [
+    "packages/*",
+    "examples/*",
+    "starters/*"
+  ],
   "packageManager": "pnpm@9.15.0+sha512.76e2379760a4328ec4415815bcd6628dee727af3779aaa4c914e3944156c4299921a89f976381ee107d41f12cfa4b66681ca9c718f0668fa0831ed4c6d8ba56c",
   "engines": {
     "node": ">=22.0.0"
@@ -10,14 +14,19 @@
   "devDependencies": {
     "@biomejs/biome": "1.9.4",
     "@changesets/cli": "^2.27.10",
-    "@vitest/coverage-istanbul": "1.5.3",
-    "@vitest/ui": "1.5.3",
-    "happy-dom": "^15.8.3",
+    "@playwright/test": "^1.50.1",
+    "@vitejs/plugin-react": "^4.3.3",
+    "@vitest/browser": "^3.0.5",
+    "@vitest/coverage-istanbul": "3.0.5",
+    "@vitest/ui": "3.0.5",
+    "happy-dom": "^16.8.1",
     "lefthook": "^1.8.2",
+    "pkg-pr-new": "^0.0.39",
+    "playwright": "^1.50.1",
     "ts-node": "^10.9.1",
     "turbo": "^2.3.1",
     "typedoc": "^0.25.13",
-    "vitest": "1.5.3"
+    "vitest": "3.0.5"
   },
   "scripts": {
     "dev": "turbo dev",
@@ -36,7 +45,11 @@
   "version": "0.0.0",
   "pnpm": {
     "peerDependencyRules": {
-      "ignoreMissing": ["@babel/*", "expo-modules-*", "typescript"]
+      "ignoreMissing": [
+        "@babel/*",
+        "expo-modules-*",
+        "typescript"
+      ]
     },
     "overrides": {
       "react": "18.3.1",

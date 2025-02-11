@@ -38,23 +38,9 @@ export class WasmCrypto extends CryptoProvider<Uint8Array> {
   }
 
   static async create(): Promise<WasmCrypto> {
-    return Promise.all([
-      createBLAKE3(),
-      initBundledOnce(),
-      new Promise<void>((resolve) => {
-        if ("crypto" in globalThis) {
-          resolve();
-        } else {
-          return import(/*webpackIgnore: true*/ "node:crypto").then(
-            ({ webcrypto }) => {
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              (globalThis as any).crypto = webcrypto;
-              resolve();
-            },
-          );
-        }
-      }),
-    ]).then(([blake3instance]) => new WasmCrypto(blake3instance));
+    return Promise.all([createBLAKE3(), initBundledOnce()]).then(
+      ([blake3instance]) => new WasmCrypto(blake3instance),
+    );
   }
 
   randomBytes(length: number): Uint8Array {

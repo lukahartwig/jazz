@@ -2,7 +2,13 @@ import { CoID } from "./coValue.js";
 import { CoValueCore, Transaction } from "./coValueCore.js";
 import { RawAccount, RawAccountID, RawProfile } from "./coValues/account.js";
 import { MapOpPayload } from "./coValues/coMap.js";
-import { EVERYONE, Everyone, RawGroup } from "./coValues/group.js";
+import {
+  EVERYONE,
+  Everyone,
+  ParentGroupReferenceRole,
+  RawGroup,
+  isInheritableRole,
+} from "./coValues/group.js";
 import { KeyID } from "./crypto/crypto.js";
 import {
   AgentID,
@@ -141,6 +147,7 @@ function resolveMemberStateFromParentReference(
   coValue: CoValueCore,
   memberState: MemberState,
   parentReference: ParentGroupReference,
+  roleMapping: ParentGroupReferenceRole,
   extendChain: Set<CoValueCore["id"]>,
 ) {
   const parentGroup = coValue.node.expectCoValueLoaded(
@@ -174,8 +181,12 @@ function resolveMemberStateFromParentReference(
     const parentRole = parentGroupMemberState[agent];
     const currentRole = memberState[agent];
 
-    if (parentRole && isHigherRole(parentRole, currentRole)) {
-      memberState[agent] = parentRole;
+    if (isInheritableRole(parentRole)) {
+      if (roleMapping !== "extend" && isHigherRole(roleMapping, currentRole)) {
+        memberState[agent] = roleMapping;
+      } else if (isHigherRole(parentRole, currentRole)) {
+        memberState[agent] = parentRole;
+      }
     }
   }
 }
@@ -317,6 +328,7 @@ function determineValidTransactionsForGroup(
         coValue,
         memberState,
         change.key,
+        change.value as ParentGroupReferenceRole,
         extendChain,
       );
 

@@ -8,7 +8,7 @@
 </script>
 
 <script lang="ts" generics="R extends CoValue">
-  import { useCoState } from '$lib/jazz.svelte.js';
+  import { useCoState } from '../../jazz.svelte.js';
   import type { CoValue, CoValueClass, DepthsIn, ID } from 'jazz-tools';
 
   let { Schema, id, depth, setResult }: Props<R> = $props();

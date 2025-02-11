@@ -467,33 +467,6 @@ describe("writeOnly", () => {
     expect(mapOnNode3.get("test")).toEqual("Written from a writeOnly member");
   });
 
-  test("inherited writer roles should work correctly", async () => {
-    const { node1, node2 } = await createTwoConnectedNodes("server", "server");
-
-    const group = node1.node.createGroup();
-    group.addMember(
-      await loadCoValueOrFail(node1.node, node2.accountID),
-      "writer",
-    );
-
-    const childGroup = node1.node.createGroup();
-    childGroup.extend(group);
-    childGroup.addMember(
-      await loadCoValueOrFail(node1.node, node2.accountID),
-      "writeOnly",
-    );
-
-    const map = childGroup.createMap();
-    map.set("test", "Written from the admin");
-
-    await map.core.waitForSync();
-
-    const mapOnNode2 = await loadCoValueOrFail(node2.node, map.id);
-
-    // The writer role should be able to see the edits from the admin
-    expect(mapOnNode2.get("test")).toEqual("Written from the admin");
-  });
-
   test("upgrade to writer roles should work correctly", async () => {
     const { node1, node2 } = await createTwoConnectedNodes("server", "server");
 
@@ -527,6 +500,35 @@ describe("writeOnly", () => {
 
     // The writer role should be able to see the edits from the admin
     expect(mapOnNode2.get("test")).toEqual("Written from the writeOnly member");
+  });
+});
+
+describe("extend", () => {
+  test("inherited writer roles should work correctly", async () => {
+    const { node1, node2 } = await createTwoConnectedNodes("server", "server");
+
+    const group = node1.node.createGroup();
+    group.addMember(
+      await loadCoValueOrFail(node1.node, node2.accountID),
+      "writer",
+    );
+
+    const childGroup = node1.node.createGroup();
+    childGroup.extend(group);
+    childGroup.addMember(
+      await loadCoValueOrFail(node1.node, node2.accountID),
+      "writeOnly",
+    );
+
+    const map = childGroup.createMap();
+    map.set("test", "Written from the admin");
+
+    await map.core.waitForSync();
+
+    const mapOnNode2 = await loadCoValueOrFail(node2.node, map.id);
+
+    // The writer role should be able to see the edits from the admin
+    expect(mapOnNode2.get("test")).toEqual("Written from the admin");
   });
 
   test("a user should be able to extend a group when his role on the parent group is writer", async () => {
@@ -637,5 +639,206 @@ describe("writeOnly", () => {
     map.set("test", "Hello!");
 
     expect(map.get("test")).toEqual("Hello!");
+  });
+
+  test("a writerInvite role should not be inherited", async () => {
+    const { node1, node2 } = await createTwoConnectedNodes("server", "server");
+
+    const group = node1.node.createGroup();
+    group.addMember(
+      await loadCoValueOrFail(node1.node, node2.accountID),
+      "writerInvite",
+    );
+
+    const childGroup = node1.node.createGroup();
+    childGroup.extend(group);
+
+    expect(childGroup.roleOf(node2.accountID)).toEqual(undefined);
+  });
+});
+
+describe("extend with role mapping", () => {
+  test("mapping to writer should add the ability to write", async () => {
+    const { node1, node2 } = await createTwoConnectedNodes("server", "server");
+
+    const group = node1.node.createGroup();
+    group.addMember(
+      await loadCoValueOrFail(node1.node, node2.accountID),
+      "reader",
+    );
+
+    const childGroup = node1.node.createGroup();
+    childGroup.extend(group, "writer");
+
+    expect(childGroup.roleOf(node2.accountID)).toEqual("writer");
+
+    const map = childGroup.createMap();
+    map.set("test", "Written from the admin");
+
+    await map.core.waitForSync();
+
+    const mapOnNode2 = await loadCoValueOrFail(node2.node, map.id);
+
+    expect(mapOnNode2.get("test")).toEqual("Written from the admin");
+
+    mapOnNode2.set("test", "Written from the inherited role");
+    expect(mapOnNode2.get("test")).toEqual("Written from the inherited role");
+
+    await mapOnNode2.core.waitForSync();
+
+    expect(map.get("test")).toEqual("Written from the inherited role");
+  });
+
+  test("mapping to reader should remove the ability to write", async () => {
+    const { node1, node2 } = await createTwoConnectedNodes("server", "server");
+
+    const group = node1.node.createGroup();
+    group.addMember(
+      await loadCoValueOrFail(node1.node, node2.accountID),
+      "writer",
+    );
+
+    const childGroup = node1.node.createGroup();
+    childGroup.extend(group, "reader");
+
+    expect(childGroup.roleOf(node2.accountID)).toEqual("reader");
+
+    const map = childGroup.createMap();
+    map.set("test", "Written from the admin");
+
+    await map.core.waitForSync();
+
+    const mapOnNode2 = await loadCoValueOrFail(node2.node, map.id);
+
+    expect(mapOnNode2.get("test")).toEqual("Written from the admin");
+
+    mapOnNode2.set("test", "Should not be visible");
+
+    await mapOnNode2.core.waitForSync();
+
+    expect(map.get("test")).toEqual("Written from the admin");
+    expect(mapOnNode2.get("test")).toEqual("Written from the admin");
+  });
+
+  test("mapping to admin should add the ability to add members", async () => {
+    const { node1, node2, node3 } = await createThreeConnectedNodes(
+      "server",
+      "server",
+      "server",
+    );
+
+    const group = node1.node.createGroup();
+    group.addMember(
+      await loadCoValueOrFail(node1.node, node2.accountID),
+      "reader",
+    );
+
+    const childGroup = node1.node.createGroup();
+    childGroup.extend(group, "admin");
+
+    expect(childGroup.roleOf(node2.accountID)).toEqual("admin");
+
+    await childGroup.core.waitForSync();
+
+    const childGroupOnNode2 = await loadCoValueOrFail(
+      node2.node,
+      childGroup.id,
+    );
+
+    childGroupOnNode2.addMember(
+      await loadCoValueOrFail(node2.node, node3.accountID),
+      "reader",
+    );
+
+    expect(childGroupOnNode2.roleOf(node3.accountID)).toEqual("reader");
+  });
+
+  test("mapping to reader should remove the ability to add members", async () => {
+    const { node1, node2, node3 } = await createThreeConnectedNodes(
+      "server",
+      "server",
+      "server",
+    );
+
+    const group = node1.node.createGroup();
+    group.addMember(
+      await loadCoValueOrFail(node1.node, node2.accountID),
+      "admin",
+    );
+
+    const childGroup = node1.node.createGroup();
+    childGroup.extend(group, "reader");
+
+    expect(childGroup.roleOf(node2.accountID)).toEqual("reader");
+
+    await childGroup.core.waitForSync();
+
+    const childGroupOnNode2 = await loadCoValueOrFail(
+      node2.node,
+      childGroup.id,
+    );
+
+    const accountToAdd = await loadCoValueOrFail(node2.node, node3.accountID);
+
+    expect(() => {
+      childGroupOnNode2.addMember(accountToAdd, "reader");
+    }).toThrow();
+
+    expect(childGroupOnNode2.roleOf(node3.accountID)).toEqual(undefined);
+  });
+
+  test("non-inheritable roles should not give access to the child group when role mapping is used", async () => {
+    const { node1, node2 } = await createTwoConnectedNodes("server", "server");
+
+    const group = node1.node.createGroup();
+    group.addMember(
+      await loadCoValueOrFail(node1.node, node2.accountID),
+      "writeOnly",
+    );
+
+    const childGroup = node1.node.createGroup();
+    childGroup.extend(group, "reader");
+
+    expect(childGroup.roleOf(node2.accountID)).toEqual(undefined);
+
+    const map = childGroup.createMap();
+    map.set("test", "Written from the admin");
+
+    await map.core.waitForSync();
+
+    const mapOnNode2 = await loadCoValueOrFail(node2.node, map.id);
+
+    expect(mapOnNode2.get("test")).toEqual(undefined);
+  });
+
+  test("invite roles should not give write access to the child group when role mapping is used", async () => {
+    const { node1, node2 } = await createTwoConnectedNodes("server", "server");
+
+    const group = node1.node.createGroup();
+    group.addMember(
+      await loadCoValueOrFail(node1.node, node2.accountID),
+      "writerInvite",
+    );
+
+    const childGroup = node1.node.createGroup();
+    childGroup.extend(group, "writer");
+
+    expect(childGroup.roleOf(node2.accountID)).toEqual(undefined);
+
+    const map = childGroup.createMap();
+    map.set("test", "Written from the admin");
+
+    await map.core.waitForSync();
+
+    const mapOnNode2 = await loadCoValueOrFail(node2.node, map.id);
+
+    expect(mapOnNode2.get("test")).toEqual("Written from the admin"); // The invite roles have access to the readKey hence can read the values on inherited groups
+
+    mapOnNode2.set("test", "Should not be visible");
+
+    await mapOnNode2.core.waitForSync();
+
+    expect(map.get("test")).toEqual("Written from the admin");
+    expect(mapOnNode2.get("test")).toEqual("Written from the admin");
   });
 });

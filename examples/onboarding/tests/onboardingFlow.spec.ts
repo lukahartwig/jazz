@@ -16,25 +16,6 @@ async function scrollToBottom(page: Page) {
   });
 }
 
-const login = async ({
-  page,
-  userName,
-  loginAs = false,
-}: {
-  page: Page;
-  userName: string;
-  loginAs?: boolean;
-}) => {
-  const loginPage = new LoginPage(page);
-  await loginPage.goto("/");
-  if (loginAs) {
-    await loginPage.loginAs(userName);
-  } else {
-    await loginPage.fillUsername(userName);
-    await loginPage.signup();
-  }
-};
-
 test.describe("Admin onboarding flow", () => {
   let browser: Browser;
   let adminContext: BrowserContext;
@@ -54,7 +35,7 @@ test.describe("Admin onboarding flow", () => {
 
   test("Create and delete flow", async () => {
     const adminPage = await adminContext.newPage();
-    await login({ page: adminPage, userName: "HR specialist" });
+    await adminPage.goto("/");
     const adminHomePage = new HomePage(adminPage);
     await adminHomePage.createEmployee("Paul");
     await adminHomePage.createEmployee("Sean");
@@ -70,10 +51,8 @@ test.describe("Admin onboarding flow", () => {
     const adminPage = await adminContext.newPage();
     const writerPage = await writerContext.newPage();
 
-    const adminUser = "HR specialist";
-    const writerUser = "Invitee";
-    await login({ page: adminPage, userName: adminUser });
-    await login({ page: writerPage, userName: writerUser });
+    await adminPage.goto("/");
+    await writerPage.goto("/");
 
     const adminHomePage = new HomePage(adminPage);
     await adminHomePage.createEmployee("Paul");

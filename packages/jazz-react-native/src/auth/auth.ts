@@ -9,5 +9,6 @@ export function clearUserCredentials() {
   return Promise.all([
     kvStore.delete("demo-auth-logged-in-secret"),
     kvStore.delete("jazz-clerk-auth"),
+    kvStore.delete("jazz-logged-in-secret"),
   ]);
 }

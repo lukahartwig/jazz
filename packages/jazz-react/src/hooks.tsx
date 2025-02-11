@@ -5,7 +5,7 @@ import { createUseAccountHooks, useJazzContext } from "jazz-react-core";
 import { CoValue, CoValueClass, ID } from "jazz-tools";
 import { RegisteredAccount } from "./provider.js";
 
-export { useCoState } from "jazz-react-core";
+export { useCoState, useAuthSecretStorage } from "jazz-react-core";
 
 export const { useAccount, useAccountOrGuest } =
   createUseAccountHooks<RegisteredAccount>();
@@ -50,4 +50,4 @@ export function useAcceptInvite<V extends CoValue>({
   }, [onAccept]);
 }
 
-export { experimental_useInboxSender } from "jazz-react-core";
+export { experimental_useInboxSender, useJazzContext } from "jazz-react-core";

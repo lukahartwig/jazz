@@ -7,7 +7,7 @@ import QRCode from "qrcode";
 
 import { Button, useToast } from "../basicComponents";
 
-export function ShareButton({ petPost }: { petPost?: PetPost }) {
+export function ShareButton({ petPost }: { petPost?: PetPost | null }) {
   const [existingInviteLink, setExistingInviteLink] = useState<string>();
   const { toast } = useToast();
 

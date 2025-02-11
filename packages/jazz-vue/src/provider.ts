@@ -1,12 +1,9 @@
-import {
-  BrowserContext,
-  BrowserGuestContext,
-  createJazzBrowserContext,
-} from "jazz-browser";
-import { Account, AccountClass, AuthMethod } from "jazz-tools";
+import { JazzBrowserContextManager } from "jazz-browser";
+import { Account, AccountClass, JazzContextType, SyncConfig } from "jazz-tools";
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   PropType,
+  computed,
   defineComponent,
   onMounted,
   onUnmounted,
@@ -25,77 +22,79 @@ export type RegisteredAccount = Register extends { Account: infer Acc }
   : Account;
 
 export const JazzContextSymbol = Symbol("JazzContext");
-
+export const JazzAuthContextSymbol = Symbol("JazzAuthContext");
 export const JazzProvider = defineComponent({
   name: "JazzProvider",
   props: {
-    auth: {
-      type: [String, Object] as PropType<AuthMethod | "guest">,
+    guestMode: {
+      type: Boolean,
+      default: false,
+    },
+    sync: {
+      type: Object as PropType<SyncConfig>,
       required: true,
     },
     AccountSchema: {
-      type: Object as PropType<AccountClass<RegisteredAccount>>,
+      type: Function as unknown as PropType<AccountClass<RegisteredAccount>>,
       required: false,
-    },
-    peer: {
-      type: String as PropType<`wss://${string}` | `ws://${string}`>,
-      required: true,
     },
     storage: {
       type: String as PropType<"indexedDB" | "singleTabOPFS">,
       default: undefined,
     },
+    defaultProfileName: {
+      type: String,
+      required: false,
+    },
+    onAnonymousAccountDiscarded: {
+      type: Function as PropType<
+        (anonymousAccount: RegisteredAccount) => Promise<void>
+      >,
+      required: false,
+    },
+    onLogOut: {
+      type: Function as PropType<() => void>,
+      required: false,
+    },
   },
   setup(props, { slots }) {
-    const ctx = ref<
-      BrowserContext<RegisteredAccount> | BrowserGuestContext | undefined
-    >(undefined);
-
-    const key = ref(0);
+    const contextManager = new JazzBrowserContextManager<RegisteredAccount>();
+    const ctx = ref<JazzContextType<RegisteredAccount>>();
 
     provide(JazzContextSymbol, ctx);
-
-    const initializeContext = async () => {
-      if (ctx.value) {
-        ctx.value.done?.();
-        ctx.value = undefined;
-      }
-
-      try {
-        const context = await createJazzBrowserContext<RegisteredAccount>(
-          props.auth === "guest"
-            ? { peer: props.peer, storage: props.storage }
-            : {
-                AccountSchema: props.AccountSchema,
-                auth: props.auth,
-                peer: props.peer,
-                storage: props.storage,
-              },
-        );
-
-        ctx.value = {
-          ...context,
-          logOut: () => {
-            logoutHandler.value?.();
-            // context.logOut();
-            key.value += 1;
-          },
-        };
-      } catch (e) {
-        console.error("Error creating Jazz browser context:", e);
-      }
-    };
-
-    onMounted(() => {
-      void initializeContext();
-    });
+    provide(JazzAuthContextSymbol, contextManager.getAuthSecretStorage());
 
     watch(
-      () => key.value,
+      () => ({
+        peer: props.sync.peer,
+        syncWhen: props.sync.when,
+        storage: props.storage,
+        guestMode: props.guestMode,
+      }),
       async () => {
-        await initializeContext();
+        contextManager
+          .createContext({
+            sync: props.sync,
+            storage: props.storage,
+            guestMode: props.guestMode,
+            AccountSchema: props.AccountSchema,
+            defaultProfileName: props.defaultProfileName,
+            onAnonymousAccountDiscarded: props.onAnonymousAccountDiscarded,
+            onLogOut: props.onLogOut,
+          })
+          .catch((error) => {
+            console.error("Error creating Jazz browser context:", error);
+          });
       },
+      { immediate: true },
     );
+
+    onMounted(() => {
+      const cleanup = contextManager.subscribe(() => {
+        ctx.value = contextManager.getCurrentValue();
+      });
+      onUnmounted(cleanup);
+    });
 
     onUnmounted(() => {
       if (ctx.value) ctx.value.done?.();

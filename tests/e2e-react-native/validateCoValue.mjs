@@ -4,7 +4,7 @@ import { WebSocket } from "ws";
 
 const invite = process.argv[2];
 
-const [id, inviteSecret] = invite.replace("/invite/", "").split("/");
+const [id, inviteSecret] = invite.replace("#/invite/", "").split("/");
 
 const { node, account } = await createLocalNode();
 

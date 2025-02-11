@@ -5,8 +5,7 @@ import {
   CoPlainText,
   WasmCrypto,
   cojsonInternals,
-  createJazzContext,
-  fixedCredentialsAuth,
+  createJazzContextFromExistingCredentials,
   isControlledAccount,
 } from "../index.web.js";
 import { randomSessionProvider } from "../internal.js";
@@ -97,15 +96,16 @@ describe("CoPlainText", () => {
         throw "me is not a controlled account";
       }
       me._raw.core.node.syncManager.addPeer(secondPeer);
-      const { account: meOnSecondPeer } = await createJazzContext({
-        auth: fixedCredentialsAuth({
-          accountID: me.id,
-          secret: me._raw.agentSecret,
-        }),
-        sessionProvider: randomSessionProvider,
-        peersToLoadFrom: [initialAsPeer],
-        crypto: Crypto,
-      });
+      const { account: meOnSecondPeer } =
+        await createJazzContextFromExistingCredentials({
+          credentials: {
+            accountID: me.id,
+            secret: me._raw.agentSecret,
+          },
+          sessionProvider: randomSessionProvider,
+          peersToLoadFrom: [initialAsPeer],
+          crypto: Crypto,
+        });
 
       // Load the text on the second peer
       const loaded = await CoPlainText.load(id, meOnSecondPeer);
@@ -127,15 +127,16 @@ describe("CoPlainText", () => {
       throw "me is not a controlled account";
     }
     me._raw.core.node.syncManager.addPeer(secondPeer);
-    const { account: meOnSecondPeer } = await createJazzContext({
-      auth: fixedCredentialsAuth({
-        accountID: me.id,
-        secret: me._raw.agentSecret,
-      }),
-      sessionProvider: randomSessionProvider,
-      peersToLoadFrom: [initialAsPeer],
-      crypto: Crypto,
-    });
+    const { account: meOnSecondPeer } =
+      await createJazzContextFromExistingCredentials({
+        credentials: {
+          accountID: me.id,
+          secret: me._raw.agentSecret,
+        },
+        sessionProvider: randomSessionProvider,
+        peersToLoadFrom: [initialAsPeer],
+        crypto: Crypto,
+      });
 
     const queue = new cojsonInternals.Channel();
 

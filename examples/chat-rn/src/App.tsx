@@ -9,7 +9,8 @@ import * as Linking from "expo-linking";
 import React, { StrictMode, useEffect, useState } from "react";
 import HandleInviteScreen from "./invite";
 
-import { DemoAuthBasicUI, JazzProvider, useDemoAuth } from "jazz-react-native";
+import { JazzProvider } from "jazz-react-native";
+import { apiKey } from "./apiKey";
 import ChatScreen from "./chat";
 
 const Stack = createNativeStackNavigator();
@@ -28,7 +29,6 @@ const linking = {
 };
 
 function App() {
-  const [auth, state] = useDemoAuth();
   const [initialRoute, setInitialRoute] = useState<
     "ChatScreen" | "HandleInviteScreen"
   >("ChatScreen");
@@ -43,16 +43,13 @@ function App() {
     });
   }, []);
 
-  if (!auth) {
-    return null;
-  }
-
   return (
     <StrictMode>
       <JazzProvider
-        auth={auth}
         storage="sqlite"
-        peer="wss://cloud.jazz.tools/?key=chat-rn-example-jazz@garden.co"
+        sync={{
+          peer: `wss://cloud.jazz.tools/?key=${apiKey}`,
+        }}
       >
         <NavigationContainer linking={linking} ref={navigationRef}>
           <Stack.Navigator initialRouteName={initialRoute}>
@@ -69,9 +66,6 @@ function App() {
           </Stack.Navigator>
         </NavigationContainer>
       </JazzProvider>
-      {state.state !== "signedIn" ? (
-        <DemoAuthBasicUI appName="Jazz Chat" state={state} />
-      ) : null}
     </StrictMode>
   );
 }

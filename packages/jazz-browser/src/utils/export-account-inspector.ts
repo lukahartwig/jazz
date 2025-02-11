@@ -1,13 +1,15 @@
-import { AgentSecret } from "cojson";
-import { Account } from "jazz-tools/src/coValues/account.js";
-import { ID } from "jazz-tools/src/coValues/interfaces.js";
+import { AuthSecretStorage } from "jazz-tools";
 
-function exportAccountToInspector(localStorageKey = "jazz-logged-in-secret") {
-  const localStorageData = JSON.parse(localStorage[localStorageKey]) as {
-    accountID: ID<Account>;
-    accountSecret: AgentSecret;
-  };
-  const encodedAccountSecret = btoa(localStorageData?.accountSecret);
+async function exportAccountToInspector() {
+  const authSecretStorage = new AuthSecretStorage();
+  const localStorageData = await authSecretStorage.get();
+
+  if (!localStorageData) {
+    console.error("No account data found in localStorage");
+    return;
+  }
+
+  const encodedAccountSecret = btoa(localStorageData.accountSecret);
   window.open(
     new URL(
       `#/import/${localStorageData?.accountID}/${encodedAccountSecret}`,
@@ -17,7 +19,7 @@ function exportAccountToInspector(localStorageKey = "jazz-logged-in-secret") {
   );
 }
 
-function listenForCmdJ(localStorageKey?: string) {
+function listenForCmdJ() {
   if (typeof window === "undefined") return;
 
   const cb = (e: any) => {
@@ -27,7 +29,7 @@ function listenForCmdJ(localStorageKey?: string) {
           "Are you sure you want to inspect your account using inspector.jazz.tools? This lets anyone with the secret inspector URL read your data and impersonate you.",
         )
       ) {
-        exportAccountToInspector(localStorageKey);
+        exportAccountToInspector();
       }
     }
   };

@@ -9,9 +9,10 @@ import {
   DepthsIn,
   ID,
   InboxSender,
+  JazzContextType,
   createCoValueObservable,
 } from "jazz-tools";
-import { JazzContext, JazzContextType } from "./provider.js";
+import { JazzAuthContext, JazzContext } from "./provider.js";
 
 export function useJazzContext<Acc extends Account>() {
   const value = useContext(JazzContext) as JazzContextType<Acc>;
@@ -25,12 +26,24 @@ export function useJazzContext<Acc extends Account>() {
   return value;
 }
 
+export function useAuthSecretStorage() {
+  const value = useContext(JazzAuthContext);
+
+  if (!value) {
+    throw new Error(
+      "You need to set up a JazzProvider on top of your app to use this useAuthSecretStorage.",
+    );
+  }
+
+  return value;
+}
+
 export function useCoState<V extends CoValue, D>(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   Schema: CoValueClass<V>,
   id: ID<V> | undefined,
   depth: D & DepthsIn<V> = [] as D & DepthsIn<V>,
-): DeeplyLoaded<V, D> | undefined {
+): DeeplyLoaded<V, D> | undefined | null {
   const context = useJazzContext();
 
   const [observable] = React.useState(() =>
@@ -39,14 +52,19 @@ export function useCoState<V extends CoValue, D>(
     }),
   );
 
-  const value = React.useSyncExternalStore<DeeplyLoaded<V, D> | undefined>(
+  const value = React.useSyncExternalStore<
+    DeeplyLoaded<V, D> | undefined | null
+  >(
     React.useCallback(
       (callback) => {
         if (!id) return () => {};
 
         const agent = "me" in context ? context.me : context.guest;
 
-        return observable.subscribe(Schema, id, agent, depth, callback);
+        return observable.subscribe(Schema, id, agent, depth, callback, () => {
+          console.log("unavailable");
+          callback();
+        });
       },
       [Schema, id, context],
     ),
@@ -64,10 +82,10 @@ export function createUseAccountHooks<Acc extends Account>() {
   };
   function useAccount<D extends DepthsIn<Acc>>(
     depth: D,
-  ): { me: DeeplyLoaded<Acc, D> | undefined; logOut: () => void };
+  ): { me: DeeplyLoaded<Acc, D> | undefined | null; logOut: () => void };
   function useAccount<D extends DepthsIn<Acc>>(
     depth?: D,
-  ): { me: Acc | DeeplyLoaded<Acc, D> | undefined; logOut: () => void } {
+  ): { me: Acc | DeeplyLoaded<Acc, D> | undefined | null; logOut: () => void } {
     const context = useJazzContext<Acc>();
 
     if (!("me" in context)) {
@@ -76,7 +94,11 @@ export function createUseAccountHooks<Acc extends Account>() {
       );
     }
 
-    const me = useCoState<Acc, D>(context.AccountSchema, context.me.id, depth);
+    const me = useCoState<Acc, D>(
+      context.me.constructor as CoValueClass<Acc>,
+      context.me.id,
+      depth,
+    );
 
     return {
       me: depth === undefined ? me || context.me : me,
@@ -89,15 +111,22 @@ export function createUseAccountHooks<Acc extends Account>() {
   };
   function useAccountOrGuest<D extends DepthsIn<Acc>>(
     depth: D,
-  ): { me: DeeplyLoaded<Acc, D> | undefined | AnonymousJazzAgent };
+  ): { me: DeeplyLoaded<Acc, D> | undefined | null | AnonymousJazzAgent };
   function useAccountOrGuest<D extends DepthsIn<Acc>>(
     depth?: D,
-  ): { me: Acc | DeeplyLoaded<Acc, D> | undefined | AnonymousJazzAgent } {
+  ): {
+    me: Acc | DeeplyLoaded<Acc, D> | undefined | null | AnonymousJazzAgent;
+  } {
     const context = useJazzContext<Acc>();
 
     const contextMe = "me" in context ? context.me : undefined;
+    const AccountSchema = contextMe?.constructor ?? Account;
 
-    const me = useCoState<Acc, D>(context.AccountSchema, contextMe?.id, depth);
+    const me = useCoState<Acc, D>(
+      AccountSchema as CoValueClass<Acc>,
+      contextMe?.id,
+      depth,
+    );
 
     if ("me" in context) {
       return {

@@ -2,30 +2,44 @@
 
 This package provides a [Clerk-based](https://clerk.com/) authentication strategy for Jazz.
 
-Looking for a React integration? Check out [`jazz-react-auth-clerk`](https://www.npmjs.com/package/jazz-react-native-auth-clerk).
-
 ## Usage
 
-`ReactNativeClerkAuth` is a class that provides a `JazzAuth` object. Provide a Clerk instance to `ReactNativeClerkAuth`, and it will return the appropriate `JazzAuth` object. Once authenticated, authentication will persist across page reloads, even if the device is offline.
+The `JazzProviderWithClerk` component is a JazzProvider that automatically handles Clerk authentication.
+
+Once authenticated, authentication will persist across page reloads, even if the device is offline.
+
+See the full [example app](https://github.com/garden-co/jazz/tree/main/examples/clerk) for a complete example.
+
+```tsx
+import { ClerkProvider, useClerk } from "@clerk/clerk-react";
+import { JazzProviderWithClerk } from "jazz-react-native-auth-clerk";
+
+const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+
+function JazzProvider({ children }: { children: React.ReactNode }) {
+  const clerk = useClerk();
+
+  return (
+    <JazzProviderWithClerk
+      clerk={clerk}
+      storage="sqlite"
+      sync={{
+        peer: "wss://cloud.jazz.tools/?key=chat-rn-clerk-example-jazz@garden.co",
+      }}
+    >
+      {children}
+    </JazzProviderWithClerk>
+  );
+}
 
 
-From [the example app](https://github.com/gardencmp/jazz/tree/main/examples/chat-rn-clerk):
-
-```ts
-import { ReactNativeClerkAuth } from "jazz-react-native-auth-clerk";
-
-// ...
-
-const auth = new ReactNativeClerkAuth(
-  {
-    onError: (error) => {
-      void clerk.signOut();
-      setState((state) => ({
-        ...state,
-        errors: [...state.errors, error.toString()],
-      }));
-    },
-  },
-  clerk,
-);
+export default function App() {
+  return (
+    <ClerkProvider publishableKey={PUBLISHABLE_KEY} afterSignOutUrl="/">
+      <JazzProvider>
+        <Slot />
+      </JazzProvider>
+    </ClerkProvider>
+  );
+}
 ```

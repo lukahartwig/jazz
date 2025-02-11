@@ -19,3 +19,5 @@ test-results
 .husky
 
 .vscode/settings.json
+
+.svelte-kit

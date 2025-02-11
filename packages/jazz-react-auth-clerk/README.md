@@ -4,49 +4,39 @@ This package provides a [Clerk-based](https://clerk.com/) authentication strateg
 
 ## Usage
 
-`useJazzClerkAuth` is a hook that returns a `JazzAuth` object and a `JazzAuthState` object. Provide a Clerk instance to `useJazzClerkAuth`, and it will return the appropriate `JazzAuth` object. Once authenticated, authentication will persist across page reloads, even if the device is offline.
+The `JazzProviderWithClerk` component is a JazzProvider that automatically handles Clerk authentication.
 
+Once authenticated, authentication will persist across page reloads, even if the device is offline.
 
 See the full [example app](https://github.com/garden-co/jazz/tree/main/examples/clerk) for a complete example.
 
 ```tsx
-import { ClerkProvider, SignInButton, useClerk } from "@clerk/clerk-react";
-import { useJazzClerkAuth } from "jazz-react-auth-clerk";
-import { JazzProvider } from "jazz-react";
+import { ClerkProvider, useClerk } from "@clerk/clerk-react";
+import { JazzProviderWithClerk } from "jazz-react-auth-clerk";
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
-function JazzAndAuth({ children }: { children: React.ReactNode }) {
+function JazzProvider({ children }: { children: React.ReactNode }) {
   const clerk = useClerk();
-  const [auth, state] = useJazzClerkAuth(clerk);
 
   return (
-    <>
-      {state?.errors?.map((error) => (
-        <div key={error}>{error}</div>
-      ))}
-      {clerk.user && auth ? (
-        <JazzProvider
-          auth={auth}
-          peer="wss://cloud.jazz.tools/?key=your-email-address"
-        >
-          {children}
-        </JazzProvider>
-      ) : (
-        <SignInButton />
-      )}
-    </>
+    <JazzProviderWithClerk
+      clerk={clerk}
+      sync={{
+        peer: "wss://cloud.jazz.tools/?key=your-email-address",
+      }}
+    >
+      {children}
+    </JazzProviderWithClerk>
   );
 }
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <ClerkProvider publishableKey={PUBLISHABLE_KEY} afterSignOutUrl="/">
-      <JazzAndAuth>
+      <JazzProvider>
         <App />
-      </JazzAndAuth>
+      </JazzProvider>
     </ClerkProvider>
   </StrictMode>,
 );
-
-```

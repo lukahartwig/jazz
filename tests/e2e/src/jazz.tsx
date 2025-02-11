@@ -1,4 +1,4 @@
-import { JazzProvider, useOnboardingAuth } from "jazz-react";
+import { JazzProvider } from "jazz-react";
 
 const url = new URL(window.location.href);
 
@@ -21,10 +21,12 @@ function getUserInfo() {
 }
 
 export function AuthAndJazz({ children }: { children: React.ReactNode }) {
-  const [auth] = useOnboardingAuth();
-
   return (
-    <JazzProvider auth={auth} peer={`${peer}?key=${key}`}>
+    <JazzProvider
+      sync={{
+        peer: `${peer}?key=${key}`,
+      }}
+    >
       {children}
     </JazzProvider>
   );

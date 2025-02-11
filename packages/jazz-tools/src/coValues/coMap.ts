@@ -542,7 +542,7 @@ export class CoMap extends CoValueBase implements CoValue {
   ensureLoaded<M extends CoMap, Depth>(
     this: M,
     depth: Depth & DepthsIn<M>,
-  ): Promise<DeeplyLoaded<M, Depth> | undefined> {
+  ): Promise<DeeplyLoaded<M, Depth>> {
     return ensureCoValueLoaded(this, depth);
   }
 

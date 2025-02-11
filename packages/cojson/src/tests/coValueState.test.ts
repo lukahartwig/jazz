@@ -1,9 +1,23 @@
-import { describe, expect, test, vi } from "vitest";
+import { beforeEach, describe, expect, onTestFinished, test, vi } from "vitest";
 import { PeerState } from "../PeerState";
 import { CoValueCore } from "../coValueCore";
-import { CO_VALUE_LOADING_MAX_RETRIES, CoValueState } from "../coValueState";
+import { CO_VALUE_LOADING_CONFIG, CoValueState } from "../coValueState";
 import { RawCoID } from "../ids";
 import { Peer } from "../sync";
+
+const initialMaxRetries = CO_VALUE_LOADING_CONFIG.MAX_RETRIES;
+
+function mockMaxRetries(maxRetries: number) {
+  CO_VALUE_LOADING_CONFIG.MAX_RETRIES = maxRetries;
+
+  onTestFinished(() => {
+    CO_VALUE_LOADING_CONFIG.MAX_RETRIES = initialMaxRetries;
+  });
+}
+
+beforeEach(() => {
+  mockMaxRetries(5);
+});
 
 describe("CoValueState", () => {
   const mockCoValueId = "co_test123" as RawCoID;
@@ -92,18 +106,18 @@ describe("CoValueState", () => {
     const state = CoValueState.Unknown(mockCoValueId);
     const loadPromise = state.loadFromPeers(mockPeers);
 
-    // Should attempt CO_VALUE_LOADING_MAX_RETRIES retries
-    for (let i = 0; i < CO_VALUE_LOADING_MAX_RETRIES; i++) {
+    // Should attempt CO_VALUE_LOADING_CONFIG.MAX_RETRIES retries
+    for (let i = 0; i < CO_VALUE_LOADING_CONFIG.MAX_RETRIES; i++) {
       await vi.runAllTimersAsync();
     }
 
     await loadPromise;
 
     expect(peer1.pushOutgoingMessage).toHaveBeenCalledTimes(
-      CO_VALUE_LOADING_MAX_RETRIES,
+      CO_VALUE_LOADING_CONFIG.MAX_RETRIES,
     );
     expect(peer2.pushOutgoingMessage).toHaveBeenCalledTimes(
-      CO_VALUE_LOADING_MAX_RETRIES,
+      CO_VALUE_LOADING_CONFIG.MAX_RETRIES,
     );
     expect(state.state.type).toBe("unavailable");
     await expect(state.getCoValue()).resolves.toBe("unavailable");
@@ -145,8 +159,8 @@ describe("CoValueState", () => {
     const state = CoValueState.Unknown(mockCoValueId);
     const loadPromise = state.loadFromPeers(mockPeers);
 
-    // Should attempt CO_VALUE_LOADING_MAX_RETRIES retries
-    for (let i = 0; i < CO_VALUE_LOADING_MAX_RETRIES; i++) {
+    // Should attempt CO_VALUE_LOADING_CONFIG.MAX_RETRIES retries
+    for (let i = 0; i < CO_VALUE_LOADING_CONFIG.MAX_RETRIES; i++) {
       await vi.runAllTimersAsync();
     }
 
@@ -154,7 +168,7 @@ describe("CoValueState", () => {
 
     expect(peer1.pushOutgoingMessage).toHaveBeenCalledTimes(1);
     expect(peer2.pushOutgoingMessage).toHaveBeenCalledTimes(
-      CO_VALUE_LOADING_MAX_RETRIES,
+      CO_VALUE_LOADING_CONFIG.MAX_RETRIES,
     );
     expect(state.state.type).toBe("unavailable");
     await expect(state.getCoValue()).resolves.toBe("unavailable");
@@ -194,8 +208,8 @@ describe("CoValueState", () => {
     const state = CoValueState.Unknown(mockCoValueId);
     const loadPromise = state.loadFromPeers(mockPeers);
 
-    // Should attempt CO_VALUE_LOADING_MAX_RETRIES retries
-    for (let i = 0; i < CO_VALUE_LOADING_MAX_RETRIES; i++) {
+    // Should attempt CO_VALUE_LOADING_CONFIG.MAX_RETRIES retries
+    for (let i = 0; i < CO_VALUE_LOADING_CONFIG.MAX_RETRIES; i++) {
       await vi.runAllTimersAsync();
     }
 
@@ -203,7 +217,7 @@ describe("CoValueState", () => {
 
     expect(peer1.pushOutgoingMessage).toHaveBeenCalledTimes(1);
     expect(peer2.pushOutgoingMessage).toHaveBeenCalledTimes(
-      CO_VALUE_LOADING_MAX_RETRIES,
+      CO_VALUE_LOADING_CONFIG.MAX_RETRIES,
     );
     expect(state.state.type).toBe("unavailable");
     await expect(state.getCoValue()).resolves.toEqual("unavailable");
@@ -213,6 +227,8 @@ describe("CoValueState", () => {
 
   test("should handle the coValues that become available in between of the retries", async () => {
     vi.useFakeTimers();
+
+    mockMaxRetries(5);
 
     let retries = 0;
 
@@ -244,8 +260,8 @@ describe("CoValueState", () => {
     const state = CoValueState.Unknown(mockCoValueId);
     const loadPromise = state.loadFromPeers(mockPeers);
 
-    // Should attempt CO_VALUE_LOADING_MAX_RETRIES retries
-    for (let i = 0; i < CO_VALUE_LOADING_MAX_RETRIES + 1; i++) {
+    // Should attempt CO_VALUE_LOADING_CONFIG.MAX_RETRIES retries
+    for (let i = 0; i < CO_VALUE_LOADING_CONFIG.MAX_RETRIES + 1; i++) {
       await vi.runAllTimersAsync();
     }
 
@@ -278,8 +294,8 @@ describe("CoValueState", () => {
     const state = CoValueState.Unknown(mockCoValueId);
     const loadPromise = state.loadFromPeers(mockPeers);
 
-    // Should attempt CO_VALUE_LOADING_MAX_RETRIES retries
-    for (let i = 0; i < CO_VALUE_LOADING_MAX_RETRIES; i++) {
+    // Should attempt CO_VALUE_LOADING_CONFIG.MAX_RETRIES retries
+    for (let i = 0; i < CO_VALUE_LOADING_CONFIG.MAX_RETRIES; i++) {
       await vi.runAllTimersAsync();
     }
 
@@ -290,7 +306,9 @@ describe("CoValueState", () => {
 
     await loadPromise;
 
-    expect(peer1.pushOutgoingMessage).toHaveBeenCalledTimes(5);
+    expect(peer1.pushOutgoingMessage).toHaveBeenCalledTimes(
+      CO_VALUE_LOADING_CONFIG.MAX_RETRIES,
+    );
     expect(state.state.type).toBe("available");
     await expect(state.getCoValue()).resolves.toEqual({ id: mockCoValueId });
 
@@ -299,6 +317,8 @@ describe("CoValueState", () => {
 
   test("should stop retrying when value becomes available", async () => {
     vi.useFakeTimers();
+
+    mockMaxRetries(5);
 
     let run = 1;
 
@@ -327,7 +347,7 @@ describe("CoValueState", () => {
     const state = CoValueState.Unknown(mockCoValueId);
     const loadPromise = state.loadFromPeers(mockPeers);
 
-    for (let i = 0; i < CO_VALUE_LOADING_MAX_RETRIES; i++) {
+    for (let i = 0; i < CO_VALUE_LOADING_CONFIG.MAX_RETRIES; i++) {
       await vi.runAllTimersAsync();
     }
     await loadPromise;
@@ -372,7 +392,7 @@ describe("CoValueState", () => {
     const state = CoValueState.Unknown(mockCoValueId);
     const loadPromise = state.loadFromPeers([peer1, peer2]);
 
-    for (let i = 0; i < CO_VALUE_LOADING_MAX_RETRIES; i++) {
+    for (let i = 0; i < CO_VALUE_LOADING_CONFIG.MAX_RETRIES; i++) {
       await vi.runAllTimersAsync();
     }
     await loadPromise;
@@ -421,7 +441,7 @@ describe("CoValueState", () => {
     const state = CoValueState.Unknown(mockCoValueId);
     const loadPromise = state.loadFromPeers([peer1, peer2]);
 
-    for (let i = 0; i < CO_VALUE_LOADING_MAX_RETRIES; i++) {
+    for (let i = 0; i < CO_VALUE_LOADING_CONFIG.MAX_RETRIES; i++) {
       await vi.runAllTimersAsync();
     }
     await loadPromise;
@@ -449,12 +469,14 @@ describe("CoValueState", () => {
     const state = CoValueState.Unknown(mockCoValueId);
     const loadPromise = state.loadFromPeers([peer1]);
 
-    for (let i = 0; i < CO_VALUE_LOADING_MAX_RETRIES * 2; i++) {
+    for (let i = 0; i < CO_VALUE_LOADING_CONFIG.MAX_RETRIES * 2; i++) {
       await vi.runAllTimersAsync();
     }
     await loadPromise;
 
-    expect(peer1.pushOutgoingMessage).toHaveBeenCalledTimes(5);
+    expect(peer1.pushOutgoingMessage).toHaveBeenCalledTimes(
+      CO_VALUE_LOADING_CONFIG.MAX_RETRIES,
+    );
 
     expect(state.state.type).toBe("unavailable");
     await expect(state.getCoValue()).resolves.toEqual("unavailable");

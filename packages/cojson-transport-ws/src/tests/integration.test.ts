@@ -1,7 +1,7 @@
 import { ControlledAgent, LocalNode, WasmCrypto } from "cojson";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { WebSocket } from "ws";
-import { createWebSocketPeer } from "../index";
+import { createWebSocketPeer } from "../createWebSocketPeer";
 import { startSyncServer } from "./syncServer";
 
 describe("WebSocket Peer Integration", () => {
@@ -86,7 +86,6 @@ describe("WebSocket Peer Integration", () => {
 
     // Wait for sync
     await map.core.waitForSync();
-    console.log("synced");
 
     // Verify data reached the server
     const serverNode = server.localNode;

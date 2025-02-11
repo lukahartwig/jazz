@@ -1,11 +1,10 @@
-import { JazzContext, JazzContextType } from "jazz-react-core";
-import { Account, AccountClass, AuthMethod } from "jazz-tools";
-import React, { useState } from "react";
-import { useEffect, useRef } from "react";
-import {
-  BaseReactNativeContextOptions,
-  createJazzRNContext,
-} from "./platform.js";
+import { JazzAuthContext, JazzContext } from "jazz-react-core";
+import { Account, JazzContextType, KvStore } from "jazz-tools";
+import React, { useEffect, useRef } from "react";
+import { JazzContextManagerProps } from "./ReactNativeContextManager.js";
+import { ReactNativeContextManager } from "./ReactNativeContextManager.js";
+import { setupKvStore } from "./platform.js";
+
 export interface Register {}
 
 export type RegisteredAccount = Register extends { Account: infer Acc }
@@ -14,104 +13,82 @@ export type RegisteredAccount = Register extends { Account: infer Acc }
 
 export type JazzProviderProps<Acc extends Account = RegisteredAccount> = {
   children: React.ReactNode;
-  auth: AuthMethod | "guest";
-  peer: `wss://${string}` | `ws://${string}`;
-  AccountSchema?: AccountClass<Acc>;
-  CryptoProvider?: BaseReactNativeContextOptions["CryptoProvider"];
-  storage?: BaseReactNativeContextOptions["storage"];
-};
+  kvStore?: KvStore;
+} & JazzContextManagerProps<Acc>;
 
 /** @category Context & Hooks */
 export function JazzProvider<Acc extends Account = RegisteredAccount>({
   children,
-  auth,
-  peer,
-  AccountSchema = Account as unknown as AccountClass<Acc>,
-  CryptoProvider,
+  guestMode,
+  sync,
   storage,
+  AccountSchema,
+  defaultProfileName,
+  onLogOut,
+  kvStore,
+  onAnonymousAccountDiscarded,
 }: JazzProviderProps<Acc>) {
-  const [ctx, setCtx] = useState<JazzContextType<Acc> | undefined>();
+  setupKvStore(kvStore);
 
-  const [sessionCount, setSessionCount] = useState(0);
+  const [contextManager] = React.useState(
+    () => new ReactNativeContextManager<Acc>(),
+  );
 
-  const effectExecuted = useRef(false);
-  effectExecuted.current = false;
+  const onAnonymousAccountDiscardedRefCallback = useRefCallback(
+    onAnonymousAccountDiscarded,
+  );
+  const onLogOutRefCallback = useRefCallback(onLogOut);
+
+  const value = React.useSyncExternalStore<JazzContextType<Acc> | undefined>(
+    React.useCallback(
+      (callback) => {
+        const props = {
+          AccountSchema,
+          guestMode,
+          sync,
+          storage,
+          defaultProfileName,
+          onLogOut: onLogOutRefCallback,
+          onAnonymousAccountDiscarded: onAnonymousAccountDiscardedRefCallback,
+        };
+        if (contextManager.propsChanged(props)) {
+          contextManager.createContext(props).catch((error) => {
+            console.log(error.stack);
+            console.error("Error creating Jazz context:", error);
+          });
+        }
+
+        return contextManager.subscribe(callback);
+      },
+      [sync, guestMode].concat(storage as any),
+    ),
+    () => contextManager.getCurrentValue(),
+    () => contextManager.getCurrentValue(),
+  );
 
   useEffect(() => {
-    // Avoid double execution of the effect in development mode for easier debugging.
-    if (process.env.NODE_ENV === "development") {
-      if (effectExecuted.current) {
-        return;
-      }
-      effectExecuted.current = true;
-
-      // In development mode we don't return a cleanup function because otherwise
-      // the double effect execution would mark the context as done immediately.
-      //
-      // So we mark it as done in the subsequent execution.
-      const previousContext = ctx;
-
-      if (previousContext) {
-        previousContext.done();
-      }
-    }
-
-    async function createContext() {
-      const currentContext = await createJazzRNContext<Acc>(
-        auth === "guest"
-          ? {
-              peer,
-              CryptoProvider,
-              storage,
-            }
-          : {
-              AccountSchema,
-              auth: auth,
-              peer,
-              CryptoProvider,
-              storage,
-            },
-      );
-
-      const logOut = () => {
-        currentContext.logOut();
-        setCtx(undefined);
-        setSessionCount(sessionCount + 1);
-
-        if (process.env.NODE_ENV === "development") {
-          // In development mode we don't return a cleanup function
-          // so we mark the context as done here.
-          currentContext.done();
-        }
-      };
-
-      setCtx({
-        ...currentContext,
-        AccountSchema,
-        logOut,
-      });
-
-      return currentContext;
-    }
-
-    const promise = createContext();
-
-    promise.catch((e) => {
-      console.error("Error creating Jazz context", e);
-    });
-
     // In development mode we don't return a cleanup function because otherwise
     // the double effect execution would mark the context as done immediately.
-    if (process.env.NODE_ENV === "development") {
-      return;
-    }
+    if (process.env.NODE_ENV === "development") return;
 
     return () => {
-      void promise.then((context) => context.done());
+      contextManager.done();
     };
-  }, [AccountSchema, auth, peer, sessionCount]);
+  }, []);
 
   return (
-    <JazzContext.Provider value={ctx}>{ctx && children}</JazzContext.Provider>
+    <JazzContext.Provider value={value}>
+      <JazzAuthContext.Provider value={contextManager.getAuthSecretStorage()}>
+        {value && children}
+      </JazzAuthContext.Provider>
+    </JazzContext.Provider>
   );
+}
+
+function useRefCallback<T extends (...args: any[]) => any>(callback?: T) {
+  const callbackRef = React.useRef(callback);
+  callbackRef.current = callback;
+  return useRef(
+    (...args: Parameters<T>): ReturnType<T> => callbackRef.current?.(...args),
+  ).current;
 }

@@ -20,10 +20,15 @@ export default function ChatScreen() {
   const navigation = useNavigation();
   const { user } = useUser();
 
+  function handleLogOut() {
+    logOut();
+    router.navigate("/");
+  }
+
   useLayoutEffect(() => {
     navigation.setOptions({
       headerTitle: "Chat",
-      headerRight: () => <Button onPress={logOut} title="Logout" />,
+      headerRight: () => <Button onPress={handleLogOut} title="Logout" />,
     });
   }, [navigation]);
 

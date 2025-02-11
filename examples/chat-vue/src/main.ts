@@ -1,32 +1,31 @@
-import { DemoAuthBasicUI, JazzProvider, useDemoAuth } from "jazz-vue";
+import { DemoAuthBasicUI, JazzProvider } from "jazz-vue";
 import { createApp, defineComponent, h } from "vue";
 import App from "./App.vue";
 import "./index.css";
+import { apiKey } from "@/apiKey";
 import router from "./router";
 
 const RootComponent = defineComponent({
   name: "RootComponent",
   setup() {
-    const { authMethod, state } = useDemoAuth();
-
-    return () => [
+    return () =>
       h(
         JazzProvider,
         {
-          auth: authMethod.value,
-          peer: "wss://cloud.jazz.tools/?key=chat-example-jazz@garden.co",
+          sync: {
+            peer: `wss://cloud.jazz.tools/?key=${apiKey}`,
+          },
         },
-        {
-          default: () => h(App),
-        },
-      ),
-
-      state.state !== "signedIn" &&
-        h(DemoAuthBasicUI, {
-          appName: "Jazz Chat",
-          state,
-        }),
-    ];
+        h(
+          DemoAuthBasicUI,
+          {
+            appName: "Jazz Vue Chat",
+          },
+          {
+            default: () => h(App),
+          },
+        ),
+      );
   },
 });
 

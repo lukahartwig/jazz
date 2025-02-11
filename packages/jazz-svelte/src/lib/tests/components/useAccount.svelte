@@ -6,7 +6,7 @@
 </script>
 
 <script lang="ts">
-  import { useAccount, type RegisteredAccount } from '$lib/jazz.svelte.js';
+  import { useAccount, type RegisteredAccount } from '../../jazz.svelte.js';
   import type { DepthsIn } from 'jazz-tools';
 
   let { depth, setResult }: Props = $props();

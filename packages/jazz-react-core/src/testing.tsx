@@ -1,20 +1,36 @@
 import { Account, AnonymousJazzAgent } from "jazz-tools";
-import { getJazzContextShape } from "jazz-tools/testing";
-import { useMemo } from "react";
-import { JazzContext } from "./provider.js";
+import { TestJazzContextManager } from "jazz-tools/testing";
+import { useCallback, useState, useSyncExternalStore } from "react";
+import { JazzAuthContext, JazzContext } from "./provider.js";
 
 export function JazzTestProvider<Acc extends Account>({
   children,
   account,
+  isAuthenticated,
 }: {
   children: React.ReactNode;
-  account: Acc | { guest: AnonymousJazzAgent };
+  account?: Acc | { guest: AnonymousJazzAgent };
+  isAuthenticated?: boolean;
 }) {
-  const value = useMemo(() => {
-    return getJazzContextShape(account);
-  }, [account]);
+  const [contextManager] = useState(() => {
+    return TestJazzContextManager.fromAccountOrGuest<Acc>(account, {
+      isAuthenticated,
+    });
+  });
 
-  return <JazzContext.Provider value={value}>{children}</JazzContext.Provider>;
+  const value = useSyncExternalStore(
+    useCallback((callback) => contextManager.subscribe(callback), []),
+    () => contextManager.getCurrentValue(),
+    () => contextManager.getCurrentValue(),
+  );
+
+  return (
+    <JazzContext.Provider value={value}>
+      <JazzAuthContext.Provider value={contextManager.getAuthSecretStorage()}>
+        {children}
+      </JazzAuthContext.Provider>
+    </JazzContext.Provider>
+  );
 }
 
 export {

@@ -19,8 +19,6 @@ export function InvitePage() {
           },
         });
 
-        if (!me) return;
-
         if (
           playlist &&
           !me.root.playlists.some((item) => playlist.id === item?.id)

@@ -1,4 +1,4 @@
-import { CojsonInternalTypes } from "cojson";
+import type { CojsonInternalTypes, RawCoID } from "cojson";
 import type {
   CoValueRow,
   DBClientInterface,
@@ -9,9 +9,6 @@ import type {
   TransactionRow,
 } from "cojson-storage";
 import { SyncPromise } from "./syncPromises.js";
-import RawCoID = CojsonInternalTypes.RawCoID;
-import Transaction = CojsonInternalTypes.Transaction;
-import Signature = CojsonInternalTypes.Signature;
 
 export class IDBClient implements DBClientInterface {
   private db;
@@ -194,7 +191,7 @@ export class IDBClient implements DBClientInterface {
   addTransaction(
     sessionRowID: number,
     idx: number,
-    newTransaction: Transaction,
+    newTransaction: CojsonInternalTypes.Transaction,
   ) {
     return this.makeRequest(({ transactions }) =>
       transactions.add({
@@ -209,7 +206,11 @@ export class IDBClient implements DBClientInterface {
     sessionRowID,
     idx,
     signature,
-  }: { sessionRowID: number; idx: number; signature: Signature }) {
+  }: {
+    sessionRowID: number;
+    idx: number;
+    signature: CojsonInternalTypes.Signature;
+  }) {
     return this.makeRequest(({ signatureAfter }) =>
       signatureAfter.put({
         ses: sessionRowID,

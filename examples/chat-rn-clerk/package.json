@@ -1,7 +1,7 @@
 {
   "name": "chat-rn-clerk",
   "main": "index.js",
-  "version": "1.0.63",
+  "version": "1.0.65",
   "scripts": {
     "build": "expo export -p ios",
     "start": "expo start",
@@ -72,7 +72,7 @@
     "jest": "^29.2.1",
     "jest-expo": "~52.0.2",
     "react-test-renderer": "18.2.0",
-    "tailwindcss": "^3.4.15",
+    "tailwindcss": "^3.4.17",
     "typescript": "~5.6.2"
   },
   "private": true

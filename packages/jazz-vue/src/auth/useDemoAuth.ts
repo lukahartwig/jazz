@@ -1,77 +1,37 @@
-import { AgentSecret } from "cojson";
-import { BrowserDemoAuth } from "jazz-browser";
-import { Account, ID } from "jazz-tools";
-import { onUnmounted, reactive, ref } from "vue";
-import { logoutHandler } from "../provider.js";
+import { DemoAuth } from "jazz-tools";
+import { computed, ref, watch } from "vue";
+import { useAuthSecretStorage, useJazzContext } from "../composables.js";
+import { useIsAuthenticated } from "./useIsAuthenticated.js";
 
-export type DemoAuthState = (
-  | {
-      state: "uninitialized";
-    }
-  | {
-      state: "loading";
-    }
-  | {
-      state: "ready";
-      existingUsers: string[];
-      signUp: (username: string) => void;
-      logInAs: (existingUser: string) => void;
-    }
-  | {
-      state: "signedIn";
-      logOut: () => void;
-    }
-) & {
-  errors: string[];
-};
+export function useDemoAuth() {
+  const context = useJazzContext();
+  const authSecretStorage = useAuthSecretStorage();
 
-/** @category Auth Providers */
-export function useDemoAuth({
-  seedAccounts,
-}: {
-  seedAccounts?: {
-    [name: string]: { accountID: ID<Account>; accountSecret: AgentSecret };
-  };
-} = {}) {
-  const state = reactive<DemoAuthState>({
-    state: "loading",
-    errors: [],
-  });
+  if ("guest" in context.value) {
+    throw new Error("Demo auth is not supported in guest mode");
+  }
 
-  const authMethod = ref(
-    new BrowserDemoAuth(
-      {
-        onReady: ({ signUp, existingUsers, logInAs }) => {
-          state.state = "ready";
-          (state as DemoAuthState & { state: "ready" }).signUp = signUp;
-          (state as DemoAuthState & { state: "ready" }).existingUsers =
-            existingUsers;
-          (state as DemoAuthState & { state: "ready" }).logInAs = logInAs;
-          state.errors = [];
-        },
-        onSignedIn: ({ logOut }) => {
-          state.state = "signedIn";
-          (state as DemoAuthState & { state: "signedIn" }).logOut = () => {
-            logOut();
-            state.state = "ready";
-            state.errors = [];
-          };
-          state.errors = [];
-          logoutHandler.value = (
-            state as DemoAuthState & { state: "signedIn" }
-          ).logOut;
-        },
-        onError: (error) => {
-          state.errors.push(error.toString());
-        },
-      },
-      seedAccounts,
-    ),
+  const authMethod = computed(
+    () => new DemoAuth(context.value.authenticate, authSecretStorage),
   );
-  onUnmounted(() => {
-    if (state.state === "signedIn") {
-      logoutHandler.value = undefined;
-    }
+
+  const existingUsers = ref<string[]>([]);
+  const isAuthenticated = useIsAuthenticated();
+
+  watch(authMethod, () => {
+    authMethod.value.getExistingUsers().then((users) => {
+      existingUsers.value = users;
+    });
   });
-  return { authMethod, state };
+
+  return computed(() => ({
+    state: isAuthenticated.value ? "signedIn" : "anonymous",
+    logIn(username: string) {
+      authMethod.value.logIn(username);
+    },
+    signUp(username: string) {
+      authMethod.value.signUp(username);
+    },
+    existingUsers: existingUsers.value,
+  }));
 }

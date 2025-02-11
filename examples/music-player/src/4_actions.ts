@@ -22,17 +22,17 @@ import {
  * pattern that best fits your app.
  */
 
-export async function uploadMusicTracks(files: Iterable<File>) {
-  const me = await MusicaAccount.getMe().ensureLoaded({
+export async function uploadMusicTracks(
+  files: Iterable<File>,
+  isExampleTrack: boolean = false,
+) {
+  const { root } = await MusicaAccount.getMe().ensureLoaded({
     root: {
       rootPlaylist: {
         tracks: [],
       },
-      playlists: [],
     },
   });
-
-  if (!me) return;
 
   for (const file of files) {
     // The ownership object defines the user that owns the created coValues
@@ -52,24 +52,23 @@ export async function uploadMusicTracks(files: Iterable<File>) {
         duration: data.duration,
         waveform: MusicTrackWaveform.create({ data: data.waveform }, group),
         title: file.name,
+        isExampleTrack,
       },
       group,
     );
 
     // The newly created musicTrack can be associated to the
     // user track list using a simple push call
-    me.root.rootPlaylist.tracks.push(musicTrack);
+    root.rootPlaylist.tracks.push(musicTrack);
   }
 }
 
 export async function createNewPlaylist() {
-  const me = await MusicaAccount.getMe().ensureLoaded({
+  const { root } = await MusicaAccount.getMe().ensureLoaded({
     root: {
       playlists: [],
     },
   });
-
-  if (!me) throw new Error("Current playlist not resolved");
 
   // Since playlists are meant to be shared we associate them
   // to a group which will contain the keys required to get
@@ -86,7 +85,7 @@ export async function createNewPlaylist() {
 
   // Again, we associate the new playlist to the
   // user by pushing it into the playlists CoList
-  me.root.playlists.push(playlist);
+  root.playlists.push(playlist);
 
   return playlist;
 }
@@ -152,24 +151,49 @@ export async function updateMusicTrackTitle(track: MusicTrack, title: string) {
 }
 
 export async function updateActivePlaylist(playlist?: Playlist) {
-  const me = await MusicaAccount.getMe().ensureLoaded({
+  const { root } = await MusicaAccount.getMe().ensureLoaded({
     root: {
       activePlaylist: {},
       rootPlaylist: {},
     },
   });
 
-  if (!me) return;
-
-  me.root.activePlaylist = playlist ?? me.root.rootPlaylist;
+  root.activePlaylist = playlist ?? root.rootPlaylist;
 }
 
 export async function updateActiveTrack(track: MusicTrack) {
-  const me = await MusicaAccount.getMe().ensureLoaded({
+  const { root } = await MusicaAccount.getMe().ensureLoaded({
     root: {},
   });
 
-  if (!me) return;
+  root.activeTrack = track;
+}
 
-  me.root.activeTrack = track;
+export async function onAnonymousAccountDiscarded(
+  anonymousAccount: MusicaAccount,
+) {
+  const { root: anonymousAccountRoot } = await anonymousAccount.ensureLoaded({
+    root: {
+      rootPlaylist: {
+        tracks: [{}],
+      },
+    },
+  });
+
+  const me = await MusicaAccount.getMe().ensureLoaded({
+    root: {
+      rootPlaylist: {
+        tracks: [],
+      },
+    },
+  });
+
+  for (const track of anonymousAccountRoot.rootPlaylist.tracks) {
+    if (track.isExampleTrack) continue;
+
+    const trackGroup = track._owner.castAs(Group);
+    trackGroup.addMember(me, "admin");
+
+    me.root.rootPlaylist.tracks.push(track);
+  }
 }

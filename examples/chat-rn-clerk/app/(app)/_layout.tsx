@@ -1,9 +1,9 @@
 import { Redirect, Stack } from "expo-router";
+import { useIsAuthenticated } from "jazz-react-native";
 import React from "react";
-import { useAuth } from "../../src/auth-context";
 
 export default function HomeLayout() {
-  const { isAuthenticated } = useAuth();
+  const isAuthenticated = useIsAuthenticated();
 
   if (isAuthenticated) {
     return <Redirect href={"/chat"} />;

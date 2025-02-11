@@ -1,6 +1,5 @@
-import { AgentSecret } from "cojson";
-import { Account, ID } from "jazz-tools";
-import React, { useMemo, useState, useEffect } from "react";
+import { useDemoAuth } from "jazz-react-core";
+import React, { useState } from "react";
 import {
   StyleSheet,
   Text,
@@ -9,101 +8,15 @@ import {
   View,
   useColorScheme,
 } from "react-native";
-import { KvStore } from "../storage/kv-store-context.js";
-import { RNDemoAuth } from "./DemoAuthMethod.js";
-
-type DemoAuthState = (
-  | {
-      state: "uninitialized";
-    }
-  | {
-      state: "loading";
-    }
-  | {
-      state: "ready";
-      existingUsers: string[];
-      signUp: (username: string) => void;
-      logInAs: (existingUser: string) => void;
-    }
-  | {
-      state: "signedIn";
-      logOut: () => void;
-    }
-) & {
-  errors: string[];
-};
-
-/** @category Auth Providers */
-export function useDemoAuth({
-  seedAccounts,
-  store,
-}: {
-  seedAccounts?: {
-    [name: string]: { accountID: ID<Account>; accountSecret: AgentSecret };
-  };
-  store?: KvStore;
-} = {}) {
-  const [state, setState] = useState<DemoAuthState>({
-    state: "loading",
-    errors: [],
-  });
-
-  const [authMethod, setAuthMethod] = useState<RNDemoAuth | null>(null);
-
-  const authMethodPromise = useMemo(() => {
-    return RNDemoAuth.init(
-      {
-        onReady: async ({ signUp, getExistingUsers, logInAs }) => {
-          const existingUsers = await getExistingUsers();
-          setState((current) => ({
-            state: "ready",
-            signUp,
-            existingUsers,
-            logInAs,
-            errors: current.errors,
-          }));
-        },
-        onSignedIn: ({ logOut }) => {
-          setState({ state: "signedIn", logOut, errors: [] });
-        },
-        onError: (error) => {
-          setState((current) => ({
-            ...current,
-            errors: [error.toString()],
-          }));
-        },
-      },
-      seedAccounts,
-      store,
-    );
-  }, [seedAccounts, state.errors]); // We reset the auth method when getting an error
-
-  useEffect(() => {
-    async function init() {
-      try {
-        const auth = await authMethodPromise;
-        setAuthMethod(auth);
-      } catch (e: unknown) {
-        const err = e as Error;
-        setState((current) => ({
-          ...current,
-          errors: [...current.errors, err.toString()],
-        }));
-      }
-    }
-    if (authMethod) return;
-    void init();
-  }, [seedAccounts]);
-
-  return [authMethod, state] as const;
-}
 
 export const DemoAuthBasicUI = ({
   appName,
-  state,
+  auth,
+  children,
 }: {
   appName: string;
-  state: DemoAuthState;
+  auth: ReturnType<typeof useDemoAuth>;
+  children: React.ReactNode;
 }) => {
   const colorScheme = useColorScheme();
   const darkMode = colorScheme === "dark";
@@ -111,14 +24,24 @@ export const DemoAuthBasicUI = ({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleSignUp = () => {
-    if (state.state !== "ready") return;
-    if (username.trim() === "") {
-      setErrorMessage("Display name is required");
-    } else {
-      setErrorMessage(null);
-      state.signUp(username);
-    }
+    setErrorMessage(null);
+
+    auth.signUp(username).catch((error) => {
+      setErrorMessage(error.message);
+    });
   };
+
+  const handleLogIn = (username: string) => {
+    setErrorMessage(null);
+
+    auth.logIn(username).catch((error) => {
+      setErrorMessage(error.message);
+    });
+  };
+
+  if (auth.state === "signedIn") {
+    return children;
+  }
 
   return (
     <View
@@ -127,77 +50,60 @@ export const DemoAuthBasicUI = ({
         darkMode ? styles.darkBackground : styles.lightBackground,
       ]}
     >
-      {state.state === "loading" ? (
-        <>
-          <Text style={styles.loadingText}>Loading...</Text>
-          {state.errors.map((error, index) => (
-            <Text key={index} style={styles.errorText}>
-              {error}
-            </Text>
-          ))}
-        </>
-      ) : state.state === "ready" ? (
-        <View style={styles.formContainer}>
+      <View style={styles.formContainer}>
+        <Text
+          style={[
+            styles.headerText,
+            darkMode ? styles.darkText : styles.lightText,
+          ]}
+        >
+          {appName}
+        </Text>
+
+        {errorMessage && <Text style={styles.errorText}>{errorMessage}</Text>}
+
+        <TextInput
+          placeholder="Display name"
+          value={username}
+          onChangeText={setUsername}
+          placeholderTextColor={darkMode ? "#fff" : "#000"}
+          style={[
+            styles.textInput,
+            darkMode ? styles.darkInput : styles.lightInput,
+          ]}
+        />
+
+        <TouchableOpacity
+          onPress={handleSignUp}
+          style={[
+            styles.button,
+            darkMode ? styles.darkButton : styles.lightButton,
+          ]}
+        >
           <Text
-            style={[
-              styles.headerText,
-              darkMode ? styles.darkText : styles.lightText,
-            ]}
+            style={darkMode ? styles.darkButtonText : styles.lightButtonText}
           >
-            {appName}
+            Sign Up as new account
           </Text>
+        </TouchableOpacity>
 
-          {state.errors.map((error) => (
-            <Text key={error} style={styles.errorText}>
-              {error}
-            </Text>
-          ))}
-
-          {errorMessage && <Text style={styles.errorText}>{errorMessage}</Text>}
-
-          <TextInput
-            placeholder="Display name"
-            value={username}
-            onChangeText={setUsername}
-            placeholderTextColor={darkMode ? "#fff" : "#000"}
-            style={[
-              styles.textInput,
-              darkMode ? styles.darkInput : styles.lightInput,
-            ]}
-          />
-
-          <TouchableOpacity
-            onPress={handleSignUp}
-            style={[
-              styles.button,
-              darkMode ? styles.darkButton : styles.lightButton,
-            ]}
-          >
-            <Text
-              style={darkMode ? styles.darkButtonText : styles.lightButtonText}
+        <View style={styles.existingUsersContainer}>
+          {auth.existingUsers.map((user) => (
+            <TouchableOpacity
+              key={user}
+              onPress={() => handleLogIn(user)}
+              style={[
+                styles.existingUserButton,
+                darkMode ? styles.darkUserButton : styles.lightUserButton,
+              ]}
             >
-              Sign Up as new account
-            </Text>
-          </TouchableOpacity>
-
-          <View style={styles.existingUsersContainer}>
-            {state.existingUsers.map((user) => (
-              <TouchableOpacity
-                key={user}
-                onPress={() => state.logInAs(user)}
-                style={[
-                  styles.existingUserButton,
-                  darkMode ? styles.darkUserButton : styles.lightUserButton,
-                ]}
-              >
-                <Text style={darkMode ? styles.darkText : styles.lightText}>
-                  Log In as "{user}"
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
+              <Text style={darkMode ? styles.darkText : styles.lightText}>
+                Log In as "{user}"
+              </Text>
+            </TouchableOpacity>
+          ))}
         </View>
-      ) : null}
+      </View>
     </View>
   );
 };

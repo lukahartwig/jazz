@@ -1,8 +1,14 @@
-import { sveltekit } from '@sveltejs/kit/vite';
+import { svelte } from '@sveltejs/vite-plugin-svelte';
+import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig(({ mode }) => ({
-  plugins: [sveltekit()],
+  plugins: [
+    svelte({
+      configFile: false,
+      preprocess: vitePreprocess(),
+    }),
+  ],
   test: {
     include: ['src/**/*.test.{js,ts,svelte}'],
     globals: true,

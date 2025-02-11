@@ -9,6 +9,7 @@ import { GcmpNav } from "@/components/Nav";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import { Copyright } from "gcmp-design-system/src/app/components/atoms/Copyright";
 
 // If loading a variable font, you don't need to specify the font weight
 const manrope = Manrope({
@@ -98,7 +99,7 @@ export default function RootLayout({
           <GcmpNav />
           <main className="flex-1 w-full">{children}</main>
           <footer className="py-8 text-sm flex justify-between gap-3 w-full container mt-12 md:mt-20">
-            <p>©2024 Garden Computing, Inc.</p>
+            <Copyright />
 
             <ThemeToggle className="hidden md:block" />
           </footer>

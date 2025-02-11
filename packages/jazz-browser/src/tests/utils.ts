@@ -1,8 +1,9 @@
-import { CoID, LocalNode, RawCoValue } from "cojson";
+import { CoID, ControlledAgent, LocalNode, RawCoValue } from "cojson";
 import { connectedPeers } from "cojson/src/streamUtils.js";
-import { Account, WasmCrypto } from "jazz-tools";
+import { Account } from "jazz-tools";
+import { TestJSCrypto } from "jazz-tools/testing";
 
-const Crypto = await WasmCrypto.create();
+const crypto = await TestJSCrypto.create();
 
 export async function setupTwoNodes() {
   const [serverAsPeer, clientAsPeer] = connectedPeers(
@@ -16,7 +17,7 @@ export async function setupTwoNodes() {
 
   const client = await LocalNode.withNewlyCreatedAccount({
     peersToLoadFrom: [serverAsPeer],
-    crypto: Crypto,
+    crypto,
     creationProps: { name: "Client" },
     migration: async (rawAccount, _node, creationProps) => {
       const account = new Account({
@@ -29,7 +30,7 @@ export async function setupTwoNodes() {
 
   const server = await LocalNode.withNewlyCreatedAccount({
     peersToLoadFrom: [clientAsPeer],
-    crypto: Crypto,
+    crypto,
     creationProps: { name: "Server" },
     migration: async (rawAccount, _node, creationProps) => {
       const account = new Account({

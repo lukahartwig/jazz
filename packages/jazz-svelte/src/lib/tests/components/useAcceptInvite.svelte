@@ -6,7 +6,7 @@
 </script>
 
 <script lang="ts" generics="R extends CoValue">
-  import { useAcceptInvite } from '$lib/jazz.svelte.js';
+  import { useAcceptInvite } from '../../jazz.svelte.js';
   import type { CoValue, CoValueClass, ID } from 'jazz-tools';
 
   let { invitedObjectSchema, onAccept }: Props<R> = $props();

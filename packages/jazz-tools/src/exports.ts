@@ -18,6 +18,7 @@ export {
   Account,
   isControlledAccount,
   type AccountClass,
+  type AccountCreationProps,
 } from "./coValues/account.js";
 export {
   BinaryCoStream,
@@ -50,6 +51,17 @@ export {
 } from "./internal.js";
 
 export {
+  JazzContextManager,
+  type JazzContextManagerAuthProps,
+} from "./implementation/ContextManager.js";
+
+export { AuthSecretStorage } from "./auth/AuthSecretStorage.js";
+export { KvStoreContext, type KvStore } from "./auth/KvStoreContext.js";
+export { InMemoryKVStore } from "./auth/InMemoryKVStore.js";
+export { DemoAuth } from "./auth/DemoAuth.js";
+export { PassphraseAuth } from "./auth/PassphraseAuth.js";
+
+export {
   createInviteLink,
   parseInviteLink,
   consumeInviteLink,
@@ -58,11 +70,13 @@ export {
 export {
   AnonymousJazzAgent,
   createAnonymousJazzContext,
+  createJazzContextFromExistingCredentials,
+  createJazzContextForNewAccount,
   createJazzContext,
-  ephemeralCredentialsAuth,
-  fixedCredentialsAuth,
   randomSessionProvider,
-  type AuthMethod,
   type AuthResult,
   type Credentials,
+  type JazzContextWithAccount,
 } from "./internal.js";
+
+export type * from "./types.js";

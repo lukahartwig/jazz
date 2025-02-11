@@ -1,0 +1,91 @@
+name: End-to-End Tests for React Native
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - ".github/workflows/e2e-rn-test.yml"
+      - "examples/chat-rn/**"
+      - "examples/chat-rn-clerk/**"
+      - "packages/jazz-react-native*/**"
+
+jobs:
+  e2e-tests:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Source Code
+        uses: ./.github/actions/source-code/
+
+      - name: Create Output Directory
+        run: |
+          mkdir -p ~/output
+
+      - name: Pnpm Build
+        run: pnpm turbo build --filter="./packages/*"
+
+      - name: iOS Simulator
+        id: ios-simulator
+        uses: futureware-tech/simulator-action@v4
+        with:
+          os: iOS
+          wait_for_boot: true
+
+      - name: chat-rn App Pre Build
+        working-directory: ./examples/chat-rn
+        run: |
+          pnpm build
+          pnpm expo prebuild --clean
+
+      - name: chat-rn App Build
+        working-directory: ./examples/chat-rn/ios
+        run: |
+          xcodebuild -scheme "jazzchatrn" \
+            -workspace jazzchatrn.xcworkspace \
+            -archivePath $RUNNER_TEMP/jazzchatrn.xcarchive \
+            -derivedDataPath $RUNNER_TEMP/build \
+            -destination "id=${{ steps.ios-simulator.outputs.udid }}" \
+            -configuration Release \
+            -sdk iphonesimulator \
+            build
+          xcrun simctl install booted $RUNNER_TEMP/build/Build/Products/Release-iphonesimulator/jazzchatrn.app
+          xcrun simctl spawn booted log stream --level debug | tee ~/output/sim.log &
+
+
+      - name: Install Maestro
+        run: |
+          curl -fsSL "https://get.maestro.mobile.dev" | bash
+
+      - name: chat-rn App Test
+        id: e2e_test
+        working-directory: ./examples/chat-rn
+        continue-on-error: true
+        run: |
+          export PATH="$PATH":"$HOME/.maestro/bin"
+          export MAESTRO_DRIVER_STARTUP_TIMEOUT=300000 # setting to 5 mins 👀
+          export MAESTRO_CLI_NO_ANALYTICS=1
+          maestro test test/e2e/flow.yml
+
+      - name: Copy Maestro and Diagnostic Files
+        if: steps.e2e_test.outcome != 'success'
+        run: |
+          cp -r ~/Library/Logs/DiagnosticReports/* ~/output
+          cp -r ~/.maestro/tests/* ~/output
+
+      - name: Upload Output Files
+        if: steps.e2e_test.outcome != 'success'
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-test-output
+          path: ~/output/*
+          retention-days: 5
+
+      - name: Exit with Test Result
+        if: always()
+        run: |
+          if [ "${{ steps.e2e_test.outcome }}" != "success" ]; then
+            exit 1
+          fi

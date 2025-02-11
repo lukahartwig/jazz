@@ -6,7 +6,7 @@ import { Icon } from "../atoms/Icon";
 
 // TODO: add tabs feature, and remove CodeExampleTabs
 
-function CopyButton({ code, size }: { code: string; size?: "sm" | "md" }) {
+function CopyButton({ code, size }: { code: string; size: "md" | "lg" }) {
   let [copyCount, setCopyCount] = useState(0);
   let copied = copyCount > 0;
 
@@ -27,8 +27,8 @@ function CopyButton({ code, size }: { code: string; size?: "sm" | "md" }) {
         copied
           ? "bg-emerald-400/10 ring-1 ring-inset ring-emerald-400/20"
           : "bg-white/5 hover:bg-white/7.5 dark:bg-white/2.5 dark:hover:bg-white/5",
-        size == "sm"
-          ? "right-1.5 top-1.5 py-[2px] pl-1 pr-2"
+        size == "md"
+          ? "right-[8px] top-[8px] py-[2px] pl-1 pr-2"
           : "right-2 top-2 py-1 pl-2 pr-3 ",
       )}
       onClick={() => {
@@ -48,7 +48,7 @@ function CopyButton({ code, size }: { code: string; size?: "sm" | "md" }) {
           name="copy"
           size="xs"
           className={clsx(
-            size === "sm" ? "size-2" : "size-3",
+            size === "md" ? "size-3" : "size-4",
             "stroke-stone-500 transition-colors group-hover/button:stroke-stone-600 dark:group-hover/button:stroke-stone-400",
           )}
         />
@@ -69,11 +69,11 @@ function CopyButton({ code, size }: { code: string; size?: "sm" | "md" }) {
 
 export function CodeGroup({
   children,
-  size,
+  size = "md",
   className,
 }: {
   children: React.ReactNode;
-  size?: "sm" | "md";
+  size?: "md" | "lg";
   className?: string;
 }) {
   const textRef = useRef<HTMLPreElement | null>(null);
@@ -86,13 +86,14 @@ export function CodeGroup({
   }, [children]);
 
   return (
-    <div className={clsx(className, "group relative")}>
+    <div className={clsx(className, "not-prose group relative")}>
       <pre
         className={clsx(
-          "h-full border p-0 bg-stone-50 dark:bg-stone-925",
+          "h-full overflow-x-auto",
+          "border rounded-md p-0 bg-stone-50 dark:bg-stone-925",
           "text-black dark:text-white",
           {
-            "text-sm": size === "sm",
+            "text-sm": size === "md",
           },
         )}
         ref={textRef}

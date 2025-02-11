@@ -1,16 +1,16 @@
-import {
-  BrowserContext,
-  BrowserGuestContext,
-  consumeInviteLinkFromWindowLocation,
-} from "jazz-browser";
+import { consumeInviteLinkFromWindowLocation } from "jazz-browser";
 import {
   Account,
   AnonymousJazzAgent,
+  AuthSecretStorage,
   CoValue,
   CoValueClass,
   DeeplyLoaded,
   DepthsIn,
   ID,
+  JazzAuthContext,
+  JazzContextType,
+  JazzGuestContext,
   subscribeToCoValue,
 } from "jazz-tools";
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -29,17 +29,27 @@ import {
   unref,
   watch,
 } from "vue";
-import { JazzContextSymbol, RegisteredAccount } from "./provider.js";
+import {
+  JazzAuthContextSymbol,
+  JazzContextSymbol,
+  RegisteredAccount,
+} from "./provider.js";
 
 export const logoutHandler = ref<() => void>();
 
-function useJazzContext() {
+export function useJazzContext() {
   const context =
-    inject<Ref<BrowserContext<RegisteredAccount> | BrowserGuestContext>>(
-      JazzContextSymbol,
-    );
-  if (!context) {
+    inject<Ref<JazzContextType<RegisteredAccount>>>(JazzContextSymbol);
+  if (!context?.value) {
     throw new Error("useJazzContext must be used within a JazzProvider");
+  }
+  return context;
+}
+
+export function useAuthSecretStorage() {
+  const context = inject<AuthSecretStorage>(JazzAuthContextSymbol);
+  if (!context) {
+    throw new Error("useAuthSecretStorage must be used within a JazzProvider");
   }
   return context;
 }
@@ -52,13 +62,13 @@ export function createUseAccountComposables<Acc extends Account>() {
   function useAccount<D extends DepthsIn<Acc>>(
     depth: D,
   ): {
-    me: ComputedRef<DeeplyLoaded<Acc, D> | undefined>;
+    me: ComputedRef<DeeplyLoaded<Acc, D> | undefined | null>;
     logOut: () => void;
   };
   function useAccount<D extends DepthsIn<Acc>>(
     depth?: D,
   ): {
-    me: ComputedRef<Acc | DeeplyLoaded<Acc, D> | undefined>;
+    me: ComputedRef<Acc | DeeplyLoaded<Acc, D> | undefined | null>;
     logOut: () => void;
   } {
     const context = useJazzContext();
@@ -85,7 +95,7 @@ export function createUseAccountComposables<Acc extends Account>() {
       me: computed(() => {
         const value =
           depth === undefined
-            ? me.value || toRaw((context.value as BrowserContext<Acc>).me)
+            ? me.value || toRaw((context.value as JazzAuthContext<Acc>).me)
             : me.value;
 
         return value ? toRaw(value) : value;
@@ -100,13 +110,15 @@ export function createUseAccountComposables<Acc extends Account>() {
   function useAccountOrGuest<D extends DepthsIn<Acc>>(
     depth: D,
   ): {
-    me: ComputedRef<DeeplyLoaded<Acc, D> | undefined | AnonymousJazzAgent>;
+    me: ComputedRef<
+      DeeplyLoaded<Acc, D> | undefined | null | AnonymousJazzAgent
+    >;
   };
   function useAccountOrGuest<D extends DepthsIn<Acc>>(
     depth?: D,
   ): {
     me: ComputedRef<
-      Acc | DeeplyLoaded<Acc, D> | undefined | AnonymousJazzAgent
+      Acc | DeeplyLoaded<Acc, D> | undefined | null | AnonymousJazzAgent
     >;
   } {
     const context = useJazzContext();
@@ -129,13 +141,13 @@ export function createUseAccountComposables<Acc extends Account>() {
       return {
         me: computed(() =>
           depth === undefined
-            ? me.value || toRaw((context.value as BrowserContext<Acc>).me)
+            ? me.value || toRaw((context.value as JazzAuthContext<Acc>).me)
             : me.value,
         ),
       };
     } else {
       return {
-        me: computed(() => toRaw((context.value as BrowserGuestContext).guest)),
+        me: computed(() => toRaw((context.value as JazzGuestContext).guest)),
       };
     }
   }
@@ -155,8 +167,8 @@ export function useCoState<V extends CoValue, D>(
   Schema: CoValueClass<V>,
   id: MaybeRef<ID<V> | undefined>,
   depth: D & DepthsIn<V> = [] as D & DepthsIn<V>,
-): Ref<DeeplyLoaded<V, D> | undefined> {
-  const state: ShallowRef<DeeplyLoaded<V, D> | undefined> =
+): Ref<DeeplyLoaded<V, D> | undefined | null> {
+  const state: ShallowRef<DeeplyLoaded<V, D> | undefined | null> =
     shallowRef(undefined);
   const context = useJazzContext();
 
@@ -184,7 +196,9 @@ export function useCoState<V extends CoValue, D>(
         (value) => {
           state.value = value;
         },
-        undefined,
+        () => {
+          state.value = null;
+        },
         true,
       );
     },
@@ -223,7 +237,7 @@ export function useAcceptInvite<V extends CoValue>({
 
   const runInviteAcceptance = () => {
     const result = consumeInviteLinkFromWindowLocation({
-      as: toRaw((context.value as BrowserContext<RegisteredAccount>).me),
+      as: toRaw((context.value as JazzAuthContext<RegisteredAccount>).me),
       invitedObjectSchema,
       forValueHint,
     });

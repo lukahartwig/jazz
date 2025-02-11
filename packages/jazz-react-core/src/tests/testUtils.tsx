@@ -4,18 +4,19 @@ import {
   render,
   renderHook,
 } from "@testing-library/react";
-import { AnonymousJazzAgent } from "jazz-tools";
+import { AnonymousJazzAgent, AuthSecretStorage } from "jazz-tools";
 import React from "react";
 import { RegisteredAccount } from "../provider.js";
 import { JazzTestProvider } from "../testing.js";
 
 type JazzExtendedOptions = {
-  account: RegisteredAccount | { guest: AnonymousJazzAgent };
+  account?: RegisteredAccount | { guest: AnonymousJazzAgent };
+  isAuthenticated?: boolean;
 };
 
 const customRender = (
   ui: React.ReactNode,
-  options: RenderOptions & JazzExtendedOptions,
+  options: RenderOptions & JazzExtendedOptions = {},
 ) => {
   const AllTheProviders = ({
     children,
@@ -23,7 +24,12 @@ const customRender = (
     children: React.ReactNode;
   }) => {
     return (
-      <JazzTestProvider account={options.account}>{children}</JazzTestProvider>
+      <JazzTestProvider
+        account={options.account}
+        isAuthenticated={options.isAuthenticated}
+      >
+        {children}
+      </JazzTestProvider>
     );
   };
 
@@ -32,7 +38,7 @@ const customRender = (
 
 const customRenderHook = <TProps, TResult>(
   callback: (props: TProps) => TResult,
-  options: RenderHookOptions<TProps> & JazzExtendedOptions,
+  options: RenderHookOptions<TProps> & JazzExtendedOptions = {},
 ) => {
   const AllTheProviders = ({
     children,
@@ -40,7 +46,12 @@ const customRenderHook = <TProps, TResult>(
     children: React.ReactNode;
   }) => {
     return (
-      <JazzTestProvider account={options.account}>{children}</JazzTestProvider>
+      <JazzTestProvider
+        account={options.account}
+        isAuthenticated={options.isAuthenticated}
+      >
+        {children}
+      </JazzTestProvider>
     );
   };
 

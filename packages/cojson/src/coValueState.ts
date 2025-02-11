@@ -4,8 +4,10 @@ import { RawCoID } from "./ids.js";
 import { logger } from "./logger.js";
 import { PeerID } from "./sync.js";
 
-export const CO_VALUE_LOADING_MAX_RETRIES = 5;
-export const CO_VALUE_LOADING_TIMEOUT = 30_000;
+export const CO_VALUE_LOADING_CONFIG = {
+  MAX_RETRIES: 2,
+  TIMEOUT: 30_000,
+};
 
 export class CoValueUnknownState {
   type = "unknown" as const;
@@ -227,7 +229,7 @@ export class CoValueState {
         this.getCoValue(),
         runWithRetry(
           () => doLoad(peersWithRetry),
-          CO_VALUE_LOADING_MAX_RETRIES,
+          CO_VALUE_LOADING_CONFIG.MAX_RETRIES,
         ),
       ]);
     }
@@ -313,7 +315,7 @@ async function loadCoValueFromPeers(
             peerId: peer.id,
           });
         }
-      }, CO_VALUE_LOADING_TIMEOUT);
+      }, CO_VALUE_LOADING_CONFIG.TIMEOUT);
       await coValueEntry.state.waitForPeer(peer.id);
       clearTimeout(timeout);
     }

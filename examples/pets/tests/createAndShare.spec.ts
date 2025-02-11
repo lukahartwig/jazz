@@ -1,4 +1,4 @@
-import { test } from "@playwright/test";
+import { BrowserContext, test } from "@playwright/test";
 import { HomePage } from "./pages/HomePage";
 import { LoginPage } from "./pages/LoginPage";
 import { NewPostPage } from "./pages/NewPostPage";
@@ -6,50 +6,80 @@ import { PostPage } from "./pages/PostPage";
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-test("create a new post and share", async ({ page }) => {
-  const loginPage = new LoginPage(page);
+test("create a new post and share", async ({ page: luigiPage, browser }) => {
+  const context = await browser.newContext();
+  await mockAuthenticator(context);
 
-  await loginPage.goto();
-  await loginPage.fillUsername("S. Mario");
-  await loginPage.signup();
+  const marioPage = await context.newPage();
+  await marioPage.goto("/");
+  await luigiPage.goto("/");
 
-  const homePage = new HomePage(page);
+  const marioLoginPage = new LoginPage(marioPage);
+  await marioLoginPage.fillUsername("S. Mario");
+  await marioLoginPage.signup();
 
-  await homePage.navigateToNewPost();
+  const luigiLoginPage = new LoginPage(luigiPage);
+  await luigiLoginPage.fillUsername("Luigi");
+  await luigiLoginPage.signup();
 
-  const newPostPage = new NewPostPage(page);
+  const marioHomePage = new HomePage(marioPage);
+  await marioHomePage.navigateToNewPost();
+
+  const newPostPage = new NewPostPage(marioPage);
 
   await newPostPage.fillPetName("Yoshi");
   await newPostPage.uploadFile("./public/jazz-logo-low-res.jpg");
   await newPostPage.submit();
 
-  const postPage = new PostPage(page);
+  const marioPostPage = new PostPage(marioPage);
+  await marioPostPage.expectPetName("Yoshi");
 
-  await postPage.expectPetName("Yoshi");
-
-  const invitation = await postPage.getShareLink();
+  const invitation = await marioPostPage.getShareLink();
 
   await sleep(1000);
+  await luigiPage.goto(invitation);
 
-  await postPage.logout();
+  const luigiPostPage = new PostPage(luigiPage);
+  await luigiPostPage.expectPetName("Yoshi");
+  await luigiPostPage.expectReactionSelectedByCurrentUser("😍", false);
+  await luigiPostPage.toggleReaction("😍");
+  await luigiPostPage.expectReactionSelectedByCurrentUser("😍", true);
 
-  await loginPage.expectLoaded();
+  await marioPostPage.expectReactionByUser("😍", "Luigi");
+});
 
-  await loginPage.fillUsername("Luigi");
-  await loginPage.signup();
+async function mockAuthenticator(context: BrowserContext) {
+  await context.addInitScript(() => {
+    Object.defineProperty(window.navigator, "credentials", {
+      value: {
+        ...window.navigator.credentials,
+        create: async () => ({
+          type: "public-key",
+          id: new Uint8Array([1, 2, 3, 4]),
+          rawId: new Uint8Array([1, 2, 3, 4]),
+          response: {
+            clientDataJSON: new Uint8Array([1]),
+            attestationObject: new Uint8Array([2]),
+          },
+        }),
+        get: async () => ({
+          type: "public-key",
+          id: new Uint8Array([1, 2, 3, 4]),
+          rawId: new Uint8Array([1, 2, 3, 4]),
+          response: {
+            authenticatorData: new Uint8Array([1]),
+            clientDataJSON: new Uint8Array([2]),
+            signature: new Uint8Array([3]),
+          },
+        }),
+      },
+      configurable: true,
+    });
+  });
+}
 
-  await page.goto(invitation);
-
-  await postPage.expectPetName("Yoshi");
-  await postPage.expectReactionSelectedByCurrentUser("😍", false);
-  await postPage.toggleReaction("😍");
-  await postPage.expectReactionSelectedByCurrentUser("😍", true);
-
-  await postPage.logout();
-  await loginPage.expectLoaded();
-  await loginPage.loginAs("S. Mario");
-
-  await homePage.navigateToPost("Yoshi");
-  await postPage.expectPetName("Yoshi");
-  await postPage.expectReactionByUser("😍", "Luigi");
+// Configure the authenticator
+test.beforeEach(async ({ context }) => {
+  // Enable virtual authenticator environment
+  await mockAuthenticator(context);
 });

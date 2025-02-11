@@ -5,8 +5,7 @@ import { cojsonInternals } from "cojson";
 import {
   Account,
   WasmCrypto,
-  createJazzContext,
-  fixedCredentialsAuth,
+  createJazzContextFromExistingCredentials,
   randomSessionProvider,
 } from "../index.web";
 
@@ -31,15 +30,16 @@ export async function setupAccount() {
     throw "me is not a controlled account";
   }
   me._raw.core.node.syncManager.addPeer(secondPeer);
-  const { account: meOnSecondPeer } = await createJazzContext({
-    auth: fixedCredentialsAuth({
-      accountID: me.id,
-      secret: me._raw.agentSecret,
-    }),
-    sessionProvider: randomSessionProvider,
-    peersToLoadFrom: [initialAsPeer],
-    crypto: Crypto,
-  });
+  const { account: meOnSecondPeer } =
+    await createJazzContextFromExistingCredentials({
+      credentials: {
+        accountID: me.id,
+        secret: me._raw.agentSecret,
+      },
+      sessionProvider: randomSessionProvider,
+      peersToLoadFrom: [initialAsPeer],
+      crypto: Crypto,
+    });
 
   return { me, meOnSecondPeer };
 }

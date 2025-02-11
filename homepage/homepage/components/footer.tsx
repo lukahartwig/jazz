@@ -7,7 +7,6 @@ export function JazzFooter() {
   return (
     <Footer
       logo={<GcmpLogo monochrome className="w-36" />}
-      companyName="Garden Computing, Inc."
       socials={socials}
       themeToggle={ThemeToggle}
       sections={[

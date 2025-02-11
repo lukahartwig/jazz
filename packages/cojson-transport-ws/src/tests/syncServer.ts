@@ -1,7 +1,7 @@
 import { createServer } from "http";
 import { ControlledAgent, LocalNode, WasmCrypto } from "cojson";
 import { WebSocket, WebSocketServer } from "ws";
-import { createWebSocketPeer } from "../index";
+import { createWebSocketPeer } from "../createWebSocketPeer";
 
 export const startSyncServer = async (port?: number) => {
   const crypto = await WasmCrypto.create();

@@ -2,79 +2,51 @@ import { SQLiteStorage } from "cojson-storage-rn-sqlite";
 import {
   Account,
   AgentID,
-  AnonymousJazzAgent,
-  AuthMethod,
+  AuthCredentials,
+  AuthSecretStorage,
   CoValue,
   CoValueClass,
   CryptoProvider,
   ID,
+  NewAccountProps,
   SessionID,
+  SyncConfig,
   createInviteLink as baseCreateInviteLink,
+  createAnonymousJazzContext,
   createJazzContext,
 } from "jazz-tools";
 
-import { RawAccountID } from "cojson";
+import NetInfo from "@react-native-community/netinfo";
+import { LocalNode, Peer, RawAccountID } from "cojson";
 
-export { RNDemoAuth } from "./auth/DemoAuthMethod.js";
-
+import { WebSocketPeerWithReconnection } from "cojson-transport-ws";
 import { PureJSCrypto } from "cojson/native";
-import { createWebSocketPeerWithReconnection } from "./createWebSocketPeerWithReconnection.js";
 import type { RNQuickCrypto } from "./crypto/RNQuickCrypto.js";
 import { ExpoSecureStoreAdapter } from "./storage/expo-secure-store-adapter.js";
 import { KvStoreContext } from "./storage/kv-store-context.js";
 
-/** @category Context Creation */
-export type ReactNativeContext<Acc extends Account> = {
-  me: Acc;
-  logOut: () => void;
-  // TODO: Symbol.dispose?
-  done: () => void;
-};
-
-export type ReactNativeGuestContext = {
-  guest: AnonymousJazzAgent;
-  logOut: () => void;
-  done: () => void;
-};
-
-export type ReactNativeContextOptions<Acc extends Account> = {
-  auth: AuthMethod;
-  AccountSchema: CoValueClass<Acc> & {
-    fromNode: (typeof Account)["fromNode"];
-  };
-} & BaseReactNativeContextOptions;
-
 export type BaseReactNativeContextOptions = {
-  peer: `wss://${string}` | `ws://${string}`;
+  sync: SyncConfig;
   reconnectionTimeout?: number;
   storage?: "sqlite" | "disabled";
   CryptoProvider?: typeof PureJSCrypto | typeof RNQuickCrypto;
+  authSecretStorage: AuthSecretStorage;
 };
 
-/** @category Context Creation */
-export async function createJazzRNContext<Acc extends Account>(
-  options: ReactNativeContextOptions<Acc>,
-): Promise<ReactNativeContext<Acc>>;
-export async function createJazzRNContext(
-  options: BaseReactNativeContextOptions,
-): Promise<ReactNativeGuestContext>;
-export async function createJazzRNContext<Acc extends Account>(
-  options: ReactNativeContextOptions<Acc> | BaseReactNativeContextOptions,
-): Promise<ReactNativeContext<Acc> | ReactNativeGuestContext>;
-export async function createJazzRNContext<Acc extends Account>(
-  options: ReactNativeContextOptions<Acc> | BaseReactNativeContextOptions,
-): Promise<ReactNativeContext<Acc> | ReactNativeGuestContext> {
-  const websocketPeer = createWebSocketPeerWithReconnection(
-    options.peer,
-    options.reconnectionTimeout,
-    (peer) => {
-      node.syncManager.addPeer(peer);
-    },
-  );
+class ReactNativeWebSocketPeerWithReconnection extends WebSocketPeerWithReconnection {
+  onNetworkChange(callback: (connected: boolean) => void): () => void {
+    return NetInfo.addEventListener((state) =>
+      callback(state.isConnected ?? false),
+    );
+  }
+}
 
+async function setupPeers(options: BaseReactNativeContextOptions) {
   const CryptoProvider = options.CryptoProvider || PureJSCrypto;
+  const crypto = await CryptoProvider.create();
+  let node: LocalNode | undefined = undefined;
 
-  const peersToLoadFrom = [websocketPeer.peer];
+  const peersToLoadFrom: Peer[] = [];
 
   if (options.storage === "sqlite") {
     const storage = await SQLiteStorage.asPeer({
@@ -84,44 +56,147 @@ export async function createJazzRNContext<Acc extends Account>(
     peersToLoadFrom.push(storage);
   }
 
-  const context =
-    "auth" in options
-      ? await createJazzContext({
-          AccountSchema: options.AccountSchema,
-          auth: options.auth,
-          crypto: await CryptoProvider.create(),
-          peersToLoadFrom,
-          sessionProvider: provideLockSession,
-        })
-      : await createJazzContext({
-          crypto: await CryptoProvider.create(),
-          peersToLoadFrom,
-        });
+  if (options.sync.when === "never") {
+    return {
+      toggleNetwork: () => {},
+      peersToLoadFrom,
+      setNode: () => {},
+      crypto,
+    };
+  }
 
-  const node =
-    "account" in context ? context.account._raw.core.node : context.agent.node;
-
-  return "account" in context
-    ? {
-        me: context.account,
-        done: () => {
-          websocketPeer.done();
-          context.done();
-        },
-        logOut: () => {
-          context.logOut();
-        },
+  const wsPeer = new ReactNativeWebSocketPeerWithReconnection({
+    peer: options.sync.peer,
+    reconnectionTimeout: options.reconnectionTimeout,
+    addPeer: (peer) => {
+      if (node) {
+        node.syncManager.addPeer(peer);
+      } else {
+        peersToLoadFrom.push(peer);
       }
-    : {
-        guest: context.agent,
-        done: () => {
-          websocketPeer.done();
-          context.done();
-        },
-        logOut: () => {
-          context.logOut();
-        },
-      };
+    },
+    removePeer: (peer) => {
+      peersToLoadFrom.splice(peersToLoadFrom.indexOf(peer), 1);
+    },
+  });
+
+  function toggleNetwork(enabled: boolean) {
+    if (enabled) {
+      wsPeer.enable();
+    } else {
+      wsPeer.disable();
+    }
+  }
+
+  function setNode(value: LocalNode) {
+    node = value;
+  }
+
+  if (options.sync.when === "always" || !options.sync.when) {
+    toggleNetwork(true);
+  }
+
+  return {
+    toggleNetwork,
+    peersToLoadFrom,
+    setNode,
+    crypto,
+  };
+}
+
+export async function createJazzReactNativeGuestContext(
+  options: BaseReactNativeContextOptions,
+) {
+  const { toggleNetwork, peersToLoadFrom, setNode, crypto } =
+    await setupPeers(options);
+
+  const context = await createAnonymousJazzContext({
+    crypto,
+    peersToLoadFrom,
+  });
+
+  setNode(context.agent.node);
+
+  options.authSecretStorage.emitUpdate(null);
+
+  return {
+    guest: context.agent,
+    node: context.agent.node,
+    done: () => {
+      // TODO: Sync all the covalues before closing the connection & context
+      toggleNetwork(false);
+      context.done();
+    },
+    logOut: () => {
+      return context.logOut();
+    },
+  };
+}
+
+export type ReactNativeContextOptions<Acc extends Account> = {
+  credentials?: AuthCredentials;
+  AccountSchema?: CoValueClass<Acc> & {
+    fromNode: (typeof Account)["fromNode"];
+  };
+  newAccountProps?: NewAccountProps;
+  defaultProfileName?: string;
+} & BaseReactNativeContextOptions;
+
+export async function createJazzReactNativeContext<Acc extends Account>(
+  options: ReactNativeContextOptions<Acc>,
+) {
+  const { toggleNetwork, peersToLoadFrom, setNode, crypto } =
+    await setupPeers(options);
+
+  let unsubscribeAuthUpdate = () => {};
+
+  if (options.sync.when === "signedUp") {
+    const authSecretStorage = options.authSecretStorage;
+    const credentials = options.credentials ?? (await authSecretStorage.get());
+
+    // To update the internal state with the current credentials
+    authSecretStorage.emitUpdate(credentials);
+
+    function handleAuthUpdate(isAuthenticated: boolean) {
+      if (isAuthenticated) {
+        toggleNetwork(true);
+      } else {
+        toggleNetwork(false);
+      }
+    }
+
+    unsubscribeAuthUpdate = authSecretStorage.onUpdate(handleAuthUpdate);
+    handleAuthUpdate(authSecretStorage.isAuthenticated);
+  }
+
+  const context = await createJazzContext({
+    credentials: options.credentials,
+    newAccountProps: options.newAccountProps,
+    peersToLoadFrom,
+    crypto,
+    defaultProfileName: options.defaultProfileName,
+    AccountSchema: options.AccountSchema,
+    sessionProvider: provideLockSession,
+    authSecretStorage: options.authSecretStorage,
+  });
+
+  setNode(context.node);
+
+  return {
+    me: context.account,
+    node: context.node,
+    authSecretStorage: context.authSecretStorage,
+    done: () => {
+      // TODO: Sync all the covalues before closing the connection & context
+      toggleNetwork(false);
+      unsubscribeAuthUpdate();
+      context.done();
+    },
+    logOut: () => {
+      unsubscribeAuthUpdate();
+      return context.logOut();
+    },
+  };
 }
 
 /** @category Auth Providers */

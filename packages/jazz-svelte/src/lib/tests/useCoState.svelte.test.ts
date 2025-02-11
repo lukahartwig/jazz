@@ -1,8 +1,17 @@
-import { render } from "@testing-library/svelte";
-import { Account, CoMap, co, type CoValue, type CoValueClass, type DepthsIn } from "jazz-tools";
+import { render, waitFor } from "@testing-library/svelte";
+import { Account, CoMap, co, cojsonInternals, type CoValue, type CoValueClass, type DepthsIn } from "jazz-tools";
 import { describe, expect, it } from "vitest";
-import { createJazzTestAccount, createJazzTestContext } from "../testing.js";
+import { createJazzTestAccount, createJazzTestContext, setupJazzTestSync } from "../testing.js";
 import UseCoState from "./components/useCoState.svelte";
+
+beforeEach(async () => {
+  await setupJazzTestSync();
+});
+
+beforeEach(() => {
+  cojsonInternals.CO_VALUE_LOADING_CONFIG.MAX_RETRIES = 1;
+  cojsonInternals.CO_VALUE_LOADING_CONFIG.TIMEOUT = 1;
+});
 
 function setup<T extends CoValue>(options: {
   account: Account;
@@ -147,5 +156,35 @@ describe("useCoState", () => {
 
     expect(result.current?.value).toBe("123");
     expect(result.current?.nested?.value).toBe("456");
+  });
+
+  it("should return null if the coValue is not found", async () => {
+    class TestMap extends CoMap {
+      value = co.string;
+    }
+
+    const unreachableAccount = await createJazzTestAccount({
+    });
+
+    const map = TestMap.create({
+      value: "123",
+    }, unreachableAccount);
+
+    unreachableAccount._raw.core.node.gracefulShutdown();
+
+    const account = await createJazzTestAccount({
+      isCurrentActiveAccount: true,
+    });
+
+    const result = setup({
+      account,
+      map,
+    });
+
+    expect(result.current).toBeUndefined();
+
+    await waitFor(() => {
+      expect(result.current).toBeNull();
+    });
   });
 });

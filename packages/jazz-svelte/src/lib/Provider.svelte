@@ -1,64 +1,55 @@
 <script lang="ts" module>
-  export type Props<Acc extends Account = Account> = {
+  export type Props<Acc extends Account = Account> = JazzContextManagerProps<Acc> & {
     children?: Snippet;
-    auth: AuthMethod | 'guest';
-    peer: `wss://${string}` | `ws://${string}`;
-    storage?: 'indexedDB' | 'singleTabOPFS';
-    AccountSchema?: AccountClass<Acc>;
   };
 </script>
 
 <script lang="ts" generics="Acc extends Account">
-  import { createJazzBrowserContext } from 'jazz-browser';
-  import type { AccountClass, AuthMethod } from 'jazz-tools';
+  import { JazzBrowserContextManager, type JazzContextManagerProps } from 'jazz-browser';
+  import type { AuthSecretStorage } from 'jazz-tools';
   import { Account } from 'jazz-tools';
   import { type Snippet, setContext, untrack } from 'svelte';
-  import { JAZZ_CTX, type JazzContext } from './jazz.svelte.js';
+  import { JAZZ_AUTH_CTX, JAZZ_CTX, type JazzContext } from './jazz.svelte.js';
 
-  let { children, auth, peer, storage, AccountSchema }: Props<Acc> = $props();
+  let props: Props<Acc> = $props();
+
+  const contextManager = new JazzBrowserContextManager<Acc>();
 
   const ctx = $state<JazzContext<Acc>>({ current: undefined });
   setContext<JazzContext<Acc>>(JAZZ_CTX, ctx);
-  let sessionCount = $state(0);
+  setContext<AuthSecretStorage>(JAZZ_AUTH_CTX, contextManager.getAuthSecretStorage());
 
   $effect(() => {
-    auth;
-    peer;
-    storage;
-    sessionCount;
+    props.sync.when;
+    props.sync.peer;
+    props.storage;
+    props.guestMode;
     return untrack(() => {
-      if (!auth || !peer) return;
+      if (!props.sync) return;
 
-      const promiseWithDoneCallback = createJazzBrowserContext<Acc>(
-        auth === 'guest'
-          ? {
-              peer,
-              storage
-            }
-          : {
-              AccountSchema: AccountSchema ?? Account as unknown as AccountClass<Acc>,
-              auth,
-              peer,
-              storage
-            }
-      ).then((context) => {
-        ctx.current = {
-          ...context,
-          logOut: () => {
-            context.logOut();
-            ctx.current = undefined;
-            sessionCount = sessionCount + 1;
-          }
-        };
-        return context.done;
-      });
-      return () => {
-        void promiseWithDoneCallback.then((done) => done());
-      };
+      contextManager
+        .createContext({
+          sync: props.sync,
+          storage: props.storage,
+          guestMode: props.guestMode,
+          AccountSchema: props.AccountSchema,
+          defaultProfileName: props.defaultProfileName,
+          onAnonymousAccountDiscarded: props.onAnonymousAccountDiscarded,
+          onLogOut: props.onLogOut,
+        })
+        .catch((error) => {
+          console.error('Error creating Jazz browser context:', error);
+        });
+    });
+  });
+
+  $effect(() => {
+    return contextManager.subscribe(() => {
+      ctx.current = contextManager.getCurrentValue();
     });
   });
 </script>
 
 {#if ctx.current}
-  {@render children?.()}
+  {@render props.children?.()}
 {/if}

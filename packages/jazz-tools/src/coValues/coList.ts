@@ -449,7 +449,7 @@ export class CoList<Item = any> extends Array<Item> implements CoValue {
   ensureLoaded<L extends CoList, Depth>(
     this: L,
     depth: Depth & DepthsIn<L>,
-  ): Promise<DeeplyLoaded<L, Depth> | undefined> {
+  ): Promise<DeeplyLoaded<L, Depth>> {
     return ensureCoValueLoaded(this, depth);
   }
 

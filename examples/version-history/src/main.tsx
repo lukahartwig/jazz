@@ -1,32 +1,21 @@
-import { DemoAuthBasicUI, JazzProvider, useDemoAuth } from "jazz-react";
+import { DemoAuthBasicUI, JazzProvider } from "jazz-react";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
-
-function JazzAndAuth({ children }: { children: React.ReactNode }) {
-  const [auth, authState] = useDemoAuth();
-
-  return (
-    <>
-      <JazzProvider
-        auth={auth}
-        peer="wss://cloud.jazz.tools/?key=version-history@garden.co"
-      >
-        {children}
-      </JazzProvider>
-
-      {authState.state !== "signedIn" && (
-        <DemoAuthBasicUI appName="React + Demo Auth" state={authState} />
-      )}
-    </>
-  );
-}
+import { apiKey } from "./apiKey.ts";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <JazzAndAuth>
-      <App />
-    </JazzAndAuth>
+    <JazzProvider
+      sync={{
+        peer: `wss://cloud.jazz.tools/?key=${apiKey}`,
+        when: "signedUp",
+      }}
+    >
+      <DemoAuthBasicUI appName="Jazz Version History Example">
+        <App />
+      </DemoAuthBasicUI>
+    </JazzProvider>
   </StrictMode>,
 );

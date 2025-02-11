@@ -1,1 +1,5 @@
-export { IDBNode, IDBNode as IDBStorage } from "./idbNode.js";
+export {
+  IDBNode,
+  IDBNode as IDBStorage,
+  internal_setDatabaseName,
+} from "./idbNode.js";

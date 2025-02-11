@@ -53,8 +53,14 @@ export const docNavigationItems = [
     ],
   },
   {
-    name: "Updates",
+    name: "Upgrade guides",
     items: [
+      {
+        // upgrade guides
+        name: "Jazz 0.10.0 - New authentication flow",
+        href: "/docs/upgrade/0-10-0",
+        done: 100,
+      },
       {
         // upgrade guides
         name: "Jazz 0.9.8 - Without me!",
@@ -70,7 +76,7 @@ export const docNavigationItems = [
       },
       {
         // upgrade guides
-        name: "Jazz 0.9.0 - Upgrade guide",
+        name: "Jazz 0.9.0 - Top level imports",
         href: "/docs/upgrade/0-9-0",
         done: 100,
       },
@@ -137,7 +143,7 @@ export const docNavigationItems = [
       {
         name: "Group inheritance",
         href: "/docs/groups/inheritance",
-        done: 0,
+        done: 100,
       },
     ],
   },
@@ -146,12 +152,12 @@ export const docNavigationItems = [
     items: [
       {
         name: "Overview",
-        href: "/docs/authentication/auth-methods",
+        href: "/docs/authentication/overview",
         done: {
-          react: 50,
-          vue: 0,
-          "react-native": 0,
-          svelte: 0,
+          react: 100,
+          vue: 50,
+          "react-native": 100,
+          svelte: 50,
         },
       },
       {

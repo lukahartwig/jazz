@@ -9,7 +9,12 @@ import gradient from "gradient-string";
 import inquirer from "inquirer";
 import ora from "ora";
 
-import { type FrameworkAuthPair, frameworkToAuthExamples } from "./config.js";
+import {
+  Framework,
+  type FrameworkAuthPair,
+  frameworkToAuthExamples,
+  frameworks,
+} from "./config.js";
 
 const program = new Command();
 
@@ -21,13 +26,16 @@ type ScaffoldOptions = {
   template: FrameworkAuthPair | string;
   projectName: string;
   packageManager: PackageManager;
+  apiKey?: string;
 };
 
 type PromptOptions = {
+  framework?: Framework;
   starter?: FrameworkAuthPair;
   example?: string;
   projectName?: string;
   packageManager?: PackageManager;
+  apiKey?: string;
 };
 
 async function getLatestPackageVersions(
@@ -78,6 +86,7 @@ async function scaffoldProject({
   template,
   projectName,
   packageManager,
+  apiKey,
 }: ScaffoldOptions): Promise<void> {
   console.log("\n" + jazzGradient.multiline("Jazz App Creator\n"));
 
@@ -88,8 +97,7 @@ async function scaffoldProject({
     throw new Error(`Invalid template: ${template}`);
   }
 
-  const devCommand =
-    template === "react-native-expo-clerk-auth" ? "ios" : "dev";
+  const devCommand = template.includes("rn-clerk") ? "ios" : "dev";
 
   if (!starterConfig.repo) {
     throw new Error(
@@ -147,6 +155,39 @@ async function scaffoldProject({
     throw error;
   }
 
+  // Replace API key if provided
+  if (apiKey) {
+    const replaceSpinner = ora({
+      text: chalk.blue("Updating API key..."),
+      spinner: "dots",
+    }).start();
+
+    try {
+      const apiKeyPath = `${projectName}/src/apiKey.ts`;
+      if (fs.existsSync(apiKeyPath)) {
+        let content = fs.readFileSync(apiKeyPath, "utf8");
+        // Replace the apiKey export value
+        const keyPattern = /export const apiKey = ["']([^"']+)["']/;
+        const updatedContent = content.replace(
+          keyPattern,
+          `export const apiKey = "${apiKey}"`,
+        );
+
+        if (content !== updatedContent) {
+          fs.writeFileSync(apiKeyPath, updatedContent);
+        }
+      }
+      replaceSpinner.succeed(chalk.green("API key updated"));
+    } catch (error) {
+      replaceSpinner.fail(chalk.red("Failed to update API key"));
+      console.warn(
+        chalk.yellow(
+          "You may need to manually update the API key in your Jazz Provider.",
+        ),
+      );
+    }
+  }
+
   // Step 4: Install dependencies
   const installSpinner = ora({
     text: chalk.blue(
@@ -156,7 +197,7 @@ async function scaffoldProject({
   }).start();
 
   try {
-    execSync(`cd ${projectName} && ${packageManager} install`, {
+    execSync(`cd "${projectName}" && ${packageManager} install`, {
       stdio: "pipe",
     });
     installSpinner.succeed(chalk.green("Dependencies installed"));
@@ -173,8 +214,8 @@ async function scaffoldProject({
     }).start();
 
     try {
-      execSync(`cd ${projectName} && npx expo prebuild`, { stdio: "pipe" });
-      execSync(`cd ${projectName} && npx pod-install`, { stdio: "pipe" });
+      execSync(`cd "${projectName}" && npx expo prebuild`, { stdio: "pipe" });
+      execSync(`cd "${projectName}" && npx pod-install`, { stdio: "pipe" });
 
       // Update metro.config.js
       const metroConfigPath = `${projectName}/metro.config.js`;
@@ -214,21 +255,51 @@ async function promptUser(
 
   const questions = [];
 
+  if (
+    partialOptions.framework &&
+    !frameworks.find(
+      (framework) => framework.value === partialOptions.framework,
+    )
+  ) {
+    throw new Error(`Invalid framework: ${partialOptions.framework}`);
+  }
+
   if (partialOptions.starter && partialOptions.example) {
     throw new Error("Please specify either a starter or an example, not both.");
   }
 
   if (!partialOptions.example && !partialOptions.starter) {
+    let framework = partialOptions.framework;
+
+    if (!partialOptions.framework) {
+      const answers = await inquirer.prompt([
+        {
+          type: "list",
+          name: "framework",
+          message: chalk.cyan("Choose a framework:"),
+          choices: Array.from(frameworks).map((framework) => ({
+            name: chalk.white(framework.name),
+            value: framework.value,
+          })),
+        },
+      ]);
+      framework = answers.framework;
+    }
+
+    let choices = Object.entries(frameworkToAuthExamples);
+
+    if (framework) {
+      choices = choices.filter(([key, value]) => key.startsWith(framework));
+    }
+
     questions.push({
       type: "list",
       name: "starter",
       message: chalk.cyan("Choose a starter:"),
-      choices: Object.entries(frameworkToAuthExamples)
-        .filter(([_, value]) => value.repo) // Only show implemented starters
-        .map(([key, value]) => ({
-          name: chalk.white(value.name),
-          value: key,
-        })),
+      choices: choices.map(([key, value]) => ({
+        name: chalk.white(value.name),
+        value: key,
+      })),
     });
   }
 
@@ -301,6 +372,7 @@ function validateOptions(options: PromptOptions): options is ScaffoldOptions {
 
 program
   .description(chalk.blue("CLI to generate Jazz starter projects"))
+  .option("-f, --framework <framework>", chalk.cyan("Framework to use"))
   .option("-s, --starter <starter>", chalk.cyan("Starter template to use"))
   .option("-e, --example <name>", chalk.cyan("Example project to use"))
   .option("-n, --project-name <name>", chalk.cyan("Name of the project"))
@@ -308,6 +380,7 @@ program
     "-p, --package-manager <manager>",
     chalk.cyan("Package manager to use (npm, yarn, pnpm, bun, deno)"),
   )
+  .option("-k, --api-key <key>", chalk.cyan("Jazz Cloud API key"))
   .action(async (options) => {
     try {
       const partialOptions: PromptOptions = {};
@@ -327,6 +400,8 @@ program
       if (options.packageManager)
         partialOptions.packageManager =
           options.packageManager as ScaffoldOptions["packageManager"];
+      if (options.framework) partialOptions.framework = options.framework;
+      if (options.apiKey) partialOptions.apiKey = options.apiKey;
 
       // Get missing options through prompts
       const scaffoldOptions = await promptUser(partialOptions);
@@ -361,6 +436,12 @@ program.on("--help", () => {
   console.log(
     chalk.white(
       "  create-jazz-app --starter react-demo-auth --project-name my-app --package-manager npm\n",
+    ),
+  );
+  console.log(chalk.blue("With API key:"));
+  console.log(
+    chalk.white(
+      "  create-jazz-app --starter react-demo-auth --project-name my-app --api-key your-api-key@garden.co\n",
     ),
   );
 });

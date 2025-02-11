@@ -1,7 +1,8 @@
-import { DemoAuthBasicUI, JazzProvider, useDemoAuth } from "jazz-react";
+import { JazzProvider } from "jazz-react";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "./index.css";
+import { apiKey } from "@/apiKey.ts";
 import { RouterProvider, createHashRouter } from "react-router-dom";
 import { AcceptInvitePage } from "./AcceptInvitePage.tsx";
 import { HomePage } from "./HomePage.tsx";
@@ -27,26 +28,6 @@ function Router() {
   return <RouterProvider router={router}></RouterProvider>;
 }
 
-function JazzAndAuth({ children }: { children: React.ReactNode }) {
-  const [auth, authState] = useDemoAuth();
-
-  return (
-    <>
-      <JazzProvider
-        AccountSchema={JazzAccount}
-        auth={auth}
-        peer="wss://cloud.jazz.tools/?key=organization-example@garden.co"
-      >
-        {children}
-      </JazzProvider>
-
-      {authState.state !== "signedIn" && (
-        <DemoAuthBasicUI appName="Organization" state={authState} />
-      )}
-    </>
-  );
-}
-
 declare module "jazz-react" {
   interface Register {
     Account: JazzAccount;
@@ -55,8 +36,13 @@ declare module "jazz-react" {
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <JazzAndAuth>
+    <JazzProvider
+      AccountSchema={JazzAccount}
+      sync={{
+        peer: `wss://cloud.jazz.tools/?key=${apiKey}`,
+      }}
+    >
       <Router />
-    </JazzAndAuth>
+    </JazzProvider>
   </StrictMode>,
 );

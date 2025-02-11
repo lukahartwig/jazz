@@ -1,4 +1,4 @@
-import { describe, expect, it, onTestFinished, vi } from "vitest";
+import { beforeEach, describe, expect, it, onTestFinished, vi } from "vitest";
 import {
   Account,
   CoFeed,
@@ -7,12 +7,15 @@ import {
   FileStream,
   Group,
   co,
+  cojsonInternals,
 } from "../index.web.js";
 import {
   type DepthsIn,
+  ID,
   createCoValueObservable,
   subscribeToCoValue,
 } from "../internal.js";
+import { setupJazzTestSync } from "../testing.js";
 import { setupAccount, waitFor } from "./utils.js";
 
 class ChatRoom extends CoMap {
@@ -42,6 +45,15 @@ function createMessage(me: Account | Group, text: string) {
     { owner: me },
   );
 }
+
+beforeEach(async () => {
+  await setupJazzTestSync();
+});
+
+beforeEach(() => {
+  cojsonInternals.CO_VALUE_LOADING_CONFIG.MAX_RETRIES = 1;
+  cojsonInternals.CO_VALUE_LOADING_CONFIG.TIMEOUT = 1;
+});
 
 describe("subscribeToCoValue", () => {
   it("subscribes to a CoMap", async () => {
@@ -163,7 +175,7 @@ describe("subscribeToCoValue", () => {
     onTestFinished(unsubscribe);
 
     await waitFor(() => {
-      const lastValue = updateFn.mock.lastCall[0];
+      const lastValue = updateFn.mock.lastCall?.[0];
 
       expect(lastValue?.messages?.[0]?.text).toBe(message.text);
     });
@@ -175,7 +187,7 @@ describe("subscribeToCoValue", () => {
       expect(updateFn).toHaveBeenCalled();
     });
 
-    const lastValue = updateFn.mock.lastCall[0];
+    const lastValue = updateFn.mock.lastCall?.[0];
     expect(lastValue?.messages?.[0]?.text).toBe(
       "Nevermind, she was gone to the supermarket",
     );
@@ -212,12 +224,12 @@ describe("subscribeToCoValue", () => {
     onTestFinished(unsubscribe);
 
     await waitFor(() => {
-      const lastValue = updateFn.mock.lastCall[0];
+      const lastValue = updateFn.mock.lastCall?.[0];
 
       expect(lastValue?.messages?.[0]?.text).toBe(message.text);
     });
 
-    const initialValue = updateFn.mock.lastCall[0];
+    const initialValue = updateFn.mock.lastCall?.[0];
     const initialMessagesList = initialValue?.messages;
     const initialMessage1 = initialValue?.messages[0];
     const initialMessage2 = initialValue?.messages[1];
@@ -231,7 +243,7 @@ describe("subscribeToCoValue", () => {
       expect(updateFn).toHaveBeenCalled();
     });
 
-    const lastValue = updateFn.mock.lastCall[0];
+    const lastValue = updateFn.mock.lastCall?.[0];
     expect(lastValue).not.toBe(initialValue);
     expect(lastValue.messages).not.toBe(initialMessagesList);
     expect(lastValue.messages[0]).not.toBe(initialMessage1);
@@ -278,13 +290,13 @@ describe("subscribeToCoValue", () => {
     onTestFinished(unsubscribe);
 
     await waitFor(() => {
-      const lastValue = updateFn.mock.lastCall[0];
+      const lastValue = updateFn.mock.lastCall?.[0];
 
       expect(lastValue?.messages?.[0]?.text).toBe(message.text);
       expect(lastValue?.messages?.[1]?.text).toBe(message2.text);
     });
 
-    const initialValue = updateFn.mock.lastCall[0];
+    const initialValue = updateFn.mock.lastCall?.[0];
     chatRoom.name = "Me and Luigi";
 
     updateFn.mockClear();
@@ -293,7 +305,7 @@ describe("subscribeToCoValue", () => {
       expect(updateFn).toHaveBeenCalled();
     });
 
-    const lastValue = updateFn.mock.lastCall[0];
+    const lastValue = updateFn.mock.lastCall?.[0];
     expect(lastValue).not.toBe(initialValue);
     expect(lastValue.name).toBe("Me and Luigi");
 
@@ -367,5 +379,26 @@ describe("createCoValueObservable", () => {
 
     unsubscribe();
     expect(observable.getCurrentValue()).toBeUndefined();
+  });
+
+  it("should return null if the coValue is not found", async () => {
+    const { meOnSecondPeer } = await setupAccount();
+    const observable = createCoValueObservable<TestMap, DepthsIn<TestMap>>();
+
+    const unsubscribe = observable.subscribe(
+      TestMap,
+      "co_z123" as ID<TestMap>,
+      meOnSecondPeer,
+      {},
+      () => {},
+    );
+
+    expect(observable.getCurrentValue()).toBeUndefined();
+
+    await waitFor(() => {
+      expect(observable.getCurrentValue()).toBeNull();
+    });
+
+    unsubscribe();
   });
 });
