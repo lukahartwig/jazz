@@ -267,6 +267,31 @@ describe("Editor Interactions", async () => {
     expect(emMarks[0]!.endBefore).toBe(6);
   });
 
+  it("should not extend strong mark when typing after it", () => {
+    const text = CoRichText.createFromPlainText("Hello", {
+      owner: group,
+    });
+    text.insertMark(0, text.length - 1, Marks.Paragraph, { tag: "paragraph" });
+    editor = new EditorTestHelper(text);
+
+    // Add strong mark to "Hello"
+    const tr = editor.view.state.tr;
+    tr.addMark(1, 6, schema.marks.strong.create());
+    editor.view.dispatch(tr);
+
+    // Type some text after the strong mark
+    editor.insertText(" world", 5);
+
+    // Verify marks
+    const marks = editor.text.resolveMarks();
+    const strongMarks = marks.filter((m) => m.sourceMark.tag === "strong");
+
+    expect(strongMarks).toHaveLength(1);
+    expect(strongMarks[0]!.startAfter).toBe(0);
+    expect(strongMarks[0]!.endBefore).toBe(6);
+    expect(editor.getContent()).toBe("Hello world");
+  });
+
   it("should handle multi-line text deletion with backspace", () => {
     const text = CoRichText.createFromPlainText("First\nSecond\nThird", {
       owner: group,

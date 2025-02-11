@@ -10,6 +10,10 @@ export const MARK_TYPE_LOOKUP = {
     mark: Marks.Em,
     tag: "em",
   },
+  paragraph: {
+    mark: Marks.Paragraph,
+    tag: "paragraph",
+  },
 } as const;
 
 // Supported node types

@@ -26,8 +26,10 @@ export function createMark(
       return Marks.Strong.create(init, { owner });
     case "em":
       return Marks.Em.create(init, { owner });
+    case "paragraph":
+      return Marks.Paragraph.create(init, { owner });
     default:
-      console.warn(`Unsupported mark type: ${markType}`);
+      console.warn("Unsupported mark type:", markType);
       return null;
   }
 }

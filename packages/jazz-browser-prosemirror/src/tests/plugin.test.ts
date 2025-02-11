@@ -57,7 +57,7 @@ describe("ProseMirror transform functions", () => {
       });
 
       // Apply transformation
-      applyDocumentToRichText(doc, text, group);
+      applyDocumentToRichText(doc, text);
 
       expect(text.text?.toString()).toBe("Updated content");
     });
@@ -74,7 +74,7 @@ describe("ProseMirror transform functions", () => {
       });
 
       // Apply transformation
-      applyDocumentToRichText(doc, text, group);
+      applyDocumentToRichText(doc, text);
 
       CoRichTextDebug.log(text);
 
@@ -87,18 +87,145 @@ describe("ProseMirror transform functions", () => {
     });
   });
 
-  describe.only("extractMarksFromProsemirror", () => {
+  describe("extractMarksFromProsemirror", () => {
     it("should extract marks from a ProseMirror node", () => {
+      // Create a document with actual marks (strong and em)
       const doc = schema.node("doc", null, [
-        schema.node("paragraph", null, [schema.text("Hello")]),
-        schema.node("paragraph", null, [schema.text("World")]),
+        schema.node("paragraph", null, [
+          schema.text("Hello", [schema.marks.strong.create()]),
+        ]),
+        schema.node("paragraph", null, [
+          schema.text("World", [schema.marks.em.create()]),
+        ]),
       ]);
 
       const { fullText, marks } = extractMarksFromProsemirror(doc);
       expect(fullText).toBe("Hello\nWorld");
-      expect(marks.length).toBe(2);
-      expect(marks[0]?.markType).toBe("paragraph");
-      expect(marks[1]?.markType).toBe("paragraph");
+      // Should have 2 paragraph marks and 2 text style marks
+      expect(marks.length).toBe(4);
+
+      // Check paragraph marks
+      const paragraphMarks = marks.filter((m) => m.markType === "paragraph");
+      expect(paragraphMarks.length).toBe(2);
+      expect(paragraphMarks[0]!.from).toBe(0); // First paragraph starts at 0
+      expect(paragraphMarks[0]!.to).toBe(5); // "Hello" length
+      expect(paragraphMarks[1]!.from).toBe(6); // After newline
+      expect(paragraphMarks[1]!.to).toBe(11); // End of "World"
+
+      // Check text style marks
+      const styleMarks = marks.filter((m) => m.markType !== "paragraph");
+      expect(styleMarks.length).toBe(2);
+      expect(styleMarks[0]!.markType).toBe("strong");
+      expect(styleMarks[0]!.from).toBe(0);
+      expect(styleMarks[0]!.to).toBe(5);
+      expect(styleMarks[1]!.markType).toBe("em");
+      expect(styleMarks[1]!.from).toBe(6);
+      expect(styleMarks[1]!.to).toBe(11);
+    });
+
+    it("should handle explicit line breaks between paragraphs", () => {
+      const doc = schema.node("doc", null, [
+        schema.node("paragraph", null, [schema.text("First line")]),
+        schema.node("paragraph", null, [schema.text("Second line")]),
+        schema.node("paragraph", null, [schema.text("Third line")]),
+      ]);
+
+      const { fullText, marks } = extractMarksFromProsemirror(doc);
+      expect(fullText).toBe("First line\nSecond line\nThird line");
+
+      // Should have 3 paragraph marks
+      const paragraphMarks = marks.filter((m) => m.markType === "paragraph");
+      expect(paragraphMarks.length).toBe(3);
+
+      // Verify paragraph positions accounting for newlines
+      expect(paragraphMarks[0]!.from).toBe(0);
+      expect(paragraphMarks[0]!.to).toBe(10); // "First line" length
+      expect(paragraphMarks[1]!.from).toBe(11); // After first newline
+      expect(paragraphMarks[1]!.to).toBe(22); // End of "Second line"
+      expect(paragraphMarks[2]!.from).toBe(23); // After second newline
+      expect(paragraphMarks[2]!.to).toBe(33); // End of "Third line"
+    });
+
+    it("should handle empty paragraphs", () => {
+      const doc = schema.node("doc", null, [
+        schema.node("paragraph", null, [
+          schema.text("hello there! This seems to be working better? ni i"),
+        ]),
+        schema.node("paragraph", null, []), // empty paragraph
+      ]);
+
+      const { fullText, marks } = extractMarksFromProsemirror(doc);
+      expect(fullText).toBe(
+        "hello there! This seems to be working better? ni i\n",
+      );
+
+      // Should have 2 paragraph marks
+      const paragraphMarks = marks.filter((m) => m.markType === "paragraph");
+      expect(paragraphMarks.length).toBe(2);
+
+      // First paragraph should cover the text content
+      expect(paragraphMarks[0]!.from).toBe(0);
+      expect(paragraphMarks[0]!.to).toBe(53);
+
+      // Second paragraph should be empty but still have a mark
+      expect(paragraphMarks[1]!.from).toBe(54); // After newline
+      expect(paragraphMarks[1]!.to).toBe(54); // Empty paragraph, same position
+    });
+
+    it("should preserve newlines when typing after empty paragraphs", () => {
+      const doc = schema.node("doc", null, [
+        schema.node("paragraph", null, [schema.text("First paragraph")]),
+        schema.node("paragraph", null, []), // empty paragraph
+        schema.node("paragraph", null, [
+          schema.text("Text after empty paragraph"),
+        ]),
+      ]);
+
+      const { fullText, marks } = extractMarksFromProsemirror(doc);
+      expect(fullText).toBe("First paragraph\n\nText after empty paragraph");
+
+      // Should have 3 paragraph marks
+      const paragraphMarks = marks.filter((m) => m.markType === "paragraph");
+      expect(paragraphMarks.length).toBe(3);
+
+      // First paragraph
+      expect(paragraphMarks[0]!.from).toBe(0);
+      expect(paragraphMarks[0]!.to).toBe(14); // "First paragraph" length
+
+      // Empty paragraph - should maintain its own newline
+      expect(paragraphMarks[1]!.from).toBe(15); // After first newline
+      expect(paragraphMarks[1]!.to).toBe(15); // Empty paragraph
+
+      // Third paragraph - should start after TWO newlines
+      expect(paragraphMarks[2]!.from).toBe(16); // After both newlines
+      expect(paragraphMarks[2]!.to).toBe(41); // End of final text
+    });
+
+    it("should preserve newlines when typing after them", () => {
+      const doc = schema.node("doc", null, [
+        schema.node("paragraph", null, [schema.text("First line")]),
+        schema.node("paragraph", null, []), // empty paragraph
+        schema.node("paragraph", null, [schema.text("typing more")]), // text after empty paragraph
+      ]);
+
+      const { fullText, marks } = extractMarksFromProsemirror(doc);
+      expect(fullText).toBe("First line\n\ntyping more");
+
+      // Should have 3 paragraph marks
+      const paragraphMarks = marks.filter((m) => m.markType === "paragraph");
+      expect(paragraphMarks.length).toBe(3);
+
+      // First paragraph
+      expect(paragraphMarks[0]!.from).toBe(0);
+      expect(paragraphMarks[0]!.to).toBe(10); // "First line" length
+
+      // Empty paragraph - should be zero-width but preserve its position
+      expect(paragraphMarks[1]!.from).toBe(11); // After first newline
+      expect(paragraphMarks[1]!.to).toBe(11); // Empty paragraph
+
+      // Third paragraph - should start after both newlines
+      expect(paragraphMarks[2]!.from).toBe(12); // After both newlines
+      expect(paragraphMarks[2]!.to).toBe(23); // End of "typing more"
     });
   });
 });

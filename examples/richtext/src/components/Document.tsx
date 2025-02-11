@@ -33,7 +33,7 @@ export function Document({ docId }: DocumentProps) {
         if (!loadedDoc) return;
         setDoc(loadedDoc);
 
-        const jazzPlugin = createJazzPlugin(loadedDoc, me);
+        const jazzPlugin = createJazzPlugin(loadedDoc);
         const editorView = new EditorView(mount, {
           state: EditorState.create({
             doc: schema.node("doc", undefined, [

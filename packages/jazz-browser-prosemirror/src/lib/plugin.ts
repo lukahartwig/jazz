@@ -1,8 +1,9 @@
-import { Account, CoRichText, CoRichTextDebug, Group } from "jazz-tools";
+import { CoRichText, CoRichTextDebug } from "jazz-tools";
+import { Marks } from "jazz-tools";
 import { Node } from "prosemirror-model";
 import { EditorState, Plugin, PluginKey, Transaction } from "prosemirror-state";
 import { EditorView } from "prosemirror-view";
-import { createMark, richTextToProsemirrorDoc } from "./document.js";
+import { richTextToProsemirrorDoc } from "./document.js";
 
 export const jazzPluginKey = new PluginKey("jazz");
 
@@ -96,7 +97,7 @@ export function extractMarksFromProsemirror(node: Node) {
   }[] = [];
   let offset = 0;
 
-  function traverse(node: Node) {
+  function traverse(node: Node, index?: number) {
     if (node.type.name === "text" && node.text) {
       const text = node.text;
       fullText += text;
@@ -110,8 +111,32 @@ export function extractMarksFromProsemirror(node: Node) {
         });
       });
       offset += text.length;
+    } else if (node.type.name === "paragraph") {
+      // Add newline BEFORE paragraph if it's not the first child
+      if (index && index > 0) {
+        fullText += "\n";
+        offset += 1;
+      }
+
+      // Process paragraph content
+      const startOffset = offset;
+      if (node.content.size > 0) {
+        node.content.forEach((child, idx) => traverse(child, idx));
+      } else {
+        // Add zero-width space for empty paragraphs
+        fullText += "\u200B";
+        offset += 1;
+      }
+
+      // Add paragraph mark covering the paragraph content
+      marks.push({
+        from: startOffset,
+        to: offset,
+        markType: "paragraph",
+        attrs: node.attrs || {},
+      });
     } else if (node.content) {
-      node.content.forEach(traverse);
+      node.content.forEach((child, idx) => traverse(child, idx));
     }
   }
 
@@ -126,24 +151,43 @@ export function extractMarksFromProsemirror(node: Node) {
  * @param text - The CoRichText to apply to
  * @param owner - The owner of the CoRichText
  */
-export function applyDocumentToRichText(
-  doc: Node,
-  text: CoRichText,
-  owner: Account | Group,
-) {
+export function applyDocumentToRichText(doc: Node, text: CoRichText) {
   // Extract text and marks from ProseMirror doc
   const { fullText, marks } = extractMarksFromProsemirror(doc);
 
-  // Create Marks
-  const marksToApply = marks
-    .map((mark) => {
-      return createMark(mark.markType, mark, owner);
-    })
-    .filter((mark) => mark !== null);
-
-  // Apply the diffs
+  // Apply text changes first
   text?.text?.applyDiff(fullText);
-  text?.marks?.applyDiff(marksToApply);
+
+  // Clear existing marks
+  const existingMarks = text.resolveMarks();
+  for (const mark of existingMarks) {
+    if (mark.sourceMark.tag === "strong") {
+      text.removeMark(mark.startBefore, mark.endBefore, Marks.Strong, {
+        tag: "strong",
+      });
+    } else if (mark.sourceMark.tag === "em") {
+      text.removeMark(mark.startBefore, mark.endBefore, Marks.Em, {
+        tag: "em",
+      });
+    } else if (mark.sourceMark.tag === "paragraph") {
+      text.removeMark(mark.startBefore, mark.endAfter, Marks.Paragraph, {
+        tag: "paragraph",
+      });
+    }
+  }
+
+  // Apply new marks (keep paragraph handling)
+  for (const mark of marks) {
+    if (mark.markType === "strong") {
+      text.insertMark(mark.from, mark.to, Marks.Strong, { tag: "strong" });
+    } else if (mark.markType === "em") {
+      text.insertMark(mark.from, mark.to, Marks.Em, { tag: "em" });
+    } else if (mark.markType === "paragraph") {
+      text.insertMark(mark.from, mark.to, Marks.Paragraph, {
+        tag: "paragraph",
+      });
+    }
+  }
 }
 
 /**
@@ -151,13 +195,9 @@ export function applyDocumentToRichText(
  * Updates CoRichText when ProseMirror document changes
  * Updates ProseMirror when CoRichText changes
  * @param text - The CoRichText to apply
- * @param owner - The owner of the CoRichText
  * @returns The ProseMirror plugin
  */
-export function createJazzPlugin(
-  text: CoRichText | undefined,
-  owner: Account | Group,
-) {
+export function createJazzPlugin(text: CoRichText | undefined) {
   let view: EditorView | undefined;
   let isUpdating = false;
 
@@ -196,7 +236,30 @@ export function createJazzPlugin(
       // Update CoRichText when ProseMirror document changes
       apply(tr, value) {
         if (tr.docChanged && !isUpdating && text) {
-          applyDocumentToRichText(tr.doc, text, owner);
+          console.log("=== ProseMirror Document Debug ===");
+          console.log(
+            "Document structure:",
+            JSON.stringify(tr.doc.toJSON(), null, 2),
+          );
+
+          // Debug document content
+          let debugContent = "";
+          tr.doc.descendants((node, pos) => {
+            const indent = "  ".repeat(tr.doc.resolve(pos).depth);
+            debugContent += `${indent}${node.type.name}`;
+            if (node.marks.length) {
+              debugContent += ` [marks: ${node.marks.map((m) => m.type.name).join(", ")}]`;
+            }
+            if (node.text) {
+              debugContent += ` - "${node.text}"`;
+            }
+            debugContent += "\n";
+          });
+          console.log("Document hierarchy:\n", debugContent);
+
+          console.log("Document JSON:", JSON.stringify(tr.doc.toJSON()));
+
+          applyDocumentToRichText(tr.doc, text);
           CoRichTextDebug.log(text);
         }
         return value;
