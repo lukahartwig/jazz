@@ -47,7 +47,7 @@ export function ExampleLinks({ example }: { example: Example }) {
           <p className="mb-3">
             Generate a new Jazz app by running the command below.
           </p>
-          <CodeGroup size="sm">
+          <CodeGroup>
             <CreateJazzApp
               components={InterpolateInCode({
                 $EXAMPLE: example.slug,

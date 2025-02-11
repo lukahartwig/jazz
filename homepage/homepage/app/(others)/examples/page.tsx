@@ -297,12 +297,13 @@ const PasswordManagerIllustration = () => (
             domain: "x.com",
           },
         ].map(({ email, domain }) => (
-          <tr className="border-b max-sm:last:hidden">
+          <tr className="border-b max-sm:last:hidden" key={domain}>
             <td className="p-2">{email}</td>
             <td className="p-2">{domain}</td>
             <td className="p-2">
               <MockButton>
-                Copy <span className="hidden sm:inline"> password</span>
+                <Icon name="copy" size="2xs" className="mr-1" />
+                Password
               </MockButton>
             </td>
           </tr>
