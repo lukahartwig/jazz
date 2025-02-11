@@ -85,26 +85,6 @@ export function applyRichTextToTransaction(
   return tr;
 }
 
-// /**
-//  * Apply a ProseMirror transaction to a CoRichText
-//  * @param tr - ProseMirror transaction
-//  * @param text - CoRichText to apply
-//  */
-// export function applyDocumentToRichText(doc: Node, text: CoRichText) {
-//   text?.text?.applyDiff(doc.textBetween(0, doc.content.size, "\n"));
-//   text?.marks?.applyDiff([
-//     Marks.Strong.create({
-//       startAfter: text.posAfter(0)!,
-//       startBefore: text.posBefore(0)!,
-//       endAfter: text.posAfter(doc.content.size)!,
-//       endBefore: text.posBefore(doc.content.size)!,
-//       tag: "strong",
-//     }),
-//   ]);
-
-//   console.log("text", JSON.parse(JSON.stringify(text)));
-// }
-
 /**
  * Extract marks from a ProseMirror node
  * @param node - The ProseMirror node to extract marks from
