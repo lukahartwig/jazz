@@ -70,9 +70,18 @@ export function applyRichTextToTransaction(
   // For text selections, try to maintain the same relative position within the paragraph
   const $newFrom = tr.doc.resolve(Math.min($from.pos, tr.doc.content.size));
   const $newTo = tr.doc.resolve(Math.min($to.pos, tr.doc.content.size));
-  newSelection = TextSelection.create(tr.doc, $newFrom.pos, $newTo.pos);
 
-  tr.setSelection(newSelection);
+  // If the selection is a text selection, maintain the same relative position within the paragraph
+  if (
+    doc
+      .textBetween(0, doc.content.size) // Get the text between the start and end of the document
+      .replace(/\u200B/g, "") // Remove zero-width spaces
+      .trim().length > 0 // Remove leading and trailing whitespace and check if there's more than one character
+  ) {
+    newSelection = TextSelection.create(tr.doc, $newFrom.pos, $newTo.pos);
+    tr.setSelection(newSelection);
+  }
+
   return tr;
 }
 
