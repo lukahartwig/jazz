@@ -35,7 +35,7 @@ export default function DocsLayout({
     <div className="flex-1 w-full">
       <JazzNav sections={navSections} />
       <main>
-        <div className="container relative grid grid-cols-12 gap-5">
+        <div className="container relative grid grid-cols-12 gap-12">
           <div
             className={clsx(
               "py-8",
@@ -48,7 +48,7 @@ export default function DocsLayout({
           </div>
           <div
             className={clsx(
-              "col-span-12 md:col-span-8 lg:col-span-9 flex gap-3",
+              "col-span-12 md:col-span-8 lg:col-span-9 flex gap-12",
             )}
           >
             {children}
