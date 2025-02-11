@@ -1,21 +1,69 @@
+"use client";
+
 import { Example } from "@/lib/example";
+import { InterpolateInCode } from "@/mdx-components";
+import { DialogDescription } from "@headlessui/react";
 import { Button } from "gcmp-design-system/src/app/components/atoms/Button";
+import { CodeGroup } from "gcmp-design-system/src/app/components/molecules/CodeGroup";
+import {
+  Dialog,
+  DialogActions,
+  DialogBody,
+  DialogTitle,
+} from "gcmp-design-system/src/app/components/organisms/Dialog";
+import { useState } from "react";
+import CreateJazzApp from "./CreateJazzApp.mdx";
 
 export function ExampleLinks({ example }: { example: Example }) {
   const { slug, demoUrl } = example;
   const githubUrl = `https://github.com/gardencmp/jazz/tree/main/examples/${slug}`;
+  const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <div className="flex gap-2">
-      <Button href={githubUrl} newTab variant="secondary" size="sm">
-        View code
-      </Button>
-
-      {demoUrl && (
-        <Button href={demoUrl} newTab variant="secondary" size="sm">
-          View demo
+    <>
+      <div className="flex gap-2">
+        <Button
+          className="hidden md:block"
+          variant="secondary"
+          size="sm"
+          onClick={() => setIsOpen(true)}
+        >
+          Use as template
         </Button>
-      )}
-    </div>
+        <Button href={githubUrl} newTab variant="secondary" size="sm">
+          View code
+        </Button>
+
+        {demoUrl && (
+          <Button href={demoUrl} newTab variant="secondary" size="sm">
+            View demo
+          </Button>
+        )}
+      </div>
+
+      <Dialog onClose={() => setIsOpen(false)} open={isOpen}>
+        <DialogTitle>Use {example.name} example as a template</DialogTitle>
+        <DialogBody>
+          <div className="mb-6 aspect-[16/9] overflow-hidden w-full rounded-md bg-white border dark:bg-stone-925 sm:aspect-[2/1] md:aspect-[3/2]">
+            {example.illustration}
+          </div>
+          <p className="mb-3">
+            Generate a new Jazz app by running the command below.
+          </p>
+          <CodeGroup size="sm">
+            <CreateJazzApp
+              components={InterpolateInCode({
+                $EXAMPLE: example.slug,
+              })}
+            />
+          </CodeGroup>
+        </DialogBody>
+        <DialogActions>
+          <Button onClick={() => setIsOpen(false)} variant="secondary">
+            Cancel
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </>
   );
 }

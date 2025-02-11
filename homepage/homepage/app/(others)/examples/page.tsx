@@ -283,27 +283,30 @@ const PasswordManagerIllustration = () => (
         </tr>
       </thead>
       <tbody>
-        <tr className="border-b">
-          <td className="p-2">user@gmail.com</td>
-          <td className="p-2">gmail.com</td>
-          <td className="p-2">
-            <MockButton>Copy password</MockButton>
-          </td>
-        </tr>
-        <tr className="border-b">
-          <td className="p-2">user@gmail.com</td>
-          <td className="p-2">fb.com</td>
-          <td className="p-2">
-            <MockButton>Copy password</MockButton>
-          </td>
-        </tr>
-        <tr className="border-b">
-          <td className="p-2">user@gmail.com</td>
-          <td className="p-2">x.com</td>
-          <td className="p-2">
-            <MockButton>Copy password</MockButton>
-          </td>
-        </tr>
+        {[
+          {
+            email: "user@gmail.com",
+            domain: "gmail.com",
+          },
+          {
+            email: "user@gmail.com",
+            domain: "fb.com",
+          },
+          {
+            email: "user@gmail.com",
+            domain: "x.com",
+          },
+        ].map(({ email, domain }) => (
+          <tr className="border-b max-sm:last:hidden">
+            <td className="p-2">{email}</td>
+            <td className="p-2">{domain}</td>
+            <td className="p-2">
+              <MockButton>
+                Copy <span className="hidden sm:inline"> password</span>
+              </MockButton>
+            </td>
+          </tr>
+        ))}
       </tbody>
     </table>
   </div>
