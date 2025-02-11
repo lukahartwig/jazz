@@ -1,7 +1,12 @@
 import { CoRichText, CoRichTextDebug, Group, Marks } from "jazz-tools";
 import { createJazzTestAccount } from "jazz-tools/testing";
 import { schema } from "prosemirror-schema-basic";
-import { EditorState, TextSelection } from "prosemirror-state";
+import {
+  AllSelection,
+  EditorState,
+  NodeSelection,
+  TextSelection,
+} from "prosemirror-state";
 import { describe, expect, it } from "vitest";
 import {
   applyDocumentToRichText,
@@ -229,8 +234,8 @@ describe("ProseMirror transform functions", () => {
     });
   });
 
-  describe("maintains selection after transaction", () => {
-    it("should maintain selection after transaction", () => {
+  describe.only("Selection", () => {
+    it("should maintain text selection after transaction", () => {
       const state = EditorState.create({
         schema,
         doc: schema.node("doc", null, [
@@ -240,7 +245,7 @@ describe("ProseMirror transform functions", () => {
 
       // Set initial selection at position 5 using TextSelection and apply it
       const selectionTr = state.tr.setSelection(
-        TextSelection.create(state.doc, 5),
+        TextSelection.create(state.doc, 5, 8), // Create a range selection from 5 to 8
       );
       const stateWithSelection = state.apply(selectionTr);
 
@@ -255,7 +260,71 @@ describe("ProseMirror transform functions", () => {
 
       // Verify selection was properly mapped
       expect(newState.selection.from).toBe(5);
-      expect(newState.selection.to).toBe(5);
+      expect(newState.selection.to).toBe(8);
+      expect(newState.selection instanceof TextSelection).toBe(true);
+    });
+
+    it("should maintain node selection after transaction", () => {
+      // Create a document with multiple paragraphs for node selection
+      const state = EditorState.create({
+        schema,
+        doc: schema.node("doc", null, [
+          schema.node("paragraph", null, [schema.text("First paragraph")]),
+          schema.node("paragraph", null, [schema.text("Second paragraph")]),
+        ]),
+      });
+
+      // Select the first paragraph node
+      const pos = 1; // Position of the first paragraph
+      const selectionTr = state.tr.setSelection(
+        NodeSelection.create(state.doc, pos),
+      );
+      const stateWithSelection = state.apply(selectionTr);
+
+      // Create CoRichText with modified content that preserves multiple paragraphs
+      const text = CoRichText.createFromPlainTextAndMark(
+        "New first paragraph\nNew second paragraph",
+        Marks.Paragraph,
+        { tag: "paragraph" },
+        { owner: group },
+      );
+
+      // Apply transformation
+      const transaction = applyRichTextToTransaction(stateWithSelection, text);
+      const newState = stateWithSelection.apply(transaction!);
+
+      // Verify selection was properly mapped
+      expect(newState.selection.from).toBe(1);
+      expect(newState.selection instanceof NodeSelection).toBe(true);
+    });
+
+    it("should maintain all selection after transaction", () => {
+      const state = EditorState.create({
+        schema,
+        doc: schema.node("doc", null, [
+          schema.node("paragraph", null, [schema.text("Initial content")]),
+        ]),
+      });
+
+      // Create an AllSelection
+      const selectionTr = state.tr.setSelection(new AllSelection(state.doc));
+      const stateWithSelection = state.apply(selectionTr);
+
+      // Create CoRichText with modified content
+      const text = CoRichText.createFromPlainText("Modified content", {
+        owner: group,
+      });
+
+      // Apply transformation
+      const transaction = applyRichTextToTransaction(stateWithSelection, text);
+      const newState = stateWithSelection.apply(transaction!);
+
+      // Verify selection spans entire document
+      expect(newState.selection.from).toBe(0);
+      expect(newState.selection.to).toBe(newState.doc.content.size - 1);
+      // AllSelection gets converted to TextSelection during transactions
+      expect(newState.selection.$anchor.pos).toBe(0);
+      expect(newState.selection.$head.pos).toBe(newState.doc.content.size - 1);
     });
 
     it("should maintain selection position through document changes", () => {

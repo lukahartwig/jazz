@@ -1,13 +1,8 @@
 import { CoRichText, CoRichTextDebug } from "jazz-tools";
 import { Marks } from "jazz-tools";
 import { Node } from "prosemirror-model";
-import {
-  EditorState,
-  Plugin,
-  PluginKey,
-  TextSelection,
-  Transaction,
-} from "prosemirror-state";
+import { EditorState, Plugin, PluginKey, Transaction } from "prosemirror-state";
+import { AllSelection, NodeSelection, TextSelection } from "prosemirror-state";
 import { EditorView } from "prosemirror-view";
 import { richTextToProsemirrorDoc } from "./document.js";
 
@@ -60,18 +55,42 @@ export function applyRichTextToTransaction(
 
   // Create transaction and replace entire document
   const tr = state.tr;
-  const selection = state.selection;
-  const head = state.doc.resolve(selection.head);
-  const anchor = state.doc.resolve(selection.anchor);
+  const oldSelection = state.selection;
 
-  // Replace the entire document with new content
-  // This will preserve marks since they're part of the doc's content
-  tr.replaceRangeWith(0, tr.doc.content.size, doc);
+  // Get the context of the current selection
+  const $from = oldSelection.$from;
+  const $to = oldSelection.$to;
+  const fromNodeDepth = $from.depth;
+  const fromParentIndex =
+    fromNodeDepth > 0 ? $from.index(fromNodeDepth - 1) : 0;
 
-  // Preserve selection through document changes
-  const mappedSelection = TextSelection.create(tr.doc, head.pos, anchor.pos);
-  tr.setSelection(mappedSelection);
+  // Replace document content
+  tr.replaceWith(0, state.doc.content.size, doc);
 
+  // Map the selection to the new document
+  let newSelection;
+  if (oldSelection instanceof NodeSelection) {
+    // For node selections, try to select the node at the same index
+    const $pos = tr.doc.resolve(fromParentIndex > 0 ? fromParentIndex + 1 : 1);
+    const node = $pos.nodeAfter;
+    if (node && NodeSelection.isSelectable(node)) {
+      newSelection = NodeSelection.create(tr.doc, $pos.pos);
+    } else {
+      // Fallback to text selection at the start of the document
+      newSelection = TextSelection.create(tr.doc, 1);
+    }
+  } else if (oldSelection instanceof AllSelection) {
+    // For all selection, select the entire document
+    console.log("AllSelection");
+    newSelection = TextSelection.create(tr.doc, 0, tr.doc.content.size);
+  } else {
+    // For text selections, try to maintain the same relative position within the paragraph
+    const $newFrom = tr.doc.resolve(Math.min($from.pos, tr.doc.content.size));
+    const $newTo = tr.doc.resolve(Math.min($to.pos, tr.doc.content.size));
+    newSelection = TextSelection.create(tr.doc, $newFrom.pos, $newTo.pos);
+  }
+
+  tr.setSelection(newSelection);
   return tr;
 }
 
@@ -216,11 +235,14 @@ export function createJazzPlugin(text: CoRichText | undefined) {
 
   // Update ProseMirror when CoRichText changes
   text?.subscribe({ text: [], marks: [{}] }, (text) => {
-    if (!view) return;
+    if (!view || isUpdating) return; // Prevent circular updates
     isUpdating = true;
     const tr = applyRichTextToTransaction(view.state, text);
     if (tr) {
-      view.dispatch(tr);
+      // Only apply if document actually changed
+      if (!tr.doc.eq(view.state.doc)) {
+        view.dispatch(tr);
+      }
     }
     isUpdating = false;
   });
