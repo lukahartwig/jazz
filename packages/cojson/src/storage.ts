@@ -1,6 +1,6 @@
 import { CoValueHeader, Transaction } from "./coValueCore.js";
 import { Signature } from "./crypto/crypto.js";
-import { CoValueCore, RawCoID, SessionID } from "./exports.js";
+import { CoValueCore, LocalNode, RawCoID, SessionID } from "./exports.js";
 import { KnownStateMessage } from "./sync.js";
 
 type StoredSessionLog = {
@@ -29,20 +29,51 @@ export interface StorageAdapter {
 export class StorageDriver {
   private storageAdapter: StorageAdapter;
   private storedStates: Map<RawCoID, KnownStateMessage> = new Map();
-
-  constructor(storageAdapter: StorageAdapter) {
+  private node: LocalNode;
+  constructor(storageAdapter: StorageAdapter, node: LocalNode) {
     this.storageAdapter = storageAdapter;
+    this.node = node;
   }
 
-  get(id: RawCoID): Promise<{
-    header: CoValueHeader;
-    sessions: Map<SessionID, StoredSessionLog>;
-  } | null> {
-    return this.storageAdapter.get(id);
+  async get(id: RawCoID) {
+    const storedCoValue = await this.storageAdapter.get(id);
+
+    if (!storedCoValue) {
+      return null;
+    }
+
+    const core = new CoValueCore(storedCoValue.header, this.node);
+
+    for (const [sessionID, sessionLog] of storedCoValue.sessions) {
+      let start = 0;
+      for (const [signatureAt, signature] of Object.entries(
+        sessionLog.signatureAfter,
+      )) {
+        if (!signature) {
+          throw new Error(
+            `Expected signature at ${signatureAt} for session ${sessionID}`,
+          );
+        }
+        core
+          .tryAddTransactions(
+            sessionID,
+            sessionLog.transactions.slice(start, parseInt(signatureAt)),
+            undefined,
+            signature,
+            { skipStorage: true },
+          )
+          ._unsafeUnwrap();
+      }
+    }
+
+    return core;
   }
 
   async set(core: CoValueCore): Promise<void> {
     const currentState = this.storedStates.get(core.id);
     const knownState = core.knownState();
+
+    currentState;
+    knownState;
   }
 }

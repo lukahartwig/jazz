@@ -3,7 +3,7 @@ import { CoValueCore } from "./coValueCore.js";
 import { RawCoID } from "./ids.js";
 import { LocalNode } from "./localNode.js";
 import { logger } from "./logger.js";
-import { StorageAdapter, StorageDriver } from "./storage.js";
+import { StorageDriver } from "./storage.js";
 import { PeerID } from "./sync.js";
 
 export const CO_VALUE_LOADING_CONFIG = {
@@ -19,45 +19,15 @@ export class CoValueLoadingFromStorageState {
   type = "loading-from-storage" as const;
   private storageDriver: StorageDriver;
   public id: RawCoID;
-  private node: LocalNode;
 
-  constructor(storageAdapter: StorageDriver, id: RawCoID, node: LocalNode) {
+  constructor(storageAdapter: StorageDriver, id: RawCoID) {
     this.storageDriver = storageAdapter;
     this.id = id;
-    this.node = node;
   }
 
   async loadFromStorage(): Promise<CoValueCore | null> {
     try {
-      const storedCoValue = await this.storageDriver.get(this.id);
-
-      if (!storedCoValue) {
-        return null;
-      }
-
-      const core = new CoValueCore(storedCoValue.header, this.node);
-
-      for (const [sessionID, sessionLog] of storedCoValue.sessions) {
-        let start = 0;
-        for (const [signatureAt, signature] of Object.entries(
-          sessionLog.signatureAfter,
-        )) {
-          if (!signature) {
-            throw new Error(
-              `Expected signature at ${signatureAt} for session ${sessionID}`,
-            );
-          }
-          core
-            .tryAddTransactions(
-              sessionID,
-              sessionLog.transactions.slice(start, parseInt(signatureAt)),
-              undefined,
-              signature,
-              { skipStorage: true },
-            )
-            ._unsafeUnwrap();
-        }
-      }
+      const core = await this.storageDriver.get(this.id);
 
       return core;
     } catch (err) {
@@ -173,16 +143,15 @@ export class CoValueState {
     return new CoValueState(id, new CoValueUnknownState());
   }
 
-  static Loading(id: RawCoID, peersIds: Iterable<PeerID>) {
-    return new CoValueState(id, new CoValueLoadingFromPeersState(peersIds));
-  }
-
   static Available(coValue: CoValueCore) {
     return new CoValueState(coValue.id, new CoValueAvailableState(coValue));
   }
 
-  static Unavailable(id: RawCoID) {
-    return new CoValueState(id, new CoValueUnavailableState());
+  isLoading() {
+    return (
+      this.state.type === "loading-from-storage" ||
+      this.state.type === "loading-from-peers"
+    );
   }
 
   async getCoValue() {
@@ -230,11 +199,7 @@ export class CoValueState {
     this.resolve = undefined;
   }
 
-  async loadCoValue(
-    storageDriver: StorageDriver | null,
-    peers: PeerState[],
-    node: LocalNode,
-  ) {
+  async loadCoValue(storageDriver: StorageDriver | null, peers: PeerState[]) {
     const state = this.state;
 
     if (state.type !== "unknown" && state.type !== "unavailable") {
@@ -245,7 +210,6 @@ export class CoValueState {
       const loadingState = new CoValueLoadingFromStorageState(
         storageDriver,
         this.id,
-        node,
       );
       this.moveToState(loadingState);
       const coValue = await loadingState.loadFromStorage();

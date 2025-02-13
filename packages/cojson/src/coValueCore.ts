@@ -304,7 +304,9 @@ export class CoValueCore {
       signatureAfter: signatureAfter,
     });
 
-    this.node.storageDriver?.set(this);
+    if (!skipStorage) {
+      this.node.storageDriver?.set(this);
+    }
 
     if (
       this._cachedContent &&
