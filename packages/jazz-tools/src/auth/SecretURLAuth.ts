@@ -27,6 +27,8 @@ export class SecretURLAuth {
     private authSecretStorage: AuthSecretStorage,
   ) {}
 
+  secretURL: string = "";
+
   /**
    * Logs in a user using a secret URL.
    *
@@ -82,9 +84,35 @@ export class SecretURLAuth {
     return bytesToBase64url(secret);
   };
 
-  private decodeSecret = (encoded: string): Uint8Array<ArrayBufferLike> => {
+  private decodeSecret = (encoded: string): Uint8Array => {
     return base64URLtoBytes(encoded);
   };
+
+  getCurrentAccountSecretURL = async () => {
+    const credentials = await this.authSecretStorage.get();
+    if (!credentials?.secretSeed) throw new Error("No active session");
+    return createAuthURL(this.encodeSecret(credentials.secretSeed));
+  };
+
+  loadCurrentAccountSecretURL = async () => {
+    this.secretURL = await this.getCurrentAccountSecretURL();
+    this.notify();
+  };
+
+  listeners = new Set<() => void>();
+  subscribe = (callback: () => void) => {
+    this.listeners.add(callback);
+
+    return () => {
+      this.listeners.delete(callback);
+    };
+  };
+
+  notify() {
+    for (const listener of this.listeners) {
+      listener();
+    }
+  }
 }
 
 /**
