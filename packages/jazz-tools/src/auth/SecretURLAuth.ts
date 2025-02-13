@@ -15,7 +15,7 @@ import { AuthSecretStorage } from "./AuthSecretStorage.js";
  * ```ts
  * import { SecretURLAuth } from "jazz-tools";
  *
- * const auth = new SecretURLAuth(crypto, jazzContext.authenticate, new AuthSecretStorage(), wordlist);
+ * const auth = new SecretURLAuth(crypto, jazzContext.authenticate, new AuthSecretStorage());
  * ```
  *
  * @category Auth Providers
@@ -27,6 +27,11 @@ export class SecretURLAuth {
     private authSecretStorage: AuthSecretStorage,
   ) {}
 
+  /**
+   * Logs in a user using a secret URL.
+   *
+   * @param url - The secret URL to log in with.
+   */
   logIn = async (url: string) => {
     const parsed = parseAuthURL(url);
     if (!parsed) {
@@ -57,14 +62,20 @@ export class SecretURLAuth {
     });
   };
 
-  signUp = async () => {
+  /**
+   * Creates a pairing URL for the given secret.
+   *
+   * @param expiresAt - The expiration time in milliseconds. Defaults to 15 minutes.
+   * @returns The pairing URL.
+   */
+  createPairingURL = async (expiresAt?: number) => {
     const credentials = await this.authSecretStorage.get();
     if (!credentials?.secretSeed) {
-      throw new Error("No credentials found");
+      throw new Error("No existing authentication found");
     }
 
     const secret = this.encodeSecret(credentials.secretSeed);
-    return createAuthURL(secret);
+    return createAuthURL(secret, expiresAt);
   };
 
   private encodeSecret = (secret: Uint8Array): string => {

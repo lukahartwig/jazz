@@ -66,7 +66,7 @@ describe("SecretURLAuth", () => {
     });
   });
 
-  describe("signUp", () => {
+  describe("createPairingURL", () => {
     test("generate valid URL with expiration", async () => {
       const secretSeed = crypto.newRandomSecretSeed();
       await authSecretStorage.set({
@@ -76,7 +76,7 @@ describe("SecretURLAuth", () => {
         provider: "anonymous",
       });
 
-      const url = await secretURLAuth.signUp();
+      const url = await secretURLAuth.createPairingURL();
       const parsed = parseAuthURL(url);
 
       expect(parsed?.expiresAt).toBeGreaterThan(Date.now());
@@ -84,7 +84,9 @@ describe("SecretURLAuth", () => {
     });
 
     test("fail when no credentials", async () => {
-      await expect(secretURLAuth.signUp()).rejects.toThrow("No credentials");
+      await expect(secretURLAuth.createPairingURL()).rejects.toThrow(
+        "No existing authentication found",
+      );
     });
   });
 });
