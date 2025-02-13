@@ -7,7 +7,7 @@ import {
   SessionID,
   logger,
 } from "./exports.js";
-import { CoValueKnownState } from "./sync.js";
+import { CoValueKnownState, SessionNewContent } from "./sync.js";
 
 export type StoredSessionLog = {
   transactions: Transaction[];
@@ -122,20 +122,22 @@ export class StorageDriver {
     const knownState = core.knownState();
 
     for (const piece of newContentPieces) {
-      for (const [sessionID, sessionNewContent] of Object.entries(
-        piece.new,
-      ) as [
+      const entries = Object.entries(piece.new) as [
         keyof typeof piece.new,
-        (typeof piece.new)[keyof typeof piece.new],
-      ][]) {
-        await this.storageAdapter.appendToSession(
-          core.id,
-          sessionID,
-          sessionNewContent.after,
-          sessionNewContent.newTransactions,
-          sessionNewContent.lastSignature,
-        );
-      }
+        SessionNewContent,
+      ][];
+
+      await Promise.all(
+        entries.map(async ([sessionID, sessionNewContent]) => {
+          await this.storageAdapter.appendToSession(
+            core.id,
+            sessionID,
+            sessionNewContent.after,
+            sessionNewContent.newTransactions,
+            sessionNewContent.lastSignature,
+          );
+        }),
+      );
     }
 
     this.storedStates.set(core.id, knownState);

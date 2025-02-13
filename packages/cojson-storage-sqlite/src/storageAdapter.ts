@@ -138,10 +138,10 @@ export class SQLiteStorageAdapter implements StorageAdapter {
       },
     });
 
-    if (shouldWriteSignature || !sessionRow) {
+    if (shouldWriteSignature) {
       this.dbClient.addSignatureAfter({
         sessionRowID: newRowID,
-        idx: newLastIdx,
+        idx: newLastIdx - 1,
         signature: lastSignature,
       });
     }

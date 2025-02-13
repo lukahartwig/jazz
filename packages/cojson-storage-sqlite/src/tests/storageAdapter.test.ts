@@ -3,25 +3,17 @@ import { tmpdir } from "os";
 import { join } from "path";
 import {
   CoValueCore,
-  CojsonInternalTypes,
   ControlledAgent,
   LocalNode,
+  MAX_RECOMMENDED_TX_SIZE,
   RawCoID,
   RawCoMap,
   StorageAdapter,
 } from "cojson";
 import { WasmCrypto } from "cojson/crypto/WasmCrypto";
 import { connectedPeers } from "cojson/src/streamUtils.js";
-import { CoValueKnownState } from "cojson/src/sync.js";
-import {
-  assert,
-  afterEach,
-  beforeEach,
-  describe,
-  expect,
-  onTestFinished,
-  test,
-} from "vitest";
+import { CoValueKnownState, SessionNewContent } from "cojson/src/sync.js";
+import { assert, describe, expect, onTestFinished, test } from "vitest";
 import { SQLiteStorageAdapter } from "../storageAdapter";
 
 async function setup() {
@@ -137,11 +129,11 @@ describe("SQLiteStorageAdapter", () => {
 
     await storageDriver.set(map.core);
 
-    map.set("count", 2);
+    map.set("count", 2, "trusting");
 
     await storageDriver.set(map.core);
 
-    map.set("count", 3);
+    map.set("count", 3, "trusting");
 
     await storageDriver.set(map.core);
 
@@ -152,6 +144,32 @@ describe("SQLiteStorageAdapter", () => {
     const mapFromStrorage = result?.getCurrentContent() as RawCoMap;
     expect(mapFromStrorage).not.toBeNull();
     expect(mapFromStrorage?.get("count")).toBe(3);
+  });
+
+  test("should handle big updates that require multiple signatures", async () => {
+    const { node, storageDriver } = await setup();
+    const group = node.createGroup();
+    await storageDriver.set(group.core);
+
+    const map = group.createMap({ value: "a".repeat(MAX_RECOMMENDED_TX_SIZE) });
+
+    await storageDriver.set(map.core);
+
+    map.set("value", "b".repeat(MAX_RECOMMENDED_TX_SIZE));
+
+    await storageDriver.set(map.core);
+
+    map.set("value", "c");
+
+    await storageDriver.set(map.core);
+
+    await storageDriver.get(group.core.id); // Load the dependency first
+    const result = await storageDriver.get(map.core.id);
+    expect(result).not.toBeNull();
+
+    const mapFromStrorage = result?.getCurrentContent() as RawCoMap;
+    expect(mapFromStrorage).not.toBeNull();
+    expect(mapFromStrorage?.get("value")).toBe("c");
   });
 
   test("should handle multiple sessions for same CoValue", async () => {
@@ -214,19 +232,36 @@ class TestStorageDriver {
           );
         }
 
-        try {
-          core
-            .tryAddTransactions(
-              sessionID,
-              sessionLog.transactions.slice(start, parseInt(signatureAt)),
-              undefined,
-              signature,
-              { skipStorage: true },
-            )
-            ._unsafeUnwrap();
-        } catch (e) {
-          console.error(e);
-          throw e;
+        const position = parseInt(signatureAt) + 1;
+
+        const result = core.tryAddTransactions(
+          sessionID,
+          sessionLog.transactions.slice(start, position),
+          undefined,
+          signature,
+          { skipStorage: true },
+        );
+
+        if (result.isErr()) {
+          console.error(result.error);
+          throw result.error;
+        }
+
+        start = position;
+      }
+
+      if (start < sessionLog.transactions.length) {
+        const result = core.tryAddTransactions(
+          sessionID,
+          sessionLog.transactions.slice(start),
+          undefined,
+          sessionLog.lastSignature,
+          { skipStorage: true },
+        );
+
+        if (result.isErr()) {
+          console.error(result.error);
+          throw result.error;
         }
       }
     }
@@ -252,20 +287,23 @@ class TestStorageDriver {
     const knownState = core.knownState();
 
     for (const piece of newContentPieces) {
-      for (const [sessionID, sessionNewContent] of Object.entries(
-        piece.new,
-      ) as [
+      const entries = Object.entries(piece.new) as [
         keyof typeof piece.new,
-        (typeof piece.new)[keyof typeof piece.new],
-      ][]) {
-        await this.storageAdapter.appendToSession(
-          core.id,
-          sessionID,
-          sessionNewContent.after,
-          sessionNewContent.newTransactions,
-          sessionNewContent.lastSignature,
-        );
-      }
+        SessionNewContent,
+      ][];
+
+      await Promise.all(
+        entries.map(async ([sessionID, sessionNewContent], i) => {
+          const forceWriteSignature = i === entries.length - 1;
+          await this.storageAdapter.appendToSession(
+            core.id,
+            sessionID,
+            sessionNewContent.after,
+            sessionNewContent.newTransactions,
+            sessionNewContent.lastSignature,
+          );
+        }),
+      );
     }
 
     this.storedStates.set(core.id, knownState);
