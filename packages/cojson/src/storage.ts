@@ -1,9 +1,15 @@
 import { CoValueHeader, Transaction } from "./coValueCore.js";
 import { Signature } from "./crypto/crypto.js";
-import { CoValueCore, LocalNode, RawCoID, SessionID } from "./exports.js";
-import { KnownStateMessage } from "./sync.js";
+import {
+  CoValueCore,
+  LocalNode,
+  RawCoID,
+  SessionID,
+  logger,
+} from "./exports.js";
+import { CoValueKnownState } from "./sync.js";
 
-type StoredSessionLog = {
+export type StoredSessionLog = {
   transactions: Transaction[];
   signatureAfter: { [txIdx: number]: Signature | undefined };
   lastSignature: Signature;
@@ -28,8 +34,9 @@ export interface StorageAdapter {
 
 export class StorageDriver {
   private storageAdapter: StorageAdapter;
-  private storedStates: Map<RawCoID, KnownStateMessage> = new Map();
+  private storedStates: Map<RawCoID, CoValueKnownState> = new Map();
   private node: LocalNode;
+
   constructor(storageAdapter: StorageAdapter, node: LocalNode) {
     this.storageAdapter = storageAdapter;
     this.node = node;
@@ -66,14 +73,71 @@ export class StorageDriver {
       }
     }
 
+    this.storedStates.set(id, core.knownState());
+
     return core;
   }
 
-  async set(core: CoValueCore): Promise<void> {
+  pullFrom = new Set<RawCoID>();
+  updating = new Set<RawCoID>();
+
+  set(core: CoValueCore) {
+    this.pullFrom.add(core.id);
+
+    if (!this.updating.has(core.id)) {
+      this.updating.add(core.id);
+      void this.pullNewTransactions(core);
+    }
+  }
+
+  async pullNewTransactions(core: CoValueCore) {
+    while (this.pullFrom.has(core.id)) {
+      this.pullFrom.delete(core.id);
+      try {
+        await this.update(core);
+      } catch (e) {
+        logger.error(`Error updating ${core.id}`, {
+          error: e instanceof Error ? e.message : String(e),
+          stack: (e instanceof Error ? e.stack : undefined) ?? null,
+        });
+      }
+    }
+
+    this.updating.delete(core.id);
+  }
+
+  async update(core: CoValueCore): Promise<void> {
     const currentState = this.storedStates.get(core.id);
+
+    if (!currentState) {
+      this.storageAdapter.writeHeader(core.id, core.header);
+    }
+
+    const newContentPieces = core.newContentSince(currentState);
+
+    if (!newContentPieces) {
+      return;
+    }
+
     const knownState = core.knownState();
 
-    currentState;
-    knownState;
+    for (const piece of newContentPieces) {
+      for (const [sessionID, sessionNewContent] of Object.entries(
+        piece.new,
+      ) as [
+        keyof typeof piece.new,
+        (typeof piece.new)[keyof typeof piece.new],
+      ][]) {
+        await this.storageAdapter.appendToSession(
+          core.id,
+          sessionID,
+          sessionNewContent.after,
+          sessionNewContent.newTransactions,
+          sessionNewContent.lastSignature,
+        );
+      }
+    }
+
+    this.storedStates.set(core.id, knownState);
   }
 }

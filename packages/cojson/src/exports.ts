@@ -79,6 +79,7 @@ type Value = JsonValue | AnyRawCoValue;
 import { CO_VALUE_LOADING_CONFIG } from "./coValueState.js";
 import { logger } from "./logger.js";
 import { getPriorityFromHeader } from "./priority.js";
+import { StorageAdapter, StoredSessionLog } from "./storage.js";
 
 /** @hidden */
 export const cojsonInternals = {
@@ -162,6 +163,8 @@ export type {
   BinaryStreamStart,
   OpID,
   AccountRole,
+  StorageAdapter,
+  StoredSessionLog,
 };
 
 // eslint-disable-next-line @typescript-eslint/no-namespace

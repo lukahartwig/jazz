@@ -411,7 +411,7 @@ export class SyncManager {
     if (entry.state.type === "unknown" || entry.state.type === "unavailable") {
       const eligiblePeers = this.getServerAndStoragePeers(peer.id);
 
-      if (eligiblePeers.length === 0) {
+      if (eligiblePeers.length === 0 && !this.local.storageDriver) {
         // If the load request contains a header or any session data
         // and we don't have any eligible peers to load the coValue from
         // we try to load it from the sender because it is the only place

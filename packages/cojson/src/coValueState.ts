@@ -1,7 +1,6 @@
 import { PeerState } from "./PeerState.js";
 import { CoValueCore } from "./coValueCore.js";
 import { RawCoID } from "./ids.js";
-import { LocalNode } from "./localNode.js";
 import { logger } from "./logger.js";
 import { StorageDriver } from "./storage.js";
 import { PeerID } from "./sync.js";
@@ -32,7 +31,8 @@ export class CoValueLoadingFromStorageState {
       return core;
     } catch (err) {
       logger.error(`Failed to load coValue ${this.id} from storage`, {
-        error: err + "",
+        error: err instanceof Error ? err.message : "",
+        stack: err instanceof Error ? (err.stack ?? null) : null,
       });
       return null;
     }
