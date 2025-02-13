@@ -38,10 +38,11 @@ export class StorageDriver {
     header: CoValueHeader;
     sessions: Map<SessionID, StoredSessionLog>;
   } | null> {
-    this.storageAdapter.get(id);
+    return this.storageAdapter.get(id);
   }
 
-  set(core: CoValueCore): Promise<void> {
-    // diff
+  async set(core: CoValueCore): Promise<void> {
+    const currentState = this.storedStates.get(core.id);
+    const knownState = core.knownState();
   }
 }

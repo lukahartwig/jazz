@@ -64,10 +64,12 @@ export class LocalNode {
     account: ControlledAccountOrAgent,
     currentSessionID: SessionID,
     crypto: CryptoProvider,
+    storageDriver?: StorageDriver,
   ) {
     this.account = account;
     this.currentSessionID = currentSessionID;
     this.crypto = crypto;
+    this.storageDriver = storageDriver ?? null;
   }
 
   /** @category 2. Node Creation */
