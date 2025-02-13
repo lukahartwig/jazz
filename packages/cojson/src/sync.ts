@@ -186,7 +186,7 @@ export class SyncManager {
     const entry = this.local.coValuesStore.get(id);
 
     if (entry.state.type !== "available") {
-      entry.loadFromPeers([peer]).catch((e: unknown) => {
+      entry.loadCoValue([peer]).catch((e: unknown) => {
         logger.error("Error sending load: " + getErrorMessage(e));
       });
       return;
@@ -415,7 +415,7 @@ export class SyncManager {
         // we try to load it from the sender because it is the only place
         // where we can get informations about the coValue
         if (msg.header || Object.keys(msg.sessions).length > 0) {
-          entry.loadFromPeers([peer]).catch((e) => {
+          entry.loadCoValue([peer]).catch((e) => {
             logger.error("Error loading coValue in handleLoad", e);
           });
         }
