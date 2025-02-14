@@ -1,0 +1,171 @@
+import { describe, expect, test } from "vitest";
+import { CoValueHeader } from "../coValueCore.js";
+import { WasmCrypto } from "../crypto/WasmCrypto.js";
+import { RawCoID, SessionID } from "../exports.js";
+import { LocalNode2 } from "../localNode2.js";
+import { PeerID } from "../sync.js";
+
+const crypto = await WasmCrypto.create();
+
+describe("Subscribing to a CoValue", () => {
+  const node = new LocalNode2(crypto.newRandomAgentSecret());
+  const id = "co_fakeCoValueID" as RawCoID;
+
+  test("creates an empty entry if none exists yet", () => {
+    const { listenerID } = node.subscribe(id);
+
+    expect(listenerID).toBeDefined();
+
+    expect(node.coValues.get(id)).toEqual({
+      id,
+      header: null,
+      sessions: new Map(),
+      storageState: "unknown",
+      peerState: new Map(),
+      listeners: new Map([[listenerID, "unknown"]]),
+    });
+  });
+
+  test("adds a listener if an entry already exists", () => {
+    const { listenerID: firstListenerID } = node.subscribe(id);
+    const { listenerID: secondListenerID } = node.subscribe(id);
+
+    expect(firstListenerID).toBeDefined();
+    expect(secondListenerID).toBeDefined();
+    expect(firstListenerID).not.toEqual(secondListenerID);
+
+    expect(node.coValues.get(id)).toEqual({
+      id,
+      header: null,
+      sessions: new Map(),
+      storageState: "unknown",
+      peerState: new Map(),
+      listeners: new Map([
+        [expect.any(Number), "unknown"],
+        [firstListenerID, "unknown"],
+        [secondListenerID, "unknown"],
+      ]),
+    });
+  });
+
+  test("unsubscribing from a CoValue removes the listener", () => {
+    const { listenerID } = node.subscribe(id);
+    expect(node.coValues.get(id)?.listeners.has(listenerID)).toBe(true);
+
+    node.unsubscribe(id, listenerID);
+    expect(node.coValues.get(id)?.listeners.has(listenerID)).toBe(false);
+  });
+});
+
+describe("Modifying peers", () => {
+  const node = new LocalNode2(crypto.newRandomAgentSecret());
+  const coValueID1 = "co_fakeCoValueID1" as RawCoID;
+  const coValueID2 = "co_fakeCoValueID2" as RawCoID;
+  const _1 = node.subscribe(coValueID1);
+  const _2 = node.subscribe(coValueID2);
+
+  test("Adding a peer adds it to the node and to every CoValue with an unknown peer state", () => {
+    const peerID = "peer1" as PeerID;
+    node.addPeer(peerID);
+    expect(node.peers).toEqual(new Set([peerID]));
+    expect(node.coValues.get(coValueID1)?.peerState.get(peerID)).toEqual({
+      confirmed: "unknown",
+      optimistic: "unknown",
+    });
+    expect(node.coValues.get(coValueID2)?.peerState.get(peerID)).toEqual({
+      confirmed: "unknown",
+      optimistic: "unknown",
+    });
+  });
+
+  test("Removing a peer removes it from the node and from every CoValue", () => {
+    const peerID = "peer1" as PeerID;
+    node.removePeer(peerID);
+    expect(node.peers).toEqual(new Set());
+    expect(node.coValues.get(coValueID1)?.peerState.get(peerID)).toBe(
+      undefined,
+    );
+    expect(node.coValues.get(coValueID2)?.peerState.get(peerID)).toBe(
+      undefined,
+    );
+  });
+});
+
+describe("Loading from storage", () => {
+  function setupNodeWithTwoCoValues() {
+    const node = new LocalNode2(crypto.newRandomAgentSecret());
+    const coValueID1 = "co_fakeCoValueID1" as RawCoID;
+    const coValueID2 = "co_fakeCoValueID2" as RawCoID;
+    const _1 = node.subscribe(coValueID1);
+    const _2 = node.subscribe(coValueID2);
+    return { node, coValueID1, coValueID2 };
+  }
+
+  test("stageLoad puts covalues of unknown storage state into pending and issues load effects", () => {
+    const { node, coValueID1, coValueID2 } = setupNodeWithTwoCoValues();
+    const { effects } = node.stageLoad();
+    expect(effects).toEqual([
+      { type: "loadFromStorage", id: coValueID1 },
+      { type: "loadFromStorage", id: coValueID2 },
+    ]);
+
+    expect(node.coValues.get(coValueID1)?.storageState).toBe("pending");
+    expect(node.coValues.get(coValueID2)?.storageState).toBe("pending");
+  });
+
+  test("when we receive metadata of a present CoValue from storage, we keep it in memory, update the storage state and add pending transactions", () => {
+    const { node, coValueID1 } = setupNodeWithTwoCoValues();
+    const header = {
+      type: "comap",
+      ruleset: { type: "unsafeAllowAll" },
+      meta: null,
+      uniqueness: 0,
+    } satisfies CoValueHeader;
+
+    const knownState = {
+      header: true,
+      sessions: new Map([["session1" as SessionID, 5]]),
+    };
+
+    node.onMetadataLoaded(coValueID1, header, knownState);
+
+    const entry = node.coValues.get(coValueID1);
+
+    expect(entry?.header).toEqual(header);
+    expect(entry?.storageState).toBe(knownState);
+    expect(entry?.sessions.get("session1" as SessionID)?.transactions).toEqual([
+      { state: "availableInStorage" },
+      { state: "availableInStorage" },
+      { state: "availableInStorage" },
+      { state: "availableInStorage" },
+      { state: "availableInStorage" },
+    ]);
+  });
+
+  test("when we receive information that a CoValue is unavailable in storage, we update the storage state accordingly", () => {
+    const { node, coValueID1 } = setupNodeWithTwoCoValues();
+    const knownState = "unavailable" as const;
+
+    node.onMetadataLoaded(coValueID1, null, knownState);
+
+    expect(node.coValues.get(coValueID1)?.storageState).toBe("unavailable");
+  });
+});
+
+describe("Syncing", () => {
+  const node = new LocalNode2(crypto.newRandomAgentSecret());
+  const coValueID1 = "co_fakeCoValueID1" as RawCoID;
+  const coValueID2 = "co_fakeCoValueID2" as RawCoID;
+  const _1 = node.subscribe(coValueID1);
+
+  node.stageLoad();
+
+  const _2 = node.subscribe(coValueID2);
+
+  test("stageSync doesn't do anything and causes no effects on CoValues with storage state unknown or pending", () => {
+    const coValuesBefore = structuredClone(node.coValues);
+    const { effects } = node.stageSync();
+    expect(effects).toEqual([]);
+    expect(node.coValues).toEqual(coValuesBefore);
+  });
+});
