@@ -3,7 +3,7 @@ import { Signature } from "./crypto/crypto.js";
 import { CoValueCore, LocalNode, RawCoID, SessionID } from "./exports.js";
 import { KnownStateMessage } from "./sync.js";
 
-type StoredSessionLog = {
+export type StoredSessionLog = {
   transactions: Transaction[];
   signatureAfter: { [txIdx: number]: Signature | undefined };
   lastSignature: Signature;
