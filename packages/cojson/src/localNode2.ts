@@ -1,5 +1,5 @@
 import { CoValueHeader, Transaction } from "./coValueCore.js";
-import { Signature } from "./crypto/crypto.js";
+import { Signature, StreamingHash } from "./crypto/crypto.js";
 import {
   AgentSecret,
   Peer,
@@ -61,9 +61,17 @@ interface CoValueEntry {
 
 export type ListenerID = number;
 
-type LoadFromStorageEffect = {
-  type: "loadFromStorage";
+type LoadMetadataFromStorageEffect = {
+  type: "loadMetadataFromStorage";
   id: RawCoID;
+};
+
+type LoadTransactionsFromStorageEffect = {
+  type: "loadTransactionsFromStorage";
+  id: RawCoID;
+  sessionID: SessionID;
+  from: number;
+  to: number;
 };
 
 type SendMessageToPeerEffect = {
@@ -147,7 +155,8 @@ export class LocalNode2 {
     effects: (
       | NotifyListenerEffect
       | SendMessageToPeerEffect
-      | LoadFromStorageEffect
+      | LoadMetadataFromStorageEffect
+      | LoadTransactionsFromStorageEffect
       | WriteToStorageEffect
     )[];
   } {
@@ -162,18 +171,59 @@ export class LocalNode2 {
     return { effects };
   }
 
-  stageLoad(): { effects: LoadFromStorageEffect[] } {
-    const effects: LoadFromStorageEffect[] = [];
+  stageLoad(): {
+    effects: (
+      | LoadMetadataFromStorageEffect
+      | LoadTransactionsFromStorageEffect
+    )[];
+  } {
+    const effects: (
+      | LoadMetadataFromStorageEffect
+      | LoadTransactionsFromStorageEffect
+    )[] = [];
     for (const coValue of this.coValues.values()) {
       if (coValue.storageState === "unknown") {
-        effects.push({ type: "loadFromStorage", id: coValue.id });
+        effects.push({ type: "loadMetadataFromStorage", id: coValue.id });
         coValue.storageState = "pending";
+      } else if (coValue.storageState === "pending") {
+        continue;
+      } else if (coValue.storageState === "unavailable") {
+        continue;
+      } else {
+        if (coValue.listeners.size > 0) {
+          for (const [sessionID, session] of coValue.sessions.entries()) {
+            let firstToLoad = -1;
+            let lastToLoad = -1;
+
+            for (let i = 0; i < session.transactions.length; i++) {
+              if (session.transactions[i]?.state === "availableInStorage") {
+                if (firstToLoad === -1) {
+                  firstToLoad = i;
+                }
+                lastToLoad = i;
+                session.transactions[i] = { state: "loadingFromStorage" };
+              }
+            }
+
+            if (firstToLoad !== -1) {
+              effects.push({
+                type: "loadTransactionsFromStorage",
+                id: coValue.id,
+                sessionID,
+                from: firstToLoad,
+                to: lastToLoad,
+              });
+            }
+          }
+        }
       }
     }
     return { effects };
   }
 
-  stageLoadDeps(coValue: CoValueEntry): { effects: LoadFromStorageEffect[] } {
+  stageLoadDeps(coValue: CoValueEntry): {
+    effects: LoadMetadataFromStorageEffect[];
+  } {
     throw new Error("Not implemented");
   }
 

@@ -105,8 +105,8 @@ describe("Loading from storage", () => {
     const { node, coValueID1, coValueID2 } = setupNodeWithTwoCoValues();
     const { effects } = node.stageLoad();
     expect(effects).toEqual([
-      { type: "loadFromStorage", id: coValueID1 },
-      { type: "loadFromStorage", id: coValueID2 },
+      { type: "loadMetadataFromStorage", id: coValueID1 },
+      { type: "loadMetadataFromStorage", id: coValueID2 },
     ]);
 
     expect(node.coValues.get(coValueID1)?.storageState).toBe("pending");
@@ -150,6 +150,101 @@ describe("Loading from storage", () => {
 
     expect(node.coValues.get(coValueID1)?.storageState).toBe("unavailable");
   });
+
+  test("stageLoad requests transactions from storage if a CoValue has listeners", () => {
+    const node = new LocalNode2(crypto.newRandomAgentSecret());
+    const coValueID1 = "co_fakeCoValueID1" as RawCoID;
+    const coValueID2 = "co_fakeCoValueID2" as RawCoID;
+
+    node.coValues.set(coValueID1, {
+      id: coValueID1,
+      header: {
+        type: "comap",
+        ruleset: { type: "unsafeAllowAll" },
+        meta: null,
+        uniqueness: 1,
+      },
+      sessions: new Map([
+        [
+          "session1" as SessionID,
+          {
+            transactions: [
+              { state: "availableInStorage" },
+              { state: "availableInStorage" },
+            ],
+            id: "session1" as SessionID,
+            lastVerified: 0,
+          },
+        ],
+      ]),
+      storageState: {
+        header: true,
+        sessions: new Map([["session1" as SessionID, 2]]),
+      },
+      peerState: new Map(),
+      listeners: new Map([[1, "unknown"]]),
+    });
+
+    node.coValues.set(coValueID2, {
+      id: coValueID2,
+      header: {
+        type: "comap",
+        ruleset: { type: "unsafeAllowAll" },
+        meta: null,
+        uniqueness: 2,
+      },
+      sessions: new Map([
+        [
+          "session1" as SessionID,
+          {
+            transactions: [
+              { state: "availableInStorage" },
+              { state: "availableInStorage" },
+            ],
+            id: "session1" as SessionID,
+            lastVerified: 0,
+          },
+        ],
+      ]),
+      storageState: {
+        header: true,
+        sessions: new Map([["session1" as SessionID, 2]]),
+      },
+      peerState: new Map(),
+      listeners: new Map(),
+    });
+
+    const { effects } = node.stageLoad();
+    expect(effects).toEqual([
+      {
+        type: "loadTransactionsFromStorage",
+        id: coValueID1,
+        sessionID: "session1" as SessionID,
+        from: 0,
+        to: 1,
+      },
+    ]);
+
+    expect(
+      node.coValues.get(coValueID1)?.sessions.get("session1" as SessionID)
+        ?.transactions,
+    ).toEqual([
+      { state: "loadingFromStorage" },
+      { state: "loadingFromStorage" },
+    ]);
+
+    expect(
+      node.coValues.get(coValueID2)?.sessions.get("session1" as SessionID)
+        ?.transactions,
+    ).toEqual([
+      { state: "availableInStorage" },
+      { state: "availableInStorage" },
+    ]);
+  });
+
+  test.todo(
+    "stageLoad requests transactions from storage that need to be synced",
+  );
 });
 
 describe("Syncing", () => {
