@@ -239,7 +239,6 @@ class TestStorageDriver {
           sessionLog.transactions.slice(start, position),
           undefined,
           signature,
-          { skipStorage: true },
         );
 
         if (result.isErr()) {
@@ -256,7 +255,6 @@ class TestStorageDriver {
           sessionLog.transactions.slice(start),
           undefined,
           sessionLog.lastSignature,
-          { skipStorage: true },
         );
 
         if (result.isErr()) {

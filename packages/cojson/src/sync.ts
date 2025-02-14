@@ -714,6 +714,8 @@ export class SyncManager {
   }
 
   async actuallySyncCoValue(coValue: CoValueCore) {
+    this.local.storageDriver?.set(coValue);
+
     // let blockingSince = performance.now();
     for (const peer of this.peersInPriorityOrder()) {
       if (peer.closed) continue;

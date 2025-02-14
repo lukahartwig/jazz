@@ -202,8 +202,6 @@ export class CoValueCore {
     newSignature: Signature,
     options: {
       skipVerify?: boolean;
-      skipStorage?: boolean;
-      // skipPeerSync?: boolean; TODO
     } = {},
   ): Result<true, TryAddTransactionsError> {
     return this.node
@@ -248,7 +246,6 @@ export class CoValueCore {
           expectedNewHash,
           newStreamingHash,
           "immediate",
-          options.skipStorage ?? false,
         );
 
         return ok(true as const);
@@ -262,7 +259,6 @@ export class CoValueCore {
     expectedNewHash: Hash,
     newStreamingHash: StreamingHash,
     notifyMode: "immediate" | "deferred",
-    skipStorage: boolean,
   ) {
     if (this.node.crashed) {
       throw new Error("Trying to add transactions after node is crashed");
@@ -303,10 +299,6 @@ export class CoValueCore {
       lastSignature: newSignature,
       signatureAfter: signatureAfter,
     });
-
-    if (!skipStorage) {
-      this.node.storageDriver?.set(this);
-    }
 
     if (
       this._cachedContent &&

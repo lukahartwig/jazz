@@ -121,10 +121,10 @@ export class SQLiteStorageAdapter implements StorageAdapter {
     const newLastIdx =
       (sessionRow?.lastIdx || 0) + actuallyNewTransactions.length;
 
-    let shouldWriteSignature = false;
+    let shouldEnableSignatureStreaming = false;
 
     if (newBytesSinceLastSignature > MAX_RECOMMENDED_TX_SIZE) {
-      shouldWriteSignature = true;
+      shouldEnableSignatureStreaming = true;
       newBytesSinceLastSignature = 0;
     }
 
@@ -138,7 +138,7 @@ export class SQLiteStorageAdapter implements StorageAdapter {
       },
     });
 
-    if (shouldWriteSignature) {
+    if (shouldEnableSignatureStreaming) {
       this.dbClient.addSignatureAfter({
         sessionRowID: newRowID,
         idx: newLastIdx - 1,

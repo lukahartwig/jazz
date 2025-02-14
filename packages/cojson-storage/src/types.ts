@@ -52,7 +52,7 @@ export interface DBClientInterface {
   ): Promise<SignatureAfterRow[]> | SignatureAfterRow[];
 
   addCoValue(
-    msg: CojsonInternalTypes.NewContentMessage,
+    msg: Pick<CojsonInternalTypes.NewContentMessage, "id" | "header">,
   ): Promise<number> | number;
 
   addSessionUpdate({
