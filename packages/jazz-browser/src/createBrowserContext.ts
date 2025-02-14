@@ -1,5 +1,5 @@
 import { LocalNode, Peer, RawAccountID } from "cojson";
-import { IDBStorage } from "cojson-storage-indexeddb";
+import { IDBStorageAdapter } from "cojson-storage-indexeddb";
 import { WebSocketPeerWithReconnection } from "cojson-transport-ws";
 import { WasmCrypto } from "cojson/crypto/WasmCrypto";
 import {
@@ -49,8 +49,6 @@ async function setupPeers(options: BaseBrowserContextOptions) {
   let node: LocalNode | undefined = undefined;
 
   const peersToLoadFrom: Peer[] = [];
-
-  peersToLoadFrom.push(await IDBStorage.asPeer());
 
   if (options.sync.when === "never") {
     return {
@@ -109,6 +107,7 @@ export async function createJazzBrowserGuestContext(
   const context = await createAnonymousJazzContext({
     crypto,
     peersToLoadFrom,
+    storageAdapter: await IDBStorageAdapter.load(),
   });
 
   setNode(context.agent.node);
@@ -173,6 +172,7 @@ export async function createJazzBrowserContext<Acc extends Account>(
     AccountSchema: options.AccountSchema,
     sessionProvider: provideBrowserLockSession,
     authSecretStorage: options.authSecretStorage,
+    storageAdapter: await IDBStorageAdapter.load(),
   });
 
   setNode(context.node);

@@ -80,12 +80,14 @@ export class LocalNode {
     peersToLoadFrom,
     migration,
     crypto,
+    storageAdapter,
     initialAgentSecret = crypto.newRandomAgentSecret(),
   }: {
     creationProps: { name: string };
     peersToLoadFrom?: Peer[];
     migration?: RawAccountMigration<Meta>;
     crypto: CryptoProvider;
+    storageAdapter?: StorageAdapter;
     initialAgentSecret?: AgentSecret;
   }): Promise<{
     node: LocalNode;
@@ -98,6 +100,7 @@ export class LocalNode {
       new ControlledAgent(throwawayAgent, crypto),
       crypto.newRandomSessionID(crypto.getAgentID(throwawayAgent)),
       crypto,
+      storageAdapter,
     );
 
     const account = setupNode.createAccount(initialAgentSecret);
@@ -174,6 +177,7 @@ export class LocalNode {
     peersToLoadFrom,
     crypto,
     migration,
+    storageAdapter,
   }: {
     accountID: RawAccountID;
     accountSecret: AgentSecret;
@@ -181,12 +185,14 @@ export class LocalNode {
     peersToLoadFrom: Peer[];
     crypto: CryptoProvider;
     migration?: RawAccountMigration<Meta>;
+    storageAdapter?: StorageAdapter;
   }): Promise<LocalNode> {
     try {
       const loadingNode = new LocalNode(
         new ControlledAgent(accountSecret, crypto),
         crypto.newRandomSessionID(accountID),
         crypto,
+        storageAdapter,
       );
 
       for (const peer of peersToLoadFrom) {
