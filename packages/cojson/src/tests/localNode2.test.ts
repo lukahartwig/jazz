@@ -1,8 +1,9 @@
 import { describe, expect, test } from "vitest";
-import { CoValueHeader } from "../coValueCore.js";
+import { CoValueHeader, Transaction } from "../coValueCore.js";
 import { WasmCrypto } from "../crypto/WasmCrypto.js";
-import { RawCoID, SessionID } from "../exports.js";
-import { LocalNode2 } from "../localNode2.js";
+import { Signature } from "../crypto/crypto.js";
+import { RawCoID, SessionID, Stringified } from "../exports.js";
+import { LocalNode2, TransactionState } from "../localNode2.js";
 import { PeerID } from "../sync.js";
 
 const crypto = await WasmCrypto.create();
@@ -245,6 +246,107 @@ describe("Loading from storage", () => {
   test.todo(
     "stageLoad requests transactions from storage that need to be synced",
   );
+
+  test("Transactions added from storage are added to memory", () => {
+    const { node, coValueID1 } = setupNodeWithTwoCoValues();
+    const header = {
+      type: "comap",
+      ruleset: { type: "unsafeAllowAll" },
+      meta: null,
+      uniqueness: 0,
+    } satisfies CoValueHeader;
+
+    const knownState = {
+      header: true,
+      sessions: new Map([["session1" as SessionID, 5]]),
+    };
+
+    node.onMetadataLoaded(coValueID1, header, knownState);
+
+    const tx1 = {
+      privacy: "trusting",
+      changes: '["ch1"]' as Stringified<string[]>,
+      madeAt: 1,
+    } satisfies Transaction;
+
+    const tx2 = {
+      privacy: "trusting",
+      changes: '["ch2"]' as Stringified<string[]>,
+      madeAt: 2,
+    } satisfies Transaction;
+
+    const tx3 = {
+      privacy: "trusting",
+      changes: '["ch3"]' as Stringified<string[]>,
+      madeAt: 3,
+    } satisfies Transaction;
+
+    const tx4 = {
+      privacy: "trusting",
+      changes: '["ch4"]' as Stringified<string[]>,
+      madeAt: 4,
+    } satisfies Transaction;
+
+    const tx5 = {
+      privacy: "trusting",
+      changes: '["ch5"]' as Stringified<string[]>,
+      madeAt: 5,
+    } satisfies Transaction;
+
+    const { result: result1 } = node.addTransaction(
+      coValueID1,
+      "session1" as SessionID,
+      0,
+      [tx1, tx2],
+      "signature_after2" as Signature,
+    );
+
+    expect(result1).toEqual({ type: "success" });
+    expect(
+      node.coValues.get(coValueID1)?.sessions.get("session1" as SessionID)
+        ?.transactions,
+    ).toEqual([
+      { state: "available", tx: tx1, signature: null },
+      {
+        state: "available",
+        tx: tx2,
+        signature: "signature_after2" as Signature,
+      },
+      { state: "availableInStorage" },
+      { state: "availableInStorage" },
+      { state: "availableInStorage" },
+    ] satisfies TransactionState[]);
+
+    const { result: result2 } = node.addTransaction(
+      coValueID1,
+      "session1" as SessionID,
+      2,
+      [tx3, tx4, tx5],
+      "signature_after5" as Signature,
+    );
+
+    expect(result2).toEqual({ type: "success" });
+    expect(
+      node.coValues.get(coValueID1)?.sessions.get("session1" as SessionID)
+        ?.transactions,
+    ).toEqual([
+      { state: "available", tx: tx1, signature: null },
+      {
+        state: "available",
+        tx: tx2,
+        signature: "signature_after2" as Signature,
+      },
+      { state: "available", tx: tx3, signature: null },
+      { state: "available", tx: tx4, signature: null },
+      {
+        state: "available",
+        tx: tx5,
+        signature: "signature_after5" as Signature,
+      },
+    ] satisfies TransactionState[]);
+
+    // console.dir(node, { depth: null });
+  });
 });
 
 describe("Syncing", () => {

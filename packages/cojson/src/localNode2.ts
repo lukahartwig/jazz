@@ -10,7 +10,7 @@ import {
 import { StoredSessionLog } from "./storage.js";
 import { PeerID } from "./sync.js";
 
-type TransactionState =
+export type TransactionState =
   | {
       state: "availableInStorage";
     }
@@ -298,19 +298,48 @@ export class LocalNode2 {
     tx: Transaction,
   ): {
     result: "success" | "failure";
-    effects: (WriteToStorageEffect | SendMessageToPeerEffect)[];
   } {
     throw new Error("Not implemented");
   }
 
-  tryAddTransaction(
+  addTransaction(
     id: RawCoID,
     sessionID: SessionID,
-    tx: Transaction,
+    after: number,
+    transactions: Transaction[],
+    signature: Signature,
   ): {
-    result: "success" | "failure";
-    effects: (WriteToStorageEffect | SendMessageToPeerEffect)[];
+    result: { type: "success" } | { type: "gap"; expectedAfter: number };
   } {
-    throw new Error("Not implemented");
+    const entry = this.coValues.get(id);
+    if (!entry) {
+      throw new Error("CoValue not found");
+    }
+    const session = entry.sessions.get(sessionID);
+    if (!session) {
+      throw new Error("Session not found");
+    }
+    if (after > session.transactions.length) {
+      return {
+        result: { type: "gap", expectedAfter: session.transactions.length },
+      };
+    }
+    for (let i = 0; i < transactions.length; i++) {
+      const sessionIdx = after + i;
+      if (
+        session.transactions[sessionIdx] &&
+        session.transactions[sessionIdx]!.state !== "availableInStorage"
+      ) {
+        throw new Error(
+          `Unexpected existing state ${session.transactions[sessionIdx]!.state} at index ${sessionIdx}`,
+        );
+      }
+      session.transactions[sessionIdx] = {
+        state: "available",
+        tx: transactions[i]!,
+        signature: i === transactions.length - 1 ? signature : null,
+      };
+    }
+    return { result: { type: "success" } };
   }
 }
