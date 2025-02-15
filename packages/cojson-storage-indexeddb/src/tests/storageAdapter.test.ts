@@ -1,48 +1,29 @@
-import { unlinkSync } from "fs";
-import { tmpdir } from "os";
-import { join } from "path";
 import {
   CoValueCore,
   ControlledAgent,
   LocalNode,
   MAX_RECOMMENDED_TX_SIZE,
-  RawCoID,
-  RawCoMap,
-  StorageAdapter,
+  type RawCoID,
+  type RawCoMap,
+  type StorageAdapter,
 } from "cojson";
 import { WasmCrypto } from "cojson/crypto/WasmCrypto";
 import { connectedPeers } from "cojson/src/streamUtils.js";
-import { CoValueKnownState, SessionNewContent } from "cojson/src/sync.js";
-import { assert, describe, expect, onTestFinished, test } from "vitest";
-import { loadSQLiteStorageAdapter } from "../storageAdapter";
-
-function getRandomDBPath() {
-  const dbPath = join(
-    tmpdir(),
-    `test-${Math.random().toString(36).slice(2)}.db`,
-  );
-
-  onTestFinished(() => {
-    // Clean up the temporary database file
-    try {
-      unlinkSync(dbPath);
-    } catch (e) {
-      // Ignore errors if file doesn't exist
-    }
-  });
-
-  return dbPath;
-}
+import type { CoValueKnownState, SessionNewContent } from "cojson/src/sync.js";
+import { assert, describe, expect, test } from "vitest";
+import { internal_setDatabaseName } from "../idbNode.js";
+import { loadIDBStorageAdapter } from "../storageAdapter";
 
 async function setup() {
   const crypto = await WasmCrypto.create();
-
   const agentSecret = crypto.newRandomAgentSecret();
   const agentID = crypto.getAgentID(agentSecret);
 
-  // Create a temporary database file for each test
-  const dbPath = getRandomDBPath();
-  const storageAdapter = loadSQLiteStorageAdapter(dbPath);
+  // Use a unique database name for each test
+  const dbName = `test-${Math.random().toString(36).slice(2)}`;
+  internal_setDatabaseName(dbName);
+
+  const storageAdapter = await loadIDBStorageAdapter();
   const node = new LocalNode(
     new ControlledAgent(agentSecret, crypto),
     crypto.newRandomSessionID(agentID),
@@ -65,7 +46,6 @@ async function setup() {
       crypto,
     );
 
-    // Connect nodes initially
     const [node1ToNode2Peer, node2ToNode1Peer] = connectedPeers(
       "node1ToNode2",
       "node2ToNode1",
@@ -86,10 +66,11 @@ async function setup() {
     node,
     storageDriver,
     createTestNode,
+    dbName,
   };
 }
 
-describe("SQLiteStorageAdapter", () => {
+describe("IDBStorageAdapter", () => {
   test("should return null when getting non-existent CoValue", async () => {
     const { storageAdapter } = await setup();
     const result = await storageAdapter.get("non_existent_id" as RawCoID);
@@ -111,19 +92,18 @@ describe("SQLiteStorageAdapter", () => {
   test("should append and retrieve session transactions", async () => {
     const { node, storageDriver } = await setup();
     const group = node.createGroup();
-
     const map = group.createMap({ name: "test" });
 
     await storageDriver.set(group.core);
     await storageDriver.set(map.core);
 
-    await storageDriver.get(group.core.id); // Load the dependency first
+    await storageDriver.get(group.core.id);
     const result = await storageDriver.get(map.core.id);
     expect(result).not.toBeNull();
 
-    const mapFromStrorage = result?.getCurrentContent() as RawCoMap;
-    expect(mapFromStrorage).not.toBeNull();
-    expect(mapFromStrorage?.get("name")).toBe("test");
+    const mapFromStorage = result?.getCurrentContent() as RawCoMap;
+    expect(mapFromStorage).not.toBeNull();
+    expect(mapFromStorage?.get("name")).toBe("test");
   });
 
   test("should handle multiple transactions for same CoValue", async () => {
@@ -132,24 +112,21 @@ describe("SQLiteStorageAdapter", () => {
     await storageDriver.set(group.core);
 
     const map = group.createMap({ count: 1 });
-
     await storageDriver.set(map.core);
 
     map.set("count", 2, "trusting");
-
     await storageDriver.set(map.core);
 
     map.set("count", 3, "trusting");
-
     await storageDriver.set(map.core);
 
-    await storageDriver.get(group.core.id); // Load the dependency first
+    await storageDriver.get(group.core.id);
     const result = await storageDriver.get(map.core.id);
     expect(result).not.toBeNull();
 
-    const mapFromStrorage = result?.getCurrentContent() as RawCoMap;
-    expect(mapFromStrorage).not.toBeNull();
-    expect(mapFromStrorage?.get("count")).toBe(3);
+    const mapFromStorage = result?.getCurrentContent() as RawCoMap;
+    expect(mapFromStorage).not.toBeNull();
+    expect(mapFromStorage?.get("count")).toBe(3);
   });
 
   test("should handle big updates that require multiple signatures", async () => {
@@ -185,11 +162,9 @@ describe("SQLiteStorageAdapter", () => {
     await storageDriver.set(group.core);
 
     const map = group.createMap({ count: 1 });
-
     await storageDriver.set(map.core);
 
     const mapOnNode2 = await node2.load(map.id);
-
     assert(mapOnNode2 !== "unavailable", "Map should be loaded");
 
     mapOnNode2.set("count", 2);
@@ -197,17 +172,17 @@ describe("SQLiteStorageAdapter", () => {
 
     await storageDriver.set(mapOnNode2.core);
 
-    await storageDriver.get(group.core.id); // Load the dependency first
+    await storageDriver.get(group.core.id);
     const result = await storageDriver.get(map.core.id);
     expect(result).not.toBeNull();
 
-    const mapFromStrorage = result?.getCurrentContent() as RawCoMap;
-    expect(mapFromStrorage).not.toBeNull();
-    expect(mapFromStrorage?.get("count")).toBe(3);
+    const mapFromStorage = result?.getCurrentContent() as RawCoMap;
+    expect(mapFromStorage).not.toBeNull();
+    expect(mapFromStorage?.get("count")).toBe(3);
   });
 
   test("should work with LocalNode", async () => {
-    const adapter = loadSQLiteStorageAdapter(getRandomDBPath());
+    const adapter = await loadIDBStorageAdapter();
 
     const { node, accountID, sessionID } =
       await LocalNode.withNewlyCreatedAccount({
@@ -268,7 +243,7 @@ class TestStorageDriver {
           );
         }
 
-        const position = parseInt(signatureAt) + 1;
+        const position = Number.parseInt(signatureAt) + 1;
 
         const result = core.tryAddTransactions(
           sessionID,
@@ -309,7 +284,7 @@ class TestStorageDriver {
     const currentState = this.storedStates.get(core.id);
 
     if (!currentState) {
-      this.storageAdapter.writeHeader(core.id, core.header);
+      await this.storageAdapter.writeHeader(core.id, core.header);
     }
 
     const newContentPieces = core.newContentSince(currentState);
@@ -326,18 +301,15 @@ class TestStorageDriver {
         SessionNewContent,
       ][];
 
-      await Promise.all(
-        entries.map(async ([sessionID, sessionNewContent], i) => {
-          const forceWriteSignature = i === entries.length - 1;
-          await this.storageAdapter.appendToSession(
-            core.id,
-            sessionID,
-            sessionNewContent.after,
-            sessionNewContent.newTransactions,
-            sessionNewContent.lastSignature,
-          );
-        }),
-      );
+      for (const [sessionID, sessionNewContent] of entries) {
+        await this.storageAdapter.appendToSession(
+          core.id,
+          sessionID,
+          sessionNewContent.after,
+          sessionNewContent.newTransactions,
+          sessionNewContent.lastSignature,
+        );
+      }
     }
 
     this.storedStates.set(core.id, knownState);

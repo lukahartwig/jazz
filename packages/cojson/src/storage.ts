@@ -10,7 +10,7 @@ import {
   cojsonInternals,
   logger,
 } from "./exports.js";
-import { CoValueKnownState } from "./sync.js";
+import { CoValueKnownState, SessionNewContent } from "./sync.js";
 
 export type StoredSessionLog = {
   transactions: Transaction[];
@@ -119,7 +119,7 @@ function getDependedOnCoValues({
       : [];
 }
 export class StorageDriver {
-  private storageAdapter: StorageAdapter;
+  public storageAdapter: StorageAdapter;
   private storedStates: Map<RawCoID, CoValueKnownState> = new Map();
   private node: LocalNode;
 
@@ -204,21 +204,25 @@ export class StorageDriver {
     return core;
   }
 
-  pullFrom = new Set<RawCoID>();
-  updating = new Set<RawCoID>();
+  updates: CoValueCore[] = [];
+  processing = false;
 
   set(core: CoValueCore) {
-    this.pullFrom.add(core.id);
+    this.updates.push(core);
 
-    if (!this.updating.has(core.id)) {
-      this.updating.add(core.id);
-      void this.pullNewTransactions(core);
+    if (!this.processing) {
+      this.processing = true;
+      void this.processUpdates();
     }
   }
 
-  async pullNewTransactions(core: CoValueCore) {
-    while (this.pullFrom.has(core.id)) {
-      this.pullFrom.delete(core.id);
+  async processUpdates() {
+    while (this.updates.length > 0) {
+      const core = this.updates.shift();
+      if (!core) {
+        continue;
+      }
+
       try {
         await this.update(core);
       } catch (e) {
@@ -228,15 +232,13 @@ export class StorageDriver {
         });
       }
     }
-
-    this.updating.delete(core.id);
   }
 
   async update(core: CoValueCore): Promise<void> {
     const currentState = this.storedStates.get(core.id);
 
     if (!currentState) {
-      this.storageAdapter.writeHeader(core.id, core.header);
+      await this.storageAdapter.writeHeader(core.id, core.header);
     }
 
     const newContentPieces = core.newContentSince(currentState);
@@ -248,12 +250,12 @@ export class StorageDriver {
     const knownState = core.knownState();
 
     for (const piece of newContentPieces) {
-      for (const [sessionID, sessionNewContent] of Object.entries(
-        piece.new,
-      ) as [
+      const entries = Object.entries(piece.new) as [
         keyof typeof piece.new,
-        (typeof piece.new)[keyof typeof piece.new],
-      ][]) {
+        SessionNewContent,
+      ][];
+
+      for (const [sessionID, sessionNewContent] of entries) {
         await this.storageAdapter.appendToSession(
           core.id,
           sessionID,

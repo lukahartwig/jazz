@@ -4,4 +4,4 @@ export {
   internal_setDatabaseName,
 } from "./idbNode.js";
 
-export { IDBStorageAdapter } from "./storageAdapter.js";
+export { loadIDBStorageAdapter } from "./storageAdapter.js";

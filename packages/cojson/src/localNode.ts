@@ -108,6 +108,7 @@ export class LocalNode {
     const nodeWithAccount = account.core.node.testWithDifferentAccount(
       account,
       crypto.newRandomSessionID(account.id),
+      storageAdapter,
     );
 
     const accountOnNodeWithAccount =
@@ -216,6 +217,7 @@ export class LocalNode {
       const node = loadingNode.testWithDifferentAccount(
         controlledAccount,
         sessionID || crypto.newRandomSessionID(accountID),
+        storageAdapter,
       );
       node.syncManager = loadingNode.syncManager;
       node.syncManager.local = node;
@@ -634,8 +636,14 @@ export class LocalNode {
   testWithDifferentAccount(
     account: ControlledAccountOrAgent,
     currentSessionID: SessionID,
+    storageAdapter?: StorageAdapter,
   ): LocalNode {
-    const newNode = new LocalNode(account, currentSessionID, this.crypto);
+    const newNode = new LocalNode(
+      account,
+      currentSessionID,
+      this.crypto,
+      storageAdapter,
+    );
 
     const coValuesToCopy = Array.from(this.coValuesStore.getEntries());
 

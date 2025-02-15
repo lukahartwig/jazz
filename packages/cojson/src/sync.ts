@@ -693,6 +693,8 @@ export class SyncManager {
   }
 
   async syncCoValue(coValue: CoValueCore) {
+    this.local.storageDriver?.set(coValue);
+
     if (this.requestedSyncs[coValue.id]) {
       this.requestedSyncs[coValue.id]!.nRequestsThisTick++;
       return this.requestedSyncs[coValue.id]!.done;
@@ -714,8 +716,6 @@ export class SyncManager {
   }
 
   async actuallySyncCoValue(coValue: CoValueCore) {
-    this.local.storageDriver?.set(coValue);
-
     // let blockingSince = performance.now();
     for (const peer of this.peersInPriorityOrder()) {
       if (peer.closed) continue;

@@ -81,3 +81,49 @@ export interface DBClientInterface {
 
   unitOfWork(operationsCallback: () => unknown[]): Promise<unknown> | void;
 }
+
+export interface SyncDBClientInterface {
+  getCoValue(coValueId: RawCoID): StoredCoValueRow | undefined;
+
+  getCoValueSessions(coValueRowId: number): StoredSessionRow[];
+
+  getNewTransactionInSession(
+    sessionRowId: number,
+    firstNewTxIdx: number,
+  ): TransactionRow[];
+
+  getSignatures(
+    sessionRowId: number,
+    firstNewTxIdx: number,
+  ): SignatureAfterRow[];
+
+  addCoValue(
+    msg: Pick<CojsonInternalTypes.NewContentMessage, "id" | "header">,
+  ): number;
+
+  addSessionUpdate({
+    sessionUpdate,
+    sessionRow,
+  }: {
+    sessionUpdate: SessionRow;
+    sessionRow?: StoredSessionRow;
+  }): number;
+
+  addTransaction(
+    sessionRowID: number,
+    idx: number,
+    newTransaction: Transaction,
+  ): number | void | unknown;
+
+  addSignatureAfter({
+    sessionRowID,
+    idx,
+    signature,
+  }: {
+    sessionRowID: number;
+    idx: number;
+    signature: Signature;
+  }): number | void | unknown;
+
+  unitOfWork(operationsCallback: () => unknown[]): Promise<unknown> | void;
+}
