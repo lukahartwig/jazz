@@ -177,6 +177,7 @@ describe("Loading from storage", () => {
             lastVerified: 0,
             lastAvailable: 0,
             lastDepsAvailable: 0,
+            lastDecrypted: 0,
           },
         ],
       ]),
@@ -208,6 +209,7 @@ describe("Loading from storage", () => {
             lastVerified: 0,
             lastAvailable: 0,
             lastDepsAvailable: 0,
+            lastDecrypted: 0,
           },
         ],
       ]),
@@ -313,6 +315,7 @@ describe("Loading from storage", () => {
       lastAvailable: 1,
       lastDepsAvailable: 0,
       lastVerified: 0,
+      lastDecrypted: 0,
       transactions: [
         { state: "available", tx: tx1, signature: null },
         {
@@ -342,6 +345,7 @@ describe("Loading from storage", () => {
       lastAvailable: 4,
       lastDepsAvailable: 0,
       lastVerified: 0,
+      lastDecrypted: 0,
       transactions: [
         { state: "available", tx: tx1, signature: null },
         {

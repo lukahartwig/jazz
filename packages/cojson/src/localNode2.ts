@@ -2,6 +2,7 @@ import { CoValueHeader, Transaction } from "./coValueCore.js";
 import { Signature, StreamingHash } from "./crypto/crypto.js";
 import {
   AgentSecret,
+  JsonValue,
   Peer,
   RawCoID,
   SessionID,
@@ -31,6 +32,18 @@ export type TransactionState =
         | { type: "pending" }
         | { type: "valid" }
         | { type: "invalid"; reason: string };
+      decryptionState:
+        | {
+            type: "notDecrypted";
+          }
+        | {
+            type: "decrypted";
+            changes: JsonValue[];
+          }
+        | {
+            type: "error";
+            error: Error;
+          };
       stored: boolean;
     };
 
@@ -40,6 +53,7 @@ export type SessionEntry = {
   lastAvailable: number;
   lastDepsAvailable: number;
   lastVerified: number;
+  lastDecrypted: number;
 };
 
 type KnownState =
@@ -279,6 +293,7 @@ export class LocalNode2 {
             lastVerified: 0,
             lastAvailable: 0,
             lastDepsAvailable: 0,
+            lastDecrypted: 0,
           };
           entry.sessions.set(sessionID, session);
         }
