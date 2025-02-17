@@ -3,7 +3,7 @@ import { CoValueHeader, Transaction } from "../coValueCore.js";
 import { WasmCrypto } from "../crypto/WasmCrypto.js";
 import { Signature } from "../crypto/crypto.js";
 import { RawCoID, SessionID, Stringified } from "../exports.js";
-import { LocalNode2, TransactionState } from "../localNode2.js";
+import { LocalNode2, SessionEntry, TransactionState } from "../localNode2.js";
 import { PeerID } from "../sync.js";
 
 const crypto = await WasmCrypto.create();
@@ -175,6 +175,8 @@ describe("Loading from storage", () => {
             ],
             id: "session1" as SessionID,
             lastVerified: 0,
+            lastAvailable: 0,
+            lastDepsAvailable: 0,
           },
         ],
       ]),
@@ -204,6 +206,8 @@ describe("Loading from storage", () => {
             ],
             id: "session1" as SessionID,
             lastVerified: 0,
+            lastAvailable: 0,
+            lastDepsAvailable: 0,
           },
         ],
       ]),
@@ -303,19 +307,24 @@ describe("Loading from storage", () => {
 
     expect(result1).toEqual({ type: "success" });
     expect(
-      node.coValues.get(coValueID1)?.sessions.get("session1" as SessionID)
-        ?.transactions,
-    ).toEqual([
-      { state: "available", tx: tx1, signature: null },
-      {
-        state: "available",
-        tx: tx2,
-        signature: "signature_after2" as Signature,
-      },
-      { state: "availableInStorage" },
-      { state: "availableInStorage" },
-      { state: "availableInStorage" },
-    ] satisfies TransactionState[]);
+      node.coValues.get(coValueID1)?.sessions.get("session1" as SessionID),
+    ).toEqual({
+      id: "session1" as SessionID,
+      lastAvailable: 1,
+      lastDepsAvailable: 0,
+      lastVerified: 0,
+      transactions: [
+        { state: "available", tx: tx1, signature: null },
+        {
+          state: "available",
+          tx: tx2,
+          signature: "signature_after2" as Signature,
+        },
+        { state: "availableInStorage" },
+        { state: "availableInStorage" },
+        { state: "availableInStorage" },
+      ],
+    } satisfies SessionEntry);
 
     const { result: result2 } = node.addTransaction(
       coValueID1,
@@ -327,23 +336,28 @@ describe("Loading from storage", () => {
 
     expect(result2).toEqual({ type: "success" });
     expect(
-      node.coValues.get(coValueID1)?.sessions.get("session1" as SessionID)
-        ?.transactions,
-    ).toEqual([
-      { state: "available", tx: tx1, signature: null },
-      {
-        state: "available",
-        tx: tx2,
-        signature: "signature_after2" as Signature,
-      },
-      { state: "available", tx: tx3, signature: null },
-      { state: "available", tx: tx4, signature: null },
-      {
-        state: "available",
-        tx: tx5,
-        signature: "signature_after5" as Signature,
-      },
-    ] satisfies TransactionState[]);
+      node.coValues.get(coValueID1)?.sessions.get("session1" as SessionID),
+    ).toEqual({
+      id: "session1" as SessionID,
+      lastAvailable: 4,
+      lastDepsAvailable: 0,
+      lastVerified: 0,
+      transactions: [
+        { state: "available", tx: tx1, signature: null },
+        {
+          state: "available",
+          tx: tx2,
+          signature: "signature_after2" as Signature,
+        },
+        { state: "available", tx: tx3, signature: null },
+        { state: "available", tx: tx4, signature: null },
+        {
+          state: "available",
+          tx: tx5,
+          signature: "signature_after5" as Signature,
+        },
+      ],
+    } satisfies SessionEntry);
 
     // console.dir(node, { depth: null });
   });

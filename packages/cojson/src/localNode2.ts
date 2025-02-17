@@ -27,15 +27,18 @@ export type TransactionState =
       tx: Transaction;
       signature: Signature | null;
       validity:
+        | { type: "unknown" }
+        | { type: "pending" }
         | { type: "valid" }
-        | { type: "invalid"; reason: string }
-        | { type: "pending"; awaitingDependencies: RawCoID[] };
+        | { type: "invalid"; reason: string };
       stored: boolean;
     };
 
-type SessionEntry = {
+export type SessionEntry = {
   id: SessionID;
   transactions: TransactionState[];
+  lastAvailable: number;
+  lastDepsAvailable: number;
   lastVerified: number;
 };
 
@@ -274,6 +277,8 @@ export class LocalNode2 {
             id: sessionID,
             transactions: [],
             lastVerified: 0,
+            lastAvailable: 0,
+            lastDepsAvailable: 0,
           };
           entry.sessions.set(sessionID, session);
         }
@@ -339,6 +344,7 @@ export class LocalNode2 {
         tx: transactions[i]!,
         signature: i === transactions.length - 1 ? signature : null,
       };
+      session.lastAvailable = Math.max(session.lastAvailable, sessionIdx);
     }
     return { result: { type: "success" } };
   }
