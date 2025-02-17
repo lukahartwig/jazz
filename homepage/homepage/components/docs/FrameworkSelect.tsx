@@ -51,7 +51,7 @@ export function FrameworkSelect({ className }: { className?: string }) {
   };
 
   return (
-    <Dropdown>
+    <Dropdown as="div" className="px-2">
       <DropdownButton
         icon="chevronDown"
         className="flex-row-reverse w-full justify-between"

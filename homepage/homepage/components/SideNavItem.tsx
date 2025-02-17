@@ -16,7 +16,7 @@ export function SideNavItem({
 }) {
   const classes = clsx(
     className,
-    "py-1 flex items-center hover:transition-colors",
+    "py-1.5 px-2 rounded-md flex items-center  transition-colors",
   );
   const path = usePathname();
 
@@ -26,10 +26,9 @@ export function SideNavItem({
         href={href}
         className={clsx(
           classes,
-          href &&
-            "hover:text-stone-900 dark:hover:text-stone-200 transition-colors hover:transition-none",
+          href && "hover:text-stone-900 dark:hover:text-stone-200",
           {
-            "text-stone-900 dark:text-white": path === href,
+            "text-stone-900  bg-stone-100 dark:text-white": path === href,
           },
         )}
       >

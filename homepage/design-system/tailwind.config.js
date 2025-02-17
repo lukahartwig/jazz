@@ -6,8 +6,7 @@ const plugin = require("tailwindcss/plugin");
 
 const stonePalette = {
   50: "oklch(0.988281 0.002 75)",
-  75: "oklch(0.980563 0.002 75)",
-  100: "oklch(0.964844 0.002 75)",
+  100: "oklch(0.980563 0.002 75)",
   200: "oklch(0.917969 0.002 75)",
   300: "oklch(0.853516 0.002 75)",
   400: "oklch(0.789063 0.002 75)",

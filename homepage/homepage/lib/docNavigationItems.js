@@ -57,26 +57,26 @@ export const docNavigationItems = [
     items: [
       {
         // upgrade guides
-        name: "Jazz 0.10.0 - New authentication flow",
+        name: "0.10.0 - New authentication flow",
         href: "/docs/upgrade/0-10-0",
         done: 100,
       },
       {
         // upgrade guides
-        name: "Jazz 0.9.8 - Without me!",
+        name: "0.9.8 - Without me!",
         href: "/docs/upgrade/0-9-8",
         done: 100,
       },
       {
         // upgrade guides
-        name: "Jazz 0.9.2 - Local persistence on React Native",
+        name: "0.9.2 - Local persistence on React Native",
         href: "/docs/upgrade/react-native-local-persistence",
         done: 100,
         framework: "react-native",
       },
       {
         // upgrade guides
-        name: "Jazz 0.9.0 - Top level imports",
+        name: "0.9.0 - Top level imports",
         href: "/docs/upgrade/0-9-0",
         done: 100,
       },
