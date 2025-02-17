@@ -31,11 +31,10 @@ export function JazzInspector() {
           bottom: 0,
           right: 0,
           margin: "1rem",
-          backgroundColor: "white",
-          border: "1px solid #e5e7eb",
           borderRadius: "0.5rem",
           padding: "6px",
         }}
+        className="text-blue-800 p-3 rounded"
       >
         Jazz Inspector
       </button>

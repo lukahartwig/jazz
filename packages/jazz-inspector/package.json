@@ -16,9 +16,11 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@tailwindcss/vite": "^4.0.6",
     "cojson": "workspace:*",
     "jazz-react-core": "workspace:*",
-    "jazz-tools": "workspace:*"
+    "jazz-tools": "workspace:*",
+    "tailwindcss": "^4.0.6"
   },
   "peerDependencies": {
     "react": "^17.0.0 || ^18.0.0"
