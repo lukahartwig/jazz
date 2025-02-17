@@ -6,6 +6,7 @@
   "types": "src/index.tsx",
   "license": "MIT",
   "dependencies": {
+    "jazz-browser": "workspace:*",
     "cojson": "workspace:*",
     "jazz-auth-clerk": "workspace:*",
     "jazz-react": "workspace:*",

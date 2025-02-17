@@ -14,7 +14,7 @@ export type JazzContextManagerAuthProps = {
 
 export type JazzContextManagerBaseProps<Acc extends Account> = {
   onAnonymousAccountDiscarded?: (anonymousAccount: Acc) => Promise<void>;
-  onLogOut?: () => void;
+  onLogOut?: () => void | Promise<void>;
 };
 
 type PlatformSpecificAuthContext<Acc extends Account> = {
@@ -44,6 +44,7 @@ export class JazzContextManager<
   protected props: P | undefined;
   protected authSecretStorage = new AuthSecretStorage();
   protected authenticating = false;
+  protected prevContextCreation?: Promise<void>;
 
   constructor() {
     KvStoreContext.getInstance().initialize(this.getKvStore());
@@ -96,8 +97,8 @@ export class JazzContextManager<
       return;
     }
 
+    await this.props.onLogOut?.();
     await this.context.logOut();
-    this.props.onLogOut?.();
     return this.createContext(this.props);
   };
 
@@ -110,6 +111,7 @@ export class JazzContextManager<
   };
 
   authenticate = async (credentials: AuthCredentials) => {
+    await this.prevContextCreation;
     if (!this.props) {
       throw new Error("Props required");
     }

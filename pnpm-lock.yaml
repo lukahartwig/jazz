@@ -1744,6 +1744,9 @@ importers:
       jazz-auth-clerk:
         specifier: workspace:*
         version: link:../jazz-auth-clerk
+      jazz-browser:
+        specifier: workspace:*
+        version: link:../jazz-browser
       jazz-react:
         specifier: workspace:*
         version: link:../jazz-react

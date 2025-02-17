@@ -23,6 +23,27 @@ export class JazzClerkAuth {
     private authSecretStorage: AuthSecretStorage,
   ) {}
 
+  static loadClerkAuthData = (
+    clerkClient: Pick<MinimalClerkClient, "user">,
+    authSecretStorage: AuthSecretStorage,
+  ) => {
+    if (!clerkClient.user) return;
+
+    const clerkCredentials = clerkClient.user
+      .unsafeMetadata as ClerkCredentials;
+
+    const credentials = {
+      accountID: clerkCredentials.jazzAccountID,
+      accountSecret: clerkCredentials.jazzAccountSecret,
+      secretSeed: clerkCredentials.jazzAccountSeed
+        ? Uint8Array.from(clerkCredentials.jazzAccountSeed)
+        : undefined,
+      provider: "clerk",
+    } satisfies AuthCredentials;
+
+    return authSecretStorage.set(credentials);
+  };
+
   onClerkUserChange = async (clerkClient: Pick<MinimalClerkClient, "user">) => {
     if (!clerkClient.user) return;
 

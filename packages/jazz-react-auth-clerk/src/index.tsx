@@ -1,10 +1,12 @@
 import { JazzClerkAuth, type MinimalClerkClient } from "jazz-auth-clerk";
+import { LocalStorageKVStore } from "jazz-browser";
 import {
   JazzProvider,
   JazzProviderProps,
   useAuthSecretStorage,
   useJazzContext,
 } from "jazz-react";
+import { AuthSecretStorage, InMemoryKVStore, KvStoreContext } from "jazz-tools";
 import { useEffect, useMemo } from "react";
 
 function useJazzClerkAuth(clerk: MinimalClerkClient) {
@@ -39,6 +41,12 @@ function RegisterClerkAuth(props: {
 export const JazzProviderWithClerk = (
   props: { clerk: MinimalClerkClient } & JazzProviderProps,
 ) => {
+  setupKvStore();
+
+  useEffect(() => {
+    JazzClerkAuth.loadClerkAuthData(props.clerk, new AuthSecretStorage());
+  }, [props.clerk]);
+
   return (
     <JazzProvider {...props} onLogOut={props.clerk.signOut}>
       <RegisterClerkAuth clerk={props.clerk}>
@@ -47,3 +55,11 @@ export const JazzProviderWithClerk = (
     </JazzProvider>
   );
 };
+
+function setupKvStore() {
+  KvStoreContext.getInstance().initialize(
+    typeof window === "undefined"
+      ? new InMemoryKVStore()
+      : new LocalStorageKVStore(),
+  );
+}
