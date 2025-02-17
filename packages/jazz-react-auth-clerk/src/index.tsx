@@ -6,7 +6,7 @@ import {
   useAuthSecretStorage,
   useJazzContext,
 } from "jazz-react";
-import { AuthSecretStorage, InMemoryKVStore, KvStoreContext } from "jazz-tools";
+import { InMemoryKVStore, KvStoreContext } from "jazz-tools";
 import { useEffect, useMemo } from "react";
 
 function useJazzClerkAuth(clerk: MinimalClerkClient) {
@@ -42,10 +42,6 @@ export const JazzProviderWithClerk = (
   props: { clerk: MinimalClerkClient } & JazzProviderProps,
 ) => {
   setupKvStore();
-
-  useEffect(() => {
-    JazzClerkAuth.loadClerkAuthData(props.clerk, new AuthSecretStorage());
-  }, [props.clerk]);
 
   return (
     <JazzProvider {...props} onLogOut={props.clerk.signOut}>

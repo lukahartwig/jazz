@@ -23,29 +23,25 @@ export class JazzClerkAuth {
     private authSecretStorage: AuthSecretStorage,
   ) {}
 
-  static loadClerkAuthData = (
-    clerkClient: Pick<MinimalClerkClient, "user">,
-    authSecretStorage: AuthSecretStorage,
-  ) => {
-    if (!clerkClient.user) return;
-
-    const clerkCredentials = clerkClient.user
-      .unsafeMetadata as ClerkCredentials;
-
-    const credentials = {
-      accountID: clerkCredentials.jazzAccountID,
-      accountSecret: clerkCredentials.jazzAccountSecret,
-      secretSeed: clerkCredentials.jazzAccountSeed
-        ? Uint8Array.from(clerkCredentials.jazzAccountSeed)
+  /**
+   * Loads the Jazz auth data from the Clerk user and sets it in the auth secret storage.
+   */
+  private loadClerkAuthData = (credentials: ClerkCredentials) => {
+    return this.authSecretStorage.set({
+      accountID: credentials.jazzAccountID,
+      accountSecret: credentials.jazzAccountSecret,
+      secretSeed: credentials.jazzAccountSeed
+        ? Uint8Array.from(credentials.jazzAccountSeed)
         : undefined,
       provider: "clerk",
-    } satisfies AuthCredentials;
-
-    return authSecretStorage.set(credentials);
+    });
   };
 
   onClerkUserChange = async (clerkClient: Pick<MinimalClerkClient, "user">) => {
-    if (!clerkClient.user) return;
+    if (!clerkClient.user) {
+      await this.authSecretStorage.clear();
+      return;
+    }
 
     const isAuthenticated = this.authSecretStorage.isAuthenticated;
 
@@ -97,13 +93,15 @@ export class JazzClerkAuth {
       throw new Error("No credentials found");
     }
 
+    const jazzAccountSeed = credentials.secretSeed
+      ? Array.from(credentials.secretSeed)
+      : undefined;
+
     await clerkClient.user?.update({
       unsafeMetadata: {
         jazzAccountID: credentials.accountID,
         jazzAccountSecret: credentials.accountSecret,
-        jazzAccountSeed: credentials.secretSeed
-          ? Array.from(credentials.secretSeed)
-          : undefined,
+        jazzAccountSeed,
       } satisfies ClerkCredentials,
     });
 
@@ -117,11 +115,10 @@ export class JazzClerkAuth {
       currentAccount.profile.name = username;
     }
 
-    await this.authSecretStorage.set({
-      accountID: credentials.accountID,
-      accountSecret: credentials.accountSecret,
-      secretSeed: credentials.secretSeed,
-      provider: "clerk",
+    await this.loadClerkAuthData({
+      jazzAccountID: credentials.accountID,
+      jazzAccountSecret: credentials.accountSecret,
+      jazzAccountSeed,
     });
   };
 }
