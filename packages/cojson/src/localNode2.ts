@@ -59,7 +59,7 @@ export type SessionEntry = {
 type KnownState =
   | {
       header: boolean;
-      sessions: Map<SessionID, number>;
+      sessions: { [key: SessionID]: number };
     }
   | "unknown"
   | "unavailable";
@@ -67,13 +67,15 @@ type KnownState =
 interface CoValueEntry {
   id: RawCoID;
   header: CoValueHeader | null;
-  sessions: Map<SessionID, SessionEntry>;
+  sessions: { [key: SessionID]: SessionEntry };
   storageState: KnownState | "pending";
-  peerState: Map<
-    PeerID,
-    { confirmed: KnownState | "pending"; optimistic: KnownState }
-  >;
-  listeners: Map<ListenerID, KnownState>;
+  peerState: {
+    [key: PeerID]: {
+      confirmed: KnownState | "pending";
+      optimistic: KnownState;
+    };
+  };
+  listeners: { [key: ListenerID]: KnownState };
 }
 
 export type ListenerID = number;
@@ -107,65 +109,71 @@ type WriteToStorageEffect = {
   type: "writeToStorage";
   id: RawCoID;
   header: CoValueHeader | null;
-  sessions: Map<SessionID, StoredSessionLog>;
+  sessions: { [key: SessionID]: StoredSessionLog };
 };
 
 export class LocalNode2 {
-  coValues: Map<RawCoID, CoValueEntry>;
+  coValues: { [key: RawCoID]: CoValueEntry };
   agentSecret: AgentSecret;
-  peers: Set<PeerID>;
+  peers: PeerID[];
 
   constructor(agentSecret: AgentSecret) {
     this.agentSecret = agentSecret;
-    this.coValues = new Map();
-    this.peers = new Set();
+    this.coValues = {};
+    this.peers = [];
   }
 
   addPeer(peerID: PeerID) {
-    this.peers.add(peerID);
-    for (const coValue of this.coValues.values()) {
-      coValue.peerState.set(peerID, {
+    this.peers.push(peerID);
+    for (const coValue of Object.values(this.coValues)) {
+      coValue.peerState[peerID] = {
         confirmed: "unknown",
         optimistic: "unknown",
-      });
+      };
     }
   }
 
   removePeer(peerID: PeerID) {
-    this.peers.delete(peerID);
-    for (const coValue of this.coValues.values()) {
-      coValue.peerState.delete(peerID);
+    const index = this.peers.indexOf(peerID);
+    if (index === -1) {
+      throw new Error("Peer not found");
+    }
+    this.peers.splice(index, 1);
+    for (const coValue of Object.values(this.coValues)) {
+      delete coValue.peerState[peerID];
     }
   }
 
   subscribe(id: RawCoID): {
     listenerID: ListenerID;
   } {
-    const existing = this.coValues.get(id);
+    const existing = this.coValues[id];
     if (!existing) {
-      this.coValues.set(id, {
+      this.coValues[id] = {
         id,
         header: null,
-        sessions: new Map(),
+        sessions: {},
         storageState: "unknown",
-        peerState: new Map(),
-        listeners: new Map([[1, "unknown"]]),
-      });
+        peerState: {},
+        listeners: {
+          1: "unknown",
+        },
+      };
 
       return { listenerID: 1 };
     } else {
-      const nextListenerID = existing.listeners.size + 1;
-      existing.listeners.set(nextListenerID, "unknown");
+      const nextListenerID = Object.keys(existing.listeners).length + 1;
+      existing.listeners[nextListenerID] = "unknown";
       return { listenerID: nextListenerID };
     }
   }
 
   unsubscribe(id: RawCoID, listenerID: ListenerID) {
-    const existing = this.coValues.get(id);
+    const existing = this.coValues[id];
     if (!existing) {
       throw new Error("CoValue not found");
     }
-    existing.listeners.delete(listenerID);
+    delete existing.listeners[listenerID];
   }
 
   tick(): {
@@ -198,7 +206,7 @@ export class LocalNode2 {
       | LoadMetadataFromStorageEffect
       | LoadTransactionsFromStorageEffect
     )[] = [];
-    for (const coValue of this.coValues.values()) {
+    for (const coValue of Object.values(this.coValues)) {
       if (coValue.storageState === "unknown") {
         effects.push({ type: "loadMetadataFromStorage", id: coValue.id });
         coValue.storageState = "pending";
@@ -207,30 +215,32 @@ export class LocalNode2 {
       } else if (coValue.storageState === "unavailable") {
         continue;
       } else {
-        if (coValue.listeners.size > 0) {
-          for (const [sessionID, session] of coValue.sessions.entries()) {
-            let firstToLoad = -1;
-            let lastToLoad = -1;
+        if (Object.keys(coValue.listeners).length == 0) continue;
+        for (const [sessionID, session] of Object.entries(coValue.sessions) as [
+          SessionID,
+          SessionEntry,
+        ][]) {
+          let firstToLoad = -1;
+          let lastToLoad = -1;
 
-            for (let i = 0; i < session.transactions.length; i++) {
-              if (session.transactions[i]?.state === "availableInStorage") {
-                if (firstToLoad === -1) {
-                  firstToLoad = i;
-                }
-                lastToLoad = i;
-                session.transactions[i] = { state: "loadingFromStorage" };
+          for (let i = 0; i < session.transactions.length; i++) {
+            if (session.transactions[i]?.state === "availableInStorage") {
+              if (firstToLoad === -1) {
+                firstToLoad = i;
               }
+              lastToLoad = i;
+              session.transactions[i] = { state: "loadingFromStorage" };
             }
+          }
 
-            if (firstToLoad !== -1) {
-              effects.push({
-                type: "loadTransactionsFromStorage",
-                id: coValue.id,
-                sessionID,
-                from: firstToLoad,
-                to: lastToLoad,
-              });
-            }
+          if (firstToLoad !== -1) {
+            effects.push({
+              type: "loadTransactionsFromStorage",
+              id: coValue.id,
+              sessionID,
+              from: firstToLoad,
+              to: lastToLoad,
+            });
           }
         }
       }
@@ -248,12 +258,14 @@ export class LocalNode2 {
 
   stageValidate() {}
 
+  stageDecrypt() {}
+
   stageNotify(): { effects: NotifyListenerEffect[] } {
     throw new Error("Not implemented");
   }
 
   stageSync(): { effects: SendMessageToPeerEffect[] } {
-    for (const coValue of this.coValues.values()) {
+    for (const coValue of Object.values(this.coValues)) {
       if (
         coValue.storageState === "pending" ||
         coValue.storageState === "unknown"
@@ -275,7 +287,7 @@ export class LocalNode2 {
     header: CoValueHeader | null,
     knownState: KnownState,
   ) {
-    const entry = this.coValues.get(id);
+    const entry = this.coValues[id];
     if (!entry) {
       throw new Error("CoValue not found");
     }
@@ -284,8 +296,8 @@ export class LocalNode2 {
     }
     entry.storageState = knownState;
     if (knownState !== "unknown" && knownState !== "unavailable") {
-      for (const sessionID of knownState.sessions.keys()) {
-        let session = entry.sessions.get(sessionID);
+      for (const sessionID of Object.keys(knownState.sessions) as SessionID[]) {
+        let session = entry.sessions[sessionID];
         if (!session) {
           session = {
             id: sessionID,
@@ -295,9 +307,9 @@ export class LocalNode2 {
             lastDepsAvailable: 0,
             lastDecrypted: 0,
           };
-          entry.sessions.set(sessionID, session);
+          entry.sessions[sessionID] = session;
         }
-        for (let i = 0; i < (knownState.sessions.get(sessionID) || 0); i++) {
+        for (let i = 0; i < (knownState.sessions[sessionID] || 0); i++) {
           if (!session.transactions[i]) {
             session.transactions[i] = { state: "availableInStorage" };
           }
@@ -331,11 +343,11 @@ export class LocalNode2 {
   ): {
     result: { type: "success" } | { type: "gap"; expectedAfter: number };
   } {
-    const entry = this.coValues.get(id);
+    const entry = this.coValues[id];
     if (!entry) {
       throw new Error("CoValue not found");
     }
-    const session = entry.sessions.get(sessionID);
+    const session = entry.sessions[sessionID];
     if (!session) {
       throw new Error("Session not found");
     }

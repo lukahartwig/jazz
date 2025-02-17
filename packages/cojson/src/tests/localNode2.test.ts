@@ -9,25 +9,26 @@ import { PeerID } from "../sync.js";
 const crypto = await WasmCrypto.create();
 
 describe("Subscribing to a CoValue", () => {
-  const node = new LocalNode2(crypto.newRandomAgentSecret());
-  const id = "co_fakeCoValueID" as RawCoID;
-
   test("creates an empty entry if none exists yet", () => {
+    const node = new LocalNode2(crypto.newRandomAgentSecret());
+    const id = "co_fakeCoValueID" as RawCoID;
     const { listenerID } = node.subscribe(id);
 
     expect(listenerID).toBeDefined();
 
-    expect(node.coValues.get(id)).toEqual({
+    expect(node.coValues[id]).toEqual({
       id,
       header: null,
-      sessions: new Map(),
+      sessions: {},
       storageState: "unknown",
-      peerState: new Map(),
-      listeners: new Map([[listenerID, "unknown"]]),
+      peerState: {},
+      listeners: { [listenerID]: "unknown" },
     });
   });
 
   test("adds a listener if an entry already exists", () => {
+    const node = new LocalNode2(crypto.newRandomAgentSecret());
+    const id = "co_fakeCoValueID" as RawCoID;
     const { listenerID: firstListenerID } = node.subscribe(id);
     const { listenerID: secondListenerID } = node.subscribe(id);
 
@@ -35,26 +36,28 @@ describe("Subscribing to a CoValue", () => {
     expect(secondListenerID).toBeDefined();
     expect(firstListenerID).not.toEqual(secondListenerID);
 
-    expect(node.coValues.get(id)).toEqual({
+    expect(node.coValues[id]).toEqual({
       id,
       header: null,
-      sessions: new Map(),
+      sessions: {},
       storageState: "unknown",
-      peerState: new Map(),
-      listeners: new Map([
-        [expect.any(Number), "unknown"],
-        [firstListenerID, "unknown"],
-        [secondListenerID, "unknown"],
-      ]),
+      peerState: {},
+      listeners: {
+        [firstListenerID]: "unknown",
+        [secondListenerID]: "unknown",
+      },
     });
   });
 
   test("unsubscribing from a CoValue removes the listener", () => {
+    const node = new LocalNode2(crypto.newRandomAgentSecret());
+    const id = "co_fakeCoValueID" as RawCoID;
+
     const { listenerID } = node.subscribe(id);
-    expect(node.coValues.get(id)?.listeners.has(listenerID)).toBe(true);
+    expect(node.coValues[id].listeners[listenerID]).toBe("unknown");
 
     node.unsubscribe(id, listenerID);
-    expect(node.coValues.get(id)?.listeners.has(listenerID)).toBe(false);
+    expect(node.coValues[id].listeners[listenerID]).toBeUndefined();
   });
 });
 
@@ -68,12 +71,12 @@ describe("Modifying peers", () => {
   test("Adding a peer adds it to the node and to every CoValue with an unknown peer state", () => {
     const peerID = "peer1" as PeerID;
     node.addPeer(peerID);
-    expect(node.peers).toEqual(new Set([peerID]));
-    expect(node.coValues.get(coValueID1)?.peerState.get(peerID)).toEqual({
+    expect(node.peers).toEqual([peerID]);
+    expect(node.coValues[coValueID1].peerState[peerID]).toEqual({
       confirmed: "unknown",
       optimistic: "unknown",
     });
-    expect(node.coValues.get(coValueID2)?.peerState.get(peerID)).toEqual({
+    expect(node.coValues[coValueID2].peerState[peerID]).toEqual({
       confirmed: "unknown",
       optimistic: "unknown",
     });
@@ -82,13 +85,9 @@ describe("Modifying peers", () => {
   test("Removing a peer removes it from the node and from every CoValue", () => {
     const peerID = "peer1" as PeerID;
     node.removePeer(peerID);
-    expect(node.peers).toEqual(new Set());
-    expect(node.coValues.get(coValueID1)?.peerState.get(peerID)).toBe(
-      undefined,
-    );
-    expect(node.coValues.get(coValueID2)?.peerState.get(peerID)).toBe(
-      undefined,
-    );
+    expect(node.peers).toEqual([]);
+    expect(node.coValues[coValueID1].peerState[peerID]).toBeUndefined();
+    expect(node.coValues[coValueID2].peerState[peerID]).toBeUndefined();
   });
 });
 
@@ -110,8 +109,8 @@ describe("Loading from storage", () => {
       { type: "loadMetadataFromStorage", id: coValueID2 },
     ]);
 
-    expect(node.coValues.get(coValueID1)?.storageState).toBe("pending");
-    expect(node.coValues.get(coValueID2)?.storageState).toBe("pending");
+    expect(node.coValues[coValueID1].storageState).toBe("pending");
+    expect(node.coValues[coValueID2].storageState).toBe("pending");
   });
 
   test("when we receive metadata of a present CoValue from storage, we keep it in memory, update the storage state and add pending transactions", () => {
@@ -125,16 +124,18 @@ describe("Loading from storage", () => {
 
     const knownState = {
       header: true,
-      sessions: new Map([["session1" as SessionID, 5]]),
+      sessions: {
+        session1: 5,
+      },
     };
 
     node.onMetadataLoaded(coValueID1, header, knownState);
 
-    const entry = node.coValues.get(coValueID1);
+    const entry = node.coValues[coValueID1];
 
     expect(entry?.header).toEqual(header);
     expect(entry?.storageState).toBe(knownState);
-    expect(entry?.sessions.get("session1" as SessionID)?.transactions).toEqual([
+    expect(entry?.sessions["session1"]?.transactions).toEqual([
       { state: "availableInStorage" },
       { state: "availableInStorage" },
       { state: "availableInStorage" },
@@ -149,7 +150,7 @@ describe("Loading from storage", () => {
 
     node.onMetadataLoaded(coValueID1, null, knownState);
 
-    expect(node.coValues.get(coValueID1)?.storageState).toBe("unavailable");
+    expect(node.coValues[coValueID1].storageState).toBe("unavailable");
   });
 
   test("stageLoad requests transactions from storage if a CoValue has listeners", () => {
@@ -157,7 +158,7 @@ describe("Loading from storage", () => {
     const coValueID1 = "co_fakeCoValueID1" as RawCoID;
     const coValueID2 = "co_fakeCoValueID2" as RawCoID;
 
-    node.coValues.set(coValueID1, {
+    node.coValues[coValueID1] = {
       id: coValueID1,
       header: {
         type: "comap",
@@ -165,31 +166,32 @@ describe("Loading from storage", () => {
         meta: null,
         uniqueness: 1,
       },
-      sessions: new Map([
-        [
-          "session1" as SessionID,
-          {
-            transactions: [
-              { state: "availableInStorage" },
-              { state: "availableInStorage" },
-            ],
-            id: "session1" as SessionID,
-            lastVerified: 0,
-            lastAvailable: 0,
-            lastDepsAvailable: 0,
-            lastDecrypted: 0,
-          },
-        ],
-      ]),
+      sessions: {
+        ["session1" as SessionID]: {
+          transactions: [
+            { state: "availableInStorage" as const },
+            { state: "availableInStorage" as const },
+          ],
+          id: "session1" as SessionID,
+          lastVerified: 0,
+          lastAvailable: 0,
+          lastDepsAvailable: 0,
+          lastDecrypted: 0,
+        },
+      },
       storageState: {
         header: true,
-        sessions: new Map([["session1" as SessionID, 2]]),
+        sessions: {
+          ["session1" as SessionID]: 2,
+        },
       },
-      peerState: new Map(),
-      listeners: new Map([[1, "unknown"]]),
-    });
+      peerState: {},
+      listeners: {
+        [1]: "unknown",
+      },
+    };
 
-    node.coValues.set(coValueID2, {
+    node.coValues[coValueID2] = {
       id: coValueID2,
       header: {
         type: "comap",
@@ -197,29 +199,28 @@ describe("Loading from storage", () => {
         meta: null,
         uniqueness: 2,
       },
-      sessions: new Map([
-        [
-          "session1" as SessionID,
-          {
-            transactions: [
-              { state: "availableInStorage" },
-              { state: "availableInStorage" },
-            ],
-            id: "session1" as SessionID,
-            lastVerified: 0,
-            lastAvailable: 0,
-            lastDepsAvailable: 0,
-            lastDecrypted: 0,
-          },
-        ],
-      ]),
+      sessions: {
+        ["session1" as SessionID]: {
+          transactions: [
+            { state: "availableInStorage" as const },
+            { state: "availableInStorage" as const },
+          ],
+          id: "session1" as SessionID,
+          lastVerified: 0,
+          lastAvailable: 0,
+          lastDepsAvailable: 0,
+          lastDecrypted: 0,
+        },
+      },
       storageState: {
         header: true,
-        sessions: new Map([["session1" as SessionID, 2]]),
+        sessions: {
+          ["session1" as SessionID]: 2,
+        },
       },
-      peerState: new Map(),
-      listeners: new Map(),
-    });
+      peerState: {},
+      listeners: {},
+    };
 
     const { effects } = node.stageLoad();
     expect(effects).toEqual([
@@ -233,16 +234,14 @@ describe("Loading from storage", () => {
     ]);
 
     expect(
-      node.coValues.get(coValueID1)?.sessions.get("session1" as SessionID)
-        ?.transactions,
+      node.coValues[coValueID1].sessions["session1"]?.transactions,
     ).toEqual([
       { state: "loadingFromStorage" },
       { state: "loadingFromStorage" },
     ]);
 
     expect(
-      node.coValues.get(coValueID2)?.sessions.get("session1" as SessionID)
-        ?.transactions,
+      node.coValues[coValueID2].sessions["session1"]?.transactions,
     ).toEqual([
       { state: "availableInStorage" },
       { state: "availableInStorage" },
@@ -264,7 +263,9 @@ describe("Loading from storage", () => {
 
     const knownState = {
       header: true,
-      sessions: new Map([["session1" as SessionID, 5]]),
+      sessions: {
+        session1: 5,
+      },
     };
 
     node.onMetadataLoaded(coValueID1, header, knownState);
@@ -308,9 +309,7 @@ describe("Loading from storage", () => {
     );
 
     expect(result1).toEqual({ type: "success" });
-    expect(
-      node.coValues.get(coValueID1)?.sessions.get("session1" as SessionID),
-    ).toEqual({
+    expect(node.coValues[coValueID1].sessions["session1"]).toEqual({
       id: "session1" as SessionID,
       lastAvailable: 1,
       lastDepsAvailable: 0,
@@ -338,9 +337,7 @@ describe("Loading from storage", () => {
     );
 
     expect(result2).toEqual({ type: "success" });
-    expect(
-      node.coValues.get(coValueID1)?.sessions.get("session1" as SessionID),
-    ).toEqual({
+    expect(node.coValues[coValueID1].sessions["session1"]).toEqual({
       id: "session1" as SessionID,
       lastAvailable: 4,
       lastDepsAvailable: 0,
