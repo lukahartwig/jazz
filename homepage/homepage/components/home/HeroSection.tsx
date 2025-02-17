@@ -1,5 +1,6 @@
 import { H1 } from "gcmp-design-system/src/app/components/atoms/Headings";
 import { Icon } from "gcmp-design-system/src/app/components/atoms/Icon";
+import { Kicker } from "gcmp-design-system/src/app/components/atoms/Kicker";
 import { Prose } from "gcmp-design-system/src/app/components/molecules/Prose";
 import Link from "next/link";
 
@@ -42,9 +43,7 @@ export function HeroSection() {
   return (
     <div className="container grid gap-x-8 gap-y-10 py-12 md:py-16 lg:py-24 lg:gap-0 lg:grid-cols-3">
       <div className="flex flex-col justify-center gap-4 lg:col-span-3 lg:gap-8">
-        <p className="uppercase text-blue tracking-widest text-sm font-medium dark:text-stone-400">
-          Local-first development toolkit
-        </p>
+        <Kicker>Local-first development toolkit</Kicker>
         <H1>
           <span className="inline-block">Ship top-tier apps</span>{" "}
           <span className="inline-block">at high tempo.</span>

@@ -12,7 +12,7 @@ export function Kicker({
     <Element
       className={clsx(
         className,
-        "uppercase text-blue tracking-widest text-sm font-medium dark:text-stone-400",
+        "uppercase font-mono text-blue tracking-widest text-sm font-semibold dark:text-stone-400",
       )}
     >
       {children}
