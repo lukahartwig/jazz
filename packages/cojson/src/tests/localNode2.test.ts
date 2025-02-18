@@ -63,7 +63,7 @@ describe("Subscribing to a CoValue", () => {
 
 describe("Modifying peers", () => {
   const node = new LocalNode2(crypto.newRandomAgentSecret());
-  const coValueID1 = "co_fakeCoValueID1" as RawCoID;
+  const coValueID1 = "co_zCoValueID1" as RawCoID;
   const coValueID2 = "co_fakeCoValueID2" as RawCoID;
   const _1 = node.subscribe(coValueID1);
   const _2 = node.subscribe(coValueID2);
@@ -94,7 +94,7 @@ describe("Modifying peers", () => {
 describe("Loading from storage", () => {
   function setupNodeWithTwoCoValues() {
     const node = new LocalNode2(crypto.newRandomAgentSecret());
-    const coValueID1 = "co_fakeCoValueID1" as RawCoID;
+    const coValueID1 = "co_zCoValueID1" as RawCoID;
     const coValueID2 = "co_fakeCoValueID2" as RawCoID;
     const _1 = node.subscribe(coValueID1);
     const _2 = node.subscribe(coValueID2);
@@ -125,7 +125,7 @@ describe("Loading from storage", () => {
     const knownState = {
       header: true,
       sessions: {
-        session1: 5,
+        [sessionID1]: 5,
       },
     };
 
@@ -135,7 +135,7 @@ describe("Loading from storage", () => {
 
     expect(entry?.header).toEqual(header);
     expect(entry?.storageState).toBe(knownState);
-    expect(entry?.sessions["session1"]?.transactions).toEqual([
+    expect(entry?.sessions[sessionID1]?.transactions).toEqual([
       { state: "availableInStorage" },
       { state: "availableInStorage" },
       { state: "availableInStorage" },
@@ -155,7 +155,7 @@ describe("Loading from storage", () => {
 
   test("stageLoad requests transactions from storage if a CoValue has listeners", () => {
     const node = new LocalNode2(crypto.newRandomAgentSecret());
-    const coValueID1 = "co_fakeCoValueID1" as RawCoID;
+    const coValueID1 = "co_zCoValueID1" as RawCoID;
     const coValueID2 = "co_fakeCoValueID2" as RawCoID;
 
     node.coValues[coValueID1] = {
@@ -167,12 +167,12 @@ describe("Loading from storage", () => {
         uniqueness: 1,
       },
       sessions: {
-        ["session1" as SessionID]: {
+        [sessionID1]: {
           transactions: [
             { state: "availableInStorage" as const },
             { state: "availableInStorage" as const },
           ],
-          id: "session1" as SessionID,
+          id: sessionID1,
           lastVerified: 0,
           lastAvailable: 0,
           lastDepsAvailable: 0,
@@ -182,13 +182,14 @@ describe("Loading from storage", () => {
       storageState: {
         header: true,
         sessions: {
-          ["session1" as SessionID]: 2,
+          [sessionID1]: 2,
         },
       },
       peerState: {},
       listeners: {
         [1]: "unknown",
       },
+      dependents: [],
     };
 
     node.coValues[coValueID2] = {
@@ -200,12 +201,12 @@ describe("Loading from storage", () => {
         uniqueness: 2,
       },
       sessions: {
-        ["session1" as SessionID]: {
+        [sessionID1]: {
           transactions: [
             { state: "availableInStorage" as const },
             { state: "availableInStorage" as const },
           ],
-          id: "session1" as SessionID,
+          id: sessionID1,
           lastVerified: 0,
           lastAvailable: 0,
           lastDepsAvailable: 0,
@@ -215,11 +216,12 @@ describe("Loading from storage", () => {
       storageState: {
         header: true,
         sessions: {
-          ["session1" as SessionID]: 2,
+          [sessionID1]: 2,
         },
       },
       peerState: {},
       listeners: {},
+      dependents: [],
     };
 
     const { effects } = node.stageLoad();
@@ -227,21 +229,21 @@ describe("Loading from storage", () => {
       {
         type: "loadTransactionsFromStorage",
         id: coValueID1,
-        sessionID: "session1" as SessionID,
+        sessionID: sessionID1,
         from: 0,
         to: 1,
       },
     ]);
 
     expect(
-      node.coValues[coValueID1].sessions["session1"]?.transactions,
+      node.coValues[coValueID1].sessions[sessionID1]?.transactions,
     ).toEqual([
       { state: "loadingFromStorage" },
       { state: "loadingFromStorage" },
     ]);
 
     expect(
-      node.coValues[coValueID2].sessions["session1"]?.transactions,
+      node.coValues[coValueID2].sessions[sessionID1]?.transactions,
     ).toEqual([
       { state: "availableInStorage" },
       { state: "availableInStorage" },
@@ -264,53 +266,23 @@ describe("Loading from storage", () => {
     const knownState = {
       header: true,
       sessions: {
-        session1: 5,
+        [sessionID1]: 5,
       },
     };
 
     node.onMetadataLoaded(coValueID1, header, knownState);
 
-    const tx1 = {
-      privacy: "trusting",
-      changes: '["ch1"]' as Stringified<string[]>,
-      madeAt: 1,
-    } satisfies Transaction;
-
-    const tx2 = {
-      privacy: "trusting",
-      changes: '["ch2"]' as Stringified<string[]>,
-      madeAt: 2,
-    } satisfies Transaction;
-
-    const tx3 = {
-      privacy: "trusting",
-      changes: '["ch3"]' as Stringified<string[]>,
-      madeAt: 3,
-    } satisfies Transaction;
-
-    const tx4 = {
-      privacy: "trusting",
-      changes: '["ch4"]' as Stringified<string[]>,
-      madeAt: 4,
-    } satisfies Transaction;
-
-    const tx5 = {
-      privacy: "trusting",
-      changes: '["ch5"]' as Stringified<string[]>,
-      madeAt: 5,
-    } satisfies Transaction;
-
     const { result: result1 } = node.addTransaction(
       coValueID1,
-      "session1" as SessionID,
+      sessionID1,
       0,
       [tx1, tx2],
       "signature_after2" as Signature,
     );
 
     expect(result1).toEqual({ type: "success" });
-    expect(node.coValues[coValueID1].sessions["session1"]).toEqual({
-      id: "session1" as SessionID,
+    expect(node.coValues[coValueID1].sessions[sessionID1]).toEqual({
+      id: sessionID1,
       lastAvailable: 1,
       lastDepsAvailable: 0,
       lastVerified: 0,
@@ -330,15 +302,15 @@ describe("Loading from storage", () => {
 
     const { result: result2 } = node.addTransaction(
       coValueID1,
-      "session1" as SessionID,
+      sessionID1,
       2,
       [tx3, tx4, tx5],
       "signature_after5" as Signature,
     );
 
     expect(result2).toEqual({ type: "success" });
-    expect(node.coValues[coValueID1].sessions["session1"]).toEqual({
-      id: "session1" as SessionID,
+    expect(node.coValues[coValueID1].sessions[sessionID1]).toEqual({
+      id: sessionID1,
       lastAvailable: 4,
       lastDepsAvailable: 0,
       lastVerified: 0,
@@ -359,14 +331,78 @@ describe("Loading from storage", () => {
         },
       ],
     } satisfies SessionEntry);
-
-    // console.dir(node, { depth: null });
   });
+});
+
+describe("Loading dependencies", () => {
+  const twoAvailableCoValues = {
+    co_zCoValueID1: {
+      id: "co_zCoValueID1",
+      header: {
+        type: "comap",
+        ruleset: { type: "unsafeAllowAll" },
+        meta: null,
+        uniqueness: 0,
+      },
+      sessions: {
+        [sessionID1]: {
+          id: sessionID1,
+          transactions: [
+            { state: "available" as const, tx: tx1, signature: null },
+            {
+              state: "available" as const,
+              tx: tx2,
+              signature: "signature_after2" as Signature,
+            },
+            { state: "available" as const, tx: tx3, signature: null },
+            { state: "available" as const, tx: tx4, signature: null },
+            {
+              state: "available" as const,
+              tx: tx5,
+              signature: "signature_after5" as Signature,
+            },
+          ],
+          lastVerified: 0,
+          lastAvailable: 4,
+          lastDepsAvailable: 0,
+          lastDecrypted: 0,
+        },
+      },
+      storageState: { header: true, sessions: { [sessionID1]: 5 } },
+      peerState: {},
+      listeners: {},
+      dependents: [],
+    },
+    co_zCoValueID2: {
+      id: "co_zCoValueID2",
+      header: null,
+      sessions: {},
+      storageState: "unknown",
+      peerState: {},
+      listeners: {},
+      dependents: [],
+    },
+  } satisfies LocalNode2["coValues"];
+
+  test("stageLoadDeps does nothing for CoValues without listeners", () => {
+    const node = new LocalNode2(crypto.newRandomAgentSecret());
+
+    node.coValues = twoAvailableCoValues;
+
+    node.peers = [];
+
+    const coValuesBefore = structuredClone(node.coValues);
+
+    node.stageLoadDeps();
+    expect(node.coValues).toEqual(coValuesBefore);
+  });
+
+  test("stageLoadDeps adds dependent covalues to their dependencies if they have listeners", () => {});
 });
 
 describe("Syncing", () => {
   const node = new LocalNode2(crypto.newRandomAgentSecret());
-  const coValueID1 = "co_fakeCoValueID1" as RawCoID;
+  const coValueID1 = "co_zCoValueID1" as RawCoID;
   const coValueID2 = "co_fakeCoValueID2" as RawCoID;
   const _1 = node.subscribe(coValueID1);
 
@@ -381,3 +417,35 @@ describe("Syncing", () => {
     expect(node.coValues).toEqual(coValuesBefore);
   });
 });
+
+const sessionID1 = "session1" as SessionID;
+
+const tx1 = {
+  privacy: "trusting",
+  changes: '["ch1"]' as Stringified<string[]>,
+  madeAt: 1,
+} satisfies Transaction;
+
+const tx2 = {
+  privacy: "trusting",
+  changes: '["ch2"]' as Stringified<string[]>,
+  madeAt: 2,
+} satisfies Transaction;
+
+const tx3 = {
+  privacy: "trusting",
+  changes: '["ch3"]' as Stringified<string[]>,
+  madeAt: 3,
+} satisfies Transaction;
+
+const tx4 = {
+  privacy: "trusting",
+  changes: '["ch4"]' as Stringified<string[]>,
+  madeAt: 4,
+} satisfies Transaction;
+
+const tx5 = {
+  privacy: "trusting",
+  changes: '["ch5"]' as Stringified<string[]>,
+  madeAt: 5,
+} satisfies Transaction;

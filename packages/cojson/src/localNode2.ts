@@ -76,6 +76,7 @@ interface CoValueEntry {
     };
   };
   listeners: { [key: ListenerID]: KnownState };
+  dependents: RawCoID[];
 }
 
 export type ListenerID = number;
@@ -248,11 +249,7 @@ export class LocalNode2 {
     return { effects };
   }
 
-  stageLoadDeps(coValue: CoValueEntry): {
-    effects: LoadMetadataFromStorageEffect[];
-  } {
-    throw new Error("Not implemented");
-  }
+  stageLoadDeps() {}
 
   stageVerify() {}
 
