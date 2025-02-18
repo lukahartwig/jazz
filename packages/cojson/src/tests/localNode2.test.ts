@@ -425,7 +425,7 @@ describe("Loading dependencies", () => {
     ]);
   });
 
-  test("stageLoadDeps adds dependent covalues to an existing coValue's dependencies if the dependent has listeners (memberInGroup)", () => {
+  test("stageLoadDeps adds dependent covalues to an existing coValue's dependencies if the dependent has listeners (group member)", () => {
     const node = new LocalNode2(crypto.newRandomAgentSecret());
 
     node.coValues = scenarios.coValue2IsMemberInCoValue1WhichIsAGroup;
@@ -451,6 +451,37 @@ describe("Loading dependencies", () => {
     const node = new LocalNode2(crypto.newRandomAgentSecret());
 
     node.coValues = scenarios.coValue2IsMemberInCoValue1WhichIsAGroup;
+    delete node.coValues["co_zCoValueID2"];
+    node.peers = [];
+
+    const _ = node.subscribe("co_zCoValueID1");
+
+    node.stageLoadDeps();
+
+    expect(node.coValues["co_zCoValueID2"].dependents).toEqual([
+      "co_zCoValueID1",
+    ]);
+  });
+
+  test("stageLoadDeps adds dependent covalues to an existing coValue's dependencies if the dependent has listeners (extended group)", () => {
+    const node = new LocalNode2(crypto.newRandomAgentSecret());
+
+    node.coValues = scenarios.coValue2IsExtendedGroupOfCoValue1;
+    node.peers = [];
+
+    const _ = node.subscribe("co_zCoValueID1");
+
+    node.stageLoadDeps();
+
+    expect(node.coValues["co_zCoValueID2"].dependents).toEqual([
+      "co_zCoValueID1",
+    ]);
+  });
+
+  test("stageLoadDeps adds dependents and adds a new entry on missing dependency if the dependent has listeners (extended group)", () => {
+    const node = new LocalNode2(crypto.newRandomAgentSecret());
+
+    node.coValues = scenarios.coValue2IsExtendedGroupOfCoValue1;
     delete node.coValues["co_zCoValueID2"];
     node.peers = [];
 
@@ -585,6 +616,65 @@ const scenarios = {
                 privacy: "trusting" as const,
                 changes:
                   `[{"op": "set", "key": "${coValueID2}", "value": "someValue"}]` as Stringified<
+                    string[]
+                  >,
+                madeAt: 1,
+              },
+              signature: null,
+            },
+            {
+              state: "available" as const,
+              tx: tx2,
+              signature: "signature_after2" as Signature,
+            },
+            { state: "available" as const, tx: tx3, signature: null },
+            { state: "available" as const, tx: tx4, signature: null },
+            {
+              state: "available" as const,
+              tx: tx5,
+              signature: "signature_after5" as Signature,
+            },
+          ],
+          lastVerified: 0,
+          lastAvailable: 4,
+          lastDepsAvailable: 0,
+          lastDecrypted: 0,
+        },
+      },
+      storageState: { header: true, sessions: { [sessionID1]: 5 } },
+      peerState: {},
+      listeners: {},
+      dependents: [],
+    },
+    co_zCoValueID2: {
+      id: "co_zCoValueID2",
+      header: null,
+      sessions: {},
+      storageState: "unknown",
+      peerState: {},
+      listeners: {},
+      dependents: [],
+    },
+  } satisfies LocalNode2["coValues"],
+  coValue2IsExtendedGroupOfCoValue1: {
+    co_zCoValueID1: {
+      id: "co_zCoValueID1",
+      header: {
+        type: "comap",
+        ruleset: { type: "group", initialAdmin: "sealer_z1/signer_z1" },
+        meta: null,
+        uniqueness: 0,
+      },
+      sessions: {
+        [sessionID1]: {
+          id: sessionID1,
+          transactions: [
+            {
+              state: "available" as const,
+              tx: {
+                privacy: "trusting" as const,
+                changes:
+                  `[{"op": "set", "key": "parent_${coValueID2}", "value": "someValue"}]` as Stringified<
                     string[]
                   >,
                 madeAt: 1,
