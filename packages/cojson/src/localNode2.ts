@@ -2,16 +2,18 @@ import { CoValueHeader, Transaction } from "./coValueCore.js";
 import { Signature, StreamingHash } from "./crypto/crypto.js";
 import {
   AgentSecret,
+  CryptoProvider,
   JsonValue,
   Peer,
   RawCoID,
   SessionID,
   SyncMessage,
 } from "./exports.js";
-import { getGroupDependentKey } from "./ids.js";
+import { getGroupDependentKey, isAgentID } from "./ids.js";
 import { parseJSON } from "./jsonStringify.js";
 import { StoredSessionLog } from "./storage.js";
 import { PeerID } from "./sync.js";
+import { accountOrAgentIDfromSessionID } from "./typeUtils/accountOrAgentIDfromSessionID.js";
 
 export type TransactionState =
   | {
@@ -47,11 +49,18 @@ export type TransactionState =
             error: Error;
           };
       stored: boolean;
+    }
+  | {
+      state: "verificationFailed";
+      tx: Transaction;
+      signature: Signature | null;
+      reason: string;
     };
 
 export type SessionEntry = {
   id: SessionID;
   transactions: TransactionState[];
+  streamingHash: StreamingHash | null;
   lastAvailable: number;
   lastDepsAvailable: number;
   lastVerified: number;
@@ -131,11 +140,13 @@ export class LocalNode2 {
   coValues: { [key: RawCoID]: CoValueEntry };
   agentSecret: AgentSecret;
   peers: PeerID[];
+  crypto: CryptoProvider;
 
-  constructor(agentSecret: AgentSecret) {
+  constructor(agentSecret: AgentSecret, crypto: CryptoProvider) {
     this.agentSecret = agentSecret;
     this.coValues = {};
     this.peers = [];
+    this.crypto = crypto;
   }
 
   addPeer(peerID: PeerID) {
@@ -313,7 +324,87 @@ export class LocalNode2 {
     }
   }
 
-  stageVerify() {}
+  stageVerify() {
+    for (const coValue of Object.values(this.coValues)) {
+      if (
+        coValue.storageState === "pending" ||
+        coValue.storageState === "unknown"
+      ) {
+        continue;
+      }
+      sessionLoop: for (const [sessionID, session] of Object.entries(
+        coValue.sessions,
+      ) as [SessionID, SessionEntry][]) {
+        if (session.lastVerified == session.lastAvailable) {
+          continue;
+        }
+
+        const streamingHash =
+          session.streamingHash?.clone() ?? new StreamingHash(this.crypto);
+
+        for (
+          let i = session.lastVerified + 1;
+          i <= session.lastAvailable;
+          i++
+        ) {
+          const txState = session.transactions[i];
+
+          if (txState?.state !== "available") {
+            throw new Error(
+              `Transaction ${i} is not available in ${coValue.id} ${sessionID}`,
+            );
+          }
+
+          streamingHash.update(txState.tx);
+
+          if (txState.signature) {
+            const hash = streamingHash.digest();
+            const authorID = accountOrAgentIDfromSessionID(sessionID);
+            if (!isAgentID(authorID)) {
+              throw new Error(
+                `Author ID ${authorID} is not an agent ID in ${coValue.id} ${sessionID} - not yet handled`,
+              );
+            }
+            const signerID = this.crypto.getAgentSignerID(authorID);
+            if (this.crypto.verify(txState.signature, hash, signerID)) {
+              for (let v = session.lastVerified + 1; v <= i; v++) {
+                session.transactions[v] = {
+                  ...(session.transactions[v] as TransactionState & {
+                    state: "available";
+                  }),
+                  state: "verified",
+                  validity: { type: "valid" },
+                  decryptionState: { type: "decrypted", changes: [] },
+                  stored: false,
+                };
+              }
+              session.lastVerified = i;
+            } else {
+              console.log(
+                `Signature verification failed for transaction ${i} in ${coValue.id} ${sessionID}`,
+              );
+
+              for (
+                let iv = session.lastVerified + 1;
+                iv <= session.lastAvailable;
+                iv++
+              ) {
+                session.transactions[iv] = {
+                  ...(session.transactions[iv] as TransactionState & {
+                    state: "available";
+                  }),
+                  state: "verificationFailed",
+                  reason: "Invalid signature",
+                };
+              }
+              session.lastVerified = session.lastAvailable;
+              break sessionLoop;
+            }
+          }
+        }
+      }
+    }
+  }
 
   stageValidate() {}
 
@@ -361,10 +452,11 @@ export class LocalNode2 {
           session = {
             id: sessionID,
             transactions: [],
-            lastVerified: 0,
-            lastAvailable: 0,
-            lastDepsAvailable: 0,
-            lastDecrypted: 0,
+            streamingHash: null,
+            lastVerified: -1,
+            lastAvailable: -1,
+            lastDepsAvailable: -1,
+            lastDecrypted: -1,
           };
           entry.sessions[sessionID] = session;
         }
