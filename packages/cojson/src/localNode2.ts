@@ -159,6 +159,7 @@ export class LocalNode2 {
         listeners: {
           1: "unknown",
         },
+        dependents: [],
       };
 
       return { listenerID: 1 };
@@ -216,7 +217,11 @@ export class LocalNode2 {
       } else if (coValue.storageState === "unavailable") {
         continue;
       } else {
-        if (Object.keys(coValue.listeners).length == 0) continue;
+        if (
+          Object.keys(coValue.listeners).length == 0 &&
+          coValue.dependents.length === 0
+        )
+          continue;
         for (const [sessionID, session] of Object.entries(coValue.sessions) as [
           SessionID,
           SessionEntry,
@@ -249,7 +254,24 @@ export class LocalNode2 {
     return { effects };
   }
 
-  stageLoadDeps() {}
+  stageLoadDeps() {
+    for (const coValue of Object.values(this.coValues)) {
+      if (Object.keys(coValue.listeners).length === 0) {
+        continue;
+      }
+      if (coValue.storageState === "pending") {
+        continue;
+      }
+      if (coValue.header?.ruleset.type === "ownedByGroup") {
+        const existing = this.coValues[coValue.header.ruleset.group];
+        if (existing) {
+          if (!existing.dependents.includes(coValue.id)) {
+            existing.dependents.push(coValue.id);
+          }
+        }
+      }
+    }
+  }
 
   stageVerify() {}
 

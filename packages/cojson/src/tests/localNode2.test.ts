@@ -23,6 +23,7 @@ describe("Subscribing to a CoValue", () => {
       storageState: "unknown",
       peerState: {},
       listeners: { [listenerID]: "unknown" },
+      dependents: [],
     });
   });
 
@@ -46,6 +47,7 @@ describe("Subscribing to a CoValue", () => {
         [firstListenerID]: "unknown",
         [secondListenerID]: "unknown",
       },
+      dependents: [],
     });
   });
 
@@ -63,8 +65,6 @@ describe("Subscribing to a CoValue", () => {
 
 describe("Modifying peers", () => {
   const node = new LocalNode2(crypto.newRandomAgentSecret());
-  const coValueID1 = "co_zCoValueID1" as RawCoID;
-  const coValueID2 = "co_fakeCoValueID2" as RawCoID;
   const _1 = node.subscribe(coValueID1);
   const _2 = node.subscribe(coValueID2);
 
@@ -153,12 +153,8 @@ describe("Loading from storage", () => {
     expect(node.coValues[coValueID1].storageState).toBe("unavailable");
   });
 
-  test("stageLoad requests transactions from storage if a CoValue has listeners", () => {
-    const node = new LocalNode2(crypto.newRandomAgentSecret());
-    const coValueID1 = "co_zCoValueID1" as RawCoID;
-    const coValueID2 = "co_fakeCoValueID2" as RawCoID;
-
-    node.coValues[coValueID1] = {
+  const coValuesWithAvailableInStorageTxs = {
+    [coValueID1]: {
       id: coValueID1,
       header: {
         type: "comap",
@@ -186,13 +182,10 @@ describe("Loading from storage", () => {
         },
       },
       peerState: {},
-      listeners: {
-        [1]: "unknown",
-      },
+      listeners: {},
       dependents: [],
-    };
-
-    node.coValues[coValueID2] = {
+    },
+    [coValueID2]: {
       id: coValueID2,
       header: {
         type: "comap",
@@ -222,7 +215,52 @@ describe("Loading from storage", () => {
       peerState: {},
       listeners: {},
       dependents: [],
-    };
+    },
+  } satisfies LocalNode2["coValues"];
+
+  test("stageLoad requests transactions from storage if a CoValue has listeners", () => {
+    const node = new LocalNode2(crypto.newRandomAgentSecret());
+    const coValueID1 = "co_zCoValueID1" as RawCoID;
+    const coValueID2 = "co_fakeCoValueID2" as RawCoID;
+
+    node.coValues = structuredClone(coValuesWithAvailableInStorageTxs);
+
+    const _ = node.subscribe(coValueID1);
+
+    const { effects } = node.stageLoad();
+    expect(effects).toEqual([
+      {
+        type: "loadTransactionsFromStorage",
+        id: coValueID1,
+        sessionID: sessionID1,
+        from: 0,
+        to: 1,
+      },
+    ]);
+
+    expect(
+      node.coValues[coValueID1].sessions[sessionID1]?.transactions,
+    ).toEqual([
+      { state: "loadingFromStorage" },
+      { state: "loadingFromStorage" },
+    ]);
+
+    expect(
+      node.coValues[coValueID2].sessions[sessionID1]?.transactions,
+    ).toEqual([
+      { state: "availableInStorage" },
+      { state: "availableInStorage" },
+    ]);
+  });
+
+  test("stageLoad requests transactions from storage if a CoValue has listeners", () => {
+    const node = new LocalNode2(crypto.newRandomAgentSecret());
+    const coValueID1 = "co_zCoValueID1" as RawCoID;
+    const coValueID2 = "co_fakeCoValueID2" as RawCoID;
+
+    node.coValues = structuredClone(coValuesWithAvailableInStorageTxs);
+
+    node.coValues[coValueID1].dependents.push(coValueID2);
 
     const { effects } = node.stageLoad();
     expect(effects).toEqual([
@@ -335,12 +373,12 @@ describe("Loading from storage", () => {
 });
 
 describe("Loading dependencies", () => {
-  const twoAvailableCoValues = {
+  const coValue2IsGroupOfCoValue1 = {
     co_zCoValueID1: {
       id: "co_zCoValueID1",
       header: {
         type: "comap",
-        ruleset: { type: "unsafeAllowAll" },
+        ruleset: { type: "ownedByGroup", group: "co_zCoValueID2" },
         meta: null,
         uniqueness: 0,
       },
@@ -384,11 +422,10 @@ describe("Loading dependencies", () => {
     },
   } satisfies LocalNode2["coValues"];
 
-  test("stageLoadDeps does nothing for CoValues without listeners", () => {
+  test("stageLoadDeps does nothing for CoValues without listeners or dependents", () => {
     const node = new LocalNode2(crypto.newRandomAgentSecret());
 
-    node.coValues = twoAvailableCoValues;
-
+    node.coValues = coValue2IsGroupOfCoValue1;
     node.peers = [];
 
     const coValuesBefore = structuredClone(node.coValues);
@@ -397,7 +434,27 @@ describe("Loading dependencies", () => {
     expect(node.coValues).toEqual(coValuesBefore);
   });
 
-  test("stageLoadDeps adds dependent covalues to their dependencies if they have listeners", () => {});
+  test("stageLoadDeps adds dependent covalues to an existing coValue's dependencies if they have listeners (ownedByGroup)", () => {
+    const node = new LocalNode2(crypto.newRandomAgentSecret());
+
+    node.coValues = coValue2IsGroupOfCoValue1;
+    node.peers = [];
+
+    const _ = node.subscribe("co_zCoValueID1");
+
+    node.stageLoadDeps();
+
+    expect(node.coValues["co_zCoValueID2"].dependents).toEqual([
+      "co_zCoValueID1",
+    ]);
+
+    node.stageLoadDeps();
+
+    // idempotency
+    expect(node.coValues["co_zCoValueID2"].dependents).toEqual([
+      "co_zCoValueID1",
+    ]);
+  });
 });
 
 describe("Syncing", () => {
@@ -417,6 +474,9 @@ describe("Syncing", () => {
     expect(node.coValues).toEqual(coValuesBefore);
   });
 });
+
+const coValueID1 = "co_zCoValueID1" as RawCoID;
+const coValueID2 = "co_fakeCoValueID2" as RawCoID;
 
 const sessionID1 = "session1" as SessionID;
 
