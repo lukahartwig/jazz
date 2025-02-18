@@ -115,6 +115,18 @@ type WriteToStorageEffect = {
   sessions: { [key: SessionID]: StoredSessionLog };
 };
 
+function createEmptyCoValueEntry(id: RawCoID): CoValueEntry {
+  return {
+    id,
+    header: null,
+    sessions: {},
+    storageState: "unknown",
+    peerState: {},
+    listeners: {},
+    dependents: [],
+  };
+}
+
 export class LocalNode2 {
   coValues: { [key: RawCoID]: CoValueEntry };
   agentSecret: AgentSecret;
@@ -152,18 +164,9 @@ export class LocalNode2 {
   } {
     const existing = this.coValues[id];
     if (!existing) {
-      this.coValues[id] = {
-        id,
-        header: null,
-        sessions: {},
-        storageState: "unknown",
-        peerState: {},
-        listeners: {
-          1: "unknown",
-        },
-        dependents: [],
-      };
-
+      const entry = createEmptyCoValueEntry(id);
+      entry.listeners[1] = "unknown";
+      this.coValues[id] = entry;
       return { listenerID: 1 };
     } else {
       const nextListenerID = Object.keys(existing.listeners).length + 1;
@@ -271,15 +274,9 @@ export class LocalNode2 {
             existing.dependents.push(coValue.id);
           }
         } else {
-          this.coValues[coValue.header.ruleset.group] = {
-            id: coValue.header.ruleset.group,
-            header: null,
-            sessions: {},
-            storageState: "unknown",
-            peerState: {},
-            listeners: {},
-            dependents: [coValue.id],
-          };
+          const entry = createEmptyCoValueEntry(coValue.header.ruleset.group);
+          entry.dependents.push(coValue.id);
+          this.coValues[coValue.header.ruleset.group] = entry;
         }
       } else if (coValue.header?.ruleset.type === "group") {
         for (const session of Object.values(coValue.sessions)) {
@@ -302,15 +299,9 @@ export class LocalNode2 {
                         existing.dependents.push(coValue.id);
                       }
                     } else {
-                      this.coValues[groupDependency] = {
-                        id: groupDependency,
-                        header: null,
-                        sessions: {},
-                        storageState: "unknown",
-                        peerState: {},
-                        listeners: {},
-                        dependents: [coValue.id],
-                      };
+                      const entry = createEmptyCoValueEntry(groupDependency);
+                      entry.dependents.push(coValue.id);
+                      this.coValues[groupDependency] = entry;
                     }
                   }
                 }
