@@ -94,8 +94,7 @@ describe("Modifying peers", () => {
 describe("Loading from storage", () => {
   function setupNodeWithTwoCoValues() {
     const node = new LocalNode2(crypto.newRandomAgentSecret());
-    const coValueID1 = "co_zCoValueID1" as RawCoID;
-    const coValueID2 = "co_fakeCoValueID2" as RawCoID;
+
     const _1 = node.subscribe(coValueID1);
     const _2 = node.subscribe(coValueID2);
     return { node, coValueID1, coValueID2 };
@@ -220,8 +219,6 @@ describe("Loading from storage", () => {
 
   test("stageLoad requests transactions from storage if a CoValue has listeners", () => {
     const node = new LocalNode2(crypto.newRandomAgentSecret());
-    const coValueID1 = "co_zCoValueID1" as RawCoID;
-    const coValueID2 = "co_fakeCoValueID2" as RawCoID;
 
     node.coValues = structuredClone(coValuesWithAvailableInStorageTxs);
 
@@ -255,8 +252,6 @@ describe("Loading from storage", () => {
 
   test("stageLoad requests transactions from storage if a CoValue has listeners", () => {
     const node = new LocalNode2(crypto.newRandomAgentSecret());
-    const coValueID1 = "co_zCoValueID1" as RawCoID;
-    const coValueID2 = "co_fakeCoValueID2" as RawCoID;
 
     node.coValues = structuredClone(coValuesWithAvailableInStorageTxs);
 
@@ -434,7 +429,7 @@ describe("Loading dependencies", () => {
     expect(node.coValues).toEqual(coValuesBefore);
   });
 
-  test("stageLoadDeps adds dependent covalues to an existing coValue's dependencies if they have listeners (ownedByGroup)", () => {
+  test("stageLoadDeps adds dependent covalues to an existing coValue's dependencies if the dependent has listeners (ownedByGroup)", () => {
     const node = new LocalNode2(crypto.newRandomAgentSecret());
 
     node.coValues = coValue2IsGroupOfCoValue1;
@@ -455,12 +450,133 @@ describe("Loading dependencies", () => {
       "co_zCoValueID1",
     ]);
   });
+
+  test("stageLoadDeps adds dependents and adds a new entry on missing dependency if the dependent has listeners (ownedByGroup)", () => {
+    const node = new LocalNode2(crypto.newRandomAgentSecret());
+
+    node.coValues = coValue2IsGroupOfCoValue1;
+    delete node.coValues["co_zCoValueID2"];
+    node.peers = [];
+
+    const _ = node.subscribe("co_zCoValueID1");
+
+    node.stageLoadDeps();
+
+    expect(node.coValues["co_zCoValueID2"].dependents).toEqual([
+      "co_zCoValueID1",
+    ]);
+
+    node.stageLoadDeps();
+
+    // idempotency
+    expect(node.coValues["co_zCoValueID2"].dependents).toEqual([
+      "co_zCoValueID1",
+    ]);
+  });
+
+  const coValue2IsMemberInCoValue1WhichIsAGroup = {
+    co_zCoValueID1: {
+      id: "co_zCoValueID1",
+      header: {
+        type: "comap",
+        ruleset: { type: "group", initialAdmin: "sealer_z1/signer_z1" },
+        meta: null,
+        uniqueness: 0,
+      },
+      sessions: {
+        [sessionID1]: {
+          id: sessionID1,
+          transactions: [
+            {
+              state: "available" as const,
+              tx: {
+                privacy: "trusting" as const,
+                changes:
+                  `[{"op": "set", "key": "${coValueID2}", "value": "someValue"}]` as Stringified<
+                    string[]
+                  >,
+                madeAt: 1,
+              },
+              signature: null,
+            },
+            {
+              state: "available" as const,
+              tx: tx2,
+              signature: "signature_after2" as Signature,
+            },
+            { state: "available" as const, tx: tx3, signature: null },
+            { state: "available" as const, tx: tx4, signature: null },
+            {
+              state: "available" as const,
+              tx: tx5,
+              signature: "signature_after5" as Signature,
+            },
+          ],
+          lastVerified: 0,
+          lastAvailable: 4,
+          lastDepsAvailable: 0,
+          lastDecrypted: 0,
+        },
+      },
+      storageState: { header: true, sessions: { [sessionID1]: 5 } },
+      peerState: {},
+      listeners: {},
+      dependents: [],
+    },
+    co_zCoValueID2: {
+      id: "co_zCoValueID2",
+      header: null,
+      sessions: {},
+      storageState: "unknown",
+      peerState: {},
+      listeners: {},
+      dependents: [],
+    },
+  } satisfies LocalNode2["coValues"];
+
+  test("stageLoadDeps adds dependent covalues to an existing coValue's dependencies if the dependent has listeners (memberInGroup)", () => {
+    const node = new LocalNode2(crypto.newRandomAgentSecret());
+
+    node.coValues = coValue2IsMemberInCoValue1WhichIsAGroup;
+    node.peers = [];
+
+    const _ = node.subscribe("co_zCoValueID1");
+
+    node.stageLoadDeps();
+
+    expect(node.coValues["co_zCoValueID2"].dependents).toEqual([
+      "co_zCoValueID1",
+    ]);
+
+    node.stageLoadDeps();
+
+    // idempotency
+    expect(node.coValues["co_zCoValueID2"].dependents).toEqual([
+      "co_zCoValueID1",
+    ]);
+  });
+
+  test("stageLoadDeps adds dependents and adds a new entry on missing dependency if the dependent has listeners (group member)", () => {
+    const node = new LocalNode2(crypto.newRandomAgentSecret());
+
+    node.coValues = coValue2IsMemberInCoValue1WhichIsAGroup;
+    delete node.coValues["co_zCoValueID2"];
+    node.peers = [];
+
+    const _ = node.subscribe("co_zCoValueID1");
+
+    node.stageLoadDeps();
+
+    expect(node.coValues["co_zCoValueID2"].dependents).toEqual([
+      "co_zCoValueID1",
+    ]);
+  });
 });
 
 describe("Syncing", () => {
   const node = new LocalNode2(crypto.newRandomAgentSecret());
   const coValueID1 = "co_zCoValueID1" as RawCoID;
-  const coValueID2 = "co_fakeCoValueID2" as RawCoID;
+  const coValueID2 = "co_z" as RawCoID;
   const _1 = node.subscribe(coValueID1);
 
   node.stageLoad();
@@ -476,7 +592,7 @@ describe("Syncing", () => {
 });
 
 const coValueID1 = "co_zCoValueID1" as RawCoID;
-const coValueID2 = "co_fakeCoValueID2" as RawCoID;
+const coValueID2 = "co_zCoValueID2" as RawCoID;
 
 const sessionID1 = "session1" as SessionID;
 

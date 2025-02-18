@@ -8,6 +8,8 @@ import {
   SessionID,
   SyncMessage,
 } from "./exports.js";
+import { getGroupDependentKey } from "./ids.js";
+import { parseJSON } from "./jsonStringify.js";
 import { StoredSessionLog } from "./storage.js";
 import { PeerID } from "./sync.js";
 
@@ -267,6 +269,53 @@ export class LocalNode2 {
         if (existing) {
           if (!existing.dependents.includes(coValue.id)) {
             existing.dependents.push(coValue.id);
+          }
+        } else {
+          this.coValues[coValue.header.ruleset.group] = {
+            id: coValue.header.ruleset.group,
+            header: null,
+            sessions: {},
+            storageState: "unknown",
+            peerState: {},
+            listeners: {},
+            dependents: [coValue.id],
+          };
+        }
+      } else if (coValue.header?.ruleset.type === "group") {
+        for (const session of Object.values(coValue.sessions)) {
+          for (const tx of session.transactions) {
+            if (tx.state === "available" && tx.tx.privacy === "trusting") {
+              const changes = parseJSON(tx.tx.changes);
+              for (const change of changes) {
+                if (
+                  typeof change === "object" &&
+                  change !== null &&
+                  "op" in change &&
+                  change.op === "set" &&
+                  "key" in change
+                ) {
+                  const groupDependency = getGroupDependentKey(change.key);
+                  if (groupDependency) {
+                    const existing = this.coValues[groupDependency];
+                    if (existing) {
+                      if (!existing.dependents.includes(coValue.id)) {
+                        existing.dependents.push(coValue.id);
+                      }
+                    } else {
+                      this.coValues[groupDependency] = {
+                        id: groupDependency,
+                        header: null,
+                        sessions: {},
+                        storageState: "unknown",
+                        peerState: {},
+                        listeners: {},
+                        dependents: [coValue.id],
+                      };
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       }
