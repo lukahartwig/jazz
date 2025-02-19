@@ -1,5 +1,5 @@
 import { CoValueHeader, Transaction } from "./coValueCore.js";
-import { Signature, StreamingHash } from "./crypto/crypto.js";
+import { Hash, Signature, StreamingHash } from "./crypto/crypto.js";
 import {
   AgentSecret,
   CryptoProvider,
@@ -55,6 +55,7 @@ export type TransactionState =
       tx: Transaction;
       signature: Signature | null;
       reason: string;
+      hash: Hash;
     };
 
 export type SessionEntry = {
@@ -328,7 +329,9 @@ export class LocalNode2 {
     for (const coValue of Object.values(this.coValues)) {
       if (
         coValue.storageState === "pending" ||
-        coValue.storageState === "unknown"
+        coValue.storageState === "unknown" ||
+        (Object.keys(coValue.listeners).length === 0 &&
+          coValue.dependents.length === 0)
       ) {
         continue;
       }
@@ -373,8 +376,8 @@ export class LocalNode2 {
                     state: "available";
                   }),
                   state: "verified",
-                  validity: { type: "valid" },
-                  decryptionState: { type: "decrypted", changes: [] },
+                  validity: { type: "unknown" },
+                  decryptionState: { type: "notDecrypted" },
                   stored: false,
                 };
               }
@@ -395,6 +398,7 @@ export class LocalNode2 {
                   }),
                   state: "verificationFailed",
                   reason: "Invalid signature",
+                  hash: hash,
                 };
               }
               session.lastVerified = session.lastAvailable;

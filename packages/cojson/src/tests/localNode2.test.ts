@@ -1,10 +1,11 @@
 import { describe, expect, test } from "vitest";
 import { CoValueHeader, Transaction } from "../coValueCore.js";
 import { WasmCrypto } from "../crypto/WasmCrypto.js";
-import { Signature } from "../crypto/crypto.js";
+import { Signature, StreamingHash } from "../crypto/crypto.js";
 import { RawCoID, SessionID, Stringified } from "../exports.js";
 import { LocalNode2, SessionEntry, TransactionState } from "../localNode2.js";
 import { PeerID } from "../sync.js";
+import { MockCrypto } from "./MockCrypto.js";
 
 const crypto = await WasmCrypto.create();
 
@@ -312,7 +313,7 @@ describe("Loading dependencies", () => {
   test("stageLoadDeps does nothing for CoValues without listeners or dependents", () => {
     const node = new LocalNode2(crypto.newRandomAgentSecret(), crypto);
 
-    node.coValues = scenarios.coValue2IsGroupOfCoValue1;
+    node.coValues = structuredClone(scenarios.coValue2IsGroupOfCoValue1);
     node.peers = [];
 
     const coValuesBefore = structuredClone(node.coValues);
@@ -324,7 +325,7 @@ describe("Loading dependencies", () => {
   test("stageLoadDeps adds dependent covalues to an existing coValue's dependencies if the dependent has listeners (ownedByGroup)", () => {
     const node = new LocalNode2(crypto.newRandomAgentSecret(), crypto);
 
-    node.coValues = scenarios.coValue2IsGroupOfCoValue1;
+    node.coValues = structuredClone(scenarios.coValue2IsGroupOfCoValue1);
     node.peers = [];
 
     const _ = node.subscribe("co_zCoValueID1");
@@ -346,7 +347,7 @@ describe("Loading dependencies", () => {
   test("stageLoadDeps adds dependents and adds a new entry on missing dependency if the dependent has listeners (ownedByGroup)", () => {
     const node = new LocalNode2(crypto.newRandomAgentSecret(), crypto);
 
-    node.coValues = scenarios.coValue2IsGroupOfCoValue1;
+    node.coValues = structuredClone(scenarios.coValue2IsGroupOfCoValue1);
     delete node.coValues["co_zCoValueID2"];
     node.peers = [];
 
@@ -369,7 +370,9 @@ describe("Loading dependencies", () => {
   test("stageLoadDeps adds dependent covalues to an existing coValue's dependencies if the dependent has listeners (group member)", () => {
     const node = new LocalNode2(crypto.newRandomAgentSecret(), crypto);
 
-    node.coValues = scenarios.coValue2IsMemberInCoValue1WhichIsAGroup;
+    node.coValues = structuredClone(
+      scenarios.coValue2IsMemberInCoValue1WhichIsAGroup,
+    );
     node.peers = [];
 
     const _ = node.subscribe("co_zCoValueID1");
@@ -391,7 +394,9 @@ describe("Loading dependencies", () => {
   test("stageLoadDeps adds dependents and adds a new entry on missing dependency if the dependent has listeners (group member)", () => {
     const node = new LocalNode2(crypto.newRandomAgentSecret(), crypto);
 
-    node.coValues = scenarios.coValue2IsMemberInCoValue1WhichIsAGroup;
+    node.coValues = structuredClone(
+      scenarios.coValue2IsMemberInCoValue1WhichIsAGroup,
+    );
     delete node.coValues["co_zCoValueID2"];
     node.peers = [];
 
@@ -407,7 +412,9 @@ describe("Loading dependencies", () => {
   test("stageLoadDeps adds dependent covalues to an existing coValue's dependencies if the dependent has listeners (extended group)", () => {
     const node = new LocalNode2(crypto.newRandomAgentSecret(), crypto);
 
-    node.coValues = scenarios.coValue2IsExtendedGroupOfCoValue1;
+    node.coValues = structuredClone(
+      scenarios.coValue2IsExtendedGroupOfCoValue1,
+    );
     node.peers = [];
 
     const _ = node.subscribe("co_zCoValueID1");
@@ -422,7 +429,9 @@ describe("Loading dependencies", () => {
   test("stageLoadDeps adds dependents and adds a new entry on missing dependency if the dependent has listeners (extended group)", () => {
     const node = new LocalNode2(crypto.newRandomAgentSecret(), crypto);
 
-    node.coValues = scenarios.coValue2IsExtendedGroupOfCoValue1;
+    node.coValues = structuredClone(
+      scenarios.coValue2IsExtendedGroupOfCoValue1,
+    );
     delete node.coValues["co_zCoValueID2"];
     node.peers = [];
 
@@ -438,9 +447,12 @@ describe("Loading dependencies", () => {
 
 describe("stageVerify", () => {
   test("stageVerify does nothing for CoValues without listeners or dependents", () => {
-    const node = new LocalNode2(crypto.newRandomAgentSecret(), crypto);
+    const node = new LocalNode2(
+      crypto.newRandomAgentSecret(),
+      new MockCrypto(crypto),
+    );
 
-    node.coValues = scenarios.coValue2IsGroupOfCoValue1;
+    node.coValues = structuredClone(scenarios.coValue2IsGroupOfCoValue1);
 
     const coValuesBefore = structuredClone(node.coValues);
 
@@ -449,9 +461,12 @@ describe("stageVerify", () => {
   });
 
   test("stageVerify verifies a CoValue if it has listeners", () => {
-    const node = new LocalNode2(crypto.newRandomAgentSecret(), crypto);
+    const node = new LocalNode2(
+      crypto.newRandomAgentSecret(),
+      new MockCrypto(crypto),
+    );
 
-    node.coValues = scenarios.coValue2IsGroupOfCoValue1;
+    node.coValues = structuredClone(scenarios.coValue2IsGroupOfCoValue1);
 
     const _ = node.subscribe(coValueID1);
 
@@ -460,7 +475,7 @@ describe("stageVerify", () => {
     expect(node.coValues[coValueID1].sessions[sessionID1].lastVerified).toEqual(
       4,
     );
-    expect(node.coValues[coValueID2].sessions[sessionID1].transactions).toEqual(
+    expect(node.coValues[coValueID1].sessions[sessionID1].transactions).toEqual(
       [
         {
           state: "verified" as const,
@@ -473,7 +488,7 @@ describe("stageVerify", () => {
         {
           state: "verified" as const,
           tx: tx2,
-          signature: "signature_after2" as Signature,
+          signature: signatureAfter2,
           validity: { type: "unknown" },
           decryptionState: { type: "notDecrypted" },
           stored: false,
@@ -497,7 +512,7 @@ describe("stageVerify", () => {
         {
           state: "verified" as const,
           tx: tx5,
-          signature: "signature_after5" as Signature,
+          signature: signatureAfter5,
           validity: { type: "unknown" },
           decryptionState: { type: "notDecrypted" },
           stored: false,
@@ -528,7 +543,7 @@ describe("Syncing", () => {
 const coValueID1 = "co_zCoValueID1" as RawCoID;
 const coValueID2 = "co_zCoValueID2" as RawCoID;
 
-const sessionID1 = "session1" as SessionID;
+const sessionID1 = "sealer_z1/signer_z1_session1" as SessionID;
 
 const tx1 = {
   privacy: "trusting",
@@ -559,6 +574,18 @@ const tx5 = {
   changes: '["ch5"]' as Stringified<string[]>,
   madeAt: 5,
 } satisfies Transaction;
+
+const streamingHash = new StreamingHash(crypto);
+streamingHash.update(tx1);
+streamingHash.update(tx2);
+const signatureAfter2 =
+  `signature_z[signer_z1/${crypto.shortHash(streamingHash.digest())}]` as Signature;
+
+streamingHash.update(tx3);
+streamingHash.update(tx4);
+streamingHash.update(tx5);
+const signatureAfter5 =
+  `signature_z[signer_z1/${crypto.shortHash(streamingHash.digest())}]` as Signature;
 
 const scenarios = {
   coValuesWithAvailableInStorageTxs: {
@@ -628,7 +655,7 @@ const scenarios = {
     },
   } satisfies LocalNode2["coValues"],
   coValue2IsGroupOfCoValue1: {
-    co_zCoValueID1: {
+    [coValueID1]: {
       id: coValueID1,
       header: {
         type: "comap",
@@ -644,14 +671,14 @@ const scenarios = {
             {
               state: "available" as const,
               tx: tx2,
-              signature: "signature_after2" as Signature,
+              signature: signatureAfter2,
             },
             { state: "available" as const, tx: tx3, signature: null },
             { state: "available" as const, tx: tx4, signature: null },
             {
               state: "available" as const,
               tx: tx5,
-              signature: "signature_after5" as Signature,
+              signature: signatureAfter5,
             },
           ],
           lastVerified: -1,
@@ -666,7 +693,7 @@ const scenarios = {
       listeners: {},
       dependents: [],
     },
-    co_zCoValueID2: {
+    [coValueID2]: {
       id: coValueID2,
       header: null,
       sessions: {},
@@ -677,7 +704,7 @@ const scenarios = {
     },
   } satisfies LocalNode2["coValues"],
   coValue2IsMemberInCoValue1WhichIsAGroup: {
-    co_zCoValueID1: {
+    [coValueID1]: {
       id: coValueID1,
       header: {
         type: "comap",
@@ -726,7 +753,7 @@ const scenarios = {
       listeners: {},
       dependents: [],
     },
-    co_zCoValueID2: {
+    [coValueID2]: {
       id: coValueID2,
       header: null,
       sessions: {},
@@ -737,7 +764,7 @@ const scenarios = {
     },
   } satisfies LocalNode2["coValues"],
   coValue2IsExtendedGroupOfCoValue1: {
-    co_zCoValueID1: {
+    [coValueID1]: {
       id: coValueID1,
       header: {
         type: "comap",
@@ -786,8 +813,8 @@ const scenarios = {
       listeners: {},
       dependents: [],
     },
-    co_zCoValueID2: {
-      id: "co_zCoValueID2",
+    [coValueID2]: {
+      id: coValueID2,
       header: null,
       sessions: {},
       storageState: "unknown",

@@ -104,9 +104,13 @@ export class WasmCrypto extends CryptoProvider<Uint8Array> {
   }
 
   verify(signature: Signature, message: JsonValue, id: SignerID): boolean {
-    return new Ed25519VerifyingKey(
-      new Memory(base58.decode(id.substring("signer_z".length))),
-    ).verify(
+    const idBytes = base58.decode(id.substring("signer_z".length));
+    if (idBytes.length !== 32) {
+      throw new Error(
+        `Invalid signer ID ${id} - ID bytes length is ${idBytes.length} instead of 32`,
+      );
+    }
+    return new Ed25519VerifyingKey(new Memory(idBytes)).verify(
       new Memory(textEncoder.encode(stableStringify(message))),
       new Ed25519Signature(
         new Memory(base58.decode(signature.substring("signature_z".length))),
