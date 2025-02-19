@@ -1,16 +1,24 @@
 import { ContentByFramework, CodeGroup } from '@/components/forMdx'
 
-# Using AI tools to build Jazz apps
+# Using AI to build Jazz apps
 
-AI tools, particularly large language models (LLMs), can enhance the speed at which you build apps with Jazz.
-However, for these tools to work effectively and provide better results, they need access to the relevant documentation.
+AI tools, particularly large language models (LLMs), can accelerate your development with Jazz. Where once you might have spent hours searching the docs, now you can ask an LLM to do it for you.
 
-## LLM docs
+Jazz is a rapidly evolving framework, and the docs are a work in progress, and sometimes AI might get things a little wrong.
 
-To provide AI tools, like Cursor, with access to Jazz docs, we've compressed the docs into a single txt file that is
-more LLM-readable than a full website, which you can easily upload to your tool of choice.
+To help the LLMs we provide a number of [llms.txt](https://llmstxt.org/) files that are optimised for use with AI tools.
 
-## Adding docs to ChatGPT and v0
+## Getting started with AI tools
+
+[llms.txt](https://llmstxt.org/) is a proposal to standardise the way that documentation is provided to AI tools at inference time that helps them understand the context of the code you're writing.
+
+Many AI tools are starting to support this, and we've created a [llms-full.txt](https://jazz.tools/llms-full.txt) file that is optimised for use with AI tools, like Cursor.
+
+## Setting up AI tools
+
+Every AI tool is different, but generally you'll need to either provide the contents of the [llms-full.txt](https://jazz.tools/llms-full.txt) file in your prompt, or upload the file to the tool.
+
+### ChatGPT/Claude etc.
 
 <a href="/llms-full.txt" download>Download llms-full.txt</a>
 
@@ -18,7 +26,7 @@ Upload the txt file in your prompt.
 
 ![ChatGPT prompt with llms-full.txt attached](/chatgpt-with-llms-full-txt.jpg)
 
-## Adding docs to Cursor
+### Cursor
 
 1. Go to Settings > Cursor Settings > Features > Docs
 2. Click "Add new doc"
@@ -30,3 +38,8 @@ https://jazz.tools/llms-full.txt
 ```
 </CodeGroup>
 
+## Limitations and considerations
+
+AI is amazing, but it's not perfect. What works well this week could break next week (or be twice as good).
+
+We're keen to keep up with changes in tooling to help support you building the best apps, but if you need help from humans (or you have issues getting set up), please let us know on [Discord](https://discord.gg/utDMjHYg42).
