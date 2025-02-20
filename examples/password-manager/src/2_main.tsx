@@ -1,4 +1,4 @@
-import { JazzProvider, PasskeyAuthBasicUI } from "jazz-react";
+import { JazzInspector, JazzProvider, PasskeyAuthBasicUI } from "jazz-react";
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { PasswordManagerAccount } from "./1_schema.ts";
@@ -16,6 +16,7 @@ function JazzAndAuth({ children }: { children: React.ReactNode }) {
       }}
     >
       <PasskeyAuthBasicUI appName="Jazz Password Manager">
+        <JazzInspector enabled />
         {children}
       </PasskeyAuthBasicUI>
     </JazzProvider>

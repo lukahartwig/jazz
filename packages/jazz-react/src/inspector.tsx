@@ -1,6 +1,11 @@
 import { exportAccountToInspector } from "jazz-browser";
 
-export function JazzInspector({ minimal }: { minimal?: boolean }) {
+export function JazzInspector({
+  minimal,
+  enabled,
+}: { minimal?: boolean; enabled?: boolean }) {
+  if (!enabled) return null;
+
   return (
     <button
       onClick={() => exportAccountToInspector()}
