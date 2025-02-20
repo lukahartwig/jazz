@@ -1,4 +1,5 @@
 export { JazzProvider } from "./provider.js";
+export { JazzInspector } from "./inspector.js";
 export type { Register, JazzProviderProps } from "./provider.js";
 export {
   useAccount,
@@ -13,7 +14,6 @@ export {
 export {
   createInviteLink,
   parseInviteLink,
-  exportAccountToInspector,
 } from "jazz-browser";
 
 export * from "./auth/auth.js";
