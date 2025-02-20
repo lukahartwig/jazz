@@ -1,26 +1,20 @@
-import { ContentByFramework, CodeGroup } from '@/components/forMdx'
+import { ContentByFramework, FileDownloadLink, CodeGroup } from '@/components/forMdx'
 
 # Using AI to build Jazz apps
 
 AI tools, particularly large language models (LLMs), can accelerate your development with Jazz. Searching docs, responding to questions and even helping you write code are all things that LLMs are starting to get good at.
 
-Jazz is a rapidly evolving framework, and the docs are a work in progress, and sometimes AI might get things a little wrong.
+However, Jazz is a rapidly evolving framework, so sometimes AI might get things a little wrong.
 
-To help the LLMs, we provide a number of [llms.txt](https://llmstxt.org/) files that are optimised for use with AI tools.
+To help the LLMs, we provide the Jazz documentation in a txt file that is optimized for use with AI tools, like Cursor.
 
-## Getting started with AI tools
-
-[llms.txt](https://llmstxt.org/) is a proposal to standardise the way that documentation is provided to AI tools at inference time that helps them understand the context of the code you're writing.
-
-Many AI tools are starting to support this, and we've created a [llms-full.txt](https://jazz.tools/llms-full.txt) file that is optimised for use with AI tools, like Cursor.
+<FileDownloadLink href="/llms-full.txt">llms-full.txt</FileDownloadLink>
 
 ## Setting up AI tools
 
-Every AI tool is different, but generally you'll need to either provide the contents of the [llms-full.txt](https://jazz.tools/llms-full.txt) file in your prompt, or upload the file to the tool.
+Every tool is different, but generally, you'll need to either paste the contents of the [llms-full.txt](https://jazz.tools/llms-full.txt) file directly in your prompt, or attach the file to the tool.
 
 ### ChatGPT and v0
-
-<a href="/llms-full.txt" download>Download llms-full.txt</a>
 
 Upload the txt file in your prompt.
 
