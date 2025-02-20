@@ -58,9 +58,10 @@ export class MockCrypto implements CryptoProvider<Uint8Array> {
     const expected =
       `signature_z[${id}/${this.shortHash(message)}]` as Signature;
     if (signature !== expected) {
-      throw new Error(
+      console.error(
         `Signature ${signature} does not match expected ${expected}`,
       );
+      return false;
     }
     return true;
   }

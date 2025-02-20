@@ -2,7 +2,7 @@ import { describe, expect, test } from "vitest";
 import { CoValueHeader, Transaction } from "../coValueCore.js";
 import { WasmCrypto } from "../crypto/WasmCrypto.js";
 import { Signature, StreamingHash } from "../crypto/crypto.js";
-import { RawCoID, SessionID, Stringified } from "../exports.js";
+import { JsonValue, RawCoID, SessionID, Stringified } from "../exports.js";
 import { LocalNode2, SessionEntry, TransactionState } from "../localNode2.js";
 import { PeerID } from "../sync.js";
 import { MockCrypto } from "./MockCrypto.js";
@@ -460,7 +460,7 @@ describe("stageVerify", () => {
     expect(node.coValues).toEqual(coValuesBefore);
   });
 
-  test("stageVerify verifies a CoValue if it has listeners", () => {
+  test("stageVerify verifies a CoValue if it has listeners (primitive signer)", () => {
     const node = new LocalNode2(
       crypto.newRandomAgentSecret(),
       new MockCrypto(crypto),
@@ -519,6 +519,194 @@ describe("stageVerify", () => {
         },
       ] satisfies TransactionState[],
     );
+  });
+
+  test("stageVerify verifies a CoValue if it has listeners (invalid signature, primitive signer)", () => {
+    const node = new LocalNode2(
+      crypto.newRandomAgentSecret(),
+      new MockCrypto(crypto),
+    );
+
+    const coValues = structuredClone(scenarios.coValue2IsGroupOfCoValue1);
+    coValues[coValueID1].sessions[sessionID1].transactions[1].signature =
+      "signature_zInvalid1";
+    coValues[coValueID1].sessions[sessionID1].transactions[4].signature =
+      "signature_zInvalid2";
+
+    node.coValues = coValues;
+    const _ = node.subscribe(coValueID1);
+
+    node.stageVerify();
+
+    expect(node.coValues[coValueID1].sessions[sessionID1].lastVerified).toEqual(
+      4,
+    );
+    expect(node.coValues[coValueID1].sessions[sessionID1].transactions).toEqual(
+      [
+        {
+          state: "verificationFailed" as const,
+          tx: tx1,
+          signature: null,
+          reason: "Invalid signature at idx 1",
+          hash: null,
+        },
+        {
+          state: "verificationFailed" as const,
+          tx: tx2,
+          signature: "signature_zInvalid1" as Signature,
+          reason: "Invalid signature (here)",
+          hash: "hash_zEyyx6wfnEsvcc4Br2hUSApxgdmpMitin3QHtLyPDxepA",
+        },
+        {
+          state: "verificationFailed" as const,
+          tx: tx3,
+          signature: null,
+          reason: "Invalid signature at idx 1",
+          hash: null,
+        },
+        {
+          state: "verificationFailed" as const,
+          tx: tx4,
+          signature: null,
+          reason: "Invalid signature at idx 1",
+          hash: null,
+        },
+        {
+          state: "verificationFailed" as const,
+          tx: tx5,
+          signature: "signature_zInvalid2" as Signature,
+          reason: "Invalid signature at idx 1",
+          hash: null,
+        },
+      ] satisfies TransactionState[],
+    );
+  });
+
+  test("stageVerify verifies a CoValue if it has listeners (account signer)", () => {
+    const node = new LocalNode2(
+      crypto.newRandomAgentSecret(),
+      new MockCrypto(crypto),
+    );
+
+    node.coValues = structuredClone(scenarios.coValue2IsAccountOwnerOfCoValue1);
+
+    const _ = node.subscribe(coValueID1);
+
+    node.stageVerify();
+
+    expect(
+      node.coValues[coValueID1].sessions[`${coValueID2}_session1`].lastVerified,
+    ).toEqual(4);
+    expect(
+      node.coValues[coValueID1].sessions[`${coValueID2}_session1`].transactions,
+    ).toEqual([
+      {
+        state: "verified" as const,
+        tx: tx1,
+        signature: null,
+        validity: { type: "unknown" },
+        decryptionState: { type: "notDecrypted" },
+        stored: false,
+      },
+      {
+        state: "verified" as const,
+        tx: tx2,
+        signature: signatureAfter2,
+        validity: { type: "unknown" },
+        decryptionState: { type: "notDecrypted" },
+        stored: false,
+      },
+      {
+        state: "verified" as const,
+        tx: tx3,
+        signature: null,
+        validity: { type: "unknown" },
+        decryptionState: { type: "notDecrypted" },
+        stored: false,
+      },
+      {
+        state: "verified" as const,
+        tx: tx4,
+        signature: null,
+        validity: { type: "unknown" },
+        decryptionState: { type: "notDecrypted" },
+        stored: false,
+      },
+      {
+        state: "verified" as const,
+        tx: tx5,
+        signature: signatureAfter5,
+        validity: { type: "unknown" },
+        decryptionState: { type: "notDecrypted" },
+        stored: false,
+      },
+    ] satisfies TransactionState[]);
+  });
+
+  test("stageVerify verifies a CoValue if it has listeners (invalid signature, account signer)", () => {
+    const node = new LocalNode2(
+      crypto.newRandomAgentSecret(),
+      new MockCrypto(crypto),
+    );
+
+    const coValues = structuredClone(
+      scenarios.coValue2IsAccountOwnerOfCoValue1,
+    );
+    coValues[coValueID1].sessions[
+      `${coValueID2}_session1`
+    ].transactions[1].signature = "signature_zInvalid1";
+    coValues[coValueID1].sessions[
+      `${coValueID2}_session1`
+    ].transactions[4].signature = "signature_zInvalid2";
+
+    node.coValues = coValues;
+
+    const _ = node.subscribe(coValueID1);
+
+    node.stageVerify();
+
+    expect(
+      node.coValues[coValueID1].sessions[`${coValueID2}_session1`].lastVerified,
+    ).toEqual(4);
+    expect(
+      node.coValues[coValueID1].sessions[`${coValueID2}_session1`].transactions,
+    ).toEqual([
+      {
+        state: "verificationFailed" as const,
+        tx: tx1,
+        signature: null,
+        reason: "Invalid signature at idx 1",
+        hash: null,
+      },
+      {
+        state: "verificationFailed" as const,
+        tx: tx2,
+        signature: "signature_zInvalid1" as Signature,
+        reason: "Invalid signature (here)",
+        hash: "hash_zEyyx6wfnEsvcc4Br2hUSApxgdmpMitin3QHtLyPDxepA",
+      },
+      {
+        state: "verificationFailed" as const,
+        tx: tx3,
+        signature: null,
+        reason: "Invalid signature at idx 1",
+        hash: null,
+      },
+      {
+        state: "verificationFailed" as const,
+        tx: tx4,
+        signature: null,
+        reason: "Invalid signature at idx 1",
+        hash: null,
+      },
+      {
+        state: "verificationFailed" as const,
+        tx: tx5,
+        signature: "signature_zInvalid2" as Signature,
+        reason: "Invalid signature at idx 1",
+        hash: null,
+      },
+    ] satisfies TransactionState[]);
   });
 });
 
@@ -817,6 +1005,91 @@ const scenarios = {
       id: coValueID2,
       header: null,
       sessions: {},
+      storageState: "unknown",
+      peerState: {},
+      listeners: {},
+      dependents: [],
+    },
+  } satisfies LocalNode2["coValues"],
+  coValue2IsAccountOwnerOfCoValue1: {
+    [coValueID1]: {
+      id: coValueID1,
+      header: {
+        type: "comap",
+        ruleset: { type: "ownedByGroup", group: coValueID2 },
+        meta: null,
+        uniqueness: 0,
+      },
+      sessions: {
+        [`${coValueID2}_session1` as SessionID]: {
+          id: `${coValueID2}_session1` as SessionID,
+          transactions: [
+            { state: "available" as const, tx: tx1, signature: null },
+            {
+              state: "available" as const,
+              tx: tx2,
+              signature: signatureAfter2,
+            },
+            { state: "available" as const, tx: tx3, signature: null },
+            { state: "available" as const, tx: tx4, signature: null },
+            {
+              state: "available" as const,
+              tx: tx5,
+              signature: signatureAfter5,
+            },
+          ],
+          lastVerified: -1,
+          lastAvailable: 4,
+          lastDepsAvailable: -1,
+          lastDecrypted: -1,
+          streamingHash: null,
+        },
+      },
+      storageState: { header: true, sessions: { [sessionID1]: 5 } },
+      peerState: {},
+      listeners: {},
+      dependents: [],
+    },
+    [coValueID2]: {
+      id: coValueID2,
+      header: {
+        type: "comap",
+        ruleset: { type: "group", initialAdmin: "sealer_z1/signer_z1" },
+        meta: null,
+        uniqueness: 0,
+      },
+      sessions: {
+        ["sealer_z1/signer_z1_session_zInit"]: {
+          id: "sealer_z1/signer_z1_session_zInit" as const,
+          transactions: [
+            {
+              state: "verified" as const,
+              tx: {
+                privacy: "trusting" as const,
+                changes:
+                  '[{ "op": "set", "key": "sealer_z1/signer_z1", "value": "admin"}]' as Stringified<
+                    JsonValue[]
+                  >,
+                madeAt: 1,
+              },
+              validity: { type: "valid" },
+              decryptionState: {
+                type: "decrypted",
+                changes: [
+                  { op: "set", key: "sealer_z1/signer_z1", value: "admin" },
+                ],
+              },
+              stored: true,
+              signature: "signature_zSomeValidSignature",
+            },
+          ],
+          lastVerified: 0,
+          lastAvailable: 0,
+          lastDepsAvailable: 0,
+          lastDecrypted: 0,
+          streamingHash: null,
+        },
+      },
       storageState: "unknown",
       peerState: {},
       listeners: {},

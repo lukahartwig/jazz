@@ -1,5 +1,5 @@
 import { CoValueHeader, Transaction } from "./coValueCore.js";
-import { Hash, Signature, StreamingHash } from "./crypto/crypto.js";
+import { Hash, Signature, SignerID, StreamingHash } from "./crypto/crypto.js";
 import {
   AgentSecret,
   CryptoProvider,
@@ -55,7 +55,7 @@ export type TransactionState =
       tx: Transaction;
       signature: Signature | null;
       reason: string;
-      hash: Hash;
+      hash: Hash | null;
     };
 
 export type SessionEntry = {
@@ -294,6 +294,7 @@ export class LocalNode2 {
         for (const session of Object.values(coValue.sessions)) {
           for (const tx of session.transactions) {
             if (tx.state === "available" && tx.tx.privacy === "trusting") {
+              // TODO: this should read from the tx.decryptionState.changes instead
               const changes = parseJSON(tx.tx.changes);
               for (const change of changes) {
                 if (
@@ -335,9 +336,10 @@ export class LocalNode2 {
       ) {
         continue;
       }
-      sessionLoop: for (const [sessionID, session] of Object.entries(
-        coValue.sessions,
-      ) as [SessionID, SessionEntry][]) {
+      for (const [sessionID, session] of Object.entries(coValue.sessions) as [
+        SessionID,
+        SessionEntry,
+      ][]) {
         if (session.lastVerified == session.lastAvailable) {
           continue;
         }
@@ -345,7 +347,8 @@ export class LocalNode2 {
         const streamingHash =
           session.streamingHash?.clone() ?? new StreamingHash(this.crypto);
 
-        for (
+        // TODO: move into helper function and return instead of label + break
+        sessionLoop: for (
           let i = session.lastVerified + 1;
           i <= session.lastAvailable;
           i++
@@ -363,12 +366,56 @@ export class LocalNode2 {
           if (txState.signature) {
             const hash = streamingHash.digest();
             const authorID = accountOrAgentIDfromSessionID(sessionID);
-            if (!isAgentID(authorID)) {
-              throw new Error(
-                `Author ID ${authorID} is not an agent ID in ${coValue.id} ${sessionID} - not yet handled`,
+            let signerID: SignerID;
+            if (isAgentID(authorID)) {
+              signerID = this.crypto.getAgentSignerID(authorID);
+            } else {
+              const authorAccount = this.coValues[authorID];
+              if (!authorAccount) {
+                throw new Error(
+                  `Author covalue ${authorID} not present, not yet handled`,
+                );
+              }
+              const foundAgentIDs = Object.values(
+                authorAccount.sessions,
+              ).flatMap((session) =>
+                session.transactions.flatMap((tx) => {
+                  if (tx.state === "verified" && tx.tx.privacy === "trusting") {
+                    // TODO: this should read from the tx.decryptionState.changes instead
+                    const changes = parseJSON(tx.tx.changes);
+                    return changes.flatMap((change) => {
+                      if (
+                        typeof change === "object" &&
+                        change !== null &&
+                        "op" in change &&
+                        change.op === "set" &&
+                        "key" in change &&
+                        typeof change.key === "string" &&
+                        isAgentID(change.key)
+                      ) {
+                        return [change.key];
+                      } else {
+                        return [];
+                      }
+                    });
+                  } else {
+                    return [];
+                  }
+                }),
               );
+              if (foundAgentIDs.length > 1) {
+                throw new Error(
+                  `Multiple agent IDs found in ${authorID} - not yet handled`,
+                );
+              }
+              const onlyAgent = foundAgentIDs[0];
+              if (!onlyAgent) {
+                throw new Error(
+                  `No agent ID found in ${authorID} - not yet handled`,
+                );
+              }
+              signerID = this.crypto.getAgentSignerID(onlyAgent);
             }
-            const signerID = this.crypto.getAgentSignerID(authorID);
             if (this.crypto.verify(txState.signature, hash, signerID)) {
               for (let v = session.lastVerified + 1; v <= i; v++) {
                 session.transactions[v] = {
@@ -397,8 +444,10 @@ export class LocalNode2 {
                     state: "available";
                   }),
                   state: "verificationFailed",
-                  reason: "Invalid signature",
-                  hash: hash,
+                  reason: `Invalid signature ${
+                    iv === i ? "(here)" : `at idx ${i}`
+                  }`,
+                  hash: iv === i ? hash : null,
                 };
               }
               session.lastVerified = session.lastAvailable;
