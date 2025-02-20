@@ -10,7 +10,11 @@ export {
   useAuthSecretStorage,
 } from "./hooks.js";
 
-export { createInviteLink, parseInviteLink } from "jazz-browser";
+export {
+  createInviteLink,
+  parseInviteLink,
+  exportAccountToInspector,
+} from "jazz-browser";
 
 export * from "./auth/auth.js";
 export * from "./media.js";

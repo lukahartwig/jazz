@@ -10,6 +10,8 @@ import {
 import { setupInspector } from "./utils/export-account-inspector.js";
 export { BrowserPasskeyAuth } from "./auth/PasskeyAuth.js";
 
+export { exportAccountToInspector } from "./utils/export-account-inspector.js";
+
 setupInspector();
 
 export * from "./createBrowserContext.js";

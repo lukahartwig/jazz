@@ -1,6 +1,6 @@
 import { AuthSecretStorage } from "jazz-tools";
 
-async function exportAccountToInspector() {
+export async function exportAccountToInspector() {
   const authSecretStorage = new AuthSecretStorage();
   const localStorageData = await authSecretStorage.get();
 
