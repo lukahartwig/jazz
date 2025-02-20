@@ -3,22 +3,21 @@ import { CoValueHeader, Transaction } from "../coValueCore.js";
 import { WasmCrypto } from "../crypto/WasmCrypto.js";
 import { Signature, StreamingHash } from "../crypto/crypto.js";
 import { JsonValue, RawCoID, SessionID, Stringified } from "../exports.js";
+import { addPeer, removePeer } from "../localNode/actions/peers.js";
+import { subscribe, unsubscribe } from "../localNode/actions/subscribing.js";
+import { addTransaction } from "../localNode/handlers/addTransaction.js";
+import { onMetadataLoaded } from "../localNode/handlers/onMetadataLoaded.js";
+import { stageLoad } from "../localNode/stages/0_load.js";
+import { stageLoadDeps } from "../localNode/stages/1_loadDeps.js";
+import { stageVerify } from "../localNode/stages/2_verify.js";
+import { stageSync } from "../localNode/stages/6_sync.js";
+
 import {
   LocalNodeState,
-  SessionEntry,
+  SessionState,
   TransactionState,
-  addPeer,
-  addTransaction,
   emptyNode,
-  onMetadataLoaded,
-  removePeer,
-  stageLoad,
-  stageLoadDeps,
-  stageSync,
-  stageVerify,
-  subscribe,
-  unsubscribe,
-} from "../localNode/localNode2.js";
+} from "../localNode/structure.js";
 import { PeerID } from "../sync.js";
 import { MockCrypto } from "./MockCrypto.js";
 
@@ -288,7 +287,7 @@ describe("Loading from storage", () => {
         { state: "availableInStorage" },
       ],
       streamingHash: null,
-    } satisfies SessionEntry);
+    } satisfies SessionState);
 
     const { result: result2 } = addTransaction(
       node,
@@ -322,7 +321,7 @@ describe("Loading from storage", () => {
         },
       ],
       streamingHash: null,
-    } satisfies SessionEntry);
+    } satisfies SessionState);
   });
 });
 
