@@ -1,7 +1,17 @@
 import { clsx } from "clsx";
 import { HeroHeader } from "gcmp-design-system/src/app/components/molecules/HeroHeader";
+import type { Metadata } from "next";
 import dynamic from "next/dynamic";
 import { Fragment } from "react";
+
+const title = "Status";
+
+export const metadata: Metadata = {
+  title,
+  openGraph: {
+    title,
+  },
+};
 
 const LatencyChart = dynamic(() => import("@/components/LatencyChart"), {
   ssr: false,
@@ -131,11 +141,6 @@ const query = async () => {
   }, {});
 
   return byRegion;
-};
-
-export const metadata = {
-  title: "Status",
-  description: "Great apps by smart people.",
 };
 
 export default async function Page() {

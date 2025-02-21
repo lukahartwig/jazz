@@ -1,7 +1,15 @@
 import { packages } from "@/lib/packages";
 import { clsx } from "clsx";
 import { Icon } from "gcmp-design-system/src/app/components/atoms/Icon";
+import type { Metadata } from "next";
 import Link from "next/link";
+
+export const metadata: Metadata = {
+  title: "API reference",
+  openGraph: {
+    title: "API reference",
+  },
+};
 
 const CardHeading = ({
   children,
