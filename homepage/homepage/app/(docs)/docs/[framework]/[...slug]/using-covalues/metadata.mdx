@@ -35,11 +35,11 @@ Transaction IDs help you find changes that were made together:
 <CodeGroup>
 ```ts
 // Find all changes made in the same transaction
-const lastEdit = report.lastEditAt("severity");
+const lastEdit = report._raw.lastEditAt("severity");
 if (lastEdit) {
   // Get all fields changed in this transaction
-  for (const field of report.fields()) {
-    const edit = report.lastEditAt(field);
+  for (const field of Object.keys(report)) {
+    const edit = report._raw.lastEditAt(field);
     if (edit && edit.tx === lastEdit.tx) {
       console.log(`${field} was changed to ${edit.value}`);
     }
@@ -57,8 +57,8 @@ Building an audit trail:
 function getAuditLog(report: IncidentReport) {
   const changes = [];
   
-  for (const field of report.fields()) {
-    for (const edit of report.editsAt(field)) {
+  for (const field of Object.keys(report)) {
+    for (const edit of report._raw.editsAt(field)) {
       changes.push({
         field,
         ...edit,
@@ -90,7 +90,7 @@ class Marine extends CoMap {
 }
 
 // Get the last edit for a field
-const lastEdit = marine.lastEditAt("status");
+const lastEdit = marine._raw.lastEditAt("status");
 if (lastEdit) {
   console.log({
     value: lastEdit.value,    // What it was changed to
@@ -100,13 +100,21 @@ if (lastEdit) {
   });
 }
 
+const marine = Marine.create({
+  name: "John Doe",
+  status: "active",
+  lastKnownLocation: "123 Main St",
+}, {
+  owner: account,
+});
+
 // See all edits for a field
-for (const edit of marine.editsAt("status")) {
+for (const edit of marine._raw.editsAt("status")) {
   console.log(`${edit.at}: ${edit.value} (by ${edit.by})`);
 }
 
 // Get a specific edit by index
-const previousEdit = marine.nthEditAt("status", 1); // Second most recent
+const previousEdit = marine._raw.nthEditAt("status", 1); // Second most recent
 ```
 </CodeGroup>
 
@@ -124,10 +132,10 @@ class MotionTracker extends CoMap {
 
 // See when a tracker went offline
 function findFailurePoint(tracker: MotionTracker) {
-  for (const edit of tracker.editsAt("status")) {
+  for (const edit of tracker._raw.editsAt("status")) {
     if (edit.value === "offline") {
       // What else changed around this time?
-      const contextState = tracker.atTime(edit.at);
+      const contextState = tracker._raw.atTime(edit.at);
       console.log({
         failureTime: edit.at,
         lastKnownSignal: contextState.lastSignal,
@@ -150,7 +158,7 @@ function getRecentActivity(colony: Colony) {
   const hourAgo = new Date(Date.now() - 3600000);
   
   for (const field of colony.fields()) {
-    for (const edit of colony.editsAt(field)) {
+    for (const edit of colony._raw.editsAt(field)) {
       if (edit.at > hourAgo) {
         activity.push({
           type: 'field_change',
@@ -178,8 +186,8 @@ function checkDoorHistory(airlock: Airlock) {
   
   // Check every minute for the last hour
   for (let mins = 0; mins < 60; mins++) {
-    const timePoint = new Date(Date.now() - mins * 60000);
-    const state = airlock.atTime(timePoint);
+    const timePoint = new Date(Date.now() - mins * 60000).getTime();
+    const state = airlock._raw.atTime(timePoint);
     pastStates.push({
       time: timePoint,
       sealed: state.sealed,
