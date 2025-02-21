@@ -83,21 +83,6 @@ tracker.readings.push(Reading.create({
 }));
 ```
 </CodeGroup>
-### Transaction Groups
-
-When you need multiple changes to happen together, you can use transactions:
-
-<CodeGroup>
-```ts
-// Group related changes
-CoValue.transaction(() => {
-  // These changes are atomic
-  marine.status = "unknown";
-  marine.lastKnownLocation = "Sub-Level 5";
-  incidentLog.addEntry("Lost contact with " + marine.name);
-});
-```
-</CodeGroup>
 
 ### Error Handling
 
@@ -115,16 +100,6 @@ try {
   }
 }
 
-// For multiple operations
-try {
-  CoValue.transaction(() => {
-    squad.members.push(newMarine);
-    missionLog.recordChange("Added marine to squad");
-  });
-} catch (error) {
-  // If any part fails, none of the changes are applied
-  console.error("Failed to update squad:", error);
-}
 ```
 </CodeGroup>
 
@@ -151,30 +126,6 @@ await ship.missionLog.delete();  // Completely removes the log
 ```
 </CodeGroup>
 
-### Cascading Deletes
-
-When you delete a CoValue, you probably want to clean up related data too:
-
-<CodeGroup>
-```ts
-// Delete everything under a colony
-async function nukeFromOrbit(colony: Colony) {
-  try {
-    await CoValue.transaction(async () => {
-      // Delete all sectors and their contents first
-      for (const sector of colony.sectors) {
-        await sector.delete();  // Will fail if sectors aren't loaded
-      }
-      // Then delete the colony itself
-      await colony.delete();
-    });
-    console.log("Site has been sterilized");
-  } catch (error) {
-    console.error("Colony deletion failed:", error);
-  }
-}
-```
-</CodeGroup>
 
 ### Best Practices
 
