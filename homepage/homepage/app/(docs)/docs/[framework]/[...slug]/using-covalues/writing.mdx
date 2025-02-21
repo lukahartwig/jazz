@@ -1,9 +1,13 @@
+export const metadata = { title: "Writing & deleting CoValues" };
+import { CodeGroup } from "@/components/forMdx";
+
 # Writing & deleting CoValues
 
 ## Writing to CoValues
 
 Once you have a CoValue, modifying it is straightforward. You can update fields like regular JavaScript properties:
 
+<CodeGroup>
 ```ts
 class Marine extends CoMap {
   name = co.string;
@@ -21,11 +25,13 @@ marine.update({
   lastKnownLocation: null
 });
 ```
+</CodeGroup>
 
 ### Working with Lists
 
 CoLists support familiar array operations:
 
+<CodeGroup>
 ```ts
 class Squad extends CoMap {
   name = co.string;
@@ -49,6 +55,7 @@ squad.members.forEach(marine => {
   marine.status = "ready";
 });
 ```
+</CodeGroup>
 
 Changes sync automatically to everyone with access. Any edits you make are immediately visible in your local view and propagate to other users as they sync.
 
@@ -56,6 +63,7 @@ Changes sync automatically to everyone with access. Any edits you make are immed
 
 CoValues use CRDTs to handle concurrent edits smoothly. In most cases, you don't need to think about conflicts - Jazz handles them automatically:
 
+<CodeGroup>
 ```ts
 class MotionTracker extends CoMap {
   location = co.string;
@@ -74,11 +82,12 @@ tracker.readings.push(Reading.create({
   movement: "multiple signatures"
 }));
 ```
-
+</CodeGroup>
 ### Transaction Groups
 
 When you need multiple changes to happen together, you can use transactions:
 
+<CodeGroup>
 ```ts
 // Group related changes
 CoValue.transaction(() => {
@@ -88,11 +97,13 @@ CoValue.transaction(() => {
   incidentLog.addEntry("Lost contact with " + marine.name);
 });
 ```
+</CodeGroup>
 
 ### Error Handling
 
 Write operations can fail for several reasons:
 
+<CodeGroup>
 ```ts
 try {
   marine.status = "ready";
@@ -115,11 +126,13 @@ try {
   console.error("Failed to update squad:", error);
 }
 ```
+</CodeGroup>
 
 ## Deleting CoValues
 
 There are a few ways to delete CoValues, from simple field removal to full cleanup:
 
+<CodeGroup>
 ```ts
 class Ship extends CoMap {
   crew = co.ref(ListOfCrew);
@@ -136,11 +149,13 @@ ship.crew.splice(2, 1);  // Removes third crew member from list
 // Delete a CoValue entirely
 await ship.missionLog.delete();  // Completely removes the log
 ```
+</CodeGroup>
 
 ### Cascading Deletes
 
 When you delete a CoValue, you probably want to clean up related data too:
 
+<CodeGroup>
 ```ts
 // Delete everything under a colony
 async function nukeFromOrbit(colony: Colony) {
@@ -159,6 +174,7 @@ async function nukeFromOrbit(colony: Colony) {
   }
 }
 ```
+</CodeGroup>
 
 ### Best Practices
 
@@ -169,8 +185,9 @@ async function nukeFromOrbit(colony: Colony) {
 
 ## Removing Data in CoValues
 
-You can delete fields from any CoMap:
+You can delete fields from any `CoMap`:
 
+<CodeGroup>
 ```ts
 class Ship extends CoMap {
   name = co.string;
@@ -185,18 +202,22 @@ delete ship.cargo;  // Removes the cargo reference
 class Inventory extends CoMap.Record(co.ref(Item)) {}
 delete inventory["motion-tracker"];  // Removes specific item
 ```
+</CodeGroup>
 
-For CoLists, use array methods:
+For `CoList`s, use array methods:
 
+<CodeGroup>
 ```ts
 // Remove from lists using splice
 ship.crew.splice(2, 1);  // Removes third crew member
 ```
+</CodeGroup>
 
 ### Restoring Data
 
 For data you might want to restore later, consider using status fields instead:
 
+<CodeGroup>
 ```ts
 class Marine extends CoMap {
   name = co.string;
@@ -209,5 +230,6 @@ marine.deleted = true;
 // Restore
 marine.deleted = false; // Tada~!
 ```
+</CodeGroup>
 
 Removed data remains in the edit history. If you need to handle sensitive information, plan your data model accordingly.

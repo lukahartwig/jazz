@@ -1,35 +1,42 @@
 import { CodeGroup, ComingSoon, ContentByFramework } from "@/components/forMdx";
 
+export const metadata = { title: "Reading from CoValues" };
+
 # Reading from CoValues
 
 Once you have a CoValue, reading its data is straightforward. Fields work just like regular JavaScript properties:
 
+<CodeGroup>
 ```ts
 class Ship extends CoMap {
   name = co.string;
   crew = co.ref(ListOfCrew);
+  captain = co.optional.ref(CrewMember);
   status = co.literal("docked", "in-transit", "lost");
 }
 
 // Reading basic fields
-console.log(ship.name);         // "Nostromo"
-console.log(ship.status);       // "in-transit"
+console.log(ship.name);           // "Nostromo"
+console.log(ship.status);         // "in-transit"
 
 // Reading from lists
 for (const member of ship.crew) {
-  console.log(member.name);
+  console.log(member.name);       // "Ellen Ripley"
 }
 
 // Checking if an optional field exists
 if (ship.captain) {
-  console.log(ship.captain.name);
+  console.log(ship.captain.name); // "Arthur Koblenz Dallas"
 }
 ```
+</CodeGroup>
 
 ## Different Types of CoValues
 
 ### CoMaps
-Work like JavaScript objects:
+`CoMap`s work like JavaScript objects:
+
+<CodeGroup> 
 ```ts
 class CrewMember extends CoMap {
   name = co.string;
@@ -41,76 +48,86 @@ console.log(member.name);          // "Ellen Ripley"
 console.log(member.role);          // "Warrant Officer"
 console.log(member.active);        // true
 ```
+</CodeGroup>
 
 ### CoLists
-Work like JavaScript arrays:
+`CoList`s work like JavaScript arrays:
+
+<CodeGroup>
 ```ts
 class CargoManifest extends CoList.Of(co.ref(CargoItem)) {}
 
 // Access items by index
-console.log(manifest[0].description);
+console.log(manifest[0].description); // "mineral ore"
 
 // Use array methods
 manifest.forEach(item => {
-  console.log(item.weight);
+  console.log(item.weight);   // 20_000_000
 });
 
 // Get list length
-console.log(manifest.length);
+console.log(manifest.length); // 3
 ```
+</CodeGroup>
 
 ### CoFeeds
 Access feed items for specific users:
+
+<CodeGroup>
 ```ts
 // Get latest status for each crew member
 for (const status of locationFeed.latestByUser()) {
-  console.log(status.location);
+  console.log(status.location);   // "Sector 12B"
 }
 
 // Get all status updates from one crew member
 for (const status of locationFeed.byUser(ripley)) {
-  console.log(status.timestamp);
+  console.log(status.timestamp);  // 2024-01-01T12:00:00Z
 }
 ```
+</CodeGroup>
 
-# Type Safety with CoValues
+## Type Safety with CoValues
 
 CoValues are fully typed in TypeScript, giving you the same autocomplete and error checking you'd expect from regular objects. Here's how it works:
 
+<CodeGroup>
 ```ts
 class Colony extends CoMap {
   name = co.string;
   population = co.number;
-  securityLevel = co.literal("green", "yellow", "red");
+  secLevel = co.literal("green", "yellow", "red");
   administrator = co.optional.ref(Personnel);
   sectors = co.ref(ListOfSectors);
 }
 
 // TypeScript knows exactly what fields exist
-const colony = await Colony.load(lv426Id, { loadAs: burke });
+const colony = await Colony.load(lv426Id, burke);
 
-colony.name = "Hadley's Hope";      // ✓ string
-colony.population = "lost";         // ✗ Type error: expected number
-colony.securityLevel = "maximum";   // ✗ Type error: must be green/yellow/red
+colony.name = "Hadley's Hope"; // ✓ string
+colony.population = "lost";    // ✗ Type error: expected number
+colony.secLevel = "maximum";   // ✗ Type error: must be green/yellow/red
 
 // Optional fields are handled safely
 if (colony.administrator) {
-  console.log(colony.administrator.name);  // TypeScript knows this is safe
+  console.log(colony.administrator.name);  // Type safe
 }
 
 // Lists with specific item types
 colony.sectors.forEach(sector => {
   // TypeScript knows each sector's structure
-  console.log(`${sector.id}: ${sector.status}`);
+  console.log(`${sector.id}: ${sector.status}`); // "B: compromised"
 });
 ```
+</CodeGroup>
 
 ## Loading States
 
 When you load a CoValue, TypeScript helps you handle different states:
 
+<CodeGroup>
 ```ts
-// Type shows this might be undefined while loading
+// Type shows this might be `undefined` while loading
 const colony = useCoState(Colony, lv426Id, { 
   resolve: { sectors: true } 
 });
@@ -120,13 +137,15 @@ if (!colony) {
 }
 
 // TypeScript now knows colony exists and has sectors loaded
-console.log(colony.sectors.length);
+console.log(colony.sectors.length); // 4
 ```
+</CodeGroup>
 
-# Accessing Nested CoValues
+### Accessing Nested CoValues
 
-Nested CoValues need special handling for loading and access. Here's how it works in the current version:
+Nested CoValues need special handling for loading and access. 
 
+<CodeGroup>
 ```ts
 class Colony extends CoMap {
   name = co.string;
@@ -140,9 +159,11 @@ class Sector extends CoMap {
   motionTrackers = co.ref(ListOfSensors);
 }
 ```
+</CodeGroup>
 
-## Current Loading Pattern
+### Loading
 
+<CodeGroup>
 ```ts
 // Basic load - sectors won't be loaded yet
 const colony = await Colony.load(lv426Id, burke);
@@ -157,11 +178,15 @@ const fullyLoaded = await Colony.load(lv426Id, burke, {
   }
 });
 ```
+</CodeGroup>
 
-## Handling Loading States
+// Link to the docs for subscribing and deep-loading
 
-Right now, unloaded references return undefined:
+### Handling Loading States
 
+Right now, unloaded references return `undefined`:
+
+<CodeGroup>
 ```ts
 // Best current practice for handling nested data
 function SectorStatus({ colony }: { colony: Colony }) {
@@ -187,9 +212,11 @@ function SectorStatus({ colony }: { colony: Colony }) {
   );
 }
 ```
+</CodeGroup>
 
 Note: We're working on making these patterns more explicit and robust. We'll provide clearer loading states and better error handling patterns. For now, be defensive with your checks for `undefined`.
 
+<CodeGroup>
 ```ts
 // Current safest pattern for deep access
 function getMotionReadings(colony: Colony, sectorId: string) {
@@ -203,5 +230,6 @@ function getMotionReadings(colony: Colony, sectorId: string) {
   return trackers.map(t => t.reading);
 }
 ```
+</CodeGroup>
 
 Stay tuned for updates to this API - we're working on making these patterns more robust and explicit.

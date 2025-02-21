@@ -1,9 +1,14 @@
+import { CodeGroup } from "@/components/forMdx";
+
+export const metadata = { title: "Metadata & time-travel" };
+
 # Metadata & time-travel
 
-# Working with Edit History Metadata
+## Working with Edit History Metadata
 
 CoValues track who made each change and when. Every edit has metadata attached to it:
 
+<CodeGroup>
 ```ts
 class IncidentReport extends CoMap {
   description = co.string;
@@ -21,11 +26,13 @@ for (const edit of report.editsAt("severity")) {
   });
 }
 ```
+</CodeGroup>
 
-## Finding Related Changes
+### Finding Related Changes
 
 Transaction IDs help you find changes that were made together:
 
+<CodeGroup>
 ```ts
 // Find all changes made in the same transaction
 const lastEdit = report.lastEditAt("severity");
@@ -39,10 +46,13 @@ if (lastEdit) {
   }
 }
 ```
+</CodeGroup>
 
-## Common Patterns
+### Common Patterns
 
 Building an audit trail:
+
+<CodeGroup>
 ```ts
 function getAuditLog(report: IncidentReport) {
   const changes = [];
@@ -63,13 +73,15 @@ function getAuditLog(report: IncidentReport) {
   );
 }
 ```
+</CodeGroup>
 
 All changes are tracked automatically - this history is a core feature of CoValues. Use it to understand how your data evolved over time.
 
-# Edit History & Time Travel
+## Edit History & Time Travel
 
 CoValues track their entire history of changes. You can see who changed what and when, or even view past states:
 
+<CodeGroup> 
 ```ts
 class Marine extends CoMap {
   name = co.string;
@@ -96,11 +108,13 @@ for (const edit of marine.editsAt("status")) {
 // Get a specific edit by index
 const previousEdit = marine.nthEditAt("status", 1); // Second most recent
 ```
+</CodeGroup>
 
-# Time Travel
+## Time Travel
 
 Looking into the past can help you understand how things changed - perfect for audit logs, debugging, or showing user activity:
 
+<CodeGroup>
 ```ts
 class MotionTracker extends CoMap {
   location = co.string;
@@ -123,10 +137,13 @@ function findFailurePoint(tracker: MotionTracker) {
   }
 }
 ```
+</CodeGroup>
 
-## Common Use Cases
+### Common Use Cases
 
 Activity feeds:
+
+<CodeGroup>
 ```ts
 function getRecentActivity(colony: Colony) {
   const activity = [];
@@ -149,8 +166,11 @@ function getRecentActivity(colony: Colony) {
   return activity.sort((a, b) => b.at - a.at);
 }
 ```
+</CodeGroup>
 
 Debugging state changes:
+
+<CodeGroup>
 ```ts
 // Find out when a door was last sealed
 function checkDoorHistory(airlock: Airlock) {
@@ -170,8 +190,9 @@ function checkDoorHistory(airlock: Airlock) {
   return pastStates;
 }
 ```
+</CodeGroup>
 
-## Best Practices
+### Best Practices
 
 - Cache historical queries if you're displaying them in UI
 - Be specific about time ranges you care about

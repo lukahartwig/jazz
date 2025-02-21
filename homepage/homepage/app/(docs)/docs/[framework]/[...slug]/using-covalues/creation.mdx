@@ -1,12 +1,16 @@
 import { CodeGroup, ComingSoon, ContentByFramework } from "@/components/forMdx";
 
+export const metadata = { title: "Creation & ownership" };
+
 # Creation & Ownership
 
 CoValues are collaborative by nature - anything you create can be shared and synced with others. Who gets to read or change each CoValue is controlled by its owner - either an individual `account` or a shared `group`.
 
 ## Creating CoValues
 
-Every CoValue starts with a schema - a class that defines what data it can hold. Here's a simple example:
+Every CoValue starts with a [schema](/docs/schemas/covalues#start-your-app-with-a-schema). From there you can create CoValues with the `create` method. 
+
+Here's a simple example:
 
 <CodeGroup>
 ```ts
@@ -36,14 +40,16 @@ const squadLeader = Marine.create({
 
 When you create a CoValue, you provide its initial data and optionally specify who owns it. The data must match the schema you defined - TypeScript will help ensure you get this right.
 
-# Ownership & Access Control
 
-Every CoValue needs an owner to control who can access it. An owner can be an individual Account, but it's usually a Group since that lets you share with multiple people.
+## Ownership & Access Control
 
-## Groups & Roles
+Every CoValue needs an owner to control who can access it. An owner can be an individual `account`, but it's usually a `group` since that lets you share with multiple people.
+
+### Groups & Roles
 
 Groups have members with different roles that control what they can do:
 
+<CodeGroup>
 ```ts
 // Create a group
 const uscmSquad = Group.create();
@@ -62,6 +68,7 @@ const missionBrief = Document.create({
   owner: uscmSquad
 });
 ```
+</CodeGroup>
 
 Each role has specific permissions:
 - `admin`: Full control including managing members
