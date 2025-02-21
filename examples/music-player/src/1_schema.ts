@@ -87,15 +87,15 @@ export class MusicaAccount extends Account {
    *  The account migration is run on account creation and on every log-in.
    *  You can use it to set up the account root and any other initial CoValues you need.
    */
-  migrate() {
-    if (this.root === undefined) {
+  static override migrate(me: MusicaAccount) {
+    if (me.root === undefined) {
       const tracks = ListOfTracks.create([]);
       const rootPlaylist = Playlist.create({
         tracks,
         title: "",
       });
 
-      this.root = MusicaAccountRoot.create({
+      me.root = MusicaAccountRoot.create({
         rootPlaylist,
         playlists: ListOfPlaylists.create([]),
         activeTrack: null,
