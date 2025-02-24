@@ -3,56 +3,58 @@ import { CodeGroup } from "@/components/forMdx";
 
 # Writing & deleting CoValues
 
+Collaborative applications need ways to update and remove data. Jazz makes this simple by treating CoValues like regular JavaScript objects while handling all the complexity of syncing changes in the background. This page covers how to modify CoValues, work with collections, handle concurrent edits, and properly remove data when needed.
+
 ## Writing to CoValues
 
-Once you have a CoValue, modifying it is straightforward. You can update fields like regular JavaScript properties:
+Once you have a CoValue, modifying it is straightforward. You can update fields like regular JavaScript properties. Changes are applied locally first for immediate feedback, then synchronized to other users with access to the same CoValues. This approach provides a natural programming model while handling all the distributed systems complexity behind the scenes.
 
 <CodeGroup>
 ```ts
-class Marine extends CoMap {
-  name = co.string;
-  status = co.literal("ready", "injured", "unknown");
-  lastKnownLocation = co.optional.string;
+class Task extends CoMap {
+  title = co.string;
+  status = co.literal("todo", "in-progress", "completed");
+  assignee = co.optional.string;
 }
 
-// Simple field updates
-marine.status = "injured";                 // Direct assignment
-marine.lastKnownLocation = "Sub-Level 3";  // Optional field
+//...
 
-// Multiple updates
-marine.update({
-  status: "unknown",
-  lastKnownLocation: null
-});
+// Update fields
+task.status = "in-progress";             // Direct assignment
+task.assignee = "Alex";                  // Optional field
 ```
 </CodeGroup>
 
 ### Working with Lists
 
-CoLists support familiar array operations:
+CoLists support familiar array operations, making it easy to work with collections of data. You can add, remove, and modify items using the standard JavaScript array methods, while Jazz handles the collaborative aspects automatically. These operations work correctly even when multiple users are making changes simultaneously.
 
 <CodeGroup>
 ```ts
-class Squad extends CoMap {
+class Project extends CoMap {
   name = co.string;
-  members = co.ref(ListOfMarines);
+  tasks = co.ref(ListOfTasks);
 }
 
+//...
+
 // Add items
-squad.members.push(Marine.create({
-  name: "Vasquez",
-  status: "ready"
+project.tasks.push(Task.create({
+  title: "Build raised beds",
+  status: "todo"
 }));
 
 // Remove items
-squad.members.splice(2, 1);  // Remove third marine
+project.tasks.splice(2, 1);  // Remove third task
 
 // Update items
-squad.members[0].status = "unknown";
+project.tasks[0].status = "in-progress";
 
 // Bulk updates
-squad.members.forEach(marine => {
-  marine.status = "ready";
+project.tasks.forEach(task => {
+  if (task.status === "todo") {
+    task.status = "in-progress";
+  }
 });
 ```
 </CodeGroup>
@@ -61,97 +63,103 @@ Changes sync automatically to everyone with access. Any edits you make are immed
 
 ## Concurrent Edits
 
-CoValues use CRDTs to handle concurrent edits smoothly. In most cases, you don't need to think about conflicts - Jazz handles them automatically:
+CoValues use [CRDTs](/docs/schemas/covalues#defining-schemas-covalues) to handle concurrent edits smoothly. In most cases, you don't need to think about conflicts - Jazz handles them automatically. This conflict resolution happens transparently, allowing multiple users to make changes simultaneously without disruption or data loss.
 
 <CodeGroup>
 ```ts
-class MotionTracker extends CoMap {
-  location = co.string;
-  status = co.literal("active", "offline");
-  readings = co.ref(ListOfReadings);
+class Dashboard extends CoMap {
+  activeProjects = co.number;
+  status = co.literal("active", "maintenance");
+  notifications = co.ref(ListOfNotifications);
 }
+
+//...
 
 // Multiple users can edit simultaneously
 // Last-write-wins for simple fields
-tracker.status = "offline";        // Local change is immediate
-tracker.location = "Sector 12B";   // Syncs automatically
+dashboard.status = "maintenance";     // Local change is immediate
+dashboard.activeProjects = 5;         // Syncs automatically
 
 // Lists handle concurrent edits too
-tracker.readings.push(Reading.create({
+dashboard.notifications.push(Notification.create({
   timestamp: new Date(),
-  movement: "multiple signatures"
+  message: "System update scheduled"
 }));
 ```
 </CodeGroup>
 
 ### Error Handling
 
-Write operations can fail for several reasons:
+Write operations can fail for several reasons, such as permission issues or network problems. It's important to handle these errors gracefully to provide good user experience. Here's how you can catch and process write errors:
 
 <CodeGroup>
 ```ts
+// TODO: Test this or verify it's correct
 try {
-  marine.status = "ready";
+  task.status = "completed";
 } catch (error) {
   if (error.message.includes("permission")) {
-    console.error("Not authorized to update marine status");
+    console.error("Not authorized to update task status");
   } else {
     console.error("Failed to update status:", error);
   }
 }
-
 ```
 </CodeGroup>
 
 ## Deleting CoValues
 
-There are a few ways to delete CoValues, from simple field removal to full cleanup:
+There are a few ways to delete CoValues, from simple field removal to full cleanup. Jazz provides flexible options for removing data depending on your needs. You can remove references while keeping the underlying data, remove items from lists, or completely delete CoValues when they're no longer needed.
 
 <CodeGroup>
 ```ts
-class Ship extends CoMap {
-  crew = co.ref(ListOfCrew);
-  cargo = co.optional.ref(CargoManifest);
-  missionLog = co.ref(Log);
+class Project extends CoMap {
+  tasks = co.ref(ListOfTasks);
+  resources = co.optional.ref(ListOfResources);
 }
 
+//...
+
 // Remove a reference
-ship.cargo = null;  // Removes the reference but cargo still exists
+project.resources = null;  // Removes the reference but resources still exist
 
 // Remove from a list
-ship.crew.splice(2, 1);  // Removes third crew member from list
-
-// Delete a CoValue entirely
-await ship.missionLog.delete();  // Completely removes the log
+project.tasks.splice(2, 1);  // Removes third team member from list
 ```
 </CodeGroup>
-
 
 ### Best Practices
 
 - Load everything you plan to delete
-- Use transactions for complex deletions
-- Check permissions before attempting deletes 
+- Check permissions before attempting deletes
 - Consider soft deletes for recoverable data
 
 ## Removing Data in CoValues
 
-You can delete fields from any `CoMap`:
+You can delete fields from any `CoMap` to remove specific properties while keeping the CoValue itself. This is useful when you need to clear certain data without affecting the rest of your object structure. The deletion operations are also synchronized to all users with access.
 
 <CodeGroup>
 ```ts
-class Ship extends CoMap {
+class Project extends CoMap {
   name = co.string;
-  crew = co.ref(ListOfCrew);
-  cargo = co.optional.ref(CargoManifest);
+  team = co.ref(ListOfMembers);
+  budget = co.optional.ref(Budget);
 }
 
+//...
+
 // Delete fields from a regular CoMap
-delete ship.cargo;  // Removes the cargo reference
+delete project.budget;  // Removes the budget reference
 
 // Delete from a record-type CoMap
-class Inventory extends CoMap.Record(co.ref(Item)) {}
-delete inventory["motion-tracker"];  // Removes specific item
+class ProjectTags extends CoMap.Record(co.string) {}
+
+const projectTags = ProjectTags.create({
+  "priority-high": "High priority tasks",
+});
+
+delete projectTags["priority-high"]; // Removes specific tag
+
 ```
 </CodeGroup>
 
@@ -160,26 +168,26 @@ For `CoList`s, use array methods:
 <CodeGroup>
 ```ts
 // Remove from lists using splice
-ship.crew.splice(2, 1);  // Removes third crew member
+project.team.splice(2, 1);  // Removes third team member
 ```
 </CodeGroup>
 
 ### Restoring Data
 
-For data you might want to restore later, consider using status fields instead:
+For data you might want to restore later, consider using status fields instead of permanent deletion. This "soft delete" pattern is common in applications where users might need to recover previously removed items. By using a boolean field to mark items as archived or deleted, you maintain the ability to restore them later.
 
 <CodeGroup>
 ```ts
-class Marine extends CoMap {
-  name = co.string;
-  deleted = co.boolean;
+class Task extends CoMap {
+  title = co.string;
+  archived = co.boolean;
 }
 
-// Mark as deleted
-marine.deleted = true;
+// Mark as archived
+task.archived = true;
 
-// Restore
-marine.deleted = false; // Tada~!
+// Restore later
+task.archived = false; // Task is back in the active list!
 ```
 </CodeGroup>
 
