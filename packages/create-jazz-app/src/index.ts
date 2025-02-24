@@ -238,6 +238,36 @@ module.exports = withNativeWind(config, { input: "./src/global.css" });
     }
   }
 
+  // Step 5: Clone cursor-docs
+  const docsSpinner = ora({
+    text: chalk.blue(`Adding cursor-docs...`),
+    spinner: "dots",
+  }).start();
+
+  try {
+    // Create a temporary directory for cursor-docs
+    const tempDocsDir = `${projectName}-cursor-docs-temp`;
+    const emitter = degit("garden-co/jazz/packages/cursor-docs", {
+      cache: false,
+      force: true,
+      verbose: true,
+    });
+
+    // Clone cursor-docs to temp directory
+    await emitter.clone(tempDocsDir);
+
+    // Copy contents to project root
+    fs.cpSync(tempDocsDir, projectName, { recursive: true });
+
+    // Clean up temp directory
+    fs.rmSync(tempDocsDir, { recursive: true, force: true });
+
+    docsSpinner.succeed(chalk.green("Cursor docs added successfully"));
+  } catch (error) {
+    docsSpinner.fail(chalk.red("Failed to add cursor docs"));
+    throw error;
+  }
+
   // Final success message
   console.log("\n" + chalk.green.bold("✨ Project setup completed! ✨\n"));
   console.log(chalk.cyan("To get started:"));
