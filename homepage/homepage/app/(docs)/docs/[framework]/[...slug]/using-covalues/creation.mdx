@@ -14,32 +14,42 @@ Here's a simple example:
 
 <CodeGroup>
 ```ts
-class Marine extends CoMap {
-  name = co.string;
-  rank = co.string;
-  status = co.literal("active", "inactive", "KIA");
+class Task extends CoMap {
+  title = co.string;
+  description = co.string;
+  status = co.literal("todo", "in-progress", "completed");
 }
 
-// Create a new marine
-const marine = Marine.create({ 
-  name: "Dwayne Hicks",
-  rank: "Corporal",
-  status: "active"
-});
-
-// Create another, owned by the USCM squad
-const squadLeader = Marine.create({
-  name: "Al Apone",
-  rank: "Sergeant",
-  status: "active"
-}, {
-  owner: uscmSquad
+// Create a new task
+const task = Task.create({
+  title: "Plant spring vegetables",
+  description: "Plant peas, carrots, and lettuce",
+  status: "todo",
 });
 ```
 </CodeGroup>
 
 When you create a CoValue, you provide its initial data and optionally specify who owns it. The data must match the schema you defined - TypeScript will help ensure you get this right.
 
+For more examples of creating CoValues, see [CoValues](/docs/covalues) for more examples.
+
+<CodeGroup>
+```ts
+class Notifications extends CoFeed {
+  title = co.string;
+  description = co.string;
+  status = co.literal("todo", "in-progress", "completed");
+}
+
+const feed = Feed.create();
+
+feed.addItem({
+  title: "New task created",
+  description: "A new task has been created",
+  status: "todo",
+});
+```
+</CodeGroup>
 
 ## Ownership & Access Control
 
@@ -51,22 +61,42 @@ Groups have members with different roles that control what they can do:
 
 <CodeGroup>
 ```ts
+
 // Create a group
-const uscmSquad = Group.create();
+const gardenCollective = Group.create(account);
+// Add community members with different roles
+gardenCollective.addMember(coordinator, "admin"); // Garden coordinator manages projects
+gardenCollective.addMember(gardener, "writer"); // Community gardeners can update tasks
+gardenCollective.addMember(visitor, "reader"); // Visitors can view progress
 
-// Add squad members with different roles
-uscmSquad.addMember(lieutenant, "admin");    // Lt. Gorman thinks he's in charge
-uscmSquad.addMember(sergeant, "writer");     // Sgt. Apone actually runs things
-uscmSquad.addMember(bishop, "reader");       // Artificial persons have restricted access
+const task1 = {
+  title: "Start tomatoes indoors",
+  description: "Plant seeds in trays under grow lights",
+  completed: false,
+  area: "vegetables",
+};
 
-// Create a mission brief owned by the squad
-const missionBrief = Document.create({
-  title: "LV-426 Colony Status Report",
-  content: "Colony has gone dark. Marine unit requested for investigation.",
-  attachments: ListOfAttachments.create([])
-}, {
-  owner: uscmSquad
-});
+const task2 = {
+  title: "Prepare garden beds",
+  description: "Add compost and turn soil when temperature reaches 10°C",
+  completed: false,
+  area: "vegetables",
+};
+
+// Create a spring project owned by the collective
+const springProject = GardenProject.create(
+  {
+    name: "Spring Planting",
+    description: "Getting the garden ready for spring vegetables",
+    tasks: ListOfTasks.create(
+      [
+        Task.create(task1),
+        Task.create(task2),
+      ],
+    ),
+  },
+  { owner: gardenCollective }, // Explicitly setting the owner
+);
 ```
 </CodeGroup>
 

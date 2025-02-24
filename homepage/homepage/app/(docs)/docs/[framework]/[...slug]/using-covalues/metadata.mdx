@@ -4,61 +4,62 @@ export const metadata = { title: "Metadata & time-travel" };
 
 # Metadata & time-travel
 
+CoValues have a lot of useful metadata attached to them, much of which is helpful for debugging and understanding the history of a CoValue.
+
+`CoValue._raw` gives you access to the internal state of a CoValue, from which a lot of useful information can be derived.
+
+`CoValue._edits` gives you access to the edit history of a CoValue.
+
 ## Working with Edit History Metadata
 
 CoValues track who made each change and when. Every edit has metadata attached to it:
 
 <CodeGroup>
 ```ts
-class IncidentReport extends CoMap {
+class GardenTask extends CoMap {
+  title = co.string;
   description = co.string;
-  severity = co.literal("low", "medium", "high");
-  location = co.string;
+  progress = co.literal("not started", "in progress", "completed");
+  area = co.literal("vegetables", "fruit", "herbs", "flowers");
 }
 
+const task = GardenTask.create({
+  title: "Plant spring vegetables",
+  description: "Plant peas, carrots, and lettuce",
+  progress: "not started",
+  area: "vegetables",
+});
+
+// Change the progress
+task.progress = ("in progress");
+
 // Get the full edit history for a field
-for (const edit of report.editsAt("severity")) {
+for (const edit of task._raw.editsAt("progress")) {
   console.log({
     author: edit.by,        // Account/agent that made the change
     timestamp: edit.at,     // When the change happened 
-    value: edit.value,      // What was changed
-    txId: edit.tx           // Groups related changes
+    value: edit.value,      // Value of the change
+    tx: edit.tx,            // Transaction ID
   });
-}
-```
-</CodeGroup>
-
-### Finding Related Changes
-
-Transaction IDs help you find changes that were made together:
-
-<CodeGroup>
-```ts
-// Find all changes made in the same transaction
-const lastEdit = report._raw.lastEditAt("severity");
-if (lastEdit) {
-  // Get all fields changed in this transaction
-  for (const field of Object.keys(report)) {
-    const edit = report._raw.lastEditAt(field);
-    if (edit && edit.tx === lastEdit.tx) {
-      console.log(`${field} was changed to ${edit.value}`);
-    }
-  }
 }
 ```
 </CodeGroup>
 
 ### Common Patterns
 
-Building an audit trail:
+With knowledge of the edit history, you can build all sorts of useful things.
+
+#### Audit Log
+
+Getting all the changes to a CoValue in order allows you to build an audit log:
 
 <CodeGroup>
 ```ts
-function getAuditLog(report: IncidentReport) {
+function getAuditLog(task: GardenTask) {
   const changes = [];
   
-  for (const field of Object.keys(report)) {
-    for (const edit of report._raw.editsAt(field)) {
+  for (const field of Object.keys(task)) {
+    for (const edit of task._raw.editsAt(field)) {
       changes.push({
         field,
         ...edit,
@@ -77,44 +78,66 @@ function getAuditLog(report: IncidentReport) {
 
 All changes are tracked automatically - this history is a core feature of CoValues. Use it to understand how your data evolved over time.
 
+#### Activity Feeds
+
+Activity feeds are a great way to see all the changes to a CoValue over time:
+
+<CodeGroup>
+```ts
+function getRecentActivity(task: GardenTask) {
+  const activity = [];
+  const hourAgo = new Date(Date.now() - 3600000);
+  
+  for (const edit of task._raw.editsAt("progress")) {
+    if (edit.at > hourAgo) {
+      activity.push({
+        field: edit.field,
+        value: edit.value,
+        by: edit.by,
+      });
+    } 
+  }
+  
+  return activity.sort((a, b) => b.at - a.at);
+}
+```
+</CodeGroup>
+
 ## Edit History & Time Travel
 
 CoValues track their entire history of changes. You can see who changed what and when, or even view past states:
 
 <CodeGroup> 
 ```ts
-class Marine extends CoMap {
-  name = co.string;
-  status = co.literal("active", "inactive", "MIA");
-  lastKnownLocation = co.string;
+class GardenTask extends CoMap {
+  title = co.string;
+  description = co.string;
+  progress = co.literal("not started", "in progress", "completed");
+  area = co.literal("vegetables", "fruit", "herbs", "flowers");
 }
 
-// Get the last edit for a field
-const lastEdit = marine._raw.lastEditAt("status");
-if (lastEdit) {
-  console.log({
-    value: lastEdit.value,    // What it was changed to
-    by: lastEdit.by,          // Who made the change
-    at: lastEdit.at,          // When it was changed
-    tx: lastEdit.tx           // Transaction ID
-  });
-}
+// Create a new task
+const task = GardenTask.create(
+  {
+    title: "Plant spring vegetables",
+    description: "Plant peas, carrots, and lettuce",
+    progress: "not started",
+    area: "vegetables",
+  },
+);
 
-const marine = Marine.create({
-  name: "John Doe",
-  status: "active",
-  lastKnownLocation: "123 Main St",
-}, {
-  owner: account,
-});
+task.progress = "in progress";
 
 // See all edits for a field
-for (const edit of marine._raw.editsAt("status")) {
-  console.log(`${edit.at}: ${edit.value} (by ${edit.by})`);
+for (const edit of task._raw.editsAt("progress")) {
+  console.log(edit.at);       // When the change happened
+  console.log(edit.value);    // Value of the change
+  console.log(edit.by);       // Account that made the change
 }
 
 // Get a specific edit by index
-const previousEdit = marine._raw.nthEditAt("status", 1); // Second most recent
+const previousEdit = task._raw.nthEditAt("progress", 1); // Second most recent
+
 ```
 </CodeGroup>
 
@@ -124,7 +147,7 @@ Looking into the past can help you understand how things changed - perfect for a
 
 <CodeGroup>
 ```ts
-class MotionTracker extends CoMap {
+class Project extends CoMap {
   location = co.string;
   status = co.literal("active", "offline", "unknown");
   lastSignal = co.Date;
