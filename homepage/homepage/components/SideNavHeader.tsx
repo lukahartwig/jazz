@@ -7,7 +7,8 @@ export function SideNavHeader({
   href?: string;
   children: React.ReactNode;
 }) {
-  const className = "block font-medium text-stone-900 py-1 dark:text-white";
+  const className =
+    "block font-medium text-stone-900 py-1 dark:text-white mb-1";
 
   if (href) {
     return (

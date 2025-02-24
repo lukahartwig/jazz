@@ -59,28 +59,6 @@ const FormIllustration = () => (
   </div>
 );
 
-const OnboardingIllustration = () => (
-  <div className="flex h-full flex-col justify-center text-sm dark:bg-transparent">
-    <div className="mx-auto grid gap-3">
-      {[
-        { icon: "addUser", text: "Add new employee" },
-        {
-          icon: "write",
-          text: "Invite employee to fill in their profile",
-        },
-        { icon: "permissions", text: "Get confirmation from admin" },
-      ].map(({ text, icon }, index) => (
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-green-800 bg-green-100 leading-none font-medium text-center p-1.5 block rounded-full dark:bg-green-800 dark:text-green-200">
-            <Icon name={icon} size="xs" />
-          </span>
-          {text}
-        </div>
-      ))}
-    </div>
-  </div>
-);
-
 const OrganizationRow = ({
   name,
   members,
@@ -434,15 +412,6 @@ const reactExamples: Example[] = [
     tech: [tech.react],
     demoUrl: "https://form-demo.jazz.tools",
     illustration: <FormIllustration />,
-  },
-  {
-    name: "HR Onboarding",
-    slug: "onboarding",
-    description:
-      "See how admin and writer permissions work while onboarding new employees",
-    tech: [tech.react],
-    features: [features.imageUpload, features.inviteLink],
-    illustration: <OnboardingIllustration />,
   },
   {
     name: "Organization/Team",

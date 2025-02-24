@@ -1,5 +1,40 @@
 # cojson-storage-sqlite
 
+## 0.8.66
+
+### Patch Changes
+
+- Updated dependencies [153dc99]
+  - cojson@0.10.8
+  - cojson-storage@0.10.8
+
+## 0.8.65
+
+### Patch Changes
+
+- 1e625f3: Improve rollback on error when failing to add new content
+- Updated dependencies [0f83320]
+- Updated dependencies [012022d]
+- Updated dependencies [1e625f3]
+  - cojson@0.10.7
+  - cojson-storage@0.10.7
+
+## 0.8.64
+
+### Patch Changes
+
+- Updated dependencies [5c76e37]
+  - cojson@0.10.6
+  - cojson-storage@0.10.6
+
+## 0.8.63
+
+### Patch Changes
+
+- Updated dependencies [1af6072]
+  - cojson@0.10.4
+  - cojson-storage@0.10.4
+
 ## 0.8.62
 
 ### Patch Changes

@@ -11,6 +11,7 @@ import {
   createJazzReactNativeContext,
   createJazzReactNativeGuestContext,
 } from "./platform.js";
+import { KvStoreContext } from "./storage/kv-store-context.js";
 
 export type JazzContextManagerProps<Acc extends Account> = {
   guestMode?: boolean;
@@ -20,6 +21,7 @@ export type JazzContextManagerProps<Acc extends Account> = {
   AccountSchema?: AccountClass<Acc>;
   defaultProfileName?: string;
   onAnonymousAccountDiscarded?: (anonymousAccount: Acc) => Promise<void>;
+  CryptoProvider?: BaseReactNativeContextOptions["CryptoProvider"];
 };
 
 export class ReactNativeContextManager<
@@ -40,6 +42,7 @@ export class ReactNativeContextManager<
         sync: props.sync,
         storage: props.storage,
         authSecretStorage: this.authSecretStorage,
+        CryptoProvider: props.CryptoProvider,
       });
     } else {
       currentContext = await createJazzReactNativeContext<Acc>({
@@ -50,10 +53,15 @@ export class ReactNativeContextManager<
         newAccountProps: authProps?.newAccountProps,
         defaultProfileName: props.defaultProfileName,
         authSecretStorage: this.authSecretStorage,
+        CryptoProvider: props.CryptoProvider,
       });
     }
 
-    this.updateContext(props, currentContext);
+    await this.updateContext(props, currentContext, authProps);
+  }
+
+  getKvStore(): KvStore {
+    return KvStoreContext.getInstance().getStorage();
   }
 
   propsChanged(props: JazzContextManagerProps<Acc>) {

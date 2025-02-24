@@ -15,7 +15,7 @@ function setup(options: {
       context: createJazzTestContext({ account: options.account }),
       props: {
         depth: options.depth ?? [],
-        setResult: (value: ReturnType<typeof useAccountOrGuest>) => {
+        setResult: (value) => {
           result.current = value
         },
       },
@@ -56,7 +56,6 @@ describe("useAccountOrGuest", () => {
 
       expect(result.current?.me).toEqual(account);
   });
-
 
   it("should return the guest agent if the account is a guest", async () => {
     const account = await createJazzTestGuest();

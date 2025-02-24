@@ -1,5 +1,67 @@
 # jazz-example-pets
 
+## 0.0.171
+
+### Patch Changes
+
+- jazz-browser-media-images@0.10.9
+- jazz-react@0.10.9
+
+## 0.0.170
+
+### Patch Changes
+
+- Updated dependencies [2fb6428]
+  - jazz-tools@0.10.8
+  - jazz-react@0.10.8
+  - jazz-browser-media-images@0.10.8
+
+## 0.0.169
+
+### Patch Changes
+
+- Updated dependencies [1136d9b]
+- Updated dependencies [0eed228]
+  - jazz-react@0.10.7
+  - jazz-tools@0.10.7
+  - jazz-browser-media-images@0.10.7
+
+## 0.0.168
+
+### Patch Changes
+
+- Updated dependencies [1d71ca1]
+- Updated dependencies [ada802b]
+  - jazz-react@0.10.6
+  - jazz-tools@0.10.6
+  - jazz-browser-media-images@0.10.6
+
+## 0.0.167
+
+### Patch Changes
+
+- Updated dependencies [59ff77e]
+  - jazz-tools@0.10.5
+  - jazz-browser-media-images@0.10.5
+  - jazz-react@0.10.5
+
+## 0.0.166
+
+### Patch Changes
+
+- jazz-react@0.10.4
+- jazz-tools@0.10.4
+- jazz-browser-media-images@0.10.4
+
+## 0.0.165
+
+### Patch Changes
+
+- Updated dependencies [d8582fc]
+  - jazz-tools@0.10.3
+  - jazz-browser-media-images@0.10.3
+  - jazz-react@0.10.3
+
 ## 0.0.164
 
 ### Patch Changes

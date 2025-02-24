@@ -72,8 +72,7 @@ nav {
 .container {
   margin-right: auto;
   margin-left: auto;
-  padding-right: 0.75rem;
-  padding-left: 0.75rem;
+  padding: 2rem 0.75rem;
   max-width: 800px;
 }
 

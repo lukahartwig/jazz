@@ -4,31 +4,24 @@ export const metadata = { title: "Jazz 0.10.0 is out!" };
 
 # Jazz 0.10.0 is out!
 
-<h2 className="not-prose text-sm text-stone-600 dark:text-stone-400 mb-5 pb-2 border-b">
-  11 February 2025
-</h2>
+For Jazz 0.10.0 we have been focusing on enhancing authentication to make it optional, more flexible and easier to use.
 
-<div>
-  For Jazz 0.10.0 we have been focusing on enhancing authentication to make it optional, more flexible and easier to use.
+The default is now anonymous auth, which means that you can build the functionality of your app first and figure out auth later. For users this means that they can start using your app right away on one device -- and once you integrate an auth method, users can sign up and their anonymous accounts are transparently upgraded to authenticated accounts that work across devices.
 
-  The default is now anonymous auth, which means that you can build the functionality of your app first and figure out auth later. For users this means that they can start using your app right away on one device -- and once you integrate an auth method, users can sign up and their anonymous accounts are transparently upgraded to authenticated accounts that work across devices.
-  
-  There are also some other minor improvements that will make your Jazz experience even better!
+There are also some other minor improvements that will make your Jazz experience even better!
 
-  <h3>What's new?</h3>
-  Here is what's changed in this release:
-  - [New authentication flow](#new-authentication-flow): Now with anonymous auth, redesigned to make Jazz easier to start with and be more flexible.
-  - [Local-only mode](#local-only-mode): Users can now explore your app in local-only mode before signing up.
-  - [Improvements on the loading APIs](#improved-loading-api); `ensureLoaded` now always returns a value and `useCoState` now returns `null` if the value is not found.
-  - [Jazz Workers on native WebSockets](#native-websocket-for-jazz-workers): Improves compatibility with a wider set of Javascript runtimes.
-  - [Group inheritance with role mapping](#group-inheritance): Groups can now inherit members from other groups with a fixed role.
-  - Support for Node 14 dropped on cojson.
-  - Bugfix: `Group.removeMember` now returns a promise.
-  - Now `cojson` and `jazz-tools` don't export directly the crypto providers anymore. Replace the import with `cojson/crypto/WasmCrypto` or `cojson/crypto/PureJSCrypto` depending on your use case.
-</div>
+## What's new?
+Here is what's changed in this release:
+- [New authentication flow](#new-authentication-flow): Now with anonymous auth, redesigned to make Jazz easier to start with and be more flexible.
+- [Local-only mode](#local-only-mode): Users can now explore your app in local-only mode before signing up.
+- [Improvements on the loading APIs](#improved-loading-api); `ensureLoaded` now always returns a value and `useCoState` now returns `null` if the value is not found.
+- [Jazz Workers on native WebSockets](#native-websocket-for-jazz-workers): Improves compatibility with a wider set of Javascript runtimes.
+- [Group inheritance with role mapping](#group-inheritance): Groups can now inherit members from other groups with a fixed role.
+- Support for Node 14 dropped on cojson.
+- Bugfix: `Group.removeMember` now returns a promise.
+- Now `cojson` and `jazz-tools` don't export directly the crypto providers anymore. Replace the import with `cojson/crypto/WasmCrypto` or `cojson/crypto/PureJSCrypto` depending on your use case.
 
-  <h3 id="new-authentication-flow">New authentication flow</h3>
-  <div>
+## New authentication flow
     Up until now authentication has been the first part to figure out when building a Jazz app, and this was a stumbling block for many.
 
     Now it is no longer required and setting up a Jazz app is as easy as writing this:
@@ -191,8 +184,8 @@ export function AuthButton() {
 
   if (isAuthenticated) {
     return (
-      <Button 
-        variant="outline" 
+      <Button
+        variant="outline"
         onClick={logOut}
       >
         Sign out
@@ -224,8 +217,8 @@ export function AuthButton() {
 
   if (isAuthenticated) {
     return (
-      <Button 
-        variant="outline" 
+      <Button
+        variant="outline"
         onPress={logOut}
       >
         Sign out
@@ -267,16 +260,16 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
 ```
 </CodeGroup>
 </ContentByFramework>
-For the changes related to the specific auth providers see the updated [authentication docs](/docs/authentication/overview).
-  </div>
 
-<h3 id="local-only-mode">Local-only mode</h3>
-<div>
+For the changes related to the specific auth providers see the updated [authentication docs](/docs/authentication/overview).
+
+## Local-only mode
+
 If you are ok with data not being persisted on the sync server for anonymous users, you can now set your app to local-only depending on the user's authentication state.
 
 With `sync.when` set to `"signedUp"` the app will work in local-only mode when the user is anonymous and unlock the multiplayer/multi-device features and cloud persistence when they sign up:
 <CodeGroup>
-```ts
+```tsx
 <JazzProvider
   sync={{
     peer: `wss://cloud.jazz.tools/?key=${apiKey}`,
@@ -290,10 +283,9 @@ With `sync.when` set to `"signedUp"` the app will work in local-only mode when t
 </CodeGroup>
 
 You can control when Jazz will sync by switching the `when` config to `"always"` or `"never"`.
-</div>
 
-<h3 id="improved-loading-api">Improvements on the loading APIs</h3>
-<div>
+## Improvements on the loading APIs
+
 Before 0.10.0 `ensureLoaded` was returning a nullable value forcing the Typescript code to always include null checks:
 <CodeGroup>
 ```ts
@@ -336,17 +328,17 @@ if (value === null) {
   return <div>Track not found</div>;
 }
 ```
-</CodeGroup> 
-</div>
+</CodeGroup>
 
-<h3 id="native-websocket-for-jazz-workers">Jazz Workers on native WebSockets</h3>
-<div>
-  We have removed the dependency on `ws` and switched to the native WebSocket API for Jazz Workers.
+## Jazz Workers on native WebSockets
 
-  This improves the compatibility with a wider set of Javascript runtimes adding drop-in support for Deno, Bun, Browsers and Cloudflare Durable Objects.
+We have removed the dependency on `ws` and switched to the native WebSocket API for Jazz Workers.
 
-  If you are using a Node.js version lower than 22 you will need to install the `ws` package and provide the WebSocket constructor:
-  <CodeGroup>
+This improves the compatibility with a wider set of Javascript runtimes adding drop-in support for Deno, Bun, Browsers and Cloudflare Durable Objects.
+
+If you are using a Node.js version lower than 22 you will need to install the `ws` package and provide the WebSocket constructor:
+
+<CodeGroup>
 ```ts
 import { WebSocket } from "ws";
 import { startWorker } from "jazz-nodejs";
@@ -355,24 +347,21 @@ const { worker } = await startWorker({
   WebSocket,
 });
 ```
-</CodeGroup> 
-</div>
+</CodeGroup>
 
-<h3 id="group-inheritance">Group inheritance with role mapping</h3>
-<div>
-  You can override the inherited role by passing a second argument to `extend`.
+## Group inheritance with role mapping
+You can override the inherited role by passing a second argument to `extend`.
 
-  This can be used to give users limited access to a child group:
-  <CodeGroup>
-  ```ts
-  const organization = Group.create();
-  const billing = Group.create();
+This can be used to give users limited access to a child group:
+<CodeGroup>
+```ts
+const organization = Group.create();
+const billing = Group.create();
 
-  billing.extend(organization, "reader");
-  ```
-  </CodeGroup>
+billing.extend(organization, "reader");
+```
+</CodeGroup>
 
-  This way the members of the organization can only read the billing data, even if they are admins in the organization group.
+This way the members of the organization can only read the billing data, even if they are admins in the organization group.
 
-  More about the group inheritance can be found in the [dedicated docs page](/docs/groups/inheritance).
-</div>
+More about the group inheritance can be found in the [dedicated docs page](/docs/groups/inheritance).

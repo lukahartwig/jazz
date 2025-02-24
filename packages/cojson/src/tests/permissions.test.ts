@@ -4,6 +4,7 @@ import { ControlledAgent } from "../coValues/account.js";
 import { WasmCrypto } from "../crypto/WasmCrypto.js";
 import { expectGroup } from "../typeUtils/expectGroup.js";
 import {
+  connectTwoPeers,
   createTwoConnectedNodes,
   groupWithTwoAdmins,
   groupWithTwoAdminsHighLevel,
@@ -2029,9 +2030,13 @@ test("Can give write permissions to 'everyone' (high-level)", async () => {
       .getCurrentContent(),
   );
 
+  connectTwoPeers(group.core.node, childContent2.core.node, "server", "server");
+
+  // Ensure that the group is available to newAccount
+  await group.core.waitForSync();
+
   expect(childContent2.get("foo")).toEqual("bar");
 
-  console.log("Before anon set");
   childContent2.set("foo", "bar2", "private");
   expect(childContent2.get("foo")).toEqual("bar2");
 });

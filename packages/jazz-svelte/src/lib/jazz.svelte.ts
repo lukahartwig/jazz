@@ -56,7 +56,7 @@ export function getAuthSecretStorage() {
   const context = getContext<AuthSecretStorage>(JAZZ_AUTH_CTX);
 
   if (!context) {
-    throw new Error('useJazzContext must be used within a JazzProvider');
+    throw new Error('getAuthSecretStorage must be used within a JazzProvider');
   }
 
   return context;

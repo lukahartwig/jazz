@@ -1,6 +1,6 @@
 {
   "name": "chat-rn",
-  "version": "1.0.64",
+  "version": "1.0.71",
   "main": "index.js",
   "scripts": {
     "build": "expo export -p ios",
@@ -13,17 +13,17 @@
   },
   "dependencies": {
     "@azure/core-asynciterator-polyfill": "^1.0.2",
+    "@bacons/text-decoder": "0.0.0",
+    "@craftzdog/react-native-buffer": "6.0.5",
     "@op-engineering/op-sqlite": "^11.2.12",
     "@react-native-community/netinfo": "^11.4.1",
     "@react-navigation/native": "^7.0.13",
     "@react-navigation/native-stack": "^7.1.14",
-    "base-64": "^1.0.0",
     "clsx": "^2.0.0",
     "expo": "^52.0.0",
     "expo-build-properties": "~0.13.1",
     "expo-clipboard": "~7.0.0",
     "expo-constants": "~17.0.3",
-    "expo-crypto": "~14.0.1",
     "expo-dev-client": "~5.0.5",
     "expo-linking": "~7.0.3",
     "expo-secure-store": "~14.0.0",
@@ -34,14 +34,13 @@
     "nativewind": "^4.1.21",
     "react": "^18.3.1",
     "react-native": "~0.76.3",
-    "react-native-fetch-api": "^3.0.0",
     "react-native-get-random-values": "^1.11.0",
-    "react-native-polyfill-globals": "^3.1.0",
+    "react-native-nitro-modules": "0.21.0",
+    "react-native-quick-crypto": "1.0.0-beta.12",
     "react-native-safe-area-context": "4.12.0",
     "react-native-screens": "4.1.0",
     "react-native-url-polyfill": "^2.0.0",
-    "text-encoding": "^0.7.0",
-    "web-streams-polyfill": "^3.2.1"
+    "readable-stream": "4.7.0"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",

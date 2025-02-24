@@ -4,6 +4,7 @@ import { PureJSCrypto } from "cojson/dist/crypto/PureJSCrypto";
 import {
   Account,
   AccountClass,
+  AuthCredentials,
   JazzContextManagerAuthProps,
 } from "./exports.js";
 import {
@@ -182,13 +183,14 @@ export class TestJazzContextManager<
     const storage = context.getAuthSecretStorage();
     const node = account._raw.core.node;
 
-    storage.set({
+    const credentials = {
       accountID: account.id,
       accountSecret: node.account.agentSecret,
       secretSeed: SecretSeedMap.get(account.id),
       provider,
-    });
-    storage.isAuthenticated = Boolean(props?.isAuthenticated);
+    } satisfies AuthCredentials;
+
+    storage.set(credentials);
 
     context.updateContext(
       {
@@ -202,8 +204,12 @@ export class TestJazzContextManager<
           node.gracefulShutdown();
         },
         logOut: async () => {
+          await storage.clear();
           node.gracefulShutdown();
         },
+      },
+      {
+        credentials,
       },
     );
 
@@ -254,16 +260,20 @@ export class TestJazzContextManager<
       AccountSchema: props.AccountSchema,
     });
 
-    this.updateContext(props, {
-      me: context.account,
-      node: context.node,
-      done: () => {
-        context.done();
+    await this.updateContext(
+      props,
+      {
+        me: context.account,
+        node: context.node,
+        done: () => {
+          context.done();
+        },
+        logOut: () => {
+          return context.logOut();
+        },
       },
-      logOut: () => {
-        return context.logOut();
-      },
-    });
+      authProps,
+    );
   }
 }
 

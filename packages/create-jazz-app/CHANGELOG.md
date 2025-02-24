@@ -1,5 +1,11 @@
 # create-jazz-app
 
+## 0.1.11
+
+### Patch Changes
+
+- ad4fcba: Remove redundant passkey auth starter
+
 ## 0.1.10
 
 ### Patch Changes

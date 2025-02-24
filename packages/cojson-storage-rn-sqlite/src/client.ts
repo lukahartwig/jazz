@@ -1,5 +1,10 @@
 import { type DB as DatabaseT } from "@op-engineering/op-sqlite";
-import { CojsonInternalTypes, type OutgoingSyncQueue, RawCoID } from "cojson";
+import {
+  CojsonInternalTypes,
+  type OutgoingSyncQueue,
+  RawCoID,
+  SessionID,
+} from "cojson";
 import type {
   DBClientInterface,
   SessionRow,
@@ -46,6 +51,17 @@ export class SQLiteClient implements DBClientInterface {
       [coValueRowId],
     );
     return rows as StoredSessionRow[];
+  }
+
+  async getSingleCoValueSession(
+    coValueRowId: number,
+    sessionID: SessionID,
+  ): Promise<StoredSessionRow | undefined> {
+    const { rows } = await this.db.execute(
+      "SELECT * FROM sessions WHERE coValue = ? AND sessionID = ?",
+      [coValueRowId, sessionID],
+    );
+    return rows[0] as StoredSessionRow | undefined;
   }
 
   async getNewTransactionInSession(
@@ -142,12 +158,10 @@ export class SQLiteClient implements DBClientInterface {
     );
   }
 
-  async unitOfWork(
-    operationsCallback: () => Promise<unknown>[],
-  ): Promise<void> {
+  async transaction(operationsCallback: () => unknown) {
     try {
       await this.db.transaction(async () => {
-        await Promise.all(operationsCallback());
+        await operationsCallback();
       });
     } catch (e) {
       console.error("Transaction failed:", e);

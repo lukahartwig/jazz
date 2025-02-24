@@ -29,11 +29,33 @@ export function fulfillsDepth(depth: any, value: CoValue): boolean {
         const map = value as unknown as {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           [key: string]: any;
-          _refs: { [key: string]: Ref<CoValue> | undefined };
         };
-        if (!map._refs[key] && map._schema[key].optional) {
-          continue;
+
+        if (map._raw.get(key) === undefined) {
+          if (!map._schema?.[key]) {
+            if (map._schema?.[ItemsSym]) {
+              // CoMap.Record
+              if (map._schema[ItemsSym].optional) {
+                continue;
+              } else {
+                throw new Error(
+                  `The ref ${key} requested on ${map.constructor.name} is missing`,
+                );
+              }
+            } else {
+              throw new Error(
+                `The ref ${key} requested on ${map.constructor.name} is not defined in the schema`,
+              );
+            }
+          } else if (map._schema[key].optional) {
+            continue;
+          } else {
+            throw new Error(
+              `The ref ${key} on ${map.constructor.name} is required but missing`,
+            );
+          }
         }
+
         if (!map[key]) {
           return false;
         }

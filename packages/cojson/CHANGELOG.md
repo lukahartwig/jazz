@@ -1,5 +1,30 @@
 # cojson
 
+## 0.10.8
+
+### Patch Changes
+
+- 153dc99: Catch errors on CoValueCore subscribers to avoid effects on the sync
+
+## 0.10.7
+
+### Patch Changes
+
+- 0f83320: Use jazz-crypto-rs isomorphic bundle
+- 012022d: Improve error logging on sync errors
+
+## 0.10.6
+
+### Patch Changes
+
+- 5c76e37: Ports Wasm crypto functions to use exported library `jazz-crypto-rs`
+
+## 0.10.4
+
+### Patch Changes
+
+- 1af6072: Revert PriorityBasedMessageQueue to use an array-based queue
+
 ## 0.10.2
 
 ### Patch Changes

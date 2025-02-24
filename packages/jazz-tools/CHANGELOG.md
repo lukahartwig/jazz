@@ -1,5 +1,50 @@
 # jazz-tools
 
+## 0.10.8
+
+### Patch Changes
+
+- 2fb6428: Allow explicit keys when loading values from a CoMap.Record and throw when a required ref is undefined
+- Updated dependencies [153dc99]
+  - cojson@0.10.8
+
+## 0.10.7
+
+### Patch Changes
+
+- 1136d9b: Fixed isAuthenticated out-of-sync with the account state during the logOut and authenticate flows
+- 0eed228: Fixes clerk auth flow
+- Updated dependencies [0f83320]
+- Updated dependencies [012022d]
+  - cojson@0.10.7
+
+## 0.10.6
+
+### Patch Changes
+
+- ada802b: Fix Clerk credentials migration
+- Updated dependencies [5c76e37]
+  - cojson@0.10.6
+
+## 0.10.5
+
+### Patch Changes
+
+- 59ff77e: Critical fix: move the Account migration code execution in the right place to ensure that the changes applied to the right Jazz node.
+
+## 0.10.4
+
+### Patch Changes
+
+- Updated dependencies [1af6072]
+  - cojson@0.10.4
+
+## 0.10.3
+
+### Patch Changes
+
+- d8582fc: Fixes co.optional.Date throwing when assigned undefined
+
 ## 0.10.2
 
 ### Patch Changes

@@ -1,15 +1,22 @@
 import { createWorkerAccount } from "jazz-run/createWorkerAccount";
 import { startSyncServer } from "jazz-run/startSyncServer";
-import { CoMap, Group, InboxSender, co } from "jazz-tools";
+import {
+  Account,
+  AccountClass,
+  CoMap,
+  Group,
+  InboxSender,
+  co,
+} from "jazz-tools";
 import { describe, expect, onTestFinished, test } from "vitest";
 import { startWorker } from "../index";
 
-async function setup() {
+async function setup<Acc extends Account>(AccountSchema?: AccountClass<Acc>) {
   const { server, port } = await setupSyncServer();
 
   const syncServer = `ws://localhost:${port}`;
 
-  const { worker, done } = await setupWorker(syncServer);
+  const { worker, done } = await setupWorker(syncServer, AccountSchema);
 
   return { worker, done, syncServer, server, port };
 }
@@ -30,7 +37,10 @@ async function setupSyncServer(defaultPort = "0") {
   return { server, port };
 }
 
-async function setupWorker(syncServer: string) {
+async function setupWorker<Acc extends Account>(
+  syncServer: string,
+  AccountSchema?: AccountClass<Acc>,
+) {
   const { accountID, agentSecret } = await createWorkerAccount({
     name: "test-worker",
     peer: syncServer,
@@ -40,6 +50,7 @@ async function setupWorker(syncServer: string) {
     accountID: accountID,
     accountSecret: agentSecret,
     syncServer,
+    AccountSchema,
   });
 }
 
@@ -69,6 +80,56 @@ describe("startWorker integration", () => {
     expect(mapOnWorker2?.value).toBe("test");
 
     await worker1.done();
+    await worker2.done();
+  });
+
+  test("worker handles successfully the custom account migration", async () => {
+    class AccountRoot extends CoMap {
+      value = co.string;
+    }
+
+    let shouldReloadPreviousAccount = false;
+
+    class CustomAccount extends Account {
+      root = co.ref(AccountRoot);
+
+      migrate() {
+        if (this.root === undefined) {
+          if (shouldReloadPreviousAccount) {
+            throw new Error("Previous account not found");
+          }
+
+          shouldReloadPreviousAccount = true;
+
+          this.root = AccountRoot.create(
+            {
+              value: "test",
+            },
+            this,
+          );
+        }
+      }
+    }
+
+    const worker1 = await setup(CustomAccount);
+
+    const { root } = await worker1.worker.ensureLoaded({ root: {} });
+
+    expect(root.value).toBe("test");
+
+    await worker1.done();
+
+    const worker2 = await startWorker({
+      accountID: worker1.worker.id,
+      accountSecret: worker1.worker._raw.core.node.account.agentSecret,
+      syncServer: worker1.syncServer,
+      AccountSchema: CustomAccount,
+    });
+
+    const { root: root2 } = await worker2.worker.ensureLoaded({ root: {} });
+
+    expect(root2.value).toBe("test");
+
     await worker2.done();
   });
 

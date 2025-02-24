@@ -5,7 +5,6 @@ import fs from "fs";
 import chalk from "chalk";
 import { Command } from "commander";
 import degit from "degit";
-import gradient from "gradient-string";
 import inquirer from "inquirer";
 import ora from "ora";
 
@@ -18,8 +17,6 @@ import {
 } from "./config.js";
 
 const program = new Command();
-
-const jazzGradient = gradient(["#FF4D4D", "#FF9900", "#FFD700"]);
 
 type PackageManager = "npm" | "yarn" | "pnpm" | "bun" | "deno";
 
@@ -93,8 +90,6 @@ async function scaffoldProject({
   packageManager,
   apiKey,
 }: ScaffoldOptions): Promise<void> {
-  console.log("\n" + jazzGradient.multiline("Jazz App Creator\n"));
-
   const starterConfig = frameworkToAuthExamples[
     template as FrameworkAuthPair
   ] || {
@@ -255,7 +250,6 @@ module.exports = withNativeWind(config, { input: "./src/global.css" });
 async function promptUser(
   partialOptions: PromptOptions,
 ): Promise<ScaffoldOptions> {
-  console.log("\n" + jazzGradient.multiline("Jazz App Creator\n"));
   console.log(chalk.blue.bold("Let's create your Jazz app! 🎷\n"));
 
   const questions = [];
@@ -300,7 +294,7 @@ async function promptUser(
     questions.push({
       type: "list",
       name: "starter",
-      message: chalk.cyan("Choose a starter:"),
+      message: chalk.cyan("Choose an authentication method:"),
       choices: choices.map(([key, value]) => ({
         name: chalk.white(value.name),
         value: key,
@@ -375,9 +369,16 @@ function validateOptions(options: PromptOptions): options is ScaffoldOptions {
   return true;
 }
 
+const frameworkOptions = frameworks.map((f) => f.name).join(", ");
+
 program
-  .description(chalk.blue("CLI to generate Jazz starter projects"))
-  .option("-f, --framework <framework>", chalk.cyan("Framework to use"))
+  .description(
+    chalk.blue("CLI to generate Jazz projects using starter templates"),
+  )
+  .option(
+    "-f, --framework <framework>",
+    chalk.cyan(`Framework to use (${frameworkOptions})`),
+  )
   .option("-s, --starter <starter>", chalk.cyan("Starter template to use"))
   .option("-e, --example <name>", chalk.cyan("Example project to use"))
   .option("-n, --project-name <name>", chalk.cyan("Name of the project"))
@@ -426,7 +427,7 @@ program
 
 // Add help text to show available starters
 program.on("--help", () => {
-  console.log("\n" + jazzGradient.multiline("Available starters:\n"));
+  console.log(chalk.blue("\nAvailable starters:\n"));
   Object.entries(frameworkToAuthExamples).forEach(([key, value]) => {
     if (value.repo) {
       // Only show implemented starters
@@ -440,13 +441,19 @@ program.on("--help", () => {
   console.log(chalk.blue("\nExample usage:"));
   console.log(
     chalk.white(
-      "  create-jazz-app --starter react-demo-auth --project-name my-app --package-manager npm\n",
+      "npx create-jazz-app@latest --project-name my-app --framework react\n",
+    ),
+  );
+  console.log(chalk.blue("With example app as a template:"));
+  console.log(
+    chalk.white(
+      "npx create-jazz-app@latest --example chat --project-name my-chat-app\n",
     ),
   );
   console.log(chalk.blue("With API key:"));
   console.log(
     chalk.white(
-      "  create-jazz-app --starter react-demo-auth --project-name my-app --api-key your-api-key@garden.co\n",
+      "npx create-jazz-app@latest --project-name my-app --api-key your-api-key@garden.co\n",
     ),
   );
 });

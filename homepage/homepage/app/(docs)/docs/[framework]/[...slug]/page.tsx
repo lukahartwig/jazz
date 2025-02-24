@@ -1,5 +1,4 @@
 import DocsLayout from "@/components/docs/DocsLayout";
-import { TableOfContents } from "@/components/docs/TableOfContents";
 import ComingSoonPage from "@/components/docs/coming-soon.mdx";
 import { DocNav } from "@/components/docs/nav";
 import { docNavigationItems } from "@/lib/docNavigationItems.js";
@@ -11,6 +10,7 @@ export default async function Page({
   params: { slug, framework },
 }: { params: { slug: string[]; framework: string } }) {
   const slugPath = slug.join("/");
+  const bodyClassName = "overflow-x-hidden lg:flex-1 py-10  max-w-3xl mx-auto";
 
   try {
     let mdxSource;
@@ -27,7 +27,7 @@ export default async function Page({
 
     return (
       <DocsLayout toc={tocItems} nav={<DocNav />}>
-        <Prose className="overflow-x-hidden lg:flex-1 py-8">
+        <Prose className={bodyClassName}>
           <Content />
         </Prose>
       </DocsLayout>
@@ -35,8 +35,8 @@ export default async function Page({
   } catch (error) {
     return (
       <DocsLayout nav={<DocNav />}>
-        <Prose className="overflow-x-hidden lg:flex-1 py-8">
-          <ComingSoonPage className="max-w-3xl mx-auto" />
+        <Prose className={bodyClassName}>
+          <ComingSoonPage />
         </Prose>
       </DocsLayout>
     );

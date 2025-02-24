@@ -3,6 +3,7 @@
 import { Framework } from "@/lib/framework";
 import { useFramework } from "@/lib/use-framework";
 import { Button } from "gcmp-design-system/src/app/components/atoms/Button";
+import { Icon } from "gcmp-design-system/src/app/components/atoms/Icon";
 import {
   Dropdown,
   DropdownButton,
@@ -37,7 +38,7 @@ const frameworks: Record<
   },
 };
 
-export function FrameworkSelect({ className }: { className?: string }) {
+export function FrameworkSelect() {
   const router = useRouter();
   const defaultFramework = useFramework();
   const [selectedFramework, setSelectedFramework] =
@@ -53,14 +54,18 @@ export function FrameworkSelect({ className }: { className?: string }) {
   return (
     <Dropdown>
       <DropdownButton
-        icon="chevronDown"
-        className="flex-row-reverse w-full justify-between"
+        className="w-full justify-between"
         as={Button}
         variant="secondary"
       >
         {frameworks[selectedFramework].label}
+        <Icon
+          name="chevronDown"
+          size="sm"
+          className="text-stone-400 dark:text-stone-600"
+        />
       </DropdownButton>
-      <DropdownMenu anchor="bottom start" className="z-50">
+      <DropdownMenu className="w-[--button-width] z-50" anchor="bottom start">
         {Object.entries(frameworks).map(([key, framework]) => (
           <DropdownItem
             className="items-baseline"

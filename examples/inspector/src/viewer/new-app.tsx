@@ -102,6 +102,7 @@ export default function CoJsonViewerApp() {
     if (coValueId) {
       setPage(coValueId);
     }
+    setCoValueId("");
   };
 
   if (
@@ -118,8 +119,22 @@ export default function CoJsonViewerApp() {
 
   return (
     <div className="w-full h-screen bg-gray-100 p-4 overflow-hidden flex flex-col">
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex items-center mb-4 gap-4">
         <Breadcrumbs path={path} onBreadcrumbClick={goToIndex} />
+        <div className="flex-1">
+          <form onSubmit={handleCoValueIdSubmit}>
+            {path.length !== 0 && (
+              <input
+                className="border p-2 rounded-lg min-w-[21rem] font-mono"
+                placeholder="co_z1234567890abcdef123456789"
+                value={coValueId}
+                onChange={(e) =>
+                  setCoValueId(e.target.value as CoID<RawCoValue>)
+                }
+              />
+            )}
+          </form>
+        </div>
         <AccountSwitcher
           accounts={accounts}
           currentAccount={currentAccount}
@@ -172,7 +187,6 @@ export default function CoJsonViewerApp() {
                 type="button"
                 className="border inline-block px-2 py-1.5 text-black rounded"
                 onClick={() => {
-                  setCoValueId(currentAccount.id);
                   setPage(currentAccount.id);
                 }}
               >

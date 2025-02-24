@@ -1,7 +1,7 @@
 import { DemoAuth } from "jazz-tools";
 import { useEffect, useMemo, useState } from "react";
 import { useAuthSecretStorage, useJazzContext } from "../hooks.js";
-import { useIsAuthenticated } from "./useIsAuthenticated.js";
+import { useIsAuthenticated } from "../hooks.js";
 
 /**
  * `useDemoAuth` is a hook that provides a `JazzAuth` object for demo authentication.

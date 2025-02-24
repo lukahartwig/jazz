@@ -1,5 +1,40 @@
 # cojson-storage-indexeddb
 
+## 0.10.8
+
+### Patch Changes
+
+- Updated dependencies [153dc99]
+  - cojson@0.10.8
+  - cojson-storage@0.10.8
+
+## 0.10.7
+
+### Patch Changes
+
+- 1e625f3: Improve rollback on error when failing to add new content
+- Updated dependencies [0f83320]
+- Updated dependencies [012022d]
+- Updated dependencies [1e625f3]
+  - cojson@0.10.7
+  - cojson-storage@0.10.7
+
+## 0.10.6
+
+### Patch Changes
+
+- Updated dependencies [5c76e37]
+  - cojson@0.10.6
+  - cojson-storage@0.10.6
+
+## 0.10.4
+
+### Patch Changes
+
+- Updated dependencies [1af6072]
+  - cojson@0.10.4
+  - cojson-storage@0.10.4
+
 ## 0.10.2
 
 ### Patch Changes

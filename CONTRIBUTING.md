@@ -48,7 +48,19 @@ You'll need Node.js 20.x or 22.x installed (we're working on support for 23.x), 
    pnpm install
    ```
 
-3. **Run tests** to verify everything is working:
+3. **Install homepage dependencies**:
+
+   ```bash
+   cd homepage && pnpm install
+   ```
+
+4. **Build the packages**:
+
+   ```bash
+   pnpm build
+   ```
+
+5. **Run tests** to verify everything is working:
    ```bash
    pnpm test
    ```

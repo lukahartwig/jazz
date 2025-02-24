@@ -341,20 +341,8 @@ export class SyncManager {
           });
           return;
         }
-        try {
-          await this.handleSyncMessage(msg, peerState);
-        } catch (e) {
-          throw new Error(
-            `Error reading from peer ${
-              peer.id
-            }, handling msg\n\n${JSON.stringify(msg, (k, v) =>
-              k === "changes" || k === "encryptedChanges"
-                ? v.slice(0, 20) + "..."
-                : v,
-            )}`,
-            { cause: e },
-          );
-        }
+
+        await this.handleSyncMessage(msg, peerState);
       }
     };
 

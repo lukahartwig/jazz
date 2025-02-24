@@ -1,7 +1,7 @@
 import { AuthSecretStorage, InMemoryKVStore, KvStoreContext } from "jazz-tools";
 import { createJazzTestAccount } from "jazz-tools/testing";
 import { beforeEach, describe, expect, it } from "vitest";
-import { useIsAuthenticated } from "../auth/useIsAuthenticated";
+import { useIsAuthenticated } from "../hooks";
 // @vitest-environment happy-dom
 import { renderHook } from "./testUtils";
 

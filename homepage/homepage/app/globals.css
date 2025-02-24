@@ -2,6 +2,16 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  :focus {
+    @apply outline-none;
+  }
+
+  :focus-visible {
+    @apply ring-2 ring-blue/75 dark:ring-blue-400/75;
+  }
+}
+
 @layer components {
   @import "shiki.css";
 }

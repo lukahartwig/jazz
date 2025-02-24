@@ -1,5 +1,79 @@
 # jazz-browser
 
+## 0.10.10
+
+### Patch Changes
+
+- 3405d8f: read provided kvStore instead of falling back to the default in-memory store
+
+## 0.10.8
+
+### Patch Changes
+
+- Updated dependencies [153dc99]
+- Updated dependencies [2fb6428]
+  - cojson@0.10.8
+  - jazz-tools@0.10.8
+  - cojson-storage-rn-sqlite@0.8.66
+  - cojson-transport-ws@0.10.8
+  - jazz-react-core@0.10.8
+
+## 0.10.7
+
+### Patch Changes
+
+- 1136d9b: Fixed isAuthenticated out-of-sync with the account state during the logOut and authenticate flows
+- Updated dependencies [0f83320]
+- Updated dependencies [012022d]
+- Updated dependencies [1136d9b]
+- Updated dependencies [1e625f3]
+- Updated dependencies [0eed228]
+  - cojson@0.10.7
+  - jazz-react-core@0.10.7
+  - jazz-tools@0.10.7
+  - cojson-storage-rn-sqlite@0.8.65
+  - cojson-transport-ws@0.10.7
+
+## 0.10.6
+
+### Patch Changes
+
+- Updated dependencies [1d71ca1]
+- Updated dependencies [5c76e37]
+- Updated dependencies [ada802b]
+  - jazz-react-core@0.10.6
+  - cojson@0.10.6
+  - jazz-tools@0.10.6
+  - cojson-storage-rn-sqlite@0.8.64
+  - cojson-transport-ws@0.10.6
+
+## 0.10.5
+
+### Patch Changes
+
+- Updated dependencies [59ff77e]
+  - jazz-tools@0.10.5
+  - jazz-react-core@0.10.5
+
+## 0.10.4
+
+### Patch Changes
+
+- Updated dependencies [1af6072]
+  - cojson@0.10.4
+  - cojson-storage-rn-sqlite@0.8.63
+  - cojson-transport-ws@0.10.4
+  - jazz-react-core@0.10.4
+  - jazz-tools@0.10.4
+
+## 0.10.3
+
+### Patch Changes
+
+- Updated dependencies [d8582fc]
+  - jazz-tools@0.10.3
+  - jazz-react-core@0.10.3
+
 ## 0.10.2
 
 ### Patch Changes

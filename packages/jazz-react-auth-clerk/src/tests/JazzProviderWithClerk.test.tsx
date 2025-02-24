@@ -1,9 +1,9 @@
 // @vitest-environment happy-dom
 
 import { act, render, waitFor } from "@testing-library/react";
-import type { MinimalClerkClient } from "jazz-auth-clerk";
+import { JazzClerkAuth, type MinimalClerkClient } from "jazz-auth-clerk";
 import { AuthSecretStorage, InMemoryKVStore, KvStoreContext } from "jazz-tools";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { MockInstance, beforeEach, describe, expect, it, vi } from "vitest";
 import { JazzProviderWithClerk } from "../index";
 
 vi.mock("jazz-react", async (importOriginal) => {
@@ -27,12 +27,24 @@ vi.mock("jazz-react", async (importOriginal) => {
   };
 });
 
+vi.mock("jazz-auth-clerk", async (importOriginal) => {
+  const { JazzClerkAuth } = await import("jazz-auth-clerk");
+
+  JazzClerkAuth.loadClerkAuthData = vi.fn().mockResolvedValue(undefined);
+
+  return {
+    ...(await importOriginal<typeof import("jazz-auth-clerk")>()),
+    JazzClerkAuth,
+  };
+});
+
 const authSecretStorage = new AuthSecretStorage();
 KvStoreContext.getInstance().initialize(new InMemoryKVStore());
 
 describe("JazzProviderWithClerk", () => {
   beforeEach(async () => {
     await authSecretStorage.clear();
+    vi.clearAllMocks();
   });
 
   const setup = (
@@ -93,5 +105,61 @@ describe("JazzProviderWithClerk", () => {
         jazzAccountSeed: expect.any(Array),
       },
     });
+  });
+
+  it("should load the clerk credentials when the user is authenticated", async () => {
+    render(
+      <JazzProviderWithClerk
+        clerk={{
+          addListener: vi.fn(),
+          signOut: vi.fn(),
+          user: {
+            update: vi.fn(),
+            unsafeMetadata: {
+              jazzAccountID: "test",
+              jazzAccountSecret: "test",
+              jazzAccountSeed: "test",
+            },
+            firstName: "Test",
+            lastName: "User",
+            username: "test",
+            fullName: "Test User",
+            id: "test",
+            primaryEmailAddress: {
+              emailAddress: "test@test.com",
+            },
+          },
+        }}
+        sync={{ peer: "wss://test.jazz.tools" }}
+      >
+        <div data-testid="test-child">Test Content</div>
+      </JazzProviderWithClerk>,
+    );
+
+    expect(JazzClerkAuth.loadClerkAuthData).toHaveBeenCalledWith(
+      {
+        jazzAccountID: "test",
+        jazzAccountSecret: "test",
+        jazzAccountSeed: "test",
+      },
+      authSecretStorage,
+    );
+  });
+
+  it("should not load the clerk credentials when the user is not authenticated", async () => {
+    render(
+      <JazzProviderWithClerk
+        clerk={{
+          addListener: vi.fn(),
+          signOut: vi.fn(),
+          user: null,
+        }}
+        sync={{ peer: "wss://test.jazz.tools" }}
+      >
+        <div data-testid="test-child">Test Content</div>
+      </JazzProviderWithClerk>,
+    );
+
+    expect(JazzClerkAuth.loadClerkAuthData).not.toHaveBeenCalledWith();
   });
 });

@@ -200,15 +200,6 @@ export class SyncManager {
       ? coValueRow.rowID
       : await this.dbClient.addCoValue(msg);
 
-    const allOurSessionsEntries =
-      await this.dbClient.getCoValueSessions(storedCoValueRowID);
-
-    const allOurSessions: {
-      [sessionID: SessionID]: StoredSessionRow;
-    } = Object.fromEntries(
-      allOurSessionsEntries.map((row) => [row.sessionID, row]),
-    );
-
     const ourKnown: CojsonInternalTypes.CoValueKnownState = {
       id: msg.id,
       header: true,
@@ -217,9 +208,13 @@ export class SyncManager {
 
     let invalidAssumptions = false;
 
-    await this.dbClient.unitOfWork(() =>
-      (Object.keys(msg.new) as SessionID[]).map((sessionID) => {
-        const sessionRow = allOurSessions[sessionID];
+    for (const sessionID of Object.keys(msg.new) as SessionID[]) {
+      await this.dbClient.transaction(async () => {
+        const sessionRow = await this.dbClient.getSingleCoValueSession(
+          storedCoValueRowID,
+          sessionID,
+        );
+
         if (sessionRow) {
           ourKnown.sessions[sessionRow.sessionID] = sessionRow.lastIdx;
         }
@@ -229,8 +224,8 @@ export class SyncManager {
         } else {
           return this.putNewTxs(msg, sessionID, sessionRow, storedCoValueRowID);
         }
-      }),
-    );
+      });
+    }
 
     if (invalidAssumptions) {
       this.sendStateMessage({

@@ -1,5 +1,68 @@
 # jazz-example-chat
 
+## 0.0.154
+
+### Patch Changes
+
+- jazz-browser-media-images@0.10.9
+- jazz-react@0.10.9
+
+## 0.0.153
+
+### Patch Changes
+
+- Updated dependencies [2fb6428]
+  - jazz-tools@0.10.8
+  - jazz-react@0.10.8
+  - jazz-browser-media-images@0.10.8
+
+## 0.0.152
+
+### Patch Changes
+
+- Updated dependencies [1136d9b]
+- Updated dependencies [0eed228]
+  - jazz-react@0.10.7
+  - jazz-tools@0.10.7
+  - jazz-browser-media-images@0.10.7
+
+## 0.0.151
+
+### Patch Changes
+
+- Updated dependencies [1d71ca1]
+- Updated dependencies [ada802b]
+  - hash-slash@0.2.2
+  - jazz-react@0.10.6
+  - jazz-tools@0.10.6
+  - jazz-browser-media-images@0.10.6
+
+## 0.0.150
+
+### Patch Changes
+
+- Updated dependencies [59ff77e]
+  - jazz-tools@0.10.5
+  - jazz-browser-media-images@0.10.5
+  - jazz-react@0.10.5
+
+## 0.0.149
+
+### Patch Changes
+
+- jazz-react@0.10.4
+- jazz-tools@0.10.4
+- jazz-browser-media-images@0.10.4
+
+## 0.0.148
+
+### Patch Changes
+
+- Updated dependencies [d8582fc]
+  - jazz-tools@0.10.3
+  - jazz-browser-media-images@0.10.3
+  - jazz-react@0.10.3
+
 ## 0.0.147
 
 ### Patch Changes

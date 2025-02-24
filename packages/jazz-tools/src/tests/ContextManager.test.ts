@@ -53,16 +53,20 @@ class TestJazzContextManager<Acc extends Account> extends JazzContextManager<
       AccountSchema: props.AccountSchema,
     });
 
-    this.updateContext(props, {
-      me: context.account,
-      node: context.node,
-      done: () => {
-        context.done();
+    await this.updateContext(
+      props,
+      {
+        me: context.account,
+        node: context.node,
+        done: () => {
+          context.done();
+        },
+        logOut: async () => {
+          await context.logOut();
+        },
       },
-      logOut: async () => {
-        await context.logOut();
-      },
-    });
+      authProps,
+    );
   }
 }
 
@@ -194,6 +198,87 @@ describe("ContextManager", () => {
 
     // Verify callback was not called
     expect(onAnonymousAccountDiscarded).not.toHaveBeenCalled();
+  });
+
+  test("the migration should be applied correctly on existing accounts ", async () => {
+    class AccountRoot extends CoMap {
+      value = co.string;
+    }
+
+    let lastRootId: string | undefined;
+
+    class CustomAccount extends Account {
+      root = co.ref(AccountRoot);
+
+      migrate() {
+        this.root = AccountRoot.create({
+          value: "Hello",
+        });
+        lastRootId = this.root.id;
+      }
+    }
+    const customManager = new TestJazzContextManager<CustomAccount>();
+
+    // Create initial anonymous context
+    await customManager.createContext({
+      AccountSchema: CustomAccount,
+    });
+
+    const account = (
+      customManager.getCurrentValue() as JazzAuthContext<CustomAccount>
+    ).me;
+
+    await customManager.authenticate({
+      accountID: account.id,
+      accountSecret: account._raw.core.node.account.agentSecret,
+      provider: "test",
+    });
+
+    const me = await CustomAccount.getMe().ensureLoaded({ root: {} });
+
+    expect(me.root.id).toBe(lastRootId);
+  });
+
+  test("the migration should be applied correctly on existing accounts (2)", async () => {
+    class AccountRoot extends CoMap {
+      value = co.number;
+    }
+
+    class CustomAccount extends Account {
+      root = co.ref(AccountRoot);
+
+      async migrate(this: CustomAccount) {
+        if (this.root === undefined) {
+          this.root = AccountRoot.create({
+            value: 1,
+          });
+        } else {
+          const { root } = await this.ensureLoaded({ root: {} });
+
+          root.value = 2;
+        }
+      }
+    }
+    const customManager = new TestJazzContextManager<CustomAccount>();
+
+    // Create initial anonymous context
+    await customManager.createContext({
+      AccountSchema: CustomAccount,
+    });
+
+    const account = (
+      customManager.getCurrentValue() as JazzAuthContext<CustomAccount>
+    ).me;
+
+    await customManager.authenticate({
+      accountID: account.id,
+      accountSecret: account._raw.core.node.account.agentSecret,
+      provider: "test",
+    });
+
+    const me = await CustomAccount.getMe().ensureLoaded({ root: {} });
+
+    expect(me.root.value).toBe(2);
   });
 
   test("onAnonymousAccountDiscarded should work on transfering data between accounts", async () => {

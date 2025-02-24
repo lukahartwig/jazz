@@ -1,3 +1,5 @@
+import { ContentByFramework, CodeGroup } from '@/components/forMdx'
+
 export const metadata = { title: "Sync and storage" };
 
 # Sync and storage
@@ -29,9 +31,11 @@ Jazz Cloud will
 
 You can run your own sync server using:
 
+<CodeGroup>
 ```sh
 npx jazz-run sync
 ```
+</CodeGroup>
 
 And then use `ws://localhost:4200` as the sync server URL.
 

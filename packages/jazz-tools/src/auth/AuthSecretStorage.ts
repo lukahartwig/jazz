@@ -16,6 +16,7 @@ export type AuthSetPayload = {
 export class AuthSecretStorage {
   private listeners: Set<(isAuthenticated: boolean) => void>;
   public isAuthenticated: boolean;
+  notify = false;
 
   constructor() {
     this.listeners = new Set();
@@ -28,14 +29,48 @@ export class AuthSecretStorage {
     if (!(await kvStore.get(STORAGE_KEY))) {
       const demoAuthSecret = await kvStore.get("demo-auth-logged-in-secret");
       if (demoAuthSecret) {
-        await kvStore.set(STORAGE_KEY, demoAuthSecret);
+        const parsed = JSON.parse(demoAuthSecret);
+        await kvStore.set(
+          STORAGE_KEY,
+          JSON.stringify({
+            accountID: parsed.accountID,
+            accountSecret: parsed.accountSecret,
+            provider: "demo",
+          }),
+        );
         await kvStore.delete("demo-auth-logged-in-secret");
       }
 
       const clerkAuthSecret = await kvStore.get("jazz-clerk-auth");
       if (clerkAuthSecret) {
-        await kvStore.set(STORAGE_KEY, clerkAuthSecret);
+        const parsed = JSON.parse(clerkAuthSecret);
+        await kvStore.set(
+          STORAGE_KEY,
+          JSON.stringify({
+            accountID: parsed.accountID,
+            accountSecret: parsed.secret,
+            provider: "clerk",
+          }),
+        );
         await kvStore.delete("jazz-clerk-auth");
+      }
+    }
+
+    const value = await kvStore.get(STORAGE_KEY);
+
+    if (value) {
+      const parsed = JSON.parse(value);
+
+      if ("secret" in parsed) {
+        await kvStore.set(
+          STORAGE_KEY,
+          JSON.stringify({
+            accountID: parsed.accountID,
+            secretSeed: parsed.secretSeed,
+            accountSecret: parsed.secret,
+            provider: parsed.provider,
+          }),
+        );
       }
     }
   }
@@ -75,7 +110,10 @@ export class AuthSecretStorage {
         provider: payload.provider,
       }),
     );
-    this.emitUpdate(payload);
+
+    if (this.notify) {
+      this.emitUpdate(payload);
+    }
   }
 
   getIsAuthenticated(data: AuthCredentials | null): boolean {
@@ -104,6 +142,9 @@ export class AuthSecretStorage {
   async clear() {
     const kvStore = KvStoreContext.getInstance().getStorage();
     await kvStore.delete(STORAGE_KEY);
-    this.emitUpdate(null);
+
+    if (this.notify) {
+      this.emitUpdate(null);
+    }
   }
 }

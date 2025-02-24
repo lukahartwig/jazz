@@ -1,5 +1,66 @@
 # jazz-example-musicplayer
 
+## 0.0.75
+
+### Patch Changes
+
+- jazz-react@0.10.9
+
+## 0.0.74
+
+### Patch Changes
+
+- Updated dependencies [2fb6428]
+  - jazz-tools@0.10.8
+  - jazz-inspector@0.10.8
+  - jazz-react@0.10.8
+
+## 0.0.73
+
+### Patch Changes
+
+- Updated dependencies [1136d9b]
+- Updated dependencies [0eed228]
+  - jazz-react@0.10.7
+  - jazz-tools@0.10.7
+  - jazz-inspector@0.10.7
+
+## 0.0.72
+
+### Patch Changes
+
+- Updated dependencies [1d71ca1]
+- Updated dependencies [ada802b]
+  - jazz-react@0.10.6
+  - jazz-tools@0.10.6
+  - jazz-inspector@0.10.6
+
+## 0.0.71
+
+### Patch Changes
+
+- Updated dependencies [59ff77e]
+  - jazz-tools@0.10.5
+  - jazz-inspector@0.10.5
+  - jazz-react@0.10.5
+
+## 0.0.70
+
+### Patch Changes
+
+- jazz-inspector@0.10.4
+- jazz-react@0.10.4
+- jazz-tools@0.10.4
+
+## 0.0.69
+
+### Patch Changes
+
+- Updated dependencies [d8582fc]
+  - jazz-tools@0.10.3
+  - jazz-inspector@0.10.3
+  - jazz-react@0.10.3
+
 ## 0.0.68
 
 ### Patch Changes

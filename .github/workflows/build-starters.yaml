@@ -9,7 +9,7 @@ jobs:
     runs-on: blacksmith-4vcpu-ubuntu-2204
     strategy:
       matrix:
-        starter: ["react-demo-auth-tailwind"]
+        starter: ["react-passkey-auth"]
 
     steps:
       - uses: actions/checkout@v4

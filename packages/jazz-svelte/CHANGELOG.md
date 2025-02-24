@@ -1,5 +1,72 @@
 # jazz-svelte
 
+## 0.10.9
+
+### Patch Changes
+
+- Updated dependencies [834203f]
+  - jazz-browser@0.10.9
+
+## 0.10.8
+
+### Patch Changes
+
+- Updated dependencies [153dc99]
+- Updated dependencies [1e87fc7]
+- Updated dependencies [2fb6428]
+  - cojson@0.10.8
+  - jazz-browser@0.10.8
+  - jazz-tools@0.10.8
+
+## 0.10.7
+
+### Patch Changes
+
+- 1136d9b: Fixed isAuthenticated out-of-sync with the account state during the logOut and authenticate flows
+- Updated dependencies [0f83320]
+- Updated dependencies [012022d]
+- Updated dependencies [1136d9b]
+- Updated dependencies [bf76d79]
+- Updated dependencies [0eed228]
+  - cojson@0.10.7
+  - jazz-browser@0.10.7
+  - jazz-tools@0.10.7
+
+## 0.10.6
+
+### Patch Changes
+
+- Updated dependencies [5c76e37]
+- Updated dependencies [ada802b]
+  - cojson@0.10.6
+  - jazz-tools@0.10.6
+  - jazz-browser@0.10.6
+
+## 0.10.5
+
+### Patch Changes
+
+- Updated dependencies [59ff77e]
+  - jazz-tools@0.10.5
+  - jazz-browser@0.10.5
+
+## 0.10.4
+
+### Patch Changes
+
+- Updated dependencies [1af6072]
+  - cojson@0.10.4
+  - jazz-browser@0.10.4
+  - jazz-tools@0.10.4
+
+## 0.10.3
+
+### Patch Changes
+
+- Updated dependencies [d8582fc]
+  - jazz-tools@0.10.3
+  - jazz-browser@0.10.3
+
 ## 0.10.2
 
 ### Patch Changes

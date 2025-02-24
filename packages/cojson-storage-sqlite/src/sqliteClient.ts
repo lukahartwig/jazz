@@ -71,6 +71,17 @@ export class SQLiteClient implements DBClientInterface {
       .all(coValueRowId) as StoredSessionRow[];
   }
 
+  getSingleCoValueSession(
+    coValueRowId: number,
+    sessionID: SessionID,
+  ): StoredSessionRow | undefined {
+    return this.db
+      .prepare<[number, string]>(
+        `SELECT * FROM sessions WHERE coValue = ? AND sessionID = ?`,
+      )
+      .get(coValueRowId, sessionID) as StoredSessionRow | undefined;
+  }
+
   getNewTransactionInSession(
     sessionRowId: number,
     firstNewTxIdx: number,
@@ -159,7 +170,7 @@ export class SQLiteClient implements DBClientInterface {
       .run(sessionRowID, idx, signature);
   }
 
-  unitOfWork(operationsCallback: () => any[]) {
+  transaction(operationsCallback: () => unknown) {
     this.db.transaction(operationsCallback)();
   }
 }

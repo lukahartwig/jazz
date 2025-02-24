@@ -36,7 +36,9 @@ export function Footer({
       <div className="container grid gap-8 md:gap-12">
         <div className="grid grid-cols-12 gap-y-3 sm:items-center pb-8 border-b">
           <div className="col-span-full sm:col-span-6 md:col-span-8">
-            {logo}
+            <Link href="https://garden.co" target="_blank">
+              {logo}
+            </Link>
           </div>
           <p className="col-span-full sm:col-span-6 md:col-span-4 text-sm sm:text-base">
             Playful software for serious problems.

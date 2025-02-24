@@ -1,6 +1,6 @@
 {
   "name": "jazz-react-auth-clerk",
-  "version": "0.10.2",
+  "version": "0.10.9",
   "type": "module",
   "main": "dist/index.js",
   "types": "src/index.tsx",
@@ -8,11 +8,12 @@
   "dependencies": {
     "cojson": "workspace:*",
     "jazz-auth-clerk": "workspace:*",
+    "jazz-browser": "workspace:*",
     "jazz-react": "workspace:*",
     "jazz-tools": "workspace:*"
   },
   "peerDependencies": {
-    "react": "^18.2.0"
+    "react": "^17.0.0 || ^18.0.0 || ^19.0.0"
   },
   "scripts": {
     "format-and-lint": "biome check .",

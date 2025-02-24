@@ -17,7 +17,8 @@
       "dependsOn": ["build"]
     },
     "test": {
-      "dependsOn": ["build"]
+      "env": ["CI"],
+      "dependsOn": ["^build"]
     },
     "type-check": {},
     "//#format-and-lint": {},

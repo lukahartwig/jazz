@@ -6,8 +6,7 @@ const plugin = require("tailwindcss/plugin");
 
 const stonePalette = {
   50: "oklch(0.988281 0.002 75)",
-  75: "oklch(0.980563 0.002 75)",
-  100: "oklch(0.964844 0.002 75)",
+  100: "oklch(0.980563 0.002 75)",
   200: "oklch(0.917969 0.002 75)",
   300: "oklch(0.853516 0.002 75)",
   400: "oklch(0.789063 0.002 75)",
@@ -106,25 +105,25 @@ const config = {
               fontFamily: theme("fontFamily.display"),
               letterSpacing: theme("letterSpacing.tight"),
               fontWeight: theme("fontWeight.semibold"),
-              fontSize: theme("fontSize.4xl"),
+              fontSize: theme("fontSize.3xl"),
             },
             h2: {
               fontFamily: theme("fontFamily.display"),
               letterSpacing: theme("letterSpacing.tight"),
               fontWeight: theme("fontWeight.semibold"),
-              fontSize: theme("fontSize.3xl"),
+              fontSize: theme("fontSize.2xl"),
             },
             h3: {
               fontFamily: theme("fontFamily.display"),
               letterSpacing: theme("letterSpacing.tight"),
               fontWeight: theme("fontWeight.semibold"),
-              fontSize: theme("fontSize.2xl"),
+              fontSize: theme("fontSize.xl"),
             },
             h4: {
               fontFamily: theme("fontFamily.display"),
               letterSpacing: theme("letterSpacing.tight"),
               fontWeight: theme("fontWeight.semibold"),
-              fontSize: theme("fontSize.xl"),
+              fontSize: theme("fontSize.lg"),
             },
             "code::before": {
               content: "none",
@@ -137,6 +136,7 @@ const config = {
               padding: "0.15rem 0.25rem",
               borderRadius: "2px",
               whiteSpace: "nowrap",
+              fontWeight: 400,
             },
             p: {
               marginBottom: theme("spacing.3"),

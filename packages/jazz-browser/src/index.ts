@@ -15,6 +15,8 @@ setupInspector();
 export * from "./createBrowserContext.js";
 export * from "./BrowserContextManager.js";
 
+export { LocalStorageKVStore } from "./auth/LocalStorageKVStore.js";
+
 /** @category Invite Links */
 export function createInviteLink<C extends CoValue>(
   value: C,

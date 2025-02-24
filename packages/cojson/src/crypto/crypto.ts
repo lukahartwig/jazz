@@ -1,3 +1,4 @@
+import { randomBytes } from "@noble/ciphers/webcrypto/utils";
 import { base58 } from "@scure/base";
 import { RawAccountID } from "../coValues/account.js";
 import { AgentID, RawCoID, TransactionID } from "../ids.js";
@@ -21,7 +22,9 @@ export const textDecoder = new TextDecoder();
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export abstract class CryptoProvider<Blake3State = any> {
-  abstract randomBytes(length: number): Uint8Array;
+  randomBytes(length: number): Uint8Array {
+    return randomBytes(length);
+  }
 
   abstract newEd25519SigningKey(): Uint8Array;
 

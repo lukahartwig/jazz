@@ -19,7 +19,6 @@ jobs:
           "pets",
           "reactions",
           "todo",
-          "onboarding",
         ]
 
     steps:

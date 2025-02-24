@@ -44,4 +44,5 @@ appId: com.jazz.chatrn
 
 # logout
 - tapOn: "Logout"
-- assertVisible: "Anonymous user"
+- assertVisible: "boorad"
+- assertVisible: "bro, low key, it do be like that tho"

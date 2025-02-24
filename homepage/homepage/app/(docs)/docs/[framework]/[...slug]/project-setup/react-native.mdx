@@ -34,14 +34,16 @@ Tested with:
 
 <CodeGroup>
   ```bash
-  npx expo install expo-linking expo-secure-store expo-file-system @react-native-community/netinfo @bam.tech/react-native-image-resizer @azure/core-asynciterator-polyfill
+  npx expo install expo-linking expo-secure-store expo-file-system @react-native-community/netinfo @bam.tech/react-native-image-resizer
 
-  npm i -S react-native-polyfill-globals react-native-url-polyfill web-streams-polyfill@3.2.1 base-64 text-encoding react-native-fetch-api react-native-get-random-values buffer @op-engineering/op-sqlite
+  npm i -S @azure/core-asynciterator-polyfill react-native-url-polyfill readable-stream react-native-get-random-values @craftzdog/react-native-buffer @op-engineering/op-sqlite
 
   npm i -S jazz-tools jazz-react-native jazz-react-native-media-images
 
   ```
 </CodeGroup>
+
+> note: Hermes has added support for `atob` and `btoa` in React Native 0.74.  If you are using earlier versions, you may also need to polyfill `atob` and `btoa` in your `package.json` . Packages to try include `text-encoding` and `base-64`, and you can drop `@bacons/text-decoder`.
 
 ### Fix incompatible dependencies
 
@@ -134,16 +136,21 @@ For more information, refer to [this](https://github.com/byCedric/expo-monorepo-
 Create a file `polyfills.js` at the project root with the following content:
 
 <CodeGroup>
-  ```ts
-  import "react-native-polyfill-globals/auto";
-  import "@azure/core-asynciterator-polyfill";
-  import { ReadableStream } from "web-streams-polyfill/ponyfill/es6";
-  import { polyfillGlobal } from "react-native/Libraries/Utilities/PolyfillFunctions";
-  import { Buffer } from "buffer";
+  ```js
+import { polyfillGlobal } from 'react-native/Libraries/Utilities/PolyfillFunctions';
 
-  polyfillGlobal("Buffer", () => Buffer);
-  polyfillGlobal("ReadableStream", () => ReadableStream);
-  ```
+import { Buffer } from '@craftzdog/react-native-buffer';
+polyfillGlobal('Buffer', () => Buffer);
+
+import { ReadableStream } from 'readable-stream';
+polyfillGlobal('ReadableStream', () => ReadableStream);
+
+import '@azure/core-asynciterator-polyfill';
+
+import '@bacons/text-decoder/install';
+
+import 'react-native-get-random-values';
+```
 </CodeGroup>
 
 Update `index.js` based on whether you are using expo-router or not:
@@ -193,7 +200,7 @@ Wrap your app components with the `JazzProvider:
               >
                   {children}
               </JazzProvider>
-          ); 
+          );
       }
 
       // Register the Account schema so `useAccount` returns our custom `MyAppAccount`
@@ -205,7 +212,15 @@ Wrap your app components with the `JazzProvider:
       ```
 </CodeGroup>
 
-You can optionally pass a custom `kvStore` and `AccountSchema` to `createJazzRNApp()`, otherwise, it defaults to `ExpoSecureStoreAdapter` and `Account`.
+You can optionally pass a few custom attributes to `<JazzProvider>`:
+- `kvStore`
+  - `ExpoSecureStoreAdapter` (default)
+  - example: `MMKVStore` - roll your own, using MMKV
+- `AccountSchema`
+  - `Account` (default)
+- `CryptoProvider`
+  - `PureJSCrypto` (default)
+  - `RNQuickCrypto` - C++ accelerated crypto provider
 
 ### Choosing an auth method
 

@@ -14,6 +14,7 @@ import {
   FolderArchiveIcon,
   GaugeIcon,
   GlobeIcon,
+  HashIcon,
   ImageIcon,
   LinkIcon,
   LockKeyholeIcon,
@@ -24,21 +25,18 @@ import {
   MonitorSmartphoneIcon,
   MoonIcon,
   MousePointerSquareDashedIcon,
-  PencilLineIcon,
   ScanFace,
   ScrollIcon,
   SunIcon,
   TrashIcon,
   UploadCloudIcon,
   UserIcon,
-  UserPlusIcon,
   UsersIcon,
   WifiOffIcon,
   XIcon,
 } from "lucide-react";
 
 const icons = {
-  addUser: UserPlusIcon,
   arrowDown: ArrowDownIcon,
   arrowRight: ArrowRightIcon,
   auth: UserIcon,
@@ -56,6 +54,7 @@ const icons = {
   encryption: LockKeyholeIcon,
   faceId: ScanFace,
   file: FileTextIcon,
+  hash: HashIcon,
   help: MessageCircleQuestionIcon,
   image: ImageIcon,
   instant: GaugeIcon,
@@ -71,7 +70,6 @@ const icons = {
   tableOfContents: ScrollIcon,
   touchId: FingerprintIcon,
   upload: UploadCloudIcon,
-  write: PencilLineIcon,
   zip: FolderArchiveIcon,
 };
 
@@ -123,7 +121,7 @@ export function Icon({
   className?: string;
 } & React.SVGProps<SVGSVGElement>) {
   if (!icon && (!name || !icons.hasOwnProperty(name))) {
-    throw new Error(`Icon not found`);
+    throw new Error(`Icon not found: ${name}`);
   }
 
   // @ts-ignore

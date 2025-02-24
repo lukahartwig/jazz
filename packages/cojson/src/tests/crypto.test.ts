@@ -2,7 +2,7 @@ import { xsalsa20_poly1305 } from "@noble/ciphers/salsa";
 import { x25519 } from "@noble/curves/ed25519";
 import { blake3 } from "@noble/hashes/blake3";
 import { base58, base64url } from "@scure/base";
-import { expect, test } from "vitest";
+import { expect, test, vi } from "vitest";
 import { PureJSCrypto } from "../crypto/PureJSCrypto.js";
 import { WasmCrypto } from "../crypto/WasmCrypto.js";
 import { SessionID } from "../ids.js";
@@ -185,5 +185,47 @@ const pureJSCrypto = await PureJSCrypto.create();
     );
 
     expect(decrypted).toBeUndefined();
+  });
+
+  test(`Unsealing malformed JSON logs error [${name}]`, () => {
+    const data = "not valid json";
+    const sender = crypto.newRandomSealer();
+    const sealer = crypto.newRandomSealer();
+
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    const nOnceMaterial = {
+      in: "co_zTEST",
+      tx: { sessionID: "co_zTEST_session_zTEST" as SessionID, txIndex: 0 },
+    } as const;
+
+    // Create a sealed message with invalid JSON
+    const nOnce = blake3(
+      new TextEncoder().encode(stableStringify(nOnceMaterial)),
+    ).slice(0, 24);
+
+    const senderPriv = base58.decode(sender.substring("sealerSecret_z".length));
+    const sealerPub = base58.decode(
+      crypto.getSealerID(sealer).substring("sealer_z".length),
+    );
+
+    const plaintext = new TextEncoder().encode(data);
+    const sharedSecret = x25519.getSharedSecret(senderPriv, sealerPub);
+    const sealedBytes = xsalsa20_poly1305(sharedSecret, nOnce).encrypt(
+      plaintext,
+    );
+    const sealed = `sealed_U${base64url.encode(sealedBytes)}`;
+
+    const result = crypto.unseal(
+      sealed as any,
+      sealer,
+      crypto.getSealerID(sender),
+      nOnceMaterial,
+    );
+
+    expect(result).toBeUndefined();
+    expect(consoleSpy.mock.lastCall?.[0]).toContain(
+      "Failed to decrypt/parse sealed message",
+    );
   });
 });

@@ -25,15 +25,18 @@ npx expo prebuild
 ### Install dependencies
 
 ```bash
-npx expo install expo-linking expo-secure-store expo-file-system @react-native-community/netinfo @bam.tech/react-native-image-resizer @azure/core-asynciterator-polyfill
+npx expo install expo-linking expo-secure-store expo-file-system @react-native-community/netinfo @bam.tech/react-native-image-resizer
 
-npm i -S react-native-polyfill-globals react-native-url-polyfill web-streams-polyfill base-64 text-encoding react-native-fetch-api react-native-get-random-values buffer
+  npm i -S @azure/core-asynciterator-polyfill react-native-url-polyfill readable-stream react-native-get-random-values @craftzdog/react-native-buffer @op-engineering/op-sqlite
+
 
 npm i -D @babel/plugin-transform-class-static-block
 
 npm i -S jazz-tools jazz-react-native jazz-react-native-media-images
 
 ```
+
+> note: Hermes has added support for `atob` and `btoa` in React Native 0.74.  If you are using earlier versions, you may also need to polyfill `atob` and `btoa` in your `package.json` . Packages to try include `text-encoding` and `base-64`, and you can drop `@bacons/text-decoder`.
 
 ### Fix Incompatible Dependencies
 
@@ -135,14 +138,19 @@ module.exports = function (api) {
 Create a file `polyfills.js` at the project root with the following content:
 
 ```js
-import "react-native-polyfill-globals/auto";
-import "@azure/core-asynciterator-polyfill";
-import { ReadableStream } from "web-streams-polyfill/ponyfill/es6";
-import { polyfillGlobal } from "react-native/Libraries/Utilities/PolyfillFunctions";
-import { Buffer } from "buffer";
+import { polyfillGlobal } from 'react-native/Libraries/Utilities/PolyfillFunctions';
 
-polyfillGlobal("Buffer", () => Buffer);
-polyfillGlobal("ReadableStream", () => ReadableStream);
+import { Buffer } from '@craftzdog/react-native-buffer';
+polyfillGlobal('Buffer', () => Buffer);
+
+import { ReadableStream } from 'readable-stream';
+polyfillGlobal('ReadableStream', () => ReadableStream);
+
+import '@azure/core-asynciterator-polyfill';
+
+import '@bacons/text-decoder/install';
+
+import 'react-native-get-random-values';
 ```
 
 Update `index.js` based on whether you are using expo-router or not:

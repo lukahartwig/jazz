@@ -46,7 +46,12 @@ export default function ImageUpload() {
         ) : (
           <div>
             <label>Upload image</label>
-            <input ref={inputRef} type="file" onChange={onImageChange} />
+            <input
+              ref={inputRef}
+              type="file"
+              accept="image/png, image/jpeg, image/gif"
+              onChange={onImageChange}
+            />
           </div>
         )}
       </div>

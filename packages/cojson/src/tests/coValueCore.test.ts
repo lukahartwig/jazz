@@ -7,6 +7,8 @@ import { LocalNode } from "../localNode.js";
 import { Role } from "../permissions.js";
 import {
   createTestNode,
+  createTwoConnectedNodes,
+  loadCoValueOrFail,
   randomAnonymousAccountAndSessionID,
 } from "./testUtils.js";
 
@@ -220,4 +222,39 @@ test("creating a coValue with a group should't trigger automatically a content c
   expect(groupSpy).toHaveBeenCalledTimes(1);
 
   getCurrentContentSpy.mockRestore();
+});
+
+test("listeners are notified even if the previous listener threw an error", async () => {
+  const { node1, node2 } = await createTwoConnectedNodes("server", "server");
+
+  const group = node1.node.createGroup();
+  group.addMember("everyone", "writer");
+
+  const coMap = group.createMap();
+
+  const spy1 = vi.fn();
+  const spy2 = vi.fn();
+
+  coMap.subscribe(spy1);
+  coMap.subscribe(spy2);
+
+  spy1.mockImplementation(() => {
+    throw new Error("test");
+  });
+
+  const errorLog = vi.spyOn(console, "error").mockImplementation(() => {});
+
+  coMap.set("hello", "world");
+
+  expect(spy1).toHaveBeenCalledTimes(2);
+  expect(spy2).toHaveBeenCalledTimes(2);
+  expect(errorLog).toHaveBeenCalledTimes(1);
+
+  await coMap.core.waitForSync();
+
+  const mapOnNode2 = await loadCoValueOrFail(node2.node, coMap.id);
+
+  expect(mapOnNode2.get("hello")).toBe("world");
+
+  errorLog.mockRestore();
 });

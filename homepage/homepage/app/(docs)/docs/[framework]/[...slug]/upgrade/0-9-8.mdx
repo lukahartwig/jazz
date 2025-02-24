@@ -4,15 +4,9 @@ export const metadata = { title: "Upgrade to Jazz 0.9.0" };
 
 # Jazz 0.9.8 - Without me!
 
-<h2 className="not-prose text-sm text-stone-600 dark:text-stone-400 mb-5 pb-2 border-b">
-  14 January 2025
-</h2>
+We have simplified the API to make the "me" value always optional!
 
-<div>
-  We have simplified the API to make the "me" value always optional!
-
-  This removes the need of using `useAccount` like the 90% of the time!
-</div>
+This removes the need of using `useAccount` like the 90% of the time!
 
 <CodeGroup>
     {/* prettier-ignore */}
@@ -20,6 +14,7 @@ export const metadata = { title: "Upgrade to Jazz 0.9.0" };
     import { useState } from "react";
     import { Issue } from "./schema";
     import { IssueComponent } from "./components/Issue.tsx";
+
     function App() {
         const [issue, setIssue] = useState<Issue>();
 
@@ -43,9 +38,7 @@ export const metadata = { title: "Upgrade to Jazz 0.9.0" };
     ```
 </CodeGroup>
 
-<div>
-  This also applies to the load API:
-</div>
+This also applies to the load API:
 
 <CodeGroup>
   {/* prettier-ignore */}
@@ -54,9 +47,7 @@ export const metadata = { title: "Upgrade to Jazz 0.9.0" };
   ```
 </CodeGroup>
 
-<div>
-  And `Group.create`:
-</div>
+And `Group.create`:
 
 <CodeGroup>
     {/* prettier-ignore */}
@@ -67,8 +58,6 @@ export const metadata = { title: "Upgrade to Jazz 0.9.0" };
     ```
 </CodeGroup>
 
-<div>
 Everything is backward compatible, so no upgrade steps are required.
 
 With this Jazz API becomes way more lean and more is coming!
-</div>

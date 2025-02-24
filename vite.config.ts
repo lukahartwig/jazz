@@ -4,7 +4,11 @@ import { defineConfig } from "vitest/config";
 export default defineConfig({
   root: "./",
   test: {
-    workspace: ["packages/*", "tests/browser-integration"],
+    workspace: [
+      "packages/*",
+      "tests/browser-integration",
+      "tests/cloudflare-workers",
+    ],
     coverage: {
       enabled: false,
       provider: "istanbul",

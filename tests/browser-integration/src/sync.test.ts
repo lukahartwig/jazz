@@ -57,37 +57,41 @@ describe("Browser sync", () => {
     expect(loadedMap?.value).toBe("test data");
   });
 
-  test("loads the previous account through the sync server", async () => {
-    const syncServer = await startSyncServer();
+  test(
+    "loads the previous account through the sync server",
+    async () => {
+      const syncServer = await startSyncServer();
 
-    const { account: account1, contextManager } = await createAccountContext({
-      sync: {
-        peer: syncServer.url,
-      },
-      storage: "indexedDB",
-      AccountSchema: CustomAccount,
-    });
+      const { account: account1, contextManager } = await createAccountContext({
+        sync: {
+          peer: syncServer.url,
+        },
+        storage: "indexedDB",
+        AccountSchema: CustomAccount,
+      });
 
-    const group = Group.create(account1);
-    const map = TestMap.create({ value: "test data" }, group);
-    group.addMember("everyone", "reader");
+      const group = Group.create(account1);
+      const map = TestMap.create({ value: "test data" }, group);
+      group.addMember("everyone", "reader");
 
-    await map.waitForSync();
-    contextManager.done();
+      await map.waitForSync();
+      contextManager.done();
 
-    const { account: account2 } = await createAccountContext({
-      sync: {
-        peer: syncServer.url,
-      },
-      storage: "indexedDB",
-      AccountSchema: CustomAccount,
-    });
+      const { account: account2 } = await createAccountContext({
+        sync: {
+          peer: syncServer.url,
+        },
+        storage: "indexedDB",
+        AccountSchema: CustomAccount,
+      });
 
-    expect(account1.id).toBe(account2.id);
-  });
+      expect(account1.id).toBe(account2.id);
+    },
+    { timeout: 10_000 },
+  );
 
   test("syncs data between accounts through storage only", async () => {
-    const syncServer = await startSyncServer();
+    await startSyncServer();
 
     const { context, contextManager } = await createAccountContext({
       sync: {

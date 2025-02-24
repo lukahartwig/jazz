@@ -1,5 +1,5 @@
 import { WasmCrypto } from "cojson/crypto/WasmCrypto";
-import { describe, expect, expectTypeOf, test } from "vitest";
+import { describe, expect, expectTypeOf, test, vi } from "vitest";
 import { Group, randomSessionProvider } from "../exports.js";
 import {
   Account,
@@ -10,7 +10,7 @@ import {
   createJazzContextFromExistingCredentials,
   isControlledAccount,
 } from "../index.js";
-import { setupTwoNodes } from "./utils.js";
+import { setupTwoNodes, waitFor } from "./utils.js";
 
 const connectedPeers = cojsonInternals.connectedPeers;
 

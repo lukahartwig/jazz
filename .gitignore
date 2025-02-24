@@ -7,11 +7,15 @@ docsTmp
 coverage
 .direnv
 
+# Typescript
+**/*.tsbuildinfo
+
 # Next.js
 **/.next
 
 # Vite output
 **/dist
+__screenshots__
 
 # Playwright
 test-results

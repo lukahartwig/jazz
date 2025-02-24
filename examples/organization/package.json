@@ -1,11 +1,11 @@
 {
   "name": "organization",
   "private": true,
-  "version": "0.0.40",
+  "version": "0.0.47",
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "vite build",
     "preview": "vite preview",
     "format-and-lint": "biome check .",
     "format-and-lint:fix": "biome check . --write"

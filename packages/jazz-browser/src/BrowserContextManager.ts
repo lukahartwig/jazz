@@ -26,6 +26,7 @@ export type JazzContextManagerProps<Acc extends Account> = {
 export class JazzBrowserContextManager<
   Acc extends Account,
 > extends JazzContextManager<Acc, JazzContextManagerProps<Acc>> {
+  // TODO: When the storage changes, if the user is changed, update the context
   getKvStore() {
     if (typeof window === "undefined") {
       // To handle running in SSR
@@ -63,7 +64,7 @@ export class JazzBrowserContextManager<
       });
     }
 
-    this.updateContext(props, currentContext);
+    await this.updateContext(props, currentContext, authProps);
   }
 
   propsChanged(props: JazzContextManagerProps<Acc>) {

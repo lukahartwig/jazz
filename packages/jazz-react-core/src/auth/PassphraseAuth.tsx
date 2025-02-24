@@ -1,7 +1,7 @@
 import { PassphraseAuth } from "jazz-tools";
 import { useCallback, useMemo, useSyncExternalStore } from "react";
 import { useAuthSecretStorage, useJazzContext } from "../hooks.js";
-import { useIsAuthenticated } from "./useIsAuthenticated.js";
+import { useIsAuthenticated } from "../hooks.js";
 
 /**
  * `usePassphraseAuth` hook provides a `JazzAuth` object for passphrase authentication.

@@ -147,7 +147,7 @@ export function ChatDemoSection() {
         )}
         <div className="col-span-2 md:col-span-full lg:col-span-2">
           {chatId && shareUrl && (
-            <div className="flex h-full flex-col justify-between gap-3 text-center md:gap-5">
+            <div className="flex h-full flex-col justify-between gap-3 text-center">
               <H3 className="font-medium text-stone-900 dark:text-white !mb-0">
                 Join the chat
               </H3>

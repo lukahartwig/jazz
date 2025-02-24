@@ -1,4 +1,4 @@
-import { JazzAuthContext, JazzContext } from "jazz-react-core";
+import { JazzContext, JazzContextManagerContext } from "jazz-react-core";
 import { Account, JazzContextType, KvStore } from "jazz-tools";
 import React, { useEffect, useRef } from "react";
 import { JazzContextManagerProps } from "./ReactNativeContextManager.js";
@@ -27,6 +27,7 @@ export function JazzProvider<Acc extends Account = RegisteredAccount>({
   onLogOut,
   kvStore,
   onAnonymousAccountDiscarded,
+  CryptoProvider,
 }: JazzProviderProps<Acc>) {
   setupKvStore(kvStore);
 
@@ -50,6 +51,7 @@ export function JazzProvider<Acc extends Account = RegisteredAccount>({
           defaultProfileName,
           onLogOut: onLogOutRefCallback,
           onAnonymousAccountDiscarded: onAnonymousAccountDiscardedRefCallback,
+          CryptoProvider,
         };
         if (contextManager.propsChanged(props)) {
           contextManager.createContext(props).catch((error) => {
@@ -78,9 +80,9 @@ export function JazzProvider<Acc extends Account = RegisteredAccount>({
 
   return (
     <JazzContext.Provider value={value}>
-      <JazzAuthContext.Provider value={contextManager.getAuthSecretStorage()}>
+      <JazzContextManagerContext.Provider value={contextManager}>
         {value && children}
-      </JazzAuthContext.Provider>
+      </JazzContextManagerContext.Provider>
     </JazzContext.Provider>
   );
 }
