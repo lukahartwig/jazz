@@ -157,7 +157,7 @@ export class CoValueBase implements CoValue {
 
 export function loadCoValueWithoutMe<V extends CoValue, Depth>(
   cls: CoValueClass<V>,
-  id: ID<V>,
+  id: ID<CoValue>,
   asOrDepth: Account | AnonymousJazzAgent | (Depth & DepthsIn<V>),
   depth?: Depth & DepthsIn<V>,
 ) {
@@ -175,7 +175,7 @@ export function loadCoValueWithoutMe<V extends CoValue, Depth>(
 
 export function loadCoValue<V extends CoValue, Depth>(
   cls: CoValueClass<V>,
-  id: ID<V>,
+  id: ID<CoValue>,
   as: Account | AnonymousJazzAgent,
   depth: Depth & DepthsIn<V>,
 ): Promise<DeeplyLoaded<V, Depth> | undefined> {
@@ -216,7 +216,7 @@ export async function ensureCoValueLoaded<V extends CoValue, Depth>(
 
 export function subscribeToCoValueWithoutMe<V extends CoValue, Depth>(
   cls: CoValueClass<V>,
-  id: ID<V>,
+  id: ID<CoValue>,
   asOrDepth: Account | AnonymousJazzAgent | (Depth & DepthsIn<V>),
   depthOrListener:
     | (Depth & DepthsIn<V>)
@@ -251,7 +251,7 @@ export function subscribeToCoValueWithoutMe<V extends CoValue, Depth>(
 
 export function subscribeToCoValue<V extends CoValue, Depth>(
   cls: CoValueClass<V>,
-  id: ID<V>,
+  id: ID<CoValue>,
   as: Account | AnonymousJazzAgent,
   depth: Depth & DepthsIn<V>,
   listener: (value: DeeplyLoaded<V, Depth>, unsubscribe: () => void) => void,
@@ -263,7 +263,7 @@ export function subscribeToCoValue<V extends CoValue, Depth>(
   let unsubscribed = false;
   let unsubscribe: (() => void) | undefined;
 
-  function subscribe(value: V | undefined) {
+  function subscribe(value: CoValue | undefined) {
     if (!value) {
       onUnavailable && onUnavailable();
       return;
@@ -313,7 +313,7 @@ export function createCoValueObservable<V extends CoValue, Depth>(options?: {
 
   function subscribe(
     cls: CoValueClass<V>,
-    id: ID<V>,
+    id: ID<CoValue>,
     as: Account | AnonymousJazzAgent,
     depth: Depth & DepthsIn<V>,
     listener: () => void,
