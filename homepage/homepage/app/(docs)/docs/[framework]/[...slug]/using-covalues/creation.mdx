@@ -4,11 +4,11 @@ export const metadata = { title: "Creation & ownership" };
 
 # Creation & Ownership
 
-CoValues are collaborative by nature - anything you create can be shared and synced with others. Who gets to read or change each CoValue is controlled by its owner - either an individual `Account` or a shared `Group`.
+CoValues are collaborative by nature - anything you create can be shared and synced with others. Who gets to read or change each CoValue is controlled by its owner - either an individual `Account` or a shared `Group`. This foundation of ownership is what enables Jazz applications to support real-time collaboration while maintaining proper access control. Understanding how to create and manage ownership of CoValues is essential for building effectively with Jazz.
 
 ## Creating CoValues
 
-Every CoValue starts with a [schema](/docs/schemas/covalues#start-your-app-with-a-schema). From there you can create CoValues with the `create` method. 
+Every CoValue starts with a [schema](/docs/schemas/covalues#start-your-app-with-a-schema). From there you can create CoValues with the `create` method. Creating CoValues is straightforward - you define the structure in your schema and then instantiate instances with initial values. These newly created CoValues automatically sync across devices and users who have access to them. 
 
 Here's a simple example:
 
@@ -31,72 +31,70 @@ const task = Task.create({
 
 When you create a CoValue, you provide its initial data and optionally specify who owns it. The data must match the schema you defined - TypeScript will help ensure you get this right.
 
-For more examples of creating CoValues, see [CoValues](/docs/covalues) for more examples.
+For more examples of creating different types of CoValues:
 
 <CodeGroup>
 ```ts
-class Notifications extends CoFeed {
-  title = co.string;
-  description = co.string;
-  status = co.literal("todo", "in-progress", "completed");
+// Creating a CoFeed for activity notifications
+class ActivityNotification extends CoMap {
+  message = co.string;
+  type = co.literal("info", "warning", "success");
+  timestamp = co.Date;
 }
 
-const feed = Feed.create();
+class ActivityFeed extends CoFeed.Of(co.ref(ActivityNotification)) {}
 
-feed.addItem({
-  title: "New task created",
-  description: "A new task has been created",
-  status: "todo",
-});
+const feed = ActivityFeed.create();
+
+// Adding an item to the feed
+feed.addItem(ActivityNotification.create({
+  message: "New task created",
+  type: "info",
+  timestamp: new Date()
+}));
 ```
 </CodeGroup>
 
 ## Ownership & Access Control
 
-Every CoValue needs an owner to control who can access it. An owner can be an individual `Account`, but it's usually a `Group` since that lets you share with multiple people.
+Every CoValue needs an owner to control who can access it. An owner can be an individual `Account`, but it's usually a `Group` since that lets you share with multiple people. The ownership model in Jazz provides fine-grained control over who can read, write, or administer your collaborative data. This system makes it easy to implement common patterns like shared workspaces, personal data, or public resources.
 
 ### Groups & Roles
 
-Groups have members with different roles that control what they can do:
+Groups have members with different roles that control what they can do. These roles provide a permission system that's both simple to understand and powerful enough for complex collaboration scenarios. By assigning appropriate roles, you can control exactly who can view, edit, or manage access to your data.
 
 <CodeGroup>
 ```ts
-
 // Create a group
-const gardenCollective = Group.create(account);
-// Add community members with different roles
-gardenCollective.addMember(coordinator, "admin"); // Garden coordinator manages projects
-gardenCollective.addMember(gardener, "writer"); // Community gardeners can update tasks
-gardenCollective.addMember(visitor, "reader"); // Visitors can view progress
+const gardenTeam = Group.create();
 
-const task1 = {
-  title: "Start tomatoes indoors",
-  description: "Plant seeds in trays under grow lights",
-  completed: false,
-  area: "vegetables",
-};
+// Add garden members with different roles
+gardenTeam.addMember(coordinator, "admin");     // Garden coordinator manages everything
+gardenTeam.addMember(gardener, "writer");       // Gardeners can update tasks
+gardenTeam.addMember(visitor, "reader");        // Visitors can view progress
 
-const task2 = {
-  title: "Prepare garden beds",
-  description: "Add compost and turn soil when temperature reaches 10°C",
-  completed: false,
-  area: "vegetables",
-};
+// Create a list of tasks with the same owner
+const taskList = ListOfTasks.create([], { owner: gardenTeam });
 
-// Create a spring project owned by the collective
-const springProject = GardenProject.create(
-  {
-    name: "Spring Planting",
-    description: "Getting the garden ready for spring vegetables",
-    tasks: ListOfTasks.create(
-      [
-        Task.create(task1),
-        Task.create(task2),
-      ],
-    ),
-  },
-  { owner: gardenCollective }, // Explicitly setting the owner
-);
+// Create a garden project with nested tasks, all with the same ownership
+const springProject = Project.create({
+  name: "Spring Planting",
+  description: "Preparing the community garden for spring vegetables",
+  tasks: taskList
+}, { owner: gardenTeam });
+
+// Add tasks to the list
+taskList.push(Task.create({
+  title: "Start tomato seedlings",
+  description: "Plant Roma and Cherry varieties in seed trays",
+  status: "todo"
+}, { owner: gardenTeam }));
+
+taskList.push(Task.create({
+  title: "Prepare herb garden",
+  description: "Clear old growth and add fresh compost",
+  status: "todo"
+}, { owner: gardenTeam }));
 ```
 </CodeGroup>
 
