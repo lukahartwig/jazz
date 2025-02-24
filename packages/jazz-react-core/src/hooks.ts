@@ -102,7 +102,7 @@ function useCoValueObservable<V extends CoValue, D>() {
 export function useCoState<V extends CoValue, D>(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   Schema: CoValueClass<V>,
-  id: ID<V> | undefined,
+  id: ID<CoValue> | undefined,
   depth: D & DepthsIn<V> = [] as D & DepthsIn<V>,
 ): DeeplyLoaded<V, D> | undefined | null {
   const contextManager = useJazzContextManager();
