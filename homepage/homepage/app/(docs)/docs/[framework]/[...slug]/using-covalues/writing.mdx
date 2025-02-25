@@ -88,25 +88,6 @@ dashboard.notifications.push(Notification.create({
 ```
 </CodeGroup>
 
-### Error Handling
-
-Write operations can fail for several reasons, such as permission issues or network problems. It's important to handle these errors gracefully to provide good user experience. Here's how you can catch and process write errors:
-
-<CodeGroup>
-```ts
-// TODO: Test this or verify it's correct
-try {
-  task.status = "completed";
-} catch (error) {
-  if (error.message.includes("permission")) {
-    console.error("Not authorized to update task status");
-  } else {
-    console.error("Failed to update status:", error);
-  }
-}
-```
-</CodeGroup>
-
 ## Deleting CoValues
 
 There are a few ways to delete CoValues, from simple field removal to full cleanup. Jazz provides flexible options for removing data depending on your needs. You can remove references while keeping the underlying data, remove items from lists, or completely delete CoValues when they're no longer needed.
