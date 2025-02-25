@@ -74,27 +74,27 @@ gardenTeam.addMember(gardener, "writer");       // Gardeners can update tasks
 gardenTeam.addMember(visitor, "reader");        // Visitors can view progress
 
 // Create a list of tasks with the same owner
-const taskList = ListOfTasks.create([], { owner: gardenTeam });
+const taskList = ListOfTasks.create([]);
 
 // Create a garden project with nested tasks, all with the same ownership
 const springProject = Project.create({
   name: "Spring Planting",
   description: "Preparing the community garden for spring vegetables",
   tasks: taskList
-}, { owner: gardenTeam });
+});
 
 // Add tasks to the list
 taskList.push(Task.create({
   title: "Start tomato seedlings",
   description: "Plant Roma and Cherry varieties in seed trays",
   status: "todo"
-}, { owner: gardenTeam }));
+});
 
 taskList.push(Task.create({
   title: "Prepare herb garden",
   description: "Clear old growth and add fresh compost",
   status: "todo"
-}, { owner: gardenTeam }));
+});
 ```
 </CodeGroup>
 
