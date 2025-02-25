@@ -4,42 +4,44 @@ export const metadata = { title: "Metadata & time-travel" };
 
 # Metadata & time-travel
 
-CoValues have a lot of useful metadata attached to them, much of which is helpful for debugging and understanding the history of a CoValue.
-
-`CoValue._raw` gives you access to the internal state of a CoValue, from which a lot of useful information can be derived.
+One of Jazz's most powerful features is that every CoValue automatically tracks its complete edit history. This means you can see who changed what and when, examine the state of your data at any point in time, and build features like audit logs, activity feeds, and undo/redo functionality. This page explores how to access and work with the rich metadata that comes with every CoValue.
 
 `CoValue._edits` gives you access to the edit history of a CoValue.
 
+`CoValue._raw` gives you access to the internal state of a CoValue, from which a lot of useful information can be derived. As this is an internal API, it should be used with caution. If you find yourself using `_raw`, consider letting us know so we can consider adding a public API for your use case.
+
 ## Working with Edit History Metadata
 
-CoValues track who made each change and when. Every edit has metadata attached to it:
+CoValues track who made each change and when. Every edit has metadata attached to it, including the author, timestamp, value, and transaction ID. This metadata enables you to build powerful audit and history features without having to implement your own tracking system.
 
 <CodeGroup>
 ```ts
-class GardenTask extends CoMap {
+class Task extends CoMap {
   title = co.string;
   description = co.string;
-  progress = co.literal("not started", "in progress", "completed");
-  area = co.literal("vegetables", "fruit", "herbs", "flowers");
+  status = co.literal("todo", "in-progress", "completed");
+  priority = co.literal("low", "medium", "high");
+  subtasks = co.optional.ref(ListOfTasks);
 }
 
-const task = GardenTask.create({
+class ListOfTasks extends CoList.Of(co.ref(Task)) {}
+
+const task = Task.create({
   title: "Plant spring vegetables",
-  description: "Plant peas, carrots, and lettuce",
-  progress: "not started",
-  area: "vegetables",
+  description: "Plant peas, carrots, and lettuce in the south garden bed",
+  status: "todo",
+  priority: "medium",
 });
 
-// Change the progress
-task.progress = ("in progress");
+// Change the status
+task.status = "in-progress";
 
 // Get the full edit history for a field
-for (const edit of task._raw.editsAt("progress")) {
+for (const edit of task._edits.status.all) {
   console.log({
-    author: edit.by,        // Account/agent that made the change
-    timestamp: edit.at,     // When the change happened 
+    author: edit.by,        // Account that made the change
+    timestamp: edit.madeAt, // When the change happened
     value: edit.value,      // Value of the change
-    tx: edit.tx,            // Transaction ID
   });
 }
 ```
@@ -47,179 +49,181 @@ for (const edit of task._raw.editsAt("progress")) {
 
 ### Common Patterns
 
-With knowledge of the edit history, you can build all sorts of useful things.
+With knowledge of the edit history, you can build all sorts of useful features that enhance your application's user experience and administrative capabilities. Here are some common patterns that leverage CoValue metadata.
 
 #### Audit Log
 
-Getting all the changes to a CoValue in order allows you to build an audit log:
+Getting all the changes to a CoValue in order allows you to build an audit log. This is especially useful for tracking important changes in collaborative environments or for compliance purposes:
 
 <CodeGroup>
 ```ts
-function getAuditLog(task: GardenTask) {
+
+function getAuditLog(task: Task) {
   const changes = [];
-  
+
   for (const field of Object.keys(task)) {
-    for (const edit of task._raw.editsAt(field)) {
+    for (const edit of task._edits[field as keyof typeof task._edits].all) {
       changes.push({
         field,
         ...edit,
-        timestamp: edit.at.toISOString()
+        timestamp: edit.madeAt,
+        at: edit.madeAt,
+        by: edit.by,
       });
     }
   }
-  
+
   // Sort by timestamp
-  return changes.sort((a, b) => 
-    b.timestamp.localeCompare(a.timestamp)
-  );
+  return changes.sort((a, b) => b.at.getTime() - a.at.getTime());
 }
+
+// Example usage
+const auditLog = getAuditLog(task);
+auditLog.forEach((entry) => {
+  console.log(
+    `${entry.timestamp} - ${entry.field} changed to "${entry.value}" by ${entry.by?.id}`,
+  );
+});
 ```
 </CodeGroup>
 
-All changes are tracked automatically - this history is a core feature of CoValues. Use it to understand how your data evolved over time.
-
 #### Activity Feeds
 
-Activity feeds are a great way to see all the changes to a CoValue over time:
+Activity feeds are a great way to see recent changes to a CoValue, helping users understand what's happening in a collaborative workspace. They can show who did what and when, creating transparency in team environments:
 
 <CodeGroup>
 ```ts
-function getRecentActivity(task: GardenTask) {
+function getRecentActivity(project: Project) {
   const activity = [];
   const hourAgo = new Date(Date.now() - 3600000);
   
-  for (const edit of task._raw.editsAt("progress")) {
-    if (edit.at > hourAgo) {
-      activity.push({
-        field: edit.field,
-        value: edit.value,
-        by: edit.by,
-      });
-    } 
+  for (const field of Object.keys(project)) {
+    for (const edit of project._raw.editsAt(field)) {
+      if (edit.at > hourAgo) {
+        activity.push({
+          field,
+          value: edit.value,
+          byID: edit.by,
+          at: edit.at
+        });
+      } 
+    }
   }
   
-  return activity.sort((a, b) => b.at - a.at);
+  return activity.sort((a, b) => b.at.getTime() - a.at.getTime());
 }
+
+// Example usage
+const recentActivity = getRecentActivity(gardenProject);
+console.log("Recent Garden Activity:");
+recentActivity.forEach(activity => {
+  console.log(`${activity.at.toLocaleString()} - ${activity.field} updated by ${activity.byID}`);
+});
 ```
 </CodeGroup>
 
 ## Edit History & Time Travel
 
-CoValues track their entire history of changes. You can see who changed what and when, or even view past states:
+CoValues track their entire history of changes, creating a timeline you can explore. You can see who changed what and when, or even view past states of the data. This capability enables powerful debugging tools and user-facing features like history browsing and restoration of previous versions:
 
 <CodeGroup> 
 ```ts
-class GardenTask extends CoMap {
+class Task extends CoMap {
   title = co.string;
   description = co.string;
-  progress = co.literal("not started", "in progress", "completed");
-  area = co.literal("vegetables", "fruit", "herbs", "flowers");
+  status = co.literal("todo", "in-progress", "completed");
+  priority = co.literal("low", "medium", "high");
 }
 
 // Create a new task
-const task = GardenTask.create(
-  {
-    title: "Plant spring vegetables",
-    description: "Plant peas, carrots, and lettuce",
-    progress: "not started",
-    area: "vegetables",
-  },
-);
+const task = Task.create({
+  title: "Plant spring vegetables",
+  description: "Plant peas, carrots, and lettuce in the south garden bed",
+  status: "todo",
+  priority: "medium",
+});
 
-task.progress = "in progress";
+// Make some changes
+task.status = "in-progress";
+task.priority = "high";
 
 // See all edits for a field
-for (const edit of task._raw.editsAt("progress")) {
-  console.log(edit.at);       // When the change happened
-  console.log(edit.value);    // Value of the change
-  console.log(edit.by);       // Account that made the change
+for (const edit of task._edits.status.all) {
+  console.log(
+    `${edit.madeAt.toISOString()}: Status changed to "${edit.value}" by ${edit.by?.id}`,
+  );
 }
 
 // Get a specific edit by index
-const previousEdit = task._raw.nthEditAt("progress", 1); // Second most recent
-
+const previousEdit = task._edits.status.all[1]; // Second edit
+console.log(`Previous status: ${previousEdit?.value}`);
 ```
 </CodeGroup>
 
 ## Time Travel
 
-Looking into the past can help you understand how things changed - perfect for audit logs, debugging, or showing user activity:
+The ability to view a CoValue as it existed at any point in time is one of Jazz's most powerful features. Looking into the past can help you understand how things changed - perfect for audit logs, debugging, or showing user activity. You can reconstruct the exact state of any CoValue at any moment in its history:
 
 <CodeGroup>
 ```ts
 class Project extends CoMap {
-  location = co.string;
-  status = co.literal("active", "offline", "unknown");
-  lastSignal = co.Date;
+  name = co.string;
+  status = co.literal("planning", "active", "completed");
+  lastUpdate = co.Date;
 }
 
-// See when a tracker went offline
-function findFailurePoint(tracker: MotionTracker) {
-  for (const edit of tracker._raw.editsAt("status")) {
-    if (edit.value === "offline") {
-      // What else changed around this time?
-      const contextState = tracker._raw.atTime(edit.at);
+// See when a project was started
+function findStatusChange(project: Project, targetStatus: string) {
+  // Get all the edits for the status field
+  const statusEdits = project._edits.status.all;
+  
+  for (const edit of statusEdits) {
+    if (edit.value === targetStatus) {
       console.log({
-        failureTime: edit.at,
-        lastKnownSignal: contextState.lastSignal,
-        reportedBy: edit.by
+        changeTime: edit.madeAt,
+        lastUpdate: project.lastUpdate,
+        changedBy: edit.by,
       });
     }
   }
 }
+
+// Example usage
+findStatusChange(gardenProject, "active");
 ```
 </CodeGroup>
 
 ### Common Use Cases
 
-Activity feeds:
+The time travel capabilities of CoValues enable several practical use cases that would otherwise require complex custom implementations. Here are some examples of how you can use time travel in your applications:
 
 <CodeGroup>
 ```ts
-function getRecentActivity(colony: Colony) {
-  const activity = [];
-  const hourAgo = new Date(Date.now() - 3600000);
+// Track task progress over time
+function getTaskStatusHistory(task: Task, days: number = 7) {
+  const statusHistory = [];
+  const dayInMs = 86400000;
   
-  for (const field of colony.fields()) {
-    for (const edit of colony._raw.editsAt(field)) {
-      if (edit.at > hourAgo) {
-        activity.push({
-          type: 'field_change',
-          field,
-          value: edit.value,
-          by: edit.by,
-          at: edit.at
-        });
-      }
-    }
-  }
-  
-  return activity.sort((a, b) => b.at - a.at);
-}
-```
-</CodeGroup>
-
-Debugging state changes:
-
-<CodeGroup>
-```ts
-// Find out when a door was last sealed
-function checkDoorHistory(airlock: Airlock) {
-  const pastStates = [];
-  
-  // Check every minute for the last hour
-  for (let mins = 0; mins < 60; mins++) {
-    const timePoint = new Date(Date.now() - mins * 60000).getTime();
-    const state = airlock._raw.atTime(timePoint);
-    pastStates.push({
-      time: timePoint,
-      sealed: state.sealed,
-      pressure: state.pressure
+  // Check every day for the past week
+  for (let day = 0; day < days; day++) {
+    const timePoint = new Date(Date.now() - day * dayInMs);
+    // Using the internal _raw API to get state at a specific point in time
+    const state = task._raw.atTime(timePoint);
+    statusHistory.push({
+      date: timePoint.toLocaleDateString(),
+      status: state.status,
+      priority: state.priority
     });
   }
   
-  return pastStates;
+  return statusHistory;
 }
+
+// Example usage
+const history = getTaskStatusHistory(plantingTask);
+history.forEach(entry => {
+  console.log(`${entry.date}: Status was "${entry.status}" with ${entry.priority} priority`);
+});
 ```
 </CodeGroup>
 
