@@ -75,7 +75,7 @@ export default function ImageUpload() {
         console.error("Error uploading image:", error);
       } finally {
         setIsUploading(false);
-        // Only cleanup preview URL and reset state after successful upload
+        // // Only cleanup preview URL and reset state after successful upload
         URL.revokeObjectURL(objectUrl);
         setPreviewUrl(null);
       }
@@ -86,8 +86,6 @@ export default function ImageUpload() {
     if (!me?.profile) return;
     me.profile.image = null;
   };
-
-  console.log({ previewUrl });
 
   // states
   // 1. empty - show image upload form form
@@ -107,36 +105,28 @@ export default function ImageUpload() {
 
   if (previewUrl) {
     return (
-      <div>
-        <p>Uploading image...</p>
+      <div className="relative">
+        <p className="z-10 absolute font-semibold text-gray-900 inset-0 flex items-center justify-center">
+          Uploading image...
+        </p>
         <img
           src={previewUrl}
           alt="Preview"
-          className="opacity-50"
-          style={{
-            cursor: "pointer",
-            maxWidth: "80vw",
-            maxHeight: "80vh",
-            width: "auto",
-            height: "auto",
-            objectFit: "contain",
-          }}
+          className="opacity-50 w-full h-auto"
         />
       </div>
     );
   }
 
   return (
-    <div>
-      <label>Upload image</label>
+    <div className="flex flex-col gap-3">
+      <label>Image</label>
       <input
         ref={inputRef}
         type="file"
         accept="image/png, image/jpeg, image/gif, image/bmp"
         onChange={onImageChange}
-        disabled={isUploading}
       />
-      {isUploading && <span>Uploading...</span>}
     </div>
   );
 }
