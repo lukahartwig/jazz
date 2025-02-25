@@ -173,6 +173,49 @@ describe("Group inheritance", () => {
     expect(mapAsReaderAfterUpdate?.title).toBe("In Grand Child");
   });
 
+  test("Inherited members", async () => {
+    const ceo = await Account.create({
+      creationProps: { name: "CEO" },
+      crypto: Crypto,
+    });
+    const teamLead = await Account.create({
+      creationProps: { name: "Team Lead" },
+      crypto: Crypto,
+    });
+    const developer = await Account.create({
+      creationProps: { name: "Developer" },
+      crypto: Crypto,
+    });
+    const client = await Account.create({
+      creationProps: { name: "Client" },
+      crypto: Crypto,
+    });
+    // Company-wide group
+    const companyGroup = Group.create();
+    companyGroup.addMember(ceo, "admin");
+    // Team group with elevated permissions
+    const teamGroup = Group.create();
+    teamGroup.extend(companyGroup); // Inherits company-wide access
+    teamGroup.addMember(teamLead, "admin");
+    teamGroup.addMember(developer, "writer");
+    // Project group with specific permissions
+    const projectGroup = Group.create();
+    projectGroup.extend(teamGroup); // Inherits team permissions
+    projectGroup.addMember(client, "reader"); // Client can only read project items
+
+    const inheritedMembers = projectGroup.inheritedMembers;
+    expect(inheritedMembers).toContainEqual({
+      id: client.id,
+      role: "reader",
+    });
+    expect(inheritedMembers).toContainEqual({ id: ceo.id, role: "admin" });
+    expect(inheritedMembers).toContainEqual({ id: teamLead.id, role: "admin" });
+    expect(inheritedMembers).toContainEqual({
+      id: developer.id,
+      role: "writer",
+    });
+  });
+
   test("waitForSync should resolve when the value is uploaded", async () => {
     const { clientNode, serverNode, clientAccount } = await setupTwoNodes();
 

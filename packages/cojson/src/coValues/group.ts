@@ -194,6 +194,25 @@ export class RawGroup<
     return groups;
   }
 
+  getInheritedMembers(): Set<{
+    id: RawAccountID | AgentID;
+    role: Role | undefined;
+  }> {
+    const parentGroups = this.getParentGroups();
+    const members = new Set(
+      this.getMemberKeys().map((id) => {
+        return { id: id, role: this.roleOfInternal(id)?.role };
+      }),
+    );
+    if (parentGroups.length === 0) {
+      return members;
+    }
+    const inheritedMembers = parentGroups.flatMap(({ group }) => [
+      ...group.getInheritedMembers(),
+    ]);
+    return new Set([...inheritedMembers, ...members]);
+  }
+
   /**
    * Returns the role of the current account in the group.
    *

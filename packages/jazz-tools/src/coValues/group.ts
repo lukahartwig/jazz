@@ -149,6 +149,15 @@ export class Group extends CoValueBase implements CoValue {
     return this._raw.removeMember(member === "everyone" ? member : member._raw);
   }
 
+  get inheritedMembers() {
+    return [...this._raw.getInheritedMembers()].map(({ id, role }) => {
+      return {
+        id: id as ID<Account>,
+        role,
+      };
+    });
+  }
+
   get members() {
     return this._raw
       .keys()
