@@ -1,8 +1,9 @@
 // @vitest-environment happy-dom
 
-import { CoMap, ID, co, cojsonInternals } from "jazz-tools";
+import { CoMap, CoValue, ID, co, cojsonInternals } from "jazz-tools";
 import { createJazzTestAccount, setupJazzTestSync } from "jazz-tools/testing";
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, expectTypeOf, it } from "vitest";
+import { Ref } from "vue";
 import { useCoState } from "../index.js";
 import { waitFor, withJazzTestSetup } from "./testUtils.js";
 
@@ -152,5 +153,22 @@ describe("useCoState", () => {
     await waitFor(() => {
       expect(result.value).toBeNull();
     });
+  });
+
+  it("should return the same type as Schema", () => {
+    class TestMap extends CoMap {
+      value = co.string;
+    }
+
+    const map = TestMap.create({
+      value: "123",
+    });
+
+    const [result] = withJazzTestSetup(() =>
+      useCoState(TestMap, map.id as ID<CoValue>, []),
+    );
+    expectTypeOf(result).toEqualTypeOf<
+      Ref<TestMap | null | undefined, TestMap | null | undefined>
+    >();
   });
 });
