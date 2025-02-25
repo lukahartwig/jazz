@@ -4,25 +4,9 @@ import { ImageDefinition } from "jazz-tools";
 import { ChangeEvent, useEffect, useRef, useState } from "react";
 
 function Image({ image }: { image: ImageDefinition }) {
-  const [isFullSize, setIsFullSize] = useState(false);
-
   return (
     <ProgressiveImg image={image}>
-      {({ src }) => (
-        <img
-          src={src}
-          onClick={() => setIsFullSize(!isFullSize)}
-          style={{
-            cursor: "pointer",
-            maxWidth: isFullSize ? "none" : "80vw",
-            maxHeight: isFullSize ? "none" : "80vh",
-            width: "auto",
-            height: "auto",
-            objectFit: "contain",
-          }}
-          title={isFullSize ? "Click to scale down" : "Click to show full size"}
-        />
-      )}
+      {({ src }) => <img alt="" src={src} className="w-full h-auto" />}
     </ProgressiveImg>
   );
 }
@@ -75,7 +59,7 @@ export default function ImageUpload() {
         console.error("Error uploading image:", error);
       } finally {
         setIsUploading(false);
-        // // Only cleanup preview URL and reset state after successful upload
+        // Only cleanup preview URL and reset state after successful upload
         URL.revokeObjectURL(objectUrl);
         setPreviewUrl(null);
       }
@@ -94,12 +78,13 @@ export default function ImageUpload() {
 
   if (me?.profile?.image) {
     return (
-      <div>
+      <>
         <Image image={me.profile.image} />
-        <button type="button" onClick={deleteImage}>
+
+        <button type="button" onClick={deleteImage} className="mt-5">
           Delete image
         </button>
-      </div>
+      </>
     );
   }
 
@@ -120,8 +105,10 @@ export default function ImageUpload() {
 
   return (
     <div className="flex flex-col gap-3">
-      <label>Image</label>
+      <label htmlFor="image">Image</label>
       <input
+        id="image"
+        name="image"
         ref={inputRef}
         type="file"
         accept="image/png, image/jpeg, image/gif, image/bmp"

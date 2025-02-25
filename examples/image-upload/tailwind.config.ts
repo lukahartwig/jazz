@@ -12,11 +12,6 @@ const config: Config = {
           DEFAULT: "0.75rem",
           sm: "1rem",
         },
-        screens: {
-          md: "500px",
-          lg: "500px",
-          xl: "500px",
-        },
       },
     },
   },
