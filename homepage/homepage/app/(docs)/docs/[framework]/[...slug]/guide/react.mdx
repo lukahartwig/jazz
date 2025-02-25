@@ -665,7 +665,7 @@ export function ProjectComponent({ projectID }: { projectID: ID<Project> }) {// 
 
 The loading-depth spec `{ issues: [{}] }` means "in `Project`, load `issues` and load each item in `issues` shallowly". (Since an `Issue` doesn't have any further references, "shallowly" actually means all its properties will be available).
 
--   Now, we can get rid of a lot of coniditional accesses because we know that once `project` is loaded, `project.issues` and each `Issue` in it will be loaded as well.
+-   Now, we can get rid of a lot of conditional accesses because we know that once `project` is loaded, `project.issues` and each `Issue` in it will be loaded as well.
 -   This also results in only one rerender and visual update when everything is loaded, which is faster (especially for long lists) and gives you more control over the loading UX.
 
 {/* TODO: explain about not loaded vs not set/defined and `_refs` basics */}
