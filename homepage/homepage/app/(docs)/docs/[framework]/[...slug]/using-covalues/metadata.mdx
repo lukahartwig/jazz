@@ -6,9 +6,17 @@ export const metadata = { title: "Metadata & time-travel" };
 
 One of Jazz's most powerful features is that every CoValue automatically tracks its complete edit history. This means you can see who changed what and when, examine the state of your data at any point in time, and build features like audit logs, activity feeds, and undo/redo functionality. This page explores how to access and work with the rich metadata that comes with every CoValue.
 
-`CoValue._edits` gives you access to the edit history of a CoValue.
+## Understanding Edit History
 
-`CoValue._raw` gives you access to the internal state of a CoValue, from which a lot of useful information can be derived. As this is an internal API, it should be used with caution. If you find yourself using `_raw`, consider letting us know so we can consider adding a public API for your use case.
+Every CoValue in Jazz maintains a full history of all changes made to it. This edit history is accessible through two main APIs:
+
+`CoValue._edits` provides a structured, field-by-field view of a CoValue's edit history. It organizes edits by property name and makes them easily accessible. For each field:
+- `_edits.fieldName` gives you the most recent edit
+- `_edits.fieldName.all` provides all historical edits as an array
+- `_edits.fieldName.madeAt` gives you the timestamp of the last edit
+- Each edit contains the value, who made the change, and when it happened
+
+`CoValue._raw` gives you access to the internal state and lower-level operations on a CoValue. As this is an internal API, it should be used with caution. If you find yourself using `_raw`, consider letting us know so we can consider adding a public API for your use case.
 
 ## Working with Edit History Metadata
 
@@ -36,6 +44,14 @@ const task = Task.create({
 // Change the status
 task.status = "in-progress";
 
+// Get the latest edit for a field
+console.log("Latest edit:", task._edits.status);
+// { value: "in-progress", by: Account, madeAt: Date, ... }
+
+// Get when a field was last edited (timestamp)
+const lastEditTime = task._edits.status.madeAt;
+console.log(`Status was last changed at: ${lastEditTime?.toLocaleString()}`);
+
 // Get the full edit history for a field
 for (const edit of task._edits.status.all) {
   console.log({
@@ -62,14 +78,17 @@ function getAuditLog(task: Task) {
   const changes = [];
 
   for (const field of Object.keys(task)) {
-    for (const edit of task._edits[field as keyof typeof task._edits].all) {
-      changes.push({
-        field,
-        ...edit,
-        timestamp: edit.madeAt,
-        at: edit.madeAt,
-        by: edit.by,
-      });
+    // Check if the field has edits to avoid accessing non-existent properties
+    if (task._edits[field as keyof typeof task._edits]) {
+      for (const edit of task._edits[field as keyof typeof task._edits].all) {
+        changes.push({
+          field,
+          ...edit,
+          timestamp: edit.madeAt,
+          at: edit.madeAt,
+          by: edit.by,
+        });
+      }
     }
   }
 
@@ -98,13 +117,16 @@ function getRecentActivity(project: Project) {
   const hourAgo = new Date(Date.now() - 3600000);
   
   for (const field of Object.keys(project)) {
-    for (const edit of project._raw.editsAt(field)) {
-      if (edit.at > hourAgo) {
+    // Skip if the field doesn't have edits
+    if (!project._edits[field as keyof typeof project._edits]) continue;
+    
+    for (const edit of project._edits[field as keyof typeof project._edits].all) {
+      if (edit.madeAt > hourAgo) {
         activity.push({
           field,
           value: edit.value,
-          byID: edit.by,
-          at: edit.at
+          by: edit.by,
+          at: edit.madeAt
         });
       } 
     }
@@ -117,7 +139,7 @@ function getRecentActivity(project: Project) {
 const recentActivity = getRecentActivity(gardenProject);
 console.log("Recent Garden Activity:");
 recentActivity.forEach(activity => {
-  console.log(`${activity.at.toLocaleString()} - ${activity.field} updated by ${activity.byID}`);
+  console.log(`${activity.at.toLocaleString()} - ${activity.field} updated by ${activity.by?.id}`);
 });
 ```
 </CodeGroup>
@@ -154,9 +176,17 @@ for (const edit of task._edits.status.all) {
   );
 }
 
+// Get the initial value
+const initialStatus = task._edits.status.all[0]?.value;
+console.log(`Original status: ${initialStatus}`);
+
 // Get a specific edit by index
 const previousEdit = task._edits.status.all[1]; // Second edit
 console.log(`Previous status: ${previousEdit?.value}`);
+
+// Check who made the most recent change
+const latestEdit = task._edits.status;
+console.log(`Latest change made by: ${latestEdit?.by?.id}`);
 ```
 </CodeGroup>
 
@@ -229,6 +259,8 @@ history.forEach(entry => {
 
 ### Best Practices
 
+- Check field existence before accessing edits (`if (task._edits.fieldName)`)
+- Access the most recent edit directly with `_edits.fieldName` instead of using any `.latest` property
 - Cache historical queries if you're displaying them in UI
 - Be specific about time ranges you care about
 - Remember that accessing history requires loading the CoValue
