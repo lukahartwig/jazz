@@ -37,7 +37,7 @@ const config = {
 function highlightPlugin() {
   return async function transformer(tree) {
     const highlighter = await getHighlighter({
-      langs: ["typescript", "bash", "tsx", "json", "svelte"],
+      langs: ["typescript", "bash", "tsx", "json", "svelte", "vue"],
       theme: "css-variables", // use css variables in shiki.css
     });
 
