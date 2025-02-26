@@ -1,7 +1,7 @@
 import { CoID, RawCoValue } from "../coValue.js";
-import { CoValueCore } from "../coValueCore.js";
 import { AgentID, TransactionID } from "../ids.js";
 import { JsonObject, JsonValue } from "../jsonValue.js";
+import { LocalNodeState } from "../localNode/structure.js";
 import { CoValueKnownState } from "../sync.js";
 import { accountOrAgentIDfromSessionID } from "../typeUtils/accountOrAgentIDfromSessionID.js";
 import { isCoValue } from "../typeUtils/isCoValue.js";
@@ -39,7 +39,7 @@ export class RawCoMapView<
   /** @category 6. Meta */
   type = "comap" as const;
   /** @category 6. Meta */
-  core: CoValueCore;
+  node: LocalNodeState;
   /** @internal */
   latest: {
     [Key in keyof Shape & string]?: MapOp<Key, Shape[Key]>;

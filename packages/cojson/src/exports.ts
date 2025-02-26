@@ -1,12 +1,6 @@
 import { base64URLtoBytes, bytesToBase64url } from "./base64url.js";
 import { type RawCoValue } from "./coValue.js";
 import {
-  CoValueCore,
-  type CoValueUniqueness,
-  MAX_RECOMMENDED_TX_SIZE,
-  idforHeader,
-} from "./coValueCore.js";
-import {
   ControlledAgent,
   RawAccount,
   RawControlledAccount,
@@ -126,7 +120,6 @@ export {
   RawProfile as Profile,
   SessionID,
   Media,
-  CoValueCore,
   ControlledAgent,
   RawControlledAccount,
   MAX_RECOMMENDED_TX_SIZE,
@@ -173,8 +166,8 @@ export namespace CojsonInternalTypes {
   export type LoadMessage = import("./sync.js").LoadMessage;
   export type NewContentMessage = import("./sync.js").NewContentMessage;
   export type SessionNewContent = import("./sync.js").SessionNewContent;
-  export type CoValueHeader = import("./coValueCore.js").CoValueHeader;
-  export type Transaction = import("./coValueCore.js").Transaction;
+  export type CoValueHeader = import("./localNode/structure.js").CoValueHeader;
+  export type Transaction = import("./localNode/structure.js").Transaction;
   export type TransactionID = import("./ids.js").TransactionID;
   export type Signature = import("./crypto/crypto.js").Signature;
   export type RawCoID = import("./ids.js").RawCoID;

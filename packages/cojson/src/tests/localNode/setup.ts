@@ -1,9 +1,8 @@
-import { Transaction } from "../../coValueCore.js";
 import { WasmCrypto } from "../../crypto/WasmCrypto.js";
 import { Signature, StreamingHash } from "../../crypto/crypto.js";
 import { JsonValue, RawCoID, SessionID, Stringified } from "../../exports.js";
 
-import { LocalNodeState } from "../../localNode/structure.js";
+import { LocalNodeState, Transaction } from "../../localNode/structure.js";
 
 export const crypto = await WasmCrypto.create();
 

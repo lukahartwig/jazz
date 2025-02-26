@@ -1,12 +1,14 @@
 import { describe, expect, test } from "vitest";
-import { CoValueHeader } from "../../coValueCore.js";
 import { Signature } from "../../crypto/crypto.js";
 import { subscribe } from "../../localNode/actions/subscribing.js";
 import { addTransaction } from "../../localNode/handlers/addTransaction.js";
 import { onMetadataLoaded } from "../../localNode/handlers/onMetadataLoaded.js";
 import { stageLoad } from "../../localNode/stages/0_load.js";
-
-import { SessionState, emptyNode } from "../../localNode/structure.js";
+import {
+  CoValueHeader,
+  SessionState,
+  emptyNode,
+} from "../../localNode/structure.js";
 import {
   coValueID1,
   coValueID2,

@@ -1,8 +1,7 @@
-import { CoValueHeader } from "../coValueCore.js";
 import { RawCoID, SessionID, SyncMessage } from "../exports.js";
 import { StoredSessionLog } from "../storage.js";
 import { PeerID } from "../sync.js";
-import { ListenerID } from "./structure.js";
+import { CoValueHeader, ListenerID } from "./structure.js";
 
 export type LoadMetadataFromStorageEffect = {
   type: "loadMetadataFromStorage";

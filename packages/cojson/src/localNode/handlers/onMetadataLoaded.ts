@@ -1,6 +1,5 @@
-import { CoValueHeader } from "../../coValueCore.js";
 import { RawCoID, SessionID } from "../../exports.js";
-import { KnownState, LocalNodeState } from "../structure.js";
+import { CoValueHeader, KnownState, LocalNodeState } from "../structure.js";
 
 export function onMetadataLoaded(
   node: LocalNodeState,

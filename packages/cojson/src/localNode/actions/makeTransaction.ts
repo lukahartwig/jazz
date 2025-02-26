@@ -1,6 +1,5 @@
-import { Transaction } from "../../coValueCore.js";
 import { RawCoID, SessionID } from "../../exports.js";
-import { LocalNodeState } from "../structure.js";
+import { LocalNodeState, Transaction } from "../structure.js";
 
 export function makeTransaction(
   node: LocalNodeState,
