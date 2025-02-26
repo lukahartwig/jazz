@@ -3,7 +3,6 @@
 import { TableOfContents } from "@/components/docs/TableOfContents";
 import { JazzNav } from "@/components/nav";
 import { useTocItems } from "@/lib/TocContext";
-import { Toc } from "@stefanprobst/rehype-extract-toc";
 import { clsx } from "clsx";
 
 export default function DocsLayout({
@@ -28,7 +27,7 @@ export default function DocsLayout({
     {
       name: "Outline",
       content: tocItems?.length && (
-        <TableOfContents className="text-sm" items={tocItems as Toc} />
+        <TableOfContents className="text-sm" items={tocItems} />
       ),
       icon: "tableOfContents",
     },
@@ -55,7 +54,7 @@ export default function DocsLayout({
               <>
                 <TableOfContents
                   className="pl-3 py-6 shrink-0 text-sm sticky align-start top-[72px] w-[16rem] h-[calc(100vh-72px)] overflow-y-auto hidden lg:block"
-                  items={tocItems as Toc}
+                  items={tocItems}
                 />
               </>
             )}
