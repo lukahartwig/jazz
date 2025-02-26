@@ -5,7 +5,13 @@ import {
   Signature,
   StreamingHash,
 } from "../crypto/crypto.js";
-import { AnyRawCoValue, RawCoID, SessionID, Stringified } from "../exports.js";
+import {
+  AnyRawCoValue,
+  RawCoID,
+  SessionID,
+  Stringified,
+  SyncMessage,
+} from "../exports.js";
 import { TransactionID } from "../ids.js";
 import { JsonObject, JsonValue } from "../jsonValue.js";
 import { PermissionsDef } from "../permissions.js";
@@ -29,6 +35,11 @@ export interface CoValueState {
   };
   listeners: { [key: ListenerID]: KnownState };
   dependents: RawCoID[];
+  incomingMessages: {
+    [key: PeerID]: {
+      [priority: number]: SyncMessage[];
+    };
+  };
 }
 
 export type CoValueHeader = {
@@ -142,5 +153,6 @@ export function emptyCoValueState(id: RawCoID): CoValueState {
     peerState: {},
     listeners: {},
     dependents: [],
+    incomingMessages: {},
   };
 }

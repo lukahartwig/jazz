@@ -2,7 +2,7 @@ import { describe, expect, test } from "vitest";
 import { RawCoID } from "../../exports.js";
 import { subscribe } from "../../localNode/actions/subscribing.js";
 import { stageLoad } from "../../localNode/stages/0_load.js";
-import { stageSync } from "../../localNode/stages/6_sync.js";
+import { stageSyncOut } from "../../localNode/stages/6_syncOut.js";
 import { emptyNode } from "../../localNode/structure.js";
 
 describe("Syncing", () => {
@@ -17,7 +17,7 @@ describe("Syncing", () => {
 
   test("stageSync doesn't do anything and causes no effects on CoValues with storage state unknown or pending", () => {
     const coValuesBefore = structuredClone(node.coValues);
-    const { effects } = stageSync(node);
+    const { effects } = stageSyncOut(node);
     expect(effects).toEqual([]);
     expect(node.coValues).toEqual(coValuesBefore);
   });

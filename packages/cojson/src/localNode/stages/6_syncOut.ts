@@ -1,7 +1,7 @@
 import { SendMessageToPeerEffect } from "../effects.js";
 import { LocalNodeState } from "../structure.js";
 
-export function stageSync(node: LocalNodeState): {
+export function stageSyncOut(node: LocalNodeState): {
   effects: SendMessageToPeerEffect[];
 } {
   for (const coValue of Object.values(node.coValues)) {
