@@ -6,7 +6,7 @@ export const metadata = { title: "Metadata & time-travel" };
 
 One of Jazz's most powerful features is that every CoValue automatically tracks its complete edit history. This means you can see who changed what and when, examine the state of your data at any point in time, and build features like audit logs, activity feeds, and undo/redo functionality. This page explores how to access and work with the rich metadata that comes with every CoValue.
 
-## Understanding Edit History
+## Understanding edit history
 
 Every CoValue in Jazz maintains a full history of all changes made to it. This edit history is accessible through two main APIs:
 
@@ -18,7 +18,7 @@ Every CoValue in Jazz maintains a full history of all changes made to it. This e
 
 `CoValue._raw` gives you access to the internal state and lower-level operations on a CoValue. As this is an internal API, it should be used with caution. If you find yourself using `_raw`, consider letting us know so we can consider adding a public API for your use case.
 
-## Working with Edit History Metadata
+## Working with edit history metadata
 
 CoValues track who made each change and when. Every edit has metadata attached to it, including the author, timestamp, value, and transaction ID. This metadata enables you to build powerful audit and history features without having to implement your own tracking system.
 
@@ -63,11 +63,11 @@ for (const edit of task._edits.status.all) {
 ```
 </CodeGroup>
 
-### Common Patterns
+### Common patterns
 
 With knowledge of the edit history, you can build all sorts of useful features that enhance your application's user experience and administrative capabilities. Here are some common patterns that leverage CoValue metadata.
 
-#### Audit Log
+#### Audit log
 
 Getting all the changes to a CoValue in order allows you to build an audit log. This is especially useful for tracking important changes in collaborative environments or for compliance purposes:
 
@@ -106,7 +106,7 @@ auditLog.forEach((entry) => {
 ```
 </CodeGroup>
 
-#### Activity Feeds
+#### Activity feeds
 
 Activity feeds are a great way to see recent changes to a CoValue, helping users understand what's happening in a collaborative workspace. They can show who did what and when, creating transparency in team environments:
 
@@ -115,11 +115,11 @@ Activity feeds are a great way to see recent changes to a CoValue, helping users
 function getRecentActivity(project: Project) {
   const activity = [];
   const hourAgo = new Date(Date.now() - 3600000);
-  
+
   for (const field of Object.keys(project)) {
     // Skip if the field doesn't have edits
     if (!project._edits[field as keyof typeof project._edits]) continue;
-    
+
     for (const edit of project._edits[field as keyof typeof project._edits].all) {
       if (edit.madeAt > hourAgo) {
         activity.push({
@@ -128,10 +128,10 @@ function getRecentActivity(project: Project) {
           by: edit.by,
           at: edit.madeAt
         });
-      } 
+      }
     }
   }
-  
+
   return activity.sort((a, b) => b.at.getTime() - a.at.getTime());
 }
 
@@ -144,11 +144,11 @@ recentActivity.forEach(activity => {
 ```
 </CodeGroup>
 
-## Edit History & Time Travel
+## Edit history & time travel
 
 CoValues track their entire history of changes, creating a timeline you can explore. You can see who changed what and when, or even view past states of the data. This capability enables powerful debugging tools and user-facing features like history browsing and restoration of previous versions:
 
-<CodeGroup> 
+<CodeGroup>
 ```ts
 class Task extends CoMap {
   title = co.string;
@@ -190,7 +190,7 @@ console.log(`Latest change made by: ${latestEdit?.by?.id}`);
 ```
 </CodeGroup>
 
-## Time Travel
+## Time travel
 
 The ability to view a CoValue as it existed at any point in time is one of Jazz's most powerful features. Looking into the past can help you understand how things changed - perfect for audit logs, debugging, or showing user activity. You can reconstruct the exact state of any CoValue at any moment in its history:
 
@@ -206,7 +206,7 @@ class Project extends CoMap {
 function findStatusChange(project: Project, targetStatus: string) {
   // Get all the edits for the status field
   const statusEdits = project._edits.status.all;
-  
+
   for (const edit of statusEdits) {
     if (edit.value === targetStatus) {
       console.log({
@@ -223,7 +223,7 @@ findStatusChange(gardenProject, "active");
 ```
 </CodeGroup>
 
-### Common Use Cases
+### Common use cases
 
 The time travel capabilities of CoValues enable several practical use cases that would otherwise require complex custom implementations. Here are some examples of how you can use time travel in your applications:
 
@@ -233,7 +233,7 @@ The time travel capabilities of CoValues enable several practical use cases that
 function getTaskStatusHistory(task: Task, days: number = 7) {
   const statusHistory = [];
   const dayInMs = 86400000;
-  
+
   // Check every day for the past week
   for (let day = 0; day < days; day++) {
     const timePoint = new Date(Date.now() - day * dayInMs);
@@ -245,7 +245,7 @@ function getTaskStatusHistory(task: Task, days: number = 7) {
       priority: state.priority
     });
   }
-  
+
   return statusHistory;
 }
 
@@ -257,7 +257,7 @@ history.forEach(entry => {
 ```
 </CodeGroup>
 
-### Best Practices
+### Best practices
 
 - Check field existence before accessing edits (`if (task._edits.fieldName)`)
 - Access the most recent edit directly with `_edits.fieldName` instead of using any `.latest` property

@@ -25,7 +25,7 @@ task.assignee = "Alex";                  // Optional field
 ```
 </CodeGroup>
 
-### Working with Lists
+### Working with lists
 
 CoLists support familiar array operations, making it easy to work with collections of data. You can add, remove, and modify items using the standard JavaScript array methods, while Jazz handles the collaborative aspects automatically. These operations work correctly even when multiple users are making changes simultaneously.
 
@@ -61,7 +61,7 @@ project.tasks.forEach(task => {
 
 Changes sync automatically to everyone with access. Any edits you make are immediately visible in your local view and propagate to other users as they sync.
 
-## Concurrent Edits
+## Concurrent edits
 
 CoValues use [CRDTs](/docs/schemas/covalues#defining-schemas-covalues) to handle concurrent edits smoothly. In most cases, you don't need to think about conflicts - Jazz handles them automatically. This conflict resolution happens transparently, allowing multiple users to make changes simultaneously without disruption or data loss.
 
@@ -109,13 +109,13 @@ project.tasks.splice(2, 1);  // Removes third team member from list
 ```
 </CodeGroup>
 
-### Best Practices
+### Best practices
 
 - Load everything you plan to delete
 - Check permissions before attempting deletes
 - Consider soft deletes for recoverable data
 
-## Removing Data in CoValues
+## Removing data in CoValues
 
 You can delete fields from any `CoMap` to remove specific properties while keeping the CoValue itself. This is useful when you need to clear certain data without affecting the rest of your object structure. The deletion operations are also synchronized to all users with access.
 
@@ -153,7 +153,7 @@ project.team.splice(2, 1);  // Removes third team member
 ```
 </CodeGroup>
 
-### Restoring Data
+### Restoring data
 
 For data you might want to restore later, consider using status fields instead of permanent deletion. This "soft delete" pattern is common in applications where users might need to recover previously removed items. By using a boolean field to mark items as archived or deleted, you maintain the ability to restore them later.
 

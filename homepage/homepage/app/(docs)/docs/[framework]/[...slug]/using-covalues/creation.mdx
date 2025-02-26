@@ -2,13 +2,13 @@ import { CodeGroup, ComingSoon, ContentByFramework } from "@/components/forMdx";
 
 export const metadata = { title: "Creation & ownership" };
 
-# Creation & Ownership
+# Creation & ownership
 
 CoValues are collaborative by nature - anything you create can be shared and synced with others. Who gets to read or change each CoValue is controlled by its owner - either an individual `Account` or a shared `Group`. This foundation of ownership is what enables Jazz applications to support real-time collaboration while maintaining proper access control. Understanding how to create and manage ownership of CoValues is essential for building effectively with Jazz.
 
 ## Creating CoValues
 
-Every CoValue starts with a [schema](/docs/schemas/covalues#start-your-app-with-a-schema). From there you can create CoValues with the `create` method. Creating CoValues is straightforward - you define the structure in your schema and then instantiate instances with initial values. These newly created CoValues automatically sync across devices and users who have access to them. 
+Every CoValue starts with a [schema](/docs/schemas/covalues#start-your-app-with-a-schema). From there you can create CoValues with the `create` method. Creating CoValues is straightforward - you define the structure in your schema and then instantiate instances with initial values. These newly created CoValues automatically sync across devices and users who have access to them.
 
 Here's a simple example:
 
@@ -55,7 +55,7 @@ feed.addItem(ActivityNotification.create({
 ```
 </CodeGroup>
 
-## Ownership & Access Control
+## Ownership & access control
 
 Every CoValue needs an owner to control who can access it. An owner can be an individual `Account`, but it's usually a `Group` since that lets you share with multiple people. The ownership model in Jazz provides fine-grained control over who can read, write, or administer your collaborative data. This system makes it easy to implement common patterns like shared workspaces, personal data, or public resources.
 
