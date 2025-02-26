@@ -55,21 +55,9 @@ export default async function Page({
     // Exclude h1 from table of contents
     const tocItems = (tableOfContents as Toc)?.[0]?.children;
 
-    return (
-      <DocsLayout toc={tocItems} nav={<DocNav />}>
-        <Prose className={bodyClassName}>
-          <Content />
-        </Prose>
-      </DocsLayout>
-    );
+    return <Content />;
   } catch (error) {
-    return (
-      <DocsLayout nav={<DocNav />}>
-        <Prose className={bodyClassName}>
-          <ComingSoonPage />
-        </Prose>
-      </DocsLayout>
-    );
+    return <ComingSoonPage />;
   }
 }
 

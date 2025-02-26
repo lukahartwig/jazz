@@ -9,7 +9,9 @@ export default function Layout({
 }) {
   return (
     <DocsLayout nav={<DocNav />}>
-      <Prose className="max-w-3xl mx-auto lg:flex-1 py-10">{children}</Prose>
+      <Prose className="overflow-x-hidden lg:flex-1 py-10  max-w-3xl mx-auto">
+        {children}
+      </Prose>
     </DocsLayout>
   );
 }
