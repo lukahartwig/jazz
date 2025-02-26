@@ -19,7 +19,6 @@ To define the structure of your CoValue, you start with a schema. Here's an exam
 // schema.ts
 class Task extends CoMap {
   title = co.string;
-  description = co.string;
   status = co.literal("todo", "in progress", "completed");
 }
 ```
@@ -31,7 +30,6 @@ From there, you can create a `Task` CoValue using the `create` method.
 ```ts
 const task = Task.create({
   title: "Plant spring vegetables",
-  description: "Plant peas, carrots, and lettuce",
   status: "todo",
 });
 ```
@@ -77,8 +75,7 @@ In the following example, we create a `Task` that only your account `me`, can ac
 const { me } = useAccount();  // *add*
 
 const task = Task.create({
-  title: "Plant spring vegetables",
-  description: "Plant peas, carrots, and lettuce",
+  title: "Plant spring vegetables such as peas and carrots",
   status: "todo",
 }, {
   owner: me // *add*
@@ -94,7 +91,6 @@ const group = Group.create();  // *add*
 
 const task = Task.create({
   title: "Plant spring vegetables",
-  description: "Plant peas, carrots, and lettuce",
   status: "todo",
 }, {
   owner: group // *add*
@@ -132,14 +128,12 @@ const taskList = ListOfTasks.create([]);
 // Create a garden project with nested tasks, all with the same ownership
 const springProject = Project.create({
   name: "Spring Planting",
-  description: "Preparing the community garden for spring vegetables",
   tasks: taskList
 });
 
 // Add tasks to the list
 taskList.push(Task.create({
   title: "Start tomato seedlings",
-  description: "Plant Roma and Cherry varieties in seed trays",
   status: "todo"
 });
 ```
