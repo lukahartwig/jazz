@@ -1,5 +1,8 @@
+"use client";
+
 import { TableOfContents } from "@/components/docs/TableOfContents";
 import { JazzNav } from "@/components/nav";
+import { useTocItems } from "@/lib/TocContext";
 import { Toc } from "@stefanprobst/rehype-extract-toc";
 import { clsx } from "clsx";
 
@@ -8,7 +11,7 @@ export default function DocsLayout({
   nav,
   navName,
   navIcon,
-  toc,
+  toc: oldtoc,
 }: {
   children: React.ReactNode;
   nav?: React.ReactNode;
@@ -16,6 +19,9 @@ export default function DocsLayout({
   navIcon?: string;
   toc?: Toc;
 }) {
+  const { tocItems: toc } = useTocItems();
+  console.log({ toc });
+
   const navSections = [
     {
       name: navName || "Docs",

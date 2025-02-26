@@ -1,4 +1,5 @@
 import DocsLayout from "@/components/docs/DocsLayout";
+import { TocItemsSetter } from "@/components/docs/TocItemsSetter";
 import ComingSoonPage from "@/components/docs/coming-soon.mdx";
 import { DocNav } from "@/components/docs/nav";
 import { docNavigationItems } from "@/lib/docNavigationItems.js";
@@ -55,9 +56,19 @@ export default async function Page({
     // Exclude h1 from table of contents
     const tocItems = (tableOfContents as Toc)?.[0]?.children;
 
-    return <Content />;
+    return (
+      <>
+        <TocItemsSetter items={tocItems} />
+        <Content />
+      </>
+    );
   } catch (error) {
-    return <ComingSoonPage />;
+    return (
+      <>
+        <TocItemsSetter items={[]} />
+        <ComingSoonPage />
+      </>
+    );
   }
 }
 
