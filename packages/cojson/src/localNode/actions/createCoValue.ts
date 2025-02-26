@@ -1,12 +1,6 @@
 import { CoValueHeader } from "../../coValueCore.js";
-import { SendMessageToPeerEffect, WriteToStorageEffect } from "../effects.js";
 import { LocalNodeState } from "../structure.js";
 
-export function createCoValue(
-  node: LocalNodeState,
-  header: CoValueHeader,
-): {
-  effects: (WriteToStorageEffect | SendMessageToPeerEffect)[];
-} {
+export function createCoValue(node: LocalNodeState, header: CoValueHeader) {
   throw new Error("Not implemented");
 }
