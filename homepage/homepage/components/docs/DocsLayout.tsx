@@ -11,16 +11,13 @@ export default function DocsLayout({
   nav,
   navName,
   navIcon,
-  toc: oldtoc,
 }: {
   children: React.ReactNode;
   nav?: React.ReactNode;
   navName?: string;
   navIcon?: string;
-  toc?: Toc;
 }) {
-  const { tocItems: toc } = useTocItems();
-  console.log({ toc });
+  const { tocItems } = useTocItems();
 
   const navSections = [
     {
@@ -30,8 +27,8 @@ export default function DocsLayout({
     },
     {
       name: "Outline",
-      content: toc && (
-        <TableOfContents className="text-sm" items={toc as Toc} />
+      content: tocItems?.length && (
+        <TableOfContents className="text-sm" items={tocItems as Toc} />
       ),
       icon: "tableOfContents",
     },
@@ -54,11 +51,11 @@ export default function DocsLayout({
           </div>
           <div className={clsx("md:col-span-8 lg:col-span-9 flex gap-12")}>
             {children}
-            {toc && (
+            {tocItems?.length && (
               <>
                 <TableOfContents
                   className="pl-3 py-6 shrink-0 text-sm sticky align-start top-[72px] w-[16rem] h-[calc(100vh-72px)] overflow-y-auto hidden lg:block"
-                  items={toc as Toc}
+                  items={tocItems as Toc}
                 />
               </>
             )}
