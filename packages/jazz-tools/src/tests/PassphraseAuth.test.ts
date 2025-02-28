@@ -1,8 +1,7 @@
 // @vitest-environment happy-dom
 
-import { mnemonicToEntropy } from "@scure/bip39";
 import { AgentSecret } from "cojson";
-import { PureJSCrypto } from "cojson/src/crypto/PureJSCrypto";
+import { PureJSCrypto } from "cojson/crypto/PureJSCrypto";
 import {
   Account,
   AuthSecretStorage,

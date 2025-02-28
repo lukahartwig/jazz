@@ -43,10 +43,6 @@ export class JazzContextManager<
   protected context: PlatformSpecificContext<Acc> | undefined;
   protected props: P | undefined;
   protected authSecretStorage = new AuthSecretStorage();
-  protected authSecretStorageWithNotify = Object.assign(
-    Object.create(this.authSecretStorage),
-    { notify: true },
-  );
   protected authenticating = false;
 
   constructor() {
@@ -103,9 +99,7 @@ export class JazzContextManager<
   }
 
   getAuthSecretStorage() {
-    // External updates of the auth secret storage are notified by default (e.g. when registering a new Auth provider)
-    // We skip internal notify to ensure that the isAuthenticated changes are notified along with the context updates
-    return this.authSecretStorageWithNotify;
+    return this.authSecretStorage;
   }
 
   logOut = async () => {
