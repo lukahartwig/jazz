@@ -1,6 +1,5 @@
 import { ValueType, metrics } from "@opentelemetry/api";
 import { PeerState } from "./PeerState.js";
-import { SyncStateManager } from "./SyncStateManager.js";
 import { CoValueHeader, Transaction } from "./coValueCore.js";
 import { CoValueCore } from "./coValueCore.js";
 import { Signature } from "./crypto/crypto.js";
@@ -129,10 +128,7 @@ export class SyncManager {
 
   constructor(local: LocalNode) {
     this.local = local;
-    this.syncState = new SyncStateManager(this);
   }
-
-  syncState: SyncStateManager;
 
   peersInPriorityOrder(): PeerState[] {
     return Object.values(this.peers).sort((a, b) => {
