@@ -114,7 +114,7 @@ export class SyncStateManager {
       return undefined;
     }
 
-    const entry = this.syncManager.local.coValuesStore.get(id);
+    const entry = this.syncManager.local.coValuesStore.getOrCreateEmpty(id);
 
     if (entry.state.type !== "available") {
       return undefined;
