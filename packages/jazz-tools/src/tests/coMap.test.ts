@@ -119,6 +119,25 @@ describe("Simple CoMap operations", async () => {
     ).toThrow();
   });
 
+  test("testing toJSON on a CoMap with a Date field", () => {
+    const map = TestMap.create(
+      {
+        color: "red",
+        _height: 10,
+        birthday: new Date(),
+      },
+      { owner: me },
+    );
+
+    expect(map.toJSON()).toMatchObject({
+      color: "red",
+      _height: 10,
+      birthday: expect.any(String),
+      _type: "CoMap",
+      id: expect.any(String),
+    });
+  });
+
   test("setting optional date as undefined should not throw", () => {
     const map = TestMap.create(
       {
