@@ -23,7 +23,7 @@ export function CreateOrganization() {
       return;
     }
 
-    const group = Group.create({ owner: me });
+    const group = Group.create();
 
     me.root.organizations.push(draft as Organization);
 

@@ -15,7 +15,7 @@ function App() {
   const issue = useCoState(Issue, issueID);
 
   const createIssue = () => {
-    const group = Group.create({ owner: me });
+    const group = Group.create();
     group.addMember("everyone", "writer");
 
     const newIssue = Issue.create(
