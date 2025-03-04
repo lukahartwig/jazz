@@ -309,7 +309,7 @@ export class CoMap extends CoValueBase implements CoValue {
       const descriptor = (this._schema[tKey] ||
         this._schema[ItemsSym]) as Schema;
 
-      if (descriptor == "json" || "encode" in descriptor) {
+      if (descriptor == "json" || "encoded" in descriptor) {
         return [key, this._raw.get(key)];
       } else if (isRefEncoded(descriptor)) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
