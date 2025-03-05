@@ -24,7 +24,7 @@ export interface CoValue {
   $type: string;
   /** @category Collaboration */
   $owner: Account | Group;
-  $loadedAs: Account | AnonymousJazzAgent;
+  _loadedAs: Account | AnonymousJazzAgent;
 
   /** @category Internals */
   $raw: RawCoValue;
@@ -41,7 +41,7 @@ export class CoValuePrototype implements CoValue {
   declare $raw: RawCoValue;
   declare $schema: any;
 
-  get $loadedAs(): Account | AnonymousJazzAgent {
+  get _loadedAs(): Account | AnonymousJazzAgent {
     const rawAccount = this.$raw.core.node.account;
 
     if (rawAccount instanceof RawAccount) {

@@ -81,20 +81,20 @@ class Subscription {
   }
 }
 
-class CoValueResolutionNode<S extends CoMapSchema> {
+export class CoValueResolutionNode<S extends CoMapSchema> {
   childNodes = new Map<string, CoValueResolutionNode<CoMapSchema>>();
   childValues = new Map<string, CoMapInstance<S> | undefined>();
   value: CoMapInstance<S> | undefined;
   status: "loading" | "loaded" | "unauthorized" | "unavailable" = "loading";
   promise: ResolvablePromise<void> | undefined;
   subscription: Subscription;
+  listener: ((value: CoMapInstance<S>) => void) | undefined;
 
   constructor(
     public node: LocalNode,
     public resolve: RefsToResolve<S>,
     public id: ID<S>,
     public schema: S,
-    public listener: (value: CoMapInstance<S>, isLoaded: boolean) => void,
   ) {
     this.subscription = new Subscription(node, id, (value) => {
       this.handleUpdate(value);
@@ -103,19 +103,24 @@ class CoValueResolutionNode<S extends CoMapSchema> {
 
   handleUpdate(value: RawCoMap) {
     if (!this.value) {
-      this.value = CoMapInstance.fromRaw(this.schema, value);
+      this.value = CoMapInstance.fromRaw(this.schema, value, this.childValues);
       this.loadChildren();
-      this.listener(this.value, this.isLoaded());
-    } else {
+      if (this.isLoaded()) {
+        this.listener?.(this.value);
+      }
+    } else if (this.isLoaded()) {
       this.value = this.value.$updated();
-      this.listener(this.value, this.isLoaded());
+      this.listener?.(this.value);
     }
   }
 
   handleChildUpdate = (key: string, value: CoMapInstance<S>) => {
     this.childValues.set(key, value);
 
-    this.listener(this.value!, this.isLoaded());
+    if (this.value && this.isLoaded()) {
+      this.value = this.value.$updated(this.childValues);
+      this.listener?.(this.value);
+    }
   };
 
   isLoaded() {
@@ -126,6 +131,13 @@ class CoValueResolutionNode<S extends CoMapSchema> {
     }
 
     return true;
+  }
+
+  setListener(listener: (value: CoMapInstance<S>) => void) {
+    this.listener = listener;
+    if (this.value && this.isLoaded()) {
+      this.listener(this.value);
+    }
   }
 
   async loadChildren() {
@@ -151,10 +163,10 @@ class CoValueResolutionNode<S extends CoMapSchema> {
           const child = new CoValueResolutionNode(
             node,
             resolve[key],
-            key as any,
+            raw.get(key) as ID<any>,
             childSchema,
-            (value) => this.handleChildUpdate(key, value),
           );
+          child.setListener((value) => this.handleChildUpdate(key, value));
           this.childNodes.set(key, child);
         }
       }
@@ -173,7 +185,87 @@ export function subscribeToCoValue<
     loadAs?: Account | AnonymousJazzAgent;
     onUnavailable?: () => void;
     onUnauthorized?: () => void;
-    syncResolution?: boolean;
   },
   listener: SubscribeListener<S, R>,
-) {}
+) {
+  const loadAs = options.loadAs ?? activeAccountContext.get();
+  const node = "node" in loadAs ? loadAs.node : loadAs._raw.core.node;
+
+  const resolve = options.resolve ?? true;
+
+  let unsubscribed = false;
+
+  let schema = cls as any;
+
+  if (typeof schema === "function") {
+    schema = new cls();
+  }
+
+  const rootNode = new CoValueResolutionNode<S>(
+    node,
+    resolve,
+    id as ID<S>,
+    schema,
+  );
+  rootNode.setListener(handleUpdate);
+
+  function unsubscribe() {
+    unsubscribed = true;
+    rootNode.subscription.unsubscribe();
+  }
+
+  function handleUpdate(value: CoMapInstance<S>) {
+    if (unsubscribed) return;
+
+    listener(value as unknown as Resolved<S, R>, unsubscribe);
+  }
+}
+
+export function loadCoValue<S extends CoMapSchema, R extends RefsToResolve<S>>(
+  cls: CoMapSchemaClass<S>,
+  id: ID<CoMapSchema>,
+  options?: {
+    resolve?: RefsToResolveStrict<S, R>;
+    loadAs?: Account | AnonymousJazzAgent;
+  },
+) {
+  return new Promise((resolve) => {
+    subscribeToCoValue<S, R>(
+      cls,
+      id,
+      {
+        resolve: options?.resolve,
+        loadAs: options?.loadAs,
+        onUnavailable: () => {
+          resolve(undefined);
+        },
+        onUnauthorized: () => {
+          resolve(undefined);
+        },
+      },
+      (value, unsubscribe) => {
+        resolve(value);
+        unsubscribe();
+      },
+    );
+  });
+}
+
+export async function ensureCoValueLoaded<
+  V extends CoMapInstance<any>,
+  const R extends RefsToResolve<V>,
+>(
+  existing: V,
+  options?: { resolve?: RefsToResolveStrict<V, R> } | undefined,
+): Promise<Resolved<V, R>> {
+  const response = await loadCoValue(existing.$schema, existing.$id, {
+    loadAs: existing._loadedAs,
+    resolve: options?.resolve as any,
+  });
+
+  if (!response) {
+    throw new Error("Failed to deeply load CoValue " + existing.id);
+  }
+
+  return response as Resolved<V, R>;
+}

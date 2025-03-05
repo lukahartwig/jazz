@@ -11,12 +11,13 @@ import {
   Resolved,
   Schema,
   SchemaInit,
+  UnCo,
   co,
   isRefEncoded,
   parseCoValueCreateOptions,
 } from "../internal.js";
 import { CoValuePrototype } from "./interfaces.js";
-
+import { ensureCoValueLoaded } from "./subscribe.js";
 export type Simplify<A> = {
   [K in keyof A]: A[K];
 } extends infer B
@@ -73,54 +74,7 @@ export class CoMapSchema {
     const schema = new this();
 
     const { owner, uniqueness } = parseCoValueCreateOptions(options);
-    const raw = schema.rawFromInit(init, owner, uniqueness);
-
-    return CoMapInstance.fromRaw(schema, raw);
-  }
-
-  /**
-   * Create a new `RawCoMap` from an initialization object
-   * @internal
-   */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  rawFromInit<Fields extends object = Record<string, any>>(
-    init: Simplify<CoMapInit<Fields>> | undefined,
-    owner: Account | Group,
-    uniqueness?: CoValueUniqueness,
-  ) {
-    const rawOwner = owner._raw;
-
-    const rawInit = {} as {
-      [key in keyof Fields]: JsonValue | undefined;
-    };
-
-    const schema = this;
-
-    if (init)
-      for (const key of Object.keys(init) as (keyof Fields)[]) {
-        const initValue = init[key as keyof typeof init];
-
-        const descriptor = schema.getFieldDescriptor(key);
-
-        if (!descriptor) {
-          continue;
-        }
-
-        if (descriptor === "json") {
-          rawInit[key] = initValue as JsonValue;
-        } else if (isRefEncoded(descriptor)) {
-          if (initValue) {
-            rawInit[key] = (initValue as unknown as CoValue).id;
-          }
-        } else if ("encoded" in descriptor) {
-          rawInit[key] = descriptor.encoded.encode(
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            initValue as any,
-          );
-        }
-      }
-
-    return rawOwner.createMap(rawInit, null, "private", uniqueness);
+    return CoMapInstance.fromInit(schema, init, owner, uniqueness);
   }
 
   /**
@@ -158,10 +112,12 @@ export type CoKeys<Map extends object> = Exclude<
   keyof CoMapSchema
 >;
 
-type ForceRequiredRef<V> = V extends co<InstanceType<CoValueClass> | null>
+type ForceRequiredRef<V> = V extends co<InstanceType<
+  CoMapSchemaClass<any>
+> | null>
   ? NonNullable<V>
-  : V extends co<InstanceType<CoValueClass> | undefined>
-    ? V | null
+  : V extends co<CoMapSchema | undefined>
+    ? CoMapInstance<NonNullable<UnCo<V>>> | null
     : V;
 
 export type CoMapInit<Map extends object> = {
@@ -177,6 +133,7 @@ export class CoMapInstance<M extends CoMapSchema> extends CoValuePrototype {
   declare $schema: M;
   declare $id: ID<M>;
 
+  refs = new Map<string, CoMapInstance<any>>();
   private $lastUpdateTx: number;
 
   constructor(schema: M, raw: RawCoMap) {
@@ -187,14 +144,29 @@ export class CoMapInstance<M extends CoMapSchema> extends CoValuePrototype {
     this.$id = raw.id as unknown as ID<M>;
   }
 
-  static fromRaw<M extends CoMapSchema>(schema: M, raw: RawCoMap) {
-    const value = Object.create(new CoMapInstance(schema, raw));
+  static fromInit<M extends CoMapSchema>(
+    schema: M,
+    init: Simplify<CoMapInit<M>> | undefined,
+    owner: Account | Group,
+    uniqueness?: CoValueUniqueness,
+  ) {
+    const { raw, refs } = createCoMapFromInit(init, owner, schema, uniqueness);
+
+    return CoMapInstance.fromRaw(schema, raw, refs);
+  }
+
+  static fromRaw<M extends CoMapSchema>(
+    schema: M,
+    raw: RawCoMap,
+    refs?: Map<string, CoMapInstance<any> | undefined>,
+  ) {
+    const instance = Object.create(new CoMapInstance(schema, raw));
 
     const isRecord = schema.getFieldDescriptor(ItemsSym) !== undefined;
     const fields = isRecord ? raw.keys() : Object.keys(schema);
 
     for (const key of fields) {
-      Object.defineProperty(value, key, {
+      Object.defineProperty(instance, key, {
         value: getValue(raw, schema, key),
         writable: false,
         enumerable: true,
@@ -202,19 +174,43 @@ export class CoMapInstance<M extends CoMapSchema> extends CoValuePrototype {
       });
     }
 
-    return value as CoMapInstance<M> & Simplify<CoMapInit<M>>;
+    if (refs) {
+      for (const [key, value] of refs.entries()) {
+        if (value) {
+          instance._fillRef(key as any, value);
+        }
+      }
+    }
+
+    return instance as CoMapInstance<M> & Simplify<CoMapInit<M>>;
+  }
+
+  _fillRef<K extends CoKeys<M>>(key: K, value: CoMapInstance<any>) {
+    const descriptor = this.$schema.getFieldDescriptor(key);
+
+    if (descriptor && isRefEncoded(descriptor)) {
+      this.refs.set(key, value);
+      Object.defineProperty(this, key, {
+        value,
+        writable: false,
+        enumerable: true,
+        configurable: true,
+      });
+    } else {
+      throw new Error(`Field ${key} is not a reference`);
+    }
   }
 
   $set<K extends CoKeys<M>>(key: K, value: M[K]) {
     setValue(this.$raw, this.$schema, key, value as JsonValue);
   }
 
-  $updated() {
-    if (this.$lastUpdateTx === this.$raw.totalProcessedTransactions) {
+  $updated(refs?: Map<string, CoMapInstance<any> | undefined>) {
+    if (this.$lastUpdateTx === this.$raw.totalProcessedTransactions && !refs) {
       return this;
     }
 
-    return CoMapInstance.fromRaw(this.$schema, this.$raw);
+    return CoMapInstance.fromRaw(this.$schema, this.$raw, refs ?? this.refs);
   }
 
   /**
@@ -225,10 +221,11 @@ export class CoMapInstance<M extends CoMapSchema> extends CoValuePrototype {
    * @category Subscription & Loading
    */
   $resolve<const R extends RefsToResolve<M>>(
-    this: M,
+    this: CoMapInstance<M>,
     options: { resolve: RefsToResolveStrict<M, R> },
   ): Promise<Resolved<M, R>> {
-    throw new Error("Not implemented");
+    // @ts-expect-error
+    return ensureCoValueLoaded(this, { resolve: options.resolve });
   }
 
   /**
@@ -258,7 +255,11 @@ function getValue(raw: RawCoMap, schema: CoMapSchema, key: string) {
     } else if ("encoded" in descriptor) {
       return value === undefined ? undefined : descriptor.encoded.decode(value);
     } else if (isRefEncoded(descriptor)) {
-      throw new Error("Not implemented");
+      if (value === undefined) {
+        return undefined;
+      } else {
+        return null;
+      }
     }
   } else {
     return undefined;
@@ -291,4 +292,51 @@ function setValue(
     }
     return true;
   }
+}
+
+function createCoMapFromInit<M extends CoMapSchema>(
+  init: Simplify<CoMapInit<M>> | undefined,
+  owner: Account | Group,
+  schema: M,
+  uniqueness?: CoValueUniqueness,
+) {
+  const rawOwner = owner._raw;
+
+  const rawInit = {} as {
+    [key in keyof CoKeys<M>]: JsonValue | undefined;
+  };
+
+  const refs = new Map<string, CoMapInstance<any>>();
+
+  if (init) {
+    const fields = Object.keys(init) as (keyof CoKeys<M>)[];
+
+    for (const key of fields) {
+      const initValue = init[key as keyof typeof init];
+
+      const descriptor = schema.getFieldDescriptor(key);
+
+      if (!descriptor) {
+        continue;
+      }
+
+      if (descriptor === "json") {
+        rawInit[key] = initValue as JsonValue;
+      } else if (isRefEncoded(descriptor)) {
+        if (initValue) {
+          rawInit[key] = (initValue as unknown as CoMapInstance<any>).$id;
+          refs.set(key as string, initValue as unknown as CoMapInstance<any>);
+        }
+      } else if ("encoded" in descriptor) {
+        rawInit[key] = descriptor.encoded.encode(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          initValue as any,
+        );
+      }
+    }
+  }
+
+  const raw = rawOwner.createMap(rawInit, null, "private", uniqueness);
+
+  return { raw, refs };
 }

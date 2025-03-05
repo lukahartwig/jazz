@@ -22,6 +22,25 @@ describe("CoMap2", () => {
     expect(myCoMap.age).toBe(30);
   });
 
+  it("should create a CoMap with nested values", () => {
+    class MyCoMap extends CoMapSchema {
+      name = co.string;
+      age = co.number;
+      ref = co.optional.ref(MyCoMap as any);
+    }
+
+    const myCoMap = MyCoMap.create({
+      name: "John",
+      age: 30,
+      ref: MyCoMap.create({ name: "Jane", age: 20 }),
+    });
+
+    expect(myCoMap.name).toBe("John");
+    expect(myCoMap.age).toBe(30);
+    expect(myCoMap.ref?.name).toBe("Jane");
+    expect(myCoMap.ref?.age).toBe(20);
+  });
+
   it("should not change original property after calling $set", () => {
     class MyCoMap extends CoMapSchema {
       name = co.string;
