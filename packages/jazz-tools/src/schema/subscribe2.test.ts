@@ -64,7 +64,6 @@ describe("CoMap load", () => {
     expect(loaded.age).toBe(30);
     expect(loaded.ref).toBe(null);
 
-    console.log("loaded", loaded);
     const loaded2 = await loaded.$resolve({
       resolve: { ref: true } as any,
     });
@@ -291,5 +290,54 @@ describe("CoMap subscribe", () => {
     expect(result.ref.name).toBe("John");
     expect(resultBeforeSet.ref.name).toBe("Jane");
     expect(result.ref2).toBe(resultBeforeSet.ref2);
+  });
+
+  it("should support $request", async () => {
+    class MyCoMap extends CoMapSchema {
+      name = co.string;
+      age = co.number;
+      ref = co.optional.ref(MyCoMap);
+      ref2 = co.optional.ref(MyCoMap);
+    }
+
+    // @ts-expect-error
+    const myCoMap = MyCoMap.create({
+      name: "John",
+      age: 30,
+      ref: MyCoMap.create({
+        name: "Jane",
+        age: 20,
+        ref: MyCoMap.create({ name: "Jane Child", age: 20 }),
+      }),
+      ref2: MyCoMap.create({ name: "Jane", age: 20 }),
+    });
+
+    let result: any;
+
+    subscribeToCoValue(
+      MyCoMap,
+      myCoMap.$id,
+      {
+        resolve: {
+          ref: true,
+        } as any,
+      },
+      (value) => {
+        result = value;
+      },
+    );
+
+    const jane = result.ref;
+
+    expect(jane?.name).toBe("Jane");
+    expect(jane?.age).toBe(20);
+    expect(jane?.ref).toBe(null);
+
+    // To do autoloading inside components
+    jane?.$request({ resolve: { ref: true } });
+
+    const janeAfterRequest = result.ref;
+
+    expect(janeAfterRequest?.ref?.name).toBe("Jane Child");
   });
 });

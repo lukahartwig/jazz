@@ -103,7 +103,12 @@ export class CoValueResolutionNode<S extends CoMapSchema> {
 
   handleUpdate(value: RawCoMap) {
     if (!this.value) {
-      this.value = CoMapInstance.fromRaw(this.schema, value, this.childValues);
+      this.value = CoMapInstance.fromRaw(
+        this.schema,
+        value,
+        this.childValues,
+        this,
+      );
       this.loadChildren();
       if (this.isLoaded()) {
         this.listener?.(this.value);
@@ -133,6 +138,18 @@ export class CoValueResolutionNode<S extends CoMapSchema> {
     return true;
   }
 
+  request(resolve: RefsToResolve<S>) {
+    if (this.resolve === true || !this.resolve) {
+      this.resolve = resolve;
+    } else if (typeof this.resolve === "object") {
+      // TODO: Better merge strategy
+      // @ts-expect-error
+      this.resolve = { ...this.resolve, ...resolve };
+    }
+
+    this.loadChildren();
+  }
+
   setListener(listener: (value: CoMapInstance<S>) => void) {
     this.listener = listener;
     if (this.value && this.isLoaded()) {
@@ -154,7 +171,7 @@ export class CoValueResolutionNode<S extends CoMapSchema> {
         const value = raw.get(key);
         const refDescriptor = schema.getFieldDescriptor(key);
 
-        if (value && isRefEncoded(refDescriptor)) {
+        if (value && isRefEncoded(refDescriptor) && !this.childNodes.has(key)) {
           const childSchema = new (
             refDescriptor.ref as CoMapSchemaClass<any>
           )();

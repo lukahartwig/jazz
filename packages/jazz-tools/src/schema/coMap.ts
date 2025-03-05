@@ -17,7 +17,7 @@ import {
   parseCoValueCreateOptions,
 } from "../internal.js";
 import { CoValuePrototype } from "./interfaces.js";
-import { ensureCoValueLoaded } from "./subscribe.js";
+import { CoValueResolutionNode, ensureCoValueLoaded } from "./subscribe.js";
 export type Simplify<A> = {
   [K in keyof A]: A[K];
 } extends infer B
@@ -132,16 +132,21 @@ export class CoMapInstance<M extends CoMapSchema> extends CoValuePrototype {
   declare $raw: RawCoMap;
   declare $schema: M;
   declare $id: ID<M>;
-
+  declare $resolutionNode: CoValueResolutionNode<M> | undefined;
   refs = new Map<string, CoMapInstance<any>>();
   private $lastUpdateTx: number;
 
-  constructor(schema: M, raw: RawCoMap) {
+  constructor(
+    schema: M,
+    raw: RawCoMap,
+    resolutionNode?: CoValueResolutionNode<M>,
+  ) {
     super();
     this.$schema = schema;
     this.$raw = raw;
     this.$lastUpdateTx = raw.totalProcessedTransactions;
     this.$id = raw.id as unknown as ID<M>;
+    this.$resolutionNode = resolutionNode;
   }
 
   static fromInit<M extends CoMapSchema>(
@@ -159,8 +164,11 @@ export class CoMapInstance<M extends CoMapSchema> extends CoValuePrototype {
     schema: M,
     raw: RawCoMap,
     refs?: Map<string, CoMapInstance<any> | undefined>,
+    resolutionNode?: CoValueResolutionNode<M>,
   ) {
-    const instance = Object.create(new CoMapInstance(schema, raw));
+    const instance = Object.create(
+      new CoMapInstance(schema, raw, resolutionNode),
+    );
 
     const isRecord = schema.getFieldDescriptor(ItemsSym) !== undefined;
     const fields = isRecord ? raw.keys() : Object.keys(schema);
@@ -210,7 +218,12 @@ export class CoMapInstance<M extends CoMapSchema> extends CoValuePrototype {
       return this;
     }
 
-    return CoMapInstance.fromRaw(this.$schema, this.$raw, refs ?? this.refs);
+    return CoMapInstance.fromRaw(
+      this.$schema,
+      this.$raw,
+      refs ?? this.refs,
+      this.$resolutionNode,
+    );
   }
 
   /**
@@ -226,6 +239,15 @@ export class CoMapInstance<M extends CoMapSchema> extends CoValuePrototype {
   ): Promise<Resolved<M, R>> {
     // @ts-expect-error
     return ensureCoValueLoaded(this, { resolve: options.resolve });
+  }
+
+  $request<const R extends RefsToResolve<M>>(
+    this: CoMapInstance<M>,
+    options: { resolve: RefsToResolveStrict<M, R> },
+  ) {
+    this.$resolutionNode?.request(options.resolve);
+
+    return this;
   }
 
   /**
