@@ -70,6 +70,24 @@ describe("CoMap2", () => {
     );
   });
 
+  it("should properly serialize nedted values to JSON", () => {
+    class MyCoMap extends CoMapSchema {
+      name = co.string;
+      age = co.number;
+      ref = co.optional.ref(MyCoMap as any);
+    }
+
+    const myCoMap = MyCoMap.create({
+      name: "John",
+      age: 30,
+      ref: MyCoMap.create({ name: "Jane", age: 20 }),
+    });
+
+    expect(JSON.stringify(myCoMap)).toMatchInlineSnapshot(
+      `"{"name":"John","age":30,"ref":{"name":"Jane","age":20}}"`,
+    );
+  });
+
   it("should return updated values after calling $set and $updated", () => {
     class MyCoMap extends CoMapSchema {
       name = co.string;
