@@ -33,9 +33,14 @@ import {
 import { getPriorityFromHeader } from "./priority.js";
 import {
   CoValueKnownState,
+  DoneMessage,
+  KnownStateMessage,
+  LoadMessage,
   NewContentMessage,
+  Peer,
   PeerID,
   SyncMessage,
+  knownStateIn,
 } from "./sync.js";
 import { accountOrAgentIDfromSessionID } from "./typeUtils/accountOrAgentIDfromSessionID.js";
 import { expectGroup } from "./typeUtils/expectGroup.js";
@@ -120,18 +125,24 @@ export class CoValueCore {
 
   syncState: Map<
     PeerID,
-    { role: "peer" | "server" | "client" | "storage"; priority?: number } & (
-      | { type: "requestedByThem" }
+    { peer: Peer } & (
+      | {
+          type: "requestedByThem";
+          asDependencyOf?: RawCoID;
+          confirmed: CoValueKnownState | "unknown";
+        }
       | { type: "requestedByUs" }
       | {
           type: "syncing";
-          confirmed: CoValueKnownState;
+          confirmed: CoValueKnownState | "unknown";
           optimistic: CoValueKnownState;
+          needsCorrection: boolean;
         }
+      | { type: "errored"; error: string }
     )
   >;
-  incomingMessages: { peer: PeerID; message: SyncMessage }[];
-  outgoingMessages: { peer: PeerID; message: SyncMessage }[];
+  incomingMessages: { peer: Peer; message: SyncMessage }[];
+  outgoingMessages: { peer: Peer; message: SyncMessage }[];
 
   constructor(
     id: RawCoID,
@@ -144,6 +155,9 @@ export class CoValueCore {
     this.header = undefined;
     this._sessionLogs = internalInitSessions;
     this.node = node;
+    this.syncState = new Map();
+    this.incomingMessages = [];
+    this.outgoingMessages = [];
 
     if (header) {
       this.setHeader(header);
@@ -1032,7 +1046,178 @@ export class CoValueCore {
   waitForSync(options?: {
     timeout?: number;
   }) {
-    return this.node.syncManager.waitForSync(this.id, options?.timeout);
+    throw new Error("Not implemented");
+  }
+
+  processIncomingMessages() {
+    // handle all messages from the highest priority peer, then the next lower one, etc.
+    this.incomingMessages.sort((a, b) => {
+      return (a.peer.priority || 0) - (b.peer.priority || 0);
+    });
+
+    for (const msg of this.incomingMessages) {
+      this.handleSyncMessage(msg.message, msg.peer);
+    }
+  }
+
+  handleSyncMessage(msg: SyncMessage, peer: Peer) {
+    switch (msg.action) {
+      case "load":
+        return this.handleLoad(msg, peer);
+      case "known":
+        if (msg.isCorrection) {
+          return this.handleCorrection(msg, peer);
+        } else {
+          return this.handleKnownState(msg, peer);
+        }
+      case "content":
+        return this.handleNewContent(msg, peer);
+      case "done":
+        return this.handleUnsubscribe(msg);
+      default:
+        throw new Error(
+          `Unknown message type ${(msg as { action: "string" }).action}`,
+        );
+    }
+  }
+
+  handleLoad(msg: LoadMessage, peer: Peer) {
+    const peerState = this.syncState.get(peer.id);
+    if (!peerState) {
+      this.syncState.set(peer.id, {
+        peer,
+        type: "requestedByThem",
+        confirmed: knownStateIn(msg),
+      });
+    } else {
+      console.warn(
+        "unexpected load from existing peer",
+        peer.id,
+        msg,
+        peerState,
+      );
+    }
+  }
+
+  handleCorrection(msg: KnownStateMessage, peer: Peer) {
+    const peerState = this.syncState.get(peer.id);
+    if (!peerState) {
+      console.warn("unexpected correction from unknown peer", peer.id, msg);
+    } else if (peerState.type !== "syncing") {
+      console.warn(
+        "unexpected correction from non-syncing peer",
+        peer.id,
+        msg,
+        peerState,
+      );
+    } else {
+      peerState.confirmed = knownStateIn(msg);
+      peerState.optimistic = knownStateIn(msg);
+    }
+  }
+
+  handleKnownState(msg: KnownStateMessage, peer: Peer) {
+    const peerState = this.syncState.get(peer.id);
+
+    if (!peerState) {
+      if (msg.asDependencyOf) {
+        this.syncState.set(peer.id, {
+          peer,
+          type: "requestedByThem",
+          confirmed: "unknown",
+        });
+      } else {
+        console.warn("unexpected known state from unknown peer", peer.id, msg);
+      }
+    } else if (peerState.type === "requestedByUs") {
+      this.syncState.set(peer.id, {
+        peer,
+        type: "syncing",
+        confirmed: knownStateIn(msg),
+        optimistic: knownStateIn(msg),
+      });
+    } else if (peerState.type === "requestedByThem") {
+      peerState.confirmed = knownStateIn(msg);
+    } else if (peerState.type === "syncing") {
+      peerState.confirmed = knownStateIn(msg);
+    } else {
+      console.warn(
+        "unexpected known state from non-syncing peer",
+        peer.id,
+        msg,
+        peerState,
+      );
+    }
+  }
+
+  handleNewContent(msg: NewContentMessage, peer: Peer) {
+    const peerState = this.syncState.get(peer.id);
+    if (!peerState) {
+      console.warn("unexpected new content from unknown peer", peer.id, msg);
+    } else if (peerState.type !== "syncing") {
+      console.warn(
+        "unexpected new content from non-syncing peer",
+        peer.id,
+        msg,
+        peerState,
+      );
+    } else {
+      if (!this.header && msg.header) {
+        try {
+          this.setHeader(msg.header);
+        } catch (e) {
+          console.error("invalid header in message from peer", peer.id, msg, e);
+        }
+      }
+
+      for (const [sessionID, newContent] of Object.entries(msg.new)) {
+        const expectedAfter =
+          this.sessionLogs.get(sessionID as SessionID)?.transactions.length ||
+          0;
+
+        if (newContent.after > expectedAfter) {
+          console.error(
+            "invalid after in message from peer",
+            peer.id,
+            msg,
+            newContent,
+          );
+          peerState.needsCorrection = true;
+          continue;
+        }
+
+        const effectivelyNewTransactions = newContent.newTransactions.slice(
+          expectedAfter - newContent.after,
+        );
+
+        if (effectivelyNewTransactions.length === 0) {
+          continue;
+        }
+
+        const result = this.tryAddTransactions(
+          sessionID as SessionID,
+          effectivelyNewTransactions,
+          undefined,
+          newContent.lastSignature,
+        );
+        if (result.isErr()) {
+          console.error(
+            "error adding transactions from peer",
+            peer.id,
+            msg,
+            result.error,
+          );
+        }
+      }
+    }
+  }
+
+  handleUnsubscribe(msg: DoneMessage, peer: Peer) {
+    this.syncState.delete(peer.id);
+  }
+
+  generateOutgoingMessages() {
+    // TODO: compare our state to all peer states and put corresponding messages in outgoingMessages
   }
 }
 

@@ -1,5 +1,4 @@
 import { ValueType, metrics } from "@opentelemetry/api";
-import { PeerState } from "./PeerState.js";
 import { CoValueHeader, Transaction } from "./coValueCore.js";
 import { CoValueCore } from "./coValueCore.js";
 import { Signature } from "./crypto/crypto.js";
@@ -112,13 +111,8 @@ export function combinedKnownStates(
 }
 
 export class SyncManager {
-  peers: { [key: PeerID]: PeerState } = {};
+  peers: { [key: PeerID]: Peer } = {};
   local: LocalNode;
-  requestedSyncs: {
-    [id: RawCoID]:
-      | { done: Promise<void>; nRequestsThisTick: number }
-      | undefined;
-  } = {};
 
   peersCounter = metrics.getMeter("cojson").createUpDownCounter("jazz.peers", {
     description: "Amount of connected peers",
@@ -130,7 +124,7 @@ export class SyncManager {
     this.local = local;
   }
 
-  peersInPriorityOrder(): PeerState[] {
+  peersInPriorityOrder(): Peer[] {
     return Object.values(this.peers).sort((a, b) => {
       const aPriority = a.priority || 0;
       const bPriority = b.priority || 0;
@@ -139,23 +133,19 @@ export class SyncManager {
     });
   }
 
-  getPeers(): PeerState[] {
+  getPeers(): Peer[] {
     return Object.values(this.peers);
   }
 
-  getServerAndStoragePeers(excludePeerId?: PeerID): PeerState[] {
+  getServerAndStoragePeers(excludePeerId?: PeerID): Peer[] {
     return this.peersInPriorityOrder().filter(
-      (peer) => peer.isServerOrStoragePeer() && peer.id !== excludePeerId,
+      (peer) =>
+        (peer.role === "server" || peer.role === "storage") &&
+        peer.id !== excludePeerId,
     );
   }
 
-  async handleSyncMessage(msg: SyncMessage, peer: PeerState) {
-    if (peer.erroredCoValues.has(msg.id)) {
-      logger.warn(
-        `Skipping message ${msg.action} on errored coValue ${msg.id} from peer ${peer.id}`,
-      );
-      return;
-    }
+  async handleSyncMessage(msg: SyncMessage, peer: Peer) {
     // TODO: validate
     switch (msg.action) {
       case "load":
@@ -776,7 +766,7 @@ export class SyncManager {
   }
 }
 
-function knownStateIn(msg: LoadMessage | KnownStateMessage) {
+export function knownStateIn(msg: LoadMessage | KnownStateMessage) {
   return {
     id: msg.id,
     header: msg.header,
