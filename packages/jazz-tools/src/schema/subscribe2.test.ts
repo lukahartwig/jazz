@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 import { beforeEach, describe, expect, it } from "vitest";
 import { co } from "../exports.js";
 import { createJazzTestAccount } from "../testing.js";

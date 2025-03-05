@@ -236,6 +236,8 @@ export function subscribeToCoValue<
 
     listener(value as unknown as Resolved<S, R>, unsubscribe);
   }
+
+  return unsubscribe;
 }
 
 export function loadCoValue<S extends CoMapSchema, R extends RefsToResolve<S>>(
