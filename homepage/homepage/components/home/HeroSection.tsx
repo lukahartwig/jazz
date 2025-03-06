@@ -4,6 +4,7 @@ import { Prose } from "gcmp-design-system/src/app/components/molecules/Prose";
 import Link from "next/link";
 import { CopyButton } from "gcmp-design-system/src/app/components/molecules/CodeGroup";
 import CreateJazzApp from "@/components/home/CreateJazzApp.mdx";
+import { SectionHeader } from "gcmp-design-system/src/app/components/molecules/SectionHeader";
 
 const features = [
   {
@@ -82,9 +83,10 @@ export function HeroSection() {
         </div>
       </div>
 
-      <div className="h-full pt-12 group">
-        <div className="  overflow-hidden rounded-xl border  h-full px-8 pt-6 bg-stone-50 dark:bg-stone-950">
-          <div className="rounded-lg bg-white dark:bg-stone-925 ring-4 ring-stone-400/20 shadow-xl shadow-blue/20 border relative top-2 h-full w-full">
+      <div className="h-full pt-12 group grid md:grid-cols-2 items-center lg:grid-cols-1">
+        <SectionHeader className="md:col-span-2 lg:sr-only" title="Get a Jazz app running in minutes."/>
+        <div className="  overflow-hidden sm:rounded-xl sm:border  h-full sm:px-8 sm:pt-6 bg-stone-50 dark:bg-stone-950">
+          <div className="rounded-lg bg-white dark:bg-stone-925 sm:ring-4 ring-stone-400/20 sm:shadow-xl shadow-blue/20 border relative sm:top-2 h-full w-full">
             <div className="py-4 flex items-center gap-2.5 px-6 border-b">
               <span className="rounded-full size-3 bg-stone-200 dark:bg-stone-900"/>
               <span className="rounded-full size-3 bg-stone-200 dark:bg-stone-900"/>
