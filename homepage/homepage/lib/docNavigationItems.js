@@ -144,6 +144,11 @@ export const docNavigationItems = [
         done: 80,
       },
       {
+        name: "ImageDefinition",
+        href: "/docs/using-covalues/imagedef",
+        done: 100,
+      },
+      {
         name: "SchemaUnions",
         href: "/docs/using-covalues/schemaunions",
         done: 0,
