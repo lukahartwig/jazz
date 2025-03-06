@@ -43,6 +43,8 @@ export default function DocsLayout({
               "sticky align-start top-[72px] h-[calc(100vh-72px)] overflow-y-auto",
               "hidden md:block",
             )}
+
+            data-scroll-restoration-id="doc-nav"
           >
             {nav}
           </div>
