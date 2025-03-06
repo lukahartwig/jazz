@@ -2,6 +2,8 @@ import { H1 } from "gcmp-design-system/src/app/components/atoms/Headings";
 import { Icon } from "gcmp-design-system/src/app/components/atoms/Icon";
 import { Prose } from "gcmp-design-system/src/app/components/molecules/Prose";
 import Link from "next/link";
+import { CopyButton } from "gcmp-design-system/src/app/components/molecules/CodeGroup";
+import CreateJazzApp from "@/components/home/CreateJazzApp.mdx";
 
 const features = [
   {
@@ -40,8 +42,8 @@ const features = [
 
 export function HeroSection() {
   return (
-    <div className="container grid gap-x-8 gap-y-10 py-12 md:py-16 lg:py-24 lg:gap-0 lg:grid-cols-3">
-      <div className="flex flex-col justify-center gap-4 lg:col-span-3 lg:gap-8">
+    <div className="container grid items-center gap-x-8 gap-y-10 py-12 md:py-16 lg:py-24 lg:gap-x-10 lg:grid-cols-3">
+      <div className="flex flex-col justify-center gap-5 lg:col-span-2 lg:gap-8">
         <p className="uppercase text-blue tracking-widest text-sm font-medium dark:text-stone-400">
           Local-first development toolkit
         </p>
@@ -77,6 +79,22 @@ export function HeroSection() {
               <p>{title}</p>
             </div>
           ))}
+        </div>
+      </div>
+
+      <div className="h-full pt-12 group">
+        <div className="  overflow-hidden rounded-xl border  h-full px-8 pt-6 bg-stone-50 dark:bg-stone-950">
+          <div className="rounded-lg bg-white dark:bg-stone-925 ring-4 ring-stone-400/20 shadow-xl shadow-blue/20 border relative top-2 h-full w-full">
+            <div className="py-4 flex items-center gap-2.5 px-6 border-b">
+              <span className="rounded-full size-3 bg-stone-200 dark:bg-stone-900"/>
+              <span className="rounded-full size-3 bg-stone-200 dark:bg-stone-900"/>
+              <span className="rounded-full size-3 bg-stone-200 dark:bg-stone-900"/>
+              <CopyButton code="npx create-jazz-app@latest" size="md" className="mt-0.5 mr-0.5" />
+            </div>
+            <div className="p-3">
+              <CreateJazzApp/>
+            </div>
+          </div>
         </div>
       </div>
     </div>
