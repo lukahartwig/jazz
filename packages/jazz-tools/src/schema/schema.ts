@@ -1,9 +1,9 @@
 import { CoValueUniqueness } from "cojson";
 import { TypeOf, ZodTypeAny, z } from "zod";
-import { Account } from "../coValues/account.js";
-import { Group } from "../coValues/group.js";
-import { parseCoValueCreateOptions } from "../coValues/interfaces.js";
-import { CoMapInstance, CoMapInstanceClass } from "./coMap.js";
+import type { Account } from "../coValues/account.js";
+import type { Group } from "../coValues/group.js";
+import { parseCoValueCreateOptions } from "../internal.js";
+import { CoMapInstanceClass } from "./coMap.js";
 
 export type CoMapInnerSchema = {
   [key: string]: CoMap<any> | ZodTypeAny | "self";
@@ -33,7 +33,7 @@ export type RelationsKeys<D extends CoValueDefinition<any>> =
 export type CoValue<
   D extends CoValueDefinition<any>,
   R extends RelationsToResolve<D>,
-> = CoMapInstance<D, R>;
+> = LoadedCoMap<D, R>;
 
 export type RelationsToResolveStrict<
   T extends CoValueDefinition<any>,
@@ -47,8 +47,7 @@ export type RelationsToResolve<
 > =
   | boolean
   | (DepthLimit extends CurrentDepth["length"]
-      ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        any
+      ? boolean
       : D extends CoMap<infer S>
         ?
             | {
@@ -78,41 +77,76 @@ export type Loaded<
   Depth extends RelationsToResolve<D>,
   DepthLimit extends number = 5,
   CurrentDepth extends number[] = [],
-> = D extends CoMap<infer S>
-  ? IsDepthLimit<Depth, DepthLimit, CurrentDepth> extends true
-    ? {
-        [K in keyof S]: S[K] extends ZodTypeAny ? TypeOf<S[K]> : null;
-      }
-    : {
-        [K in keyof S]: K extends keyof Depth
-          ? S[K] extends "self"
-            ? Depth[K] extends RelationsToResolve<D>
-              ? Loaded<D, Depth[K], DepthLimit, [0, ...CurrentDepth]>
-              : never
-            : S[K] extends CoValueDefinition<any>
-              ? Depth[K] extends RelationsToResolve<S[K]>
-                ? Loaded<S[K], Depth[K], DepthLimit, [0, ...CurrentDepth]>
-                : never
-              : never
-          : S[K] extends ZodTypeAny
-            ? TypeOf<S[K]>
-            : never;
-      }
-  : never;
+> = Depth extends never
+  ? undefined
+  : D extends CoMap<infer S>
+    ? LoadedCoMap<CoMap<S>, Depth, DepthLimit, CurrentDepth>
+    : undefined;
 
-export type CoMapInit<D extends CoValueDefinition<any>> = D extends CoMap<
-  infer S
->
+export type LoadedCoMap<
+  D extends CoValueDefinition<any>,
+  Depth extends RelationsToResolve<D>,
+  DepthLimit extends number = 5,
+  CurrentDepth extends number[] = [],
+> = CoMapInstanceClass<D, Depth> &
+  (D extends CoMap<infer S>
+    ? IsDepthLimit<Depth, DepthLimit, CurrentDepth> extends true
+      ? {
+          [K in keyof S]: S[K] extends ZodTypeAny ? TypeOf<S[K]> : null;
+        }
+      : {
+          [K in keyof S]: K extends keyof Depth
+            ? S[K] extends "self"
+              ? Depth[K] extends RelationsToResolve<D>
+                ? Loaded<D, Depth[K], DepthLimit, [0, ...CurrentDepth]>
+                : null
+              : S[K] extends CoValueDefinition<any>
+                ? Depth[K] extends RelationsToResolve<S[K]>
+                  ? Loaded<S[K], Depth[K], DepthLimit, [0, ...CurrentDepth]>
+                  : null
+                : null
+            : S[K] extends ZodTypeAny
+              ? TypeOf<S[K]>
+              : null;
+        }
+    : {});
+
+export type CoMapInit<D extends CoMap<any>> = D extends CoMap<infer S>
   ? {
-      [K in keyof S]: S[K] extends CoMap<any>
-        ? CoMapInstance<D, any> | undefined
-        : S[K] extends ZodTypeAny
-          ? TypeOf<S[K]>
-          : S[K] extends "self"
-            ? CoMapInstance<D, any> | undefined
-            : never;
+      [K in keyof S]?: S[K] extends ZodTypeAny
+        ? TypeOf<S[K]>
+        : S[K] extends CoMap<any>
+          ? CoMapInit<S[K]> | CoMapInstanceClass<S[K], any> | undefined
+          : never;
     }
-  : never;
+  : {};
+
+export type CoMapInitStrict<D extends CoMap<any>> = D extends CoMap<infer S>
+  ? {
+      [K in keyof S]: S[K] extends ZodTypeAny ? TypeOf<S[K]> : never;
+    }
+  : {};
+
+type CoMapInitToRelationsToResolve<
+  D,
+  I,
+  DepthLimit extends number = 5,
+  CurrentDepth extends number[] = [],
+> = DepthLimit extends CurrentDepth["length"]
+  ? true
+  : D extends CoMap<infer S>
+    ? I extends CoMapInit<D>
+      ? {
+          [K in keyof S]: S[K] extends CoMap<any>
+            ? I[K] extends undefined
+              ? never
+              : I[K] extends CoMapInit<S[K]> | CoMapInstanceClass<S[K], any>
+                ? true
+                : never
+            : never;
+        }
+      : true
+    : true;
 
 export class CoMap<S extends CoMapInnerSchema> {
   protected schema: S;
@@ -130,8 +164,8 @@ export class CoMap<S extends CoMapInnerSchema> {
     return Object.keys(this.schema) as (keyof S)[];
   }
 
-  create(
-    init: CoMapInit<CoMap<S>>,
+  create<I extends CoMapInit<CoMap<S>>>(
+    init: I,
     options?:
       | {
           owner: Account | Group;
@@ -141,12 +175,17 @@ export class CoMap<S extends CoMapInnerSchema> {
       | Group,
   ) {
     const { owner, uniqueness } = parseCoValueCreateOptions(options);
-    return CoMapInstanceClass.fromInit(this, init, owner, uniqueness);
+    return CoMapInstanceClass.fromInit<CoMap<S>>(
+      this,
+      init,
+      owner,
+      uniqueness,
+    ) as Loaded<CoMap<S>, CoMapInitToRelationsToResolve<CoMap<S>, I>>;
   }
 }
 
-function map<S extends CoMapInnerSchema>(options: { schema: S }) {
-  return new CoMap(options.schema);
+function map<S extends CoMapInnerSchema>(schema: S) {
+  return new CoMap(schema);
 }
 
 export function isRelationRef(
@@ -165,37 +204,3 @@ export const co = {
   intersection: z.intersection,
   tuple: z.tuple,
 };
-
-const MyMap = co.map({
-  schema: {
-    name: co.string(),
-    age: co.number(),
-    isAdmin: co.boolean(),
-  },
-});
-
-const MyMap2 = co.map({
-  schema: {
-    name: co.string(),
-    age: co.number(),
-    isAdmin: co.boolean(),
-    bestFriend: MyMap,
-    self: "self",
-  },
-});
-
-type MyMap2Resolved = Loaded<
-  typeof MyMap2,
-  { bestFriend: true; self: { self: true } }
->;
-type MyMap2Resolved2 = Loaded<typeof MyMap2, true>;
-
-type MyMap2Init = CoMapInstance<typeof MyMap2, true>;
-
-const myMap = MyMap2.create({
-  name: "John",
-  age: 20,
-  isAdmin: true,
-  bestFriend: undefined,
-  self: undefined,
-});

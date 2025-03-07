@@ -2,7 +2,7 @@ import { LocalNode, RawCoMap } from "cojson";
 import { Account } from "../exports.js";
 import { activeAccountContext } from "../implementation/activeAccountContext.js";
 import { AnonymousJazzAgent, ID } from "../internal.js";
-import { CoMapInstance, CoMapInstanceClass } from "./coMap.js";
+import { CoMapInstanceClass } from "./coMap.js";
 import {
   CoMap,
   CoValueDefinition,
@@ -85,12 +85,12 @@ export class CoValueResolutionNode<
   R extends RelationsToResolve<D>,
 > {
   childNodes = new Map<string, CoValueResolutionNode<CoMap<any>, any>>();
-  childValues = new Map<string, CoMapInstance<any, any> | undefined>();
-  value: CoMapInstance<D, R> | undefined;
+  childValues = new Map<string, Loaded<any, any> | undefined>();
+  value: Loaded<D, R> | undefined;
   status: "loading" | "loaded" | "unauthorized" | "unavailable" = "loading";
   promise: ResolvablePromise<void> | undefined;
   subscription: Subscription;
-  listener: ((value: CoMapInstance<D, R>) => void) | undefined;
+  listener: ((value: Loaded<D, R>) => void) | undefined;
 
   constructor(
     public node: LocalNode,
@@ -103,29 +103,29 @@ export class CoValueResolutionNode<
     });
   }
 
-  handleUpdate(this: CoValueResolutionNode<D, R>, value: RawCoMap) {
+  handleUpdate(value: RawCoMap) {
     if (!this.value) {
-      this.value = CoMapInstanceClass.fromRaw(
+      this.value = CoMapInstanceClass.fromRaw<D, R>(
         this.schema,
         value,
         this.childValues,
         this,
-      ) as CoMapInstance<D, R>;
+      );
       this.loadChildren();
       if (this.isLoaded()) {
         this.listener?.(this.value);
       }
     } else if (this.isLoaded()) {
-      this.value = this.value.$updated();
+      this.value = this.value.$updated() as Loaded<D, R>;
       this.listener?.(this.value);
     }
   }
 
-  handleChildUpdate = (key: string, value: CoMapInstance<any, any>) => {
+  handleChildUpdate = (key: string, value: Loaded<any, any>) => {
     this.childValues.set(key, value);
 
     if (this.value && this.isLoaded()) {
-      this.value = this.value.$updated(this.childValues);
+      this.value = this.value.$updated(this.childValues) as Loaded<D, R>;
       this.listener?.(this.value);
     }
   };
@@ -152,7 +152,7 @@ export class CoValueResolutionNode<
     this.loadChildren();
   }
 
-  setListener(listener: (value: CoMapInstance<D, R>) => void) {
+  setListener(listener: (value: Loaded<D, R>) => void) {
     this.listener = listener;
     if (this.value && this.isLoaded()) {
       this.listener(this.value);
@@ -232,7 +232,7 @@ export function subscribeToCoValue<
     rootNode.subscription.unsubscribe();
   }
 
-  function handleUpdate(value: CoMapInstance<D, R>) {
+  function handleUpdate(value: Loaded<D, R>) {
     if (unsubscribed) return;
 
     listener(value, unsubscribe);
@@ -278,16 +278,16 @@ export async function ensureCoValueLoaded<
   D extends CoValueDefinition<any>,
   R extends RelationsToResolve<D>,
 >(
-  existing: CoMapInstance<D, true>,
+  existing: CoMapInstanceClass<D, true>,
   options?: { resolve?: RelationsToResolveStrict<D, R> } | undefined,
 ) {
-  const response = await loadCoValue(existing.$schema, existing.$id, {
+  const response = await loadCoValue<D, R>(existing.$schema, existing.$id, {
     loadAs: existing._loadedAs,
     resolve: options?.resolve,
   });
 
   if (!response) {
-    throw new Error("Failed to deeply load CoValue " + existing.id);
+    throw new Error("Failed to deeply load CoValue " + existing.$id);
   }
 
   return response;
