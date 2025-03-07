@@ -1,22 +1,21 @@
 import { LocalNode, RawCoMap } from "cojson";
-import { cojsonInternals } from "cojson";
 import { Account } from "../exports.js";
 import { activeAccountContext } from "../implementation/activeAccountContext.js";
+import { AnonymousJazzAgent, ID } from "../internal.js";
+import { CoMapInstance, CoMapInstanceClass } from "./coMap.js";
 import {
-  AnonymousJazzAgent,
-  ID,
-  RefsToResolve,
-  RefsToResolveStrict,
-  Resolved,
-  SchemaInit,
-  isRefEncoded,
-} from "../internal.js";
-import { CoMapInstance, CoMapSchema, CoMapSchemaClass } from "./coMap.js";
+  CoMap,
+  CoValueDefinition,
+  Loaded,
+  RelationsToResolve,
+  RelationsToResolveStrict,
+  isRelationRef,
+} from "./schema.js";
 
-type SubscribeListener<S extends CoMapSchema, R extends RefsToResolve<S>> = (
-  value: Resolved<S, R>,
-  unsubscribe: () => void,
-) => void;
+type SubscribeListener<
+  D extends CoValueDefinition<any>,
+  R extends RelationsToResolve<D>,
+> = (value: Loaded<D, R>, unsubscribe: () => void) => void;
 
 function createResolvablePromise<T>() {
   let resolve!: (value: T) => void;
@@ -42,7 +41,7 @@ class Subscription {
 
   constructor(
     public node: LocalNode,
-    public id: ID<CoMapSchema>,
+    public id: ID<CoMap<any>>,
     public listener: (value: RawCoMap) => void,
   ) {
     const value = this.node.coValuesStore.get(this.id as any);
@@ -81,34 +80,37 @@ class Subscription {
   }
 }
 
-export class CoValueResolutionNode<S extends CoMapSchema> {
-  childNodes = new Map<string, CoValueResolutionNode<CoMapSchema>>();
-  childValues = new Map<string, CoMapInstance<S> | undefined>();
-  value: CoMapInstance<S> | undefined;
+export class CoValueResolutionNode<
+  D extends CoValueDefinition<any>,
+  R extends RelationsToResolve<D>,
+> {
+  childNodes = new Map<string, CoValueResolutionNode<CoMap<any>, any>>();
+  childValues = new Map<string, CoMapInstance<any, any> | undefined>();
+  value: CoMapInstance<D, R> | undefined;
   status: "loading" | "loaded" | "unauthorized" | "unavailable" = "loading";
   promise: ResolvablePromise<void> | undefined;
   subscription: Subscription;
-  listener: ((value: CoMapInstance<S>) => void) | undefined;
+  listener: ((value: CoMapInstance<D, R>) => void) | undefined;
 
   constructor(
     public node: LocalNode,
-    public resolve: RefsToResolve<S>,
-    public id: ID<S>,
-    public schema: S,
+    public resolve: RelationsToResolve<D>,
+    public id: ID<D>,
+    public schema: D,
   ) {
     this.subscription = new Subscription(node, id, (value) => {
       this.handleUpdate(value);
     });
   }
 
-  handleUpdate(value: RawCoMap) {
+  handleUpdate(this: CoValueResolutionNode<D, R>, value: RawCoMap) {
     if (!this.value) {
-      this.value = CoMapInstance.fromRaw(
+      this.value = CoMapInstanceClass.fromRaw(
         this.schema,
         value,
         this.childValues,
         this,
-      );
+      ) as CoMapInstance<D, R>;
       this.loadChildren();
       if (this.isLoaded()) {
         this.listener?.(this.value);
@@ -119,7 +121,7 @@ export class CoValueResolutionNode<S extends CoMapSchema> {
     }
   }
 
-  handleChildUpdate = (key: string, value: CoMapInstance<S>) => {
+  handleChildUpdate = (key: string, value: CoMapInstance<any, any>) => {
     this.childValues.set(key, value);
 
     if (this.value && this.isLoaded()) {
@@ -138,7 +140,7 @@ export class CoValueResolutionNode<S extends CoMapSchema> {
     return true;
   }
 
-  request(resolve: RefsToResolve<S>) {
+  request(resolve: RelationsToResolve<D>) {
     if (this.resolve === true || !this.resolve) {
       this.resolve = resolve;
     } else if (typeof this.resolve === "object") {
@@ -150,7 +152,7 @@ export class CoValueResolutionNode<S extends CoMapSchema> {
     this.loadChildren();
   }
 
-  setListener(listener: (value: CoMapInstance<S>) => void) {
+  setListener(listener: (value: CoMapInstance<D, R>) => void) {
     this.listener = listener;
     if (this.value && this.isLoaded()) {
       this.listener(this.value);
@@ -169,17 +171,22 @@ export class CoValueResolutionNode<S extends CoMapSchema> {
     if (typeof resolve === "object" && resolve !== null) {
       for (const key of Object.keys(resolve)) {
         const value = raw.get(key);
-        const refDescriptor = schema.getFieldDescriptor(key);
+        const refDescriptor = schema.get(key);
 
-        if (value && isRefEncoded(refDescriptor) && !this.childNodes.has(key)) {
-          const childSchema = new (
-            refDescriptor.ref as CoMapSchemaClass<any>
-          )();
+        if (refDescriptor === undefined) {
+          continue;
+        }
+
+        if (value && isRelationRef(refDescriptor) && resolve[key]) {
+          const childSchema =
+            refDescriptor === "self"
+              ? this.schema
+              : (refDescriptor as CoMap<any>);
 
           this.childValues.set(key, undefined);
           const child = new CoValueResolutionNode(
             node,
-            resolve[key],
+            resolve[key] as RelationsToResolve<any>,
             raw.get(key) as ID<any>,
             childSchema,
           );
@@ -192,18 +199,18 @@ export class CoValueResolutionNode<S extends CoMapSchema> {
 }
 
 export function subscribeToCoValue<
-  S extends CoMapSchema,
-  const R extends RefsToResolve<S>,
+  D extends CoValueDefinition<any>,
+  R extends RelationsToResolve<D>,
 >(
-  cls: CoMapSchemaClass<S>,
-  id: ID<CoMapSchema>,
+  schema: D,
+  id: ID<D>,
   options: {
-    resolve?: RefsToResolveStrict<S, R>;
+    resolve?: RelationsToResolveStrict<D, R>;
     loadAs?: Account | AnonymousJazzAgent;
     onUnavailable?: () => void;
     onUnauthorized?: () => void;
   },
-  listener: SubscribeListener<S, R>,
+  listener: SubscribeListener<D, R>,
 ) {
   const loadAs = options.loadAs ?? activeAccountContext.get();
   const node = "node" in loadAs ? loadAs.node : loadAs._raw.core.node;
@@ -212,16 +219,10 @@ export function subscribeToCoValue<
 
   let unsubscribed = false;
 
-  let schema = cls as any;
-
-  if (typeof schema === "function") {
-    schema = new cls();
-  }
-
-  const rootNode = new CoValueResolutionNode<S>(
+  const rootNode = new CoValueResolutionNode<D, R>(
     node,
     resolve,
-    id as ID<S>,
+    id as ID<D>,
     schema,
   );
   rootNode.setListener(handleUpdate);
@@ -231,26 +232,29 @@ export function subscribeToCoValue<
     rootNode.subscription.unsubscribe();
   }
 
-  function handleUpdate(value: CoMapInstance<S>) {
+  function handleUpdate(value: CoMapInstance<D, R>) {
     if (unsubscribed) return;
 
-    listener(value as unknown as Resolved<S, R>, unsubscribe);
+    listener(value, unsubscribe);
   }
 
   return unsubscribe;
 }
 
-export function loadCoValue<S extends CoMapSchema, R extends RefsToResolve<S>>(
-  cls: CoMapSchemaClass<S>,
-  id: ID<CoMapSchema>,
+export function loadCoValue<
+  D extends CoValueDefinition<any>,
+  R extends RelationsToResolve<D>,
+>(
+  schema: D,
+  id: ID<D>,
   options?: {
-    resolve?: RefsToResolveStrict<S, R>;
+    resolve?: RelationsToResolveStrict<D, R>;
     loadAs?: Account | AnonymousJazzAgent;
   },
 ) {
-  return new Promise((resolve) => {
-    subscribeToCoValue<S, R>(
-      cls,
+  return new Promise<Loaded<D, R> | undefined>((resolve) => {
+    subscribeToCoValue<D, R>(
+      schema,
       id,
       {
         resolve: options?.resolve,
@@ -271,20 +275,20 @@ export function loadCoValue<S extends CoMapSchema, R extends RefsToResolve<S>>(
 }
 
 export async function ensureCoValueLoaded<
-  V extends CoMapInstance<any>,
-  const R extends RefsToResolve<V>,
+  D extends CoValueDefinition<any>,
+  R extends RelationsToResolve<D>,
 >(
-  existing: V,
-  options?: { resolve?: RefsToResolveStrict<V, R> } | undefined,
-): Promise<Resolved<V, R>> {
+  existing: CoMapInstance<D, true>,
+  options?: { resolve?: RelationsToResolveStrict<D, R> } | undefined,
+) {
   const response = await loadCoValue(existing.$schema, existing.$id, {
     loadAs: existing._loadedAs,
-    resolve: options?.resolve as any,
+    resolve: options?.resolve,
   });
 
   if (!response) {
     throw new Error("Failed to deeply load CoValue " + existing.id);
   }
 
-  return response as Resolved<V, R>;
+  return response;
 }

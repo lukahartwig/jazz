@@ -1,4 +1,4 @@
-import { CoMapInstance, CoMapSchema } from "./coMap.js";
+import { co } from "./schema.js";
 import {
   ensureCoValueLoaded,
   loadCoValue,
@@ -6,8 +6,7 @@ import {
 } from "./subscribe.js";
 
 export const SchemaV2 = {
-  CoMap: CoMapSchema,
-  CoMapInstance: CoMapInstance,
+  co,
   subscribeToCoValue: subscribeToCoValue,
   ensureCoValueLoaded: ensureCoValueLoaded,
   loadCoValue: loadCoValue,

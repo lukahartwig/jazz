@@ -1,181 +1,75 @@
-import { CoValueUniqueness, JsonValue, RawCoMap } from "cojson";
-import { Account, CoMap, Group } from "../exports.js";
+import { CoValueUniqueness, JsonValue, RawAccount, RawCoMap } from "cojson";
+import { RegisteredSchemas } from "../coValues/registeredSchemas.js";
+import { Account, Group } from "../exports.js";
+import { AnonymousJazzAgent, ID } from "../internal.js";
+import { coValuesCache } from "../lib/cache.js";
 import {
-  CoValue,
-  CoValueClass,
-  ID,
-  IfCo,
-  ItemsSym,
-  RefsToResolve,
-  RefsToResolveStrict,
-  Resolved,
-  Schema,
-  SchemaInit,
-  UnCo,
-  co,
-  isRefEncoded,
-  parseCoValueCreateOptions,
-} from "../internal.js";
-import { CoValuePrototype } from "./interfaces.js";
+  CoMap,
+  CoMapInit,
+  CoMapSchema,
+  Loaded,
+  RelationsKeys,
+  RelationsToResolve,
+  RelationsToResolveStrict,
+  isRelationRef,
+} from "./schema.js";
 import { CoValueResolutionNode, ensureCoValueLoaded } from "./subscribe.js";
-export type Simplify<A> = {
-  [K in keyof A]: A[K];
-} extends infer B
-  ? B
-  : never;
 
-export class CoMapSchema {
-  declare $type: "CoMap";
+export type CoMapInstance<
+  D extends CoMap<any>,
+  R extends RelationsToResolve<D>,
+> = CoMapInstanceClass<D, R> & Loaded<D, R>;
 
-  static {
-    this.prototype.$type = "CoMap";
-  }
-
-  getFieldDescriptor(key: string | number | symbol) {
-    const schemaDef = this as unknown as Record<
-      string,
-      { [SchemaInit]: Schema }
-    >;
-
-    return (schemaDef[key as string]! || schemaDef[ItemsSym])?.[
-      SchemaInit
-    ] as Schema;
-  }
-
-  /**
-   * Create a new CoMap with the given initial values and owner.
-   *
-   * The owner (a Group or Account) determines access rights to the CoMap.
-   *
-   * The CoMap will immediately be persisted and synced to connected peers.
-   *
-   * @example
-   * ```ts
-   * const person = Person.create({
-   *   name: "Alice",
-   *   age: 42,
-   *   pet: cat,
-   * }, { owner: friendGroup });
-   * ```
-   *
-   * @category Creation
-   **/
-  static create<M extends CoMapSchema>(
-    this: CoMapSchemaClass<M>,
-    init: Simplify<CoMapInit<M>>,
-    options?:
-      | {
-          owner: Account | Group;
-          unique?: CoValueUniqueness["uniqueness"];
-        }
-      | Account
-      | Group,
-  ) {
-    const schema = new this();
-
-    const { owner, uniqueness } = parseCoValueCreateOptions(options);
-    return CoMapInstance.fromInit(schema, init, owner, uniqueness);
-  }
-
-  /**
-   * Declare a Record-like CoMap schema, by extending `CoMap.Record(...)` and passing the value schema using `co`. Keys are always `string`.
-   *
-   * @example
-   * ```ts
-   * import { co, CoMap } from "jazz-tools";
-   *
-   * class ColorToFruitMap extends CoMap.Record(
-   *  co.ref(Fruit)
-   * ) {}
-   *
-   * // assume we have map: ColorToFruitMap
-   * // and strawberry: Fruit
-   * map["red"] = strawberry;
-   * ```
-   *
-   * @category Declaration
-   */
-  static Record<Value>(value: IfCo<Value, Value>) {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging
-    class RecordLikeCoMap extends CoMapSchema {
-      [ItemsSym] = value;
-    }
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging
-    interface RecordLikeCoMap extends Record<string, Value> {}
-
-    return RecordLikeCoMap;
-  }
-}
-
-export type CoKeys<Map extends object> = Exclude<
-  keyof Map & string,
-  keyof CoMapSchema
->;
-
-type ForceRequiredRef<V> = V extends co<InstanceType<
-  CoMapSchemaClass<any>
-> | null>
-  ? NonNullable<V>
-  : V extends co<CoMapSchema | undefined>
-    ? CoMapInstance<NonNullable<UnCo<V>>> | null
-    : V;
-
-export type CoMapInit<Map extends object> = {
-  [Key in CoKeys<Map> as undefined extends Map[Key]
-    ? never
-    : IfCo<Map[Key], Key>]: ForceRequiredRef<Map[Key]>;
-} & {
-  [Key in CoKeys<Map> as IfCo<Map[Key], Key>]?: ForceRequiredRef<Map[Key]>;
-};
-
-export class CoMapInstance<M extends CoMapSchema> extends CoValuePrototype {
+export class CoMapInstanceClass<
+  D extends CoMap<any>,
+  R extends RelationsToResolve<D> = true,
+> {
   declare $raw: RawCoMap;
-  declare $schema: M;
-  declare $id: ID<M>;
-  declare $resolutionNode: CoValueResolutionNode<M> | undefined;
-  refs = new Map<string, CoMapInstance<any>>();
-  private $lastUpdateTx: number;
+  declare $schema: D;
+  declare $id: ID<D>;
+  declare $resolutionNode: CoValueResolutionNode<D, R> | undefined;
+  refs = new Map<RelationsKeys<D>, CoMapInstance<any, any> | undefined>();
+  protected $lastUpdateTx: number;
 
   constructor(
-    schema: M,
+    schema: D,
     raw: RawCoMap,
-    resolutionNode?: CoValueResolutionNode<M>,
+    resolutionNode?: CoValueResolutionNode<D, R>,
   ) {
-    super();
     this.$schema = schema;
     this.$raw = raw;
     this.$lastUpdateTx = raw.totalProcessedTransactions;
-    this.$id = raw.id as unknown as ID<M>;
+    this.$id = raw.id as unknown as ID<D>;
     this.$resolutionNode = resolutionNode;
   }
 
-  static fromInit<M extends CoMapSchema>(
-    schema: M,
-    init: Simplify<CoMapInit<M>> | undefined,
+  static fromInit<D extends CoMap<any>>(
+    schema: D,
+    init: CoMapInit<D>,
     owner: Account | Group,
     uniqueness?: CoValueUniqueness,
   ) {
     const { raw, refs } = createCoMapFromInit(init, owner, schema, uniqueness);
 
-    return CoMapInstance.fromRaw(schema, raw, refs);
+    return CoMapInstanceClass.fromRaw(schema, raw, refs);
   }
 
-  static fromRaw<M extends CoMapSchema>(
-    schema: M,
+  static fromRaw<D extends CoMap<any>, R extends RelationsToResolve<D> = true>(
+    schema: D,
     raw: RawCoMap,
-    refs?: Map<string, CoMapInstance<any> | undefined>,
-    resolutionNode?: CoValueResolutionNode<M>,
+    refs?: Map<RelationsKeys<D>, CoMapInstance<any, any> | undefined>,
+    resolutionNode?: CoValueResolutionNode<D, R>,
   ) {
     const instance = Object.create(
-      new CoMapInstance(schema, raw, resolutionNode),
+      new CoMapInstanceClass(schema, raw, resolutionNode),
     );
 
-    const isRecord = schema.getFieldDescriptor(ItemsSym) !== undefined;
-    const fields = isRecord ? raw.keys() : Object.keys(schema);
+    const isRecord = false;
+    const fields = isRecord ? raw.keys() : schema.keys();
 
     for (const key of fields) {
       Object.defineProperty(instance, key, {
-        value: getValue(raw, schema, key),
+        value: getValue(raw, schema, key as keyof CoMapSchema<D>),
         writable: false,
         enumerable: true,
         configurable: true,
@@ -190,13 +84,13 @@ export class CoMapInstance<M extends CoMapSchema> extends CoValuePrototype {
       }
     }
 
-    return instance as CoMapInstance<M> & Simplify<CoMapInit<M>>;
+    return instance as CoMapInstance<D, R>;
   }
 
-  _fillRef<K extends CoKeys<M>>(key: K, value: CoMapInstance<any>) {
-    const descriptor = this.$schema.getFieldDescriptor(key);
+  _fillRef<K extends RelationsKeys<D>>(key: K, value: CoMapInstance<any, any>) {
+    const descriptor = this.$schema.get(key);
 
-    if (descriptor && isRefEncoded(descriptor)) {
+    if (descriptor && isRelationRef(descriptor)) {
       this.refs.set(key, value);
       Object.defineProperty(this, key, {
         value,
@@ -209,16 +103,18 @@ export class CoMapInstance<M extends CoMapSchema> extends CoValuePrototype {
     }
   }
 
-  $set<K extends CoKeys<M>>(key: K, value: M[K]) {
+  $set<K extends keyof D>(key: K, value: D[K]) {
     setValue(this.$raw, this.$schema, key, value as JsonValue);
   }
 
-  $updated(refs?: Map<string, CoMapInstance<any> | undefined>) {
+  $updated(
+    refs?: Map<RelationsKeys<D>, CoMapInstance<any, any> | undefined>,
+  ): CoMapInstance<D, R> {
     if (this.$lastUpdateTx === this.$raw.totalProcessedTransactions && !refs) {
-      return this;
+      return this as CoMapInstance<D, R>;
     }
 
-    return CoMapInstance.fromRaw(
+    return CoMapInstanceClass.fromRaw<D, R>(
       this.$schema,
       this.$raw,
       refs ?? this.refs,
@@ -233,20 +129,22 @@ export class CoMapInstance<M extends CoMapSchema> extends CoValuePrototype {
    *
    * @category Subscription & Loading
    */
-  $resolve<const R extends RefsToResolve<M>>(
-    this: CoMapInstance<M>,
-    options: { resolve: RefsToResolveStrict<M, R> },
-  ): Promise<Resolved<M, R>> {
-    // @ts-expect-error
-    return ensureCoValueLoaded(this, { resolve: options.resolve });
+  $resolve<R extends RelationsToResolve<D>>(options: {
+    resolve: RelationsToResolveStrict<D, R>;
+  }): Promise<Loaded<D, R>> {
+    return ensureCoValueLoaded<D, R>(
+      this as unknown as CoMapInstance<D, true>,
+      { resolve: options.resolve },
+    );
   }
 
-  $request<const R extends RefsToResolve<M>>(
-    this: CoMapInstance<M>,
-    options: { resolve: RefsToResolveStrict<M, R> },
+  $request<I extends CoMapInstance<D, any>, R extends RelationsToResolve<D>>(
+    this: I,
+    options: { resolve: RelationsToResolveStrict<D, R> },
   ) {
     this.$resolutionNode?.request(options.resolve);
 
+    // TODO Make the resolved values null | X
     return this;
   }
 
@@ -258,102 +156,115 @@ export class CoMapInstance<M extends CoMapSchema> extends CoValuePrototype {
   $waitForSync(options?: { timeout?: number }) {
     return this.$raw.core.waitForSync(options);
   }
+
+  get _loadedAs(): Account | AnonymousJazzAgent {
+    const rawAccount = this.$raw.core.node.account;
+
+    if (rawAccount instanceof RawAccount) {
+      return coValuesCache.get(rawAccount, () =>
+        RegisteredSchemas["Account"].fromRaw(rawAccount),
+      );
+    }
+
+    return new AnonymousJazzAgent(this.$raw.core.node);
+  }
+
+  get $owner(): Account | Group {
+    return coValuesCache.get(this.$raw.group, () =>
+      this.$raw.group instanceof RawAccount
+        ? RegisteredSchemas["Account"].fromRaw(this.$raw.group)
+        : RegisteredSchemas["Group"].fromRaw(this.$raw.group),
+    );
+  }
 }
 
-export interface CoMapSchemaClass<S extends CoMapSchema> {
-  /** @ignore */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  new (...args: any[]): S;
-}
-
-function getValue(raw: RawCoMap, schema: CoMapSchema, key: string) {
-  const descriptor = schema.getFieldDescriptor(key);
+function getValue<D extends CoMap<any>>(
+  raw: RawCoMap,
+  schema: D,
+  key: keyof CoMapSchema<D>,
+) {
+  const descriptor = schema.get(key);
 
   if (descriptor && typeof key === "string") {
     const value = raw.get(key);
 
-    if (descriptor === "json") {
-      return value;
-    } else if ("encoded" in descriptor) {
-      return value === undefined ? undefined : descriptor.encoded.decode(value);
-    } else if (isRefEncoded(descriptor)) {
+    if (descriptor instanceof CoMap || descriptor === "self") {
       if (value === undefined) {
         return undefined;
       } else {
         return null;
       }
+    } else {
+      return descriptor.parse(value);
     }
   } else {
     return undefined;
   }
 }
 
-function setValue(
+function setValue<D extends CoMap<any>>(
   raw: RawCoMap,
-  schema: CoMapSchema,
-  key: string,
+  schema: D,
+  key: keyof CoMapSchema<D>,
   value: JsonValue,
 ) {
-  const descriptor = schema.getFieldDescriptor(key);
+  const descriptor = schema.get(key);
 
   if (descriptor && typeof key === "string") {
-    if (descriptor === "json") {
-      raw.set(key, value);
-    } else if ("encoded" in descriptor) {
-      raw.set(key, descriptor.encoded.encode(value));
-    } else if (isRefEncoded(descriptor)) {
+    if (isRelationRef(descriptor)) {
       if (value === null) {
-        if (descriptor.optional) {
-          raw.set(key, null);
-        } else {
-          throw new Error(`Cannot set required reference ${key} to null`);
-        }
+        raw.set(key, null);
       } else {
-        raw.set(key, (value as unknown as CoValue).id);
+        raw.set(key, (value as unknown as CoMapInstance<CoMap<{}>, true>).$id);
       }
+    } else {
+      raw.set(key, descriptor.parse(value));
     }
+
     return true;
   }
 }
 
-function createCoMapFromInit<M extends CoMapSchema>(
-  init: Simplify<CoMapInit<M>> | undefined,
+function createCoMapFromInit<D extends CoMap<any>>(
+  init: CoMapInit<D> | undefined,
   owner: Account | Group,
-  schema: M,
+  schema: D,
   uniqueness?: CoValueUniqueness,
 ) {
   const rawOwner = owner._raw;
 
   const rawInit = {} as {
-    [key in keyof CoKeys<M>]: JsonValue | undefined;
+    [key in keyof CoMapSchema<D>]: JsonValue | undefined;
   };
 
-  const refs = new Map<string, CoMapInstance<any>>();
+  const refs = new Map<string, CoMapInstance<any, any>>();
 
   if (init) {
-    const fields = Object.keys(init) as (keyof CoKeys<M>)[];
+    const fields = Object.keys(init) as (keyof CoMapSchema<D>)[];
 
     for (const key of fields) {
       const initValue = init[key as keyof typeof init];
 
-      const descriptor = schema.getFieldDescriptor(key);
+      const descriptor = schema.get(key);
 
       if (!descriptor) {
         continue;
       }
 
-      if (descriptor === "json") {
-        rawInit[key] = initValue as JsonValue;
-      } else if (isRefEncoded(descriptor)) {
-        if (initValue) {
-          rawInit[key] = (initValue as unknown as CoMapInstance<any>).$id;
-          refs.set(key as string, initValue as unknown as CoMapInstance<any>);
+      if (isRelationRef(descriptor)) {
+        if (initValue === null) {
+          rawInit[key] = null;
+        } else {
+          rawInit[key] = (
+            initValue as unknown as CoMapInstance<CoMap<{}>, true>
+          ).$id;
+          refs.set(
+            key as string,
+            initValue as unknown as CoMapInstance<any, any>,
+          );
         }
-      } else if ("encoded" in descriptor) {
-        rawInit[key] = descriptor.encoded.encode(
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          initValue as any,
-        );
+      } else {
+        rawInit[key] = descriptor.parse(initValue);
       }
     }
   }
