@@ -2,28 +2,25 @@ import { CoValueUniqueness } from "cojson";
 import { TypeOf, ZodTypeAny, z } from "zod";
 import type { Account } from "../coValues/account.js";
 import type { Group } from "../coValues/group.js";
-import { parseCoValueCreateOptions } from "../internal.js";
+import { RefsToResolve, parseCoValueCreateOptions } from "../internal.js";
 import { CoMapInstanceClass } from "./coMap.js";
 
-export type CoMapInnerSchema = {
-  [key: string]: CoMap<any> | ZodTypeAny | "self";
+type DEPTH_LIMIT = 5;
+
+type IsDepthLimit<CurrentDepth extends number[]> =
+  DEPTH_LIMIT extends CurrentDepth["length"] ? true : false;
+
+export type CoMapSchemaDefinition = {
+  [key: string]: CoMap<any> | ZodTypeAny;
 };
 
-export type CoMapSchema<D extends CoMap<any>> = D extends CoMap<infer S>
-  ? S
-  : never;
-
-export type CoValueDefinition<S extends CoMapInnerSchema> = CoMap<S>;
+export type CoValueDefinition<S extends CoMapSchemaDefinition> = CoMap<S>;
 
 export type Relations<D extends CoValueDefinition<any>> = D extends CoMap<
   infer S
 >
   ? {
-      [K in keyof S]: S[K] extends CoMap<any>
-        ? S[K]
-        : S[K] extends "self"
-          ? S
-          : never;
+      [K in keyof S]: S[K] extends CoMap<any> ? S[K] : never;
     }
   : never;
 
@@ -42,114 +39,106 @@ export type RelationsToResolveStrict<
 
 export type RelationsToResolve<
   D extends CoValueDefinition<any>,
-  DepthLimit extends number = 5,
   CurrentDepth extends number[] = [],
 > =
   | boolean
-  | (DepthLimit extends CurrentDepth["length"]
+  | (IsDepthLimit<CurrentDepth> extends true
       ? boolean
       : D extends CoMap<infer S>
         ?
             | {
-                [K in keyof S]?: S[K] extends "self"
-                  ? RelationsToResolve<D, DepthLimit, [0, ...CurrentDepth]>
-                  : S[K] extends CoValueDefinition<any>
-                    ? RelationsToResolve<S[K], DepthLimit, [0, ...CurrentDepth]>
-                    : never;
+                [K in keyof S]?: S[K] extends CoValueDefinition<any>
+                  ? RelationsToResolve<S[K], [0, ...CurrentDepth]>
+                  : never;
               }
             | boolean
         : boolean);
 
-type IsDepthLimit<
-  Depth,
-  DepthLimit extends number,
-  CurrentDepth extends number[],
-> = DepthLimit extends CurrentDepth["length"]
+type isResolveLeaf<Depth> = Depth extends boolean | undefined
   ? true
-  : Depth extends boolean | undefined
+  : keyof Depth extends never // Depth = {}
     ? true
-    : keyof Depth extends never // Depth = {}
-      ? true
-      : false;
+    : false;
 
 export type Loaded<
   D extends CoValueDefinition<any>,
   Depth extends RelationsToResolve<D>,
-  DepthLimit extends number = 5,
   CurrentDepth extends number[] = [],
 > = Depth extends never
-  ? undefined
+  ? D
   : D extends CoMap<infer S>
-    ? LoadedCoMap<CoMap<S>, Depth, DepthLimit, CurrentDepth>
-    : undefined;
+    ? LoadedCoMap<CoMap<S>, Depth, CurrentDepth>
+    : D;
+
+type UnwrapZodType<T, O = null> = T extends ZodTypeAny ? TypeOf<T> : O;
+
+type ValidateResolve<
+  D extends CoValueDefinition<any>,
+  I,
+  E,
+> = I extends RelationsToResolve<D> ? I : E;
 
 export type LoadedCoMap<
-  D extends CoValueDefinition<any>,
+  D extends CoMap<any>,
   Depth extends RelationsToResolve<D>,
-  DepthLimit extends number = 5,
   CurrentDepth extends number[] = [],
 > = CoMapInstanceClass<D, Depth> &
   (D extends CoMap<infer S>
-    ? IsDepthLimit<Depth, DepthLimit, CurrentDepth> extends true
+    ? IsDepthLimit<CurrentDepth> & isResolveLeaf<Depth> extends true // The & here is used as OR operator
       ? {
-          [K in keyof S]: S[K] extends ZodTypeAny ? TypeOf<S[K]> : null;
+          [K in keyof S]: UnwrapZodType<S[K]>;
         }
       : {
           [K in keyof S]: K extends keyof Depth
-            ? S[K] extends "self"
-              ? Depth[K] extends RelationsToResolve<D>
-                ? Loaded<D, Depth[K], DepthLimit, [0, ...CurrentDepth]>
+            ? S[K] extends CoValueDefinition<any>
+              ? Depth[K] extends RelationsToResolve<S[K]>
+                ? Loaded<S[K], Depth[K], [0, ...CurrentDepth]>
                 : null
-              : S[K] extends CoValueDefinition<any>
-                ? Depth[K] extends RelationsToResolve<S[K]>
-                  ? Loaded<S[K], Depth[K], DepthLimit, [0, ...CurrentDepth]>
-                  : null
-                : null
-            : S[K] extends ZodTypeAny
-              ? TypeOf<S[K]>
-              : null;
+              : UnwrapZodType<S[K]>
+            : UnwrapZodType<S[K]>;
         }
-    : {});
+    : never);
 
 export type CoMapInit<D extends CoMap<any>> = D extends CoMap<infer S>
   ? {
       [K in keyof S]?: S[K] extends ZodTypeAny
         ? TypeOf<S[K]>
         : S[K] extends CoMap<any>
-          ? CoMapInit<S[K]> | CoMapInstanceClass<S[K], any> | undefined
+          ? CoMapInit<S[K]> | LoadedCoMap<S[K], any> | undefined
           : never;
     }
-  : {};
+  : never;
 
-export type CoMapInitStrict<D extends CoMap<any>> = D extends CoMap<infer S>
-  ? {
-      [K in keyof S]: S[K] extends ZodTypeAny ? TypeOf<S[K]> : never;
-    }
-  : {};
+export type CoMapInitStrict<D extends CoMap<any>, I> = I extends CoMapInit<D>
+  ? CoMapInit<D>
+  : I;
 
 type CoMapInitToRelationsToResolve<
-  D,
-  I,
-  DepthLimit extends number = 5,
+  S extends CoMapSchemaDefinition,
+  I extends CoMapInit<CoMap<S>>,
   CurrentDepth extends number[] = [],
-> = DepthLimit extends CurrentDepth["length"]
+> = IsDepthLimit<CurrentDepth> extends true
   ? true
-  : D extends CoMap<infer S>
-    ? I extends CoMapInit<D>
-      ? {
-          [K in keyof S]: S[K] extends CoMap<any>
-            ? I[K] extends undefined
-              ? never
-              : I[K] extends CoMapInit<S[K]> | CoMapInstanceClass<S[K], any>
-                ? true
-                : never
-            : never;
-        }
-      : true
-    : true;
+  : {
+      [K in keyof S]: S[K] extends CoMap<infer ChildSchema>
+        ? I[K] extends LoadedCoMap<CoMap<ChildSchema>, infer R>
+          ? ValidateResolve<S[K], R, never>
+          : I[K] extends CoMapInit<CoMap<ChildSchema>>
+            ? ValidateResolve<
+                S[K],
+                CoMapInitToRelationsToResolve<
+                  ChildSchema,
+                  I[K],
+                  [0, ...CurrentDepth]
+                >,
+                never
+              >
+            : never
+        : never;
+    };
 
-export class CoMap<S extends CoMapInnerSchema> {
-  protected schema: S;
+export class CoMap<S extends CoMapSchemaDefinition> {
+  schema: S;
   optional = true;
 
   constructor(schema: S) {
@@ -165,7 +154,7 @@ export class CoMap<S extends CoMapInnerSchema> {
   }
 
   create<I extends CoMapInit<CoMap<S>>>(
-    init: I,
+    init: CoMapInitStrict<CoMap<S>, I>,
     options?:
       | {
           owner: Account | Group;
@@ -173,25 +162,25 @@ export class CoMap<S extends CoMapInnerSchema> {
         }
       | Account
       | Group,
-  ) {
+  ): Loaded<CoMap<S>, CoMapInitToRelationsToResolve<S, I>> {
     const { owner, uniqueness } = parseCoValueCreateOptions(options);
     return CoMapInstanceClass.fromInit<CoMap<S>>(
       this,
       init,
       owner,
       uniqueness,
-    ) as Loaded<CoMap<S>, CoMapInitToRelationsToResolve<CoMap<S>, I>>;
+    ) as any;
   }
 }
 
-function map<S extends CoMapInnerSchema>(schema: S) {
+function map<S extends CoMapSchemaDefinition>(schema: S) {
   return new CoMap(schema);
 }
 
 export function isRelationRef(
-  descriptor: CoMap<any> | ZodTypeAny | "self",
-): descriptor is CoMap<any> | "self" {
-  return descriptor instanceof CoMap || descriptor === "self";
+  descriptor: CoMap<any> | ZodTypeAny,
+): descriptor is CoMap<any> {
+  return descriptor instanceof CoMap;
 }
 
 export const co = {

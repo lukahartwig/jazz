@@ -178,10 +178,7 @@ export class CoValueResolutionNode<
         }
 
         if (value && isRelationRef(refDescriptor) && resolve[key]) {
-          const childSchema =
-            refDescriptor === "self"
-              ? this.schema
-              : (refDescriptor as CoMap<any>);
+          const childSchema = refDescriptor as CoMap<any>;
 
           this.childValues.set(key, undefined);
           const child = new CoValueResolutionNode(

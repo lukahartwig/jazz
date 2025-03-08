@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { createJazzTestAccount } from "../testing.js";
-import { co } from "./schema.js";
+import { LoadedCoMap, co } from "./schema.js";
 
 beforeEach(async () => {
   await createJazzTestAccount({
@@ -22,9 +22,15 @@ describe("CoMap2", () => {
   });
 
   it("should create a CoMap with nested values", () => {
+    const NestedCoMap2 = co.map({
+      name: co.string(),
+      age2: co.number(),
+    });
+
     const NestedCoMap = co.map({
       name: co.string(),
       age: co.number(),
+      ref: NestedCoMap2,
     });
 
     const MyCoMap = co.map({
@@ -36,16 +42,24 @@ describe("CoMap2", () => {
     const myCoMap = MyCoMap.create({
       name: "John",
       age: 30,
-      ref: {
+      ref: NestedCoMap.create({
         name: "Jane",
         age: 20,
-      },
+        ref: NestedCoMap2.create({ name: "Jane", age2: 20 }),
+      }),
+    });
+
+    const myCoMap2 = MyCoMap.create({
+      name: "John",
+      age: 30,
+      ref: { name: "Jane", age: 20, ref: { name: "Jane", age2: 20 } },
     });
 
     expect(myCoMap.name).toBe("John");
     expect(myCoMap.age).toBe(30);
-    expect(myCoMap.ref?.name).toBe("Jane");
+    expect(myCoMap2.ref?.ref?.name).toBe("Jane");
     expect(myCoMap.ref?.age).toBe(20);
+    expect(myCoMap.ref?.ref.name).toBe(20);
   });
 
   it("should not change original property after calling $set", () => {

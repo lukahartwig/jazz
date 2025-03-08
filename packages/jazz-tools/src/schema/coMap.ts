@@ -7,7 +7,6 @@ import { coValuesCache } from "../lib/cache.js";
 import {
   CoMap,
   CoMapInit,
-  CoMapSchema,
   Loaded,
   LoadedCoMap,
   RelationsKeys,
@@ -24,10 +23,8 @@ type ChildMap<D extends CoMap<any>> = Map<
 
 type PropertyType<
   D extends CoMap<any>,
-  K extends keyof CoMapSchema<D>,
-> = CoMapSchema<D>[K] extends ZodTypeAny
-  ? TypeOf<CoMapSchema<D>[K]>
-  : CoMapSchema<D>[K];
+  K extends keyof D["schema"],
+> = D["schema"][K] extends ZodTypeAny ? TypeOf<D["schema"][K]> : D["schema"][K];
 
 export class CoMapInstanceClass<
   D extends CoMap<any>,
@@ -78,7 +75,7 @@ export class CoMapInstanceClass<
 
     for (const key of fields) {
       Object.defineProperty(instance, key, {
-        value: getValue(raw, schema, key as keyof CoMapSchema<D>),
+        value: getValue(raw, schema, key as keyof D["schema"]),
         writable: false,
         enumerable: true,
         configurable: true,
@@ -112,7 +109,7 @@ export class CoMapInstanceClass<
     }
   }
 
-  $set<K extends keyof CoMapSchema<D>>(key: K, value: PropertyType<D, K>) {
+  $set<K extends keyof D["schema"]>(key: K, value: PropertyType<D, K>) {
     setValue(this.$raw, this.$schema, key, value as JsonValue);
   }
 
@@ -187,7 +184,7 @@ export class CoMapInstanceClass<
 function getValue<D extends CoMap<any>>(
   raw: RawCoMap,
   schema: D,
-  key: keyof CoMapSchema<D>,
+  key: keyof D["schema"],
 ) {
   const descriptor = schema.get(key);
 
@@ -211,7 +208,7 @@ function getValue<D extends CoMap<any>>(
 function setValue<D extends CoMap<any>>(
   raw: RawCoMap,
   schema: D,
-  key: keyof CoMapSchema<D>,
+  key: keyof D["schema"],
   value: JsonValue,
 ) {
   const descriptor = schema.get(key);
@@ -240,13 +237,13 @@ function createCoMapFromInit<D extends CoMap<any>>(
   const rawOwner = owner._raw;
 
   const rawInit = {} as {
-    [key in keyof CoMapSchema<D>]: JsonValue | undefined;
+    [key in keyof D["schema"]]: JsonValue | undefined;
   };
 
   const refs = new Map<string, Loaded<any, any>>();
 
   if (init) {
-    const fields = Object.keys(init) as (keyof CoMapSchema<D>)[];
+    const fields = Object.keys(init) as (keyof D["schema"])[];
 
     for (const key of fields) {
       const initValue = init[key as keyof typeof init];

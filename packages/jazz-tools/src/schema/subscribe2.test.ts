@@ -336,7 +336,6 @@ describe("CoMap subscribe", () => {
       ref: NestedCoMap.create({
         name: "Jane",
         age: 20,
-        ref: NestedCoMap.create({ name: "Jane Child", age: 20 }),
       }),
       ref2: NestedCoMap.create({ name: "Jane", age: 20 }),
     });
