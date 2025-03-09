@@ -59,7 +59,7 @@ describe("CoMap2", () => {
     expect(myCoMap.age).toBe(30);
     expect(myCoMap2.ref?.ref?.name).toBe("Jane");
     expect(myCoMap.ref?.age).toBe(20);
-    expect(myCoMap.ref?.ref.name).toBe(20);
+    expect(myCoMap.ref?.ref.name).toBe("Jane");
   });
 
   it("should not change original property after calling $set", () => {

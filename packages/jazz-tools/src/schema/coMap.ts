@@ -141,14 +141,13 @@ export class CoMapInstanceClass<
     });
   }
 
-  $request<I extends LoadedCoMap<D, any>, R extends RelationsToResolve<D>>(
-    this: I,
-    options: { resolve: RelationsToResolveStrict<D, R> },
-  ) {
+  $request<R extends RelationsToResolve<D>>(options: {
+    resolve: RelationsToResolveStrict<D, R>;
+  }) {
     this.$resolutionNode?.request(options.resolve);
 
-    // TODO Make the resolved values null | X
-    return this;
+    // TODO Merge with the current Resolve
+    return this as Loaded<D, R, "nullable">;
   }
 
   /**
@@ -261,7 +260,7 @@ function createCoMapFromInit<D extends CoMap<any>>(
           rawInit[key] = (initValue as unknown as Loaded<CoMap<{}>, true>).$id;
           refs.set(key as string, initValue as unknown as Loaded<any, any>);
         } else {
-          const instance = schema.create(initValue, owner);
+          const instance = descriptor.create(initValue, owner);
           rawInit[key] = (instance as unknown as Loaded<CoMap<{}>, true>).$id;
           refs.set(key as string, instance as unknown as Loaded<any, any>);
         }

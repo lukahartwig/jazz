@@ -1,16 +1,11 @@
-import {
-  AnonymousJazzAgent,
-  ID,
-  RefsToResolve,
-  RefsToResolveStrict,
-  Resolved,
-  SchemaV2,
-} from "jazz-tools";
+import { AnonymousJazzAgent, ID, SchemaV2 } from "jazz-tools";
 import type { Account } from "jazz-tools";
 import type {
-  CoMapSchema,
-  CoMapSchemaClass,
-} from "jazz-tools/dist/schema/coMap.js";
+  CoMap,
+  Loaded,
+  RelationsToResolve,
+  RelationsToResolveStrict,
+} from "jazz-tools/dist/schema/schema.js";
 import { useCallback, useRef, useState, useSyncExternalStore } from "react";
 import { useJazzContextManager } from "./hooks.js";
 import {
@@ -19,18 +14,18 @@ import {
 } from "./utils.js";
 
 export function createCoValueObservable<
-  V extends CoMapSchema,
-  const R extends RefsToResolve<V>,
+  V extends CoMap<any>,
+  const R extends RelationsToResolve<V>,
 >() {
-  let currentValue: Resolved<V, R> | undefined | null = undefined;
+  let currentValue: Loaded<V, R> | undefined | null = undefined;
   let subscriberCount = 0;
 
   function subscribe(
-    cls: CoMapSchemaClass<V>,
-    id: ID<CoMapSchema>,
+    cls: V,
+    id: ID<V>,
     options: {
       loadAs: Account | AnonymousJazzAgent;
-      resolve?: RefsToResolveStrict<V, R>;
+      resolve?: RelationsToResolveStrict<V, R>;
       onUnavailable?: () => void;
       onUnauthorized?: () => void;
       syncResolution?: boolean;
@@ -78,8 +73,8 @@ export function createCoValueObservable<
 }
 
 function useCoValueObservable<
-  V extends CoMapSchema,
-  const R extends RefsToResolve<V>,
+  V extends CoMap<any>,
+  const R extends RelationsToResolve<V>,
 >() {
   const [initialValue] = useState(() => createCoValueObservable<V, R>());
   const ref = useRef(initialValue);
@@ -98,19 +93,18 @@ function useCoValueObservable<
 }
 
 export function useCoState2<
-  V extends CoMapSchema,
-  const R extends RefsToResolve<V> = true,
+  V extends CoMap<any>,
+  const R extends RelationsToResolve<V> = true,
 >(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  Schema: CoMapSchemaClass<V>,
-  id: ID<CoMapSchema> | undefined,
-  options?: { resolve?: RefsToResolveStrict<V, R> },
-): Resolved<V, R> | undefined | null {
+  Schema: V,
+  id: ID<V> | undefined,
+  options?: { resolve?: RelationsToResolveStrict<V, R> },
+): Loaded<V, R> | undefined | null {
   const contextManager = useJazzContextManager();
 
   const observable = useCoValueObservable<V, R>();
 
-  const value = useSyncExternalStore<Resolved<V, R> | undefined | null>(
+  const value = useSyncExternalStore<Loaded<V, R> | undefined | null>(
     useCallback(
       (callback) => {
         if (!id) return () => {};

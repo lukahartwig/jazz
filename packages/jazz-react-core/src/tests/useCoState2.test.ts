@@ -1,8 +1,7 @@
 // @vitest-environment happy-dom
-// @ts-nocheck
 
 import { cojsonInternals } from "cojson";
-import { CoValue, Group, ID, SchemaV2, co } from "jazz-tools";
+import { CoValue, Group, ID, SchemaV2 } from "jazz-tools";
 import { beforeEach, describe, expect, expectTypeOf, it } from "vitest";
 import { createJazzTestAccount, setupJazzTestSync } from "../testing.js";
 import { useCoState2 } from "../useCoState2.js";
@@ -23,9 +22,9 @@ beforeEach(() => {
 
 describe("useCoState2", () => {
   it("should return the correct value", async () => {
-    class TestMap extends SchemaV2.CoMap {
-      value = co.string;
-    }
+    const TestMap = SchemaV2.co.map({
+      value: SchemaV2.co.string(),
+    });
 
     const account = await createJazzTestAccount({
       isCurrentActiveAccount: true,
@@ -43,9 +42,9 @@ describe("useCoState2", () => {
   });
 
   it("should update the value when the coValue changes", async () => {
-    class TestMap extends SchemaV2.CoMap {
-      value = co.string;
-    }
+    const TestMap = SchemaV2.co.map({
+      value: SchemaV2.co.string(),
+    });
 
     const account = await createJazzTestAccount({
       isCurrentActiveAccount: true,
@@ -69,14 +68,14 @@ describe("useCoState2", () => {
   });
 
   it("should load nested values if requested", async () => {
-    class TestNestedMap extends SchemaV2.CoMap {
-      value = co.string;
-    }
+    const TestNestedMap = SchemaV2.co.map({
+      value: SchemaV2.co.string(),
+    });
 
-    class TestMap extends SchemaV2.CoMap {
-      value = co.string;
-      nested = co.ref(TestNestedMap);
-    }
+    const TestMap = SchemaV2.co.map({
+      value: SchemaV2.co.string(),
+      nested: TestNestedMap,
+    });
 
     const account = await createJazzTestAccount({
       isCurrentActiveAccount: true,
@@ -106,14 +105,12 @@ describe("useCoState2", () => {
   });
 
   it("should load nested values when $requested", async () => {
-    class TestNestedMap extends SchemaV2.CoMap {
-      value = co.string;
-    }
-
-    class TestMap extends SchemaV2.CoMap {
-      value = co.string;
-      nested = co.ref(TestNestedMap);
-    }
+    const TestMap = SchemaV2.co.map({
+      value: SchemaV2.co.string(),
+      nested: SchemaV2.co.map({
+        value: SchemaV2.co.string(),
+      }),
+    });
 
     const account = await createJazzTestAccount({
       isCurrentActiveAccount: true,
@@ -121,9 +118,13 @@ describe("useCoState2", () => {
 
     const map = TestMap.create({
       value: "123",
-      nested: TestNestedMap.create({
+      nested: {
         value: "456",
-      }),
+      },
+    });
+
+    expect(map.nested).toEqual({
+      value: "456",
     });
 
     const { result } = renderHook(() => useCoState2(TestMap, map.$id, {}), {
@@ -139,14 +140,16 @@ describe("useCoState2", () => {
     expect(result.current?.value).toBe("123");
 
     await waitFor(() => {
-      expect(result.current?.nested.value).toBe("456");
+      expect(result.current?.nested).toEqual({
+        value: "456",
+      });
     });
   });
 
   it.skip("should return null if the coValue is not found", async () => {
-    class TestMap extends SchemaV2.CoMap {
-      value = co.string;
-    }
+    const TestMap = SchemaV2.co.map({
+      value: SchemaV2.co.string(),
+    });
 
     const map = TestMap.create({
       value: "123",
@@ -157,7 +160,7 @@ describe("useCoState2", () => {
     });
 
     const { result } = renderHook(
-      () => useCoState2(TestMap, (map.id + "123") as any),
+      () => useCoState2(TestMap, (map.$id + "123") as any),
       {
         account,
       },
@@ -171,9 +174,9 @@ describe("useCoState2", () => {
   });
 
   it.skip("should return null if the coValue is not accessible", async () => {
-    class TestMap extends SchemaV2.CoMap {
-      value = co.string;
-    }
+    const TestMap = SchemaV2.co.map({
+      value: SchemaV2.co.string(),
+    });
 
     const someoneElse = await createJazzTestAccount({
       isCurrentActiveAccount: true,
@@ -202,9 +205,9 @@ describe("useCoState2", () => {
   });
 
   it("should not return null if the coValue is shared with everyone", async () => {
-    class TestMap extends SchemaV2.CoMap {
-      value = co.string;
-    }
+    const TestMap = SchemaV2.co.map({
+      value: SchemaV2.co.string(),
+    });
 
     const someoneElse = await createJazzTestAccount({
       isCurrentActiveAccount: true,
@@ -236,9 +239,9 @@ describe("useCoState2", () => {
   });
 
   it.skip("should return a value when the coValue becomes accessible", async () => {
-    class TestMap extends SchemaV2.CoMap {
-      value = co.string;
-    }
+    const TestMap = SchemaV2.co.map({
+      value: SchemaV2.co.string(),
+    });
 
     const someoneElse = await createJazzTestAccount({
       isCurrentActiveAccount: true,
@@ -276,10 +279,14 @@ describe("useCoState2", () => {
   });
 
   it.skip("should update when an inner coValue is updated", async () => {
-    class TestMap extends SchemaV2.CoMap {
-      value = co.string;
-      nested = co.optional.ref(TestMap);
-    }
+    const TestNestedMap = SchemaV2.co.map({
+      value: SchemaV2.co.string(),
+    });
+
+    const TestMap = SchemaV2.co.map({
+      value: SchemaV2.co.string(),
+      nested: TestNestedMap,
+    });
 
     const someoneElse = await createJazzTestAccount({
       isCurrentActiveAccount: true,
@@ -292,12 +299,9 @@ describe("useCoState2", () => {
     const map = TestMap.create(
       {
         value: "123",
-        nested: TestMap.create(
-          {
-            value: "456",
-          },
-          group,
-        ),
+        nested: {
+          value: "456",
+        },
       },
       everyone,
     );
@@ -330,22 +334,5 @@ describe("useCoState2", () => {
     await waitFor(() => {
       expect(result.current?.nested?.value).toBe("456");
     });
-  });
-
-  it.skip("should return the same type as Schema", () => {
-    class TestMap extends SchemaV2.CoMap {
-      value = co.string;
-    }
-
-    const map = TestMap.create({
-      value: "123",
-    });
-
-    const { result } = renderHook(() =>
-      useCoState2(TestMap, map.$id as ID<CoValue>),
-    );
-    expectTypeOf(result).toEqualTypeOf<{
-      current: TestMap | null | undefined;
-    }>();
   });
 });

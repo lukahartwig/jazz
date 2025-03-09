@@ -63,11 +63,12 @@ type isResolveLeaf<Depth> = Depth extends boolean | undefined
 export type Loaded<
   D extends CoValueDefinition<any>,
   Depth extends RelationsToResolve<D>,
+  Options extends "nullable" | "non-nullable" = "non-nullable",
   CurrentDepth extends number[] = [],
 > = Depth extends never
   ? D
   : D extends CoMap<infer S>
-    ? LoadedCoMap<CoMap<S>, Depth, CurrentDepth>
+    ? LoadedCoMap<CoMap<S>, Depth, Options, CurrentDepth>
     : D;
 
 type UnwrapZodType<T, O = null> = T extends ZodTypeAny ? TypeOf<T> : O;
@@ -78,9 +79,14 @@ type ValidateResolve<
   E,
 > = I extends RelationsToResolve<D> ? I : E;
 
+type addNullable<O extends "nullable" | "non-nullable"> = O extends "nullable"
+  ? null
+  : never;
+
 export type LoadedCoMap<
   D extends CoMap<any>,
   Depth extends RelationsToResolve<D>,
+  Options extends "nullable" | "non-nullable" = "non-nullable",
   CurrentDepth extends number[] = [],
 > = CoMapInstanceClass<D, Depth> &
   (D extends CoMap<infer S>
@@ -92,7 +98,9 @@ export type LoadedCoMap<
           [K in keyof S]: K extends keyof Depth
             ? S[K] extends CoValueDefinition<any>
               ? Depth[K] extends RelationsToResolve<S[K]>
-                ? Loaded<S[K], Depth[K], [0, ...CurrentDepth]>
+                ?
+                    | Loaded<S[K], Depth[K], Options, [0, ...CurrentDepth]>
+                    | addNullable<Options>
                 : null
               : UnwrapZodType<S[K]>
             : UnwrapZodType<S[K]>;

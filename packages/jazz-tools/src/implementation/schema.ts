@@ -9,7 +9,6 @@ import {
   SchemaInit,
   isCoValueClass,
 } from "../internal.js";
-import { CoMapSchemaClass } from "../schema/coMap.js";
 
 /** @category Schema definition */
 export const Encoders = {
@@ -103,7 +102,7 @@ export const co = {
   optional,
 };
 
-function optionalRef<C extends CoValueClass | CoMapSchemaClass<any>>(
+function optionalRef<C extends CoValueClass>(
   arg: C | ((_raw: InstanceType<C>["_raw"]) => C),
 ): co<InstanceType<C> | null | undefined> {
   return ref(arg, { optional: true });

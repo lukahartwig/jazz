@@ -317,27 +317,28 @@ describe("CoMap subscribe", () => {
     expect(result.ref2).toBe(resultBeforeSet.ref2);
   });
 
-  it.skip("should support $request", async () => {
-    const NestedCoMap = co.map({
-      name: co.string(),
-      age: co.number(),
-    });
-
+  it("should support $request", async () => {
     const MyCoMap = co.map({
       name: co.string(),
       age: co.number(),
-      ref: NestedCoMap,
-      ref2: NestedCoMap,
+      ref: co.map({
+        name: co.string(),
+        age: co.number(),
+      }),
+      ref2: co.map({
+        name: co.string(),
+        age: co.number(),
+      }),
     });
 
     const myCoMap = MyCoMap.create({
       name: "John",
       age: 30,
-      ref: NestedCoMap.create({
+      ref: {
         name: "Jane",
         age: 20,
-      }),
-      ref2: NestedCoMap.create({ name: "Jane", age: 20 }),
+      },
+      ref2: { name: "Jane", age: 20 },
     });
 
     let result: any;
@@ -355,17 +356,17 @@ describe("CoMap subscribe", () => {
       },
     );
 
-    const jane = result.ref;
+    const john = result;
 
-    expect(jane?.name).toBe("Jane");
-    expect(jane?.age).toBe(20);
-    expect(jane?.ref).toBe(undefined);
+    expect(john?.name).toBe("John");
+    expect(john?.age).toBe(30);
+    expect(john?.ref2).toBe(null);
 
     // To do autoloading inside components
-    jane?.$request({ resolve: { ref: true } });
+    john.$request({ resolve: { ref2: true } });
 
     const janeAfterRequest = result.ref;
 
-    expect(janeAfterRequest?.ref?.name).toBe("Jane Child");
+    expect(janeAfterRequest?.name).toBe("Jane");
   });
 });
