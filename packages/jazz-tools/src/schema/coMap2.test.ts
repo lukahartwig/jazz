@@ -62,6 +62,29 @@ describe("CoMap2", () => {
     expect(myCoMap.ref?.ref.name).toBe("Jane");
   });
 
+  it("should create a CoMap with self references", () => {
+    const MyCoMap = co.map({
+      name: co.string(),
+      age: co.number(),
+      ref: co.self(),
+    });
+
+    const myCoMap = MyCoMap.create({
+      name: "John",
+      age: 30,
+      ref: {
+        name: "Jane",
+        age: 20,
+        ref: { name: "Jane", age: 20 },
+      },
+    });
+
+    expect(myCoMap.name).toBe("John");
+    expect(myCoMap.age).toBe(30);
+    expect(myCoMap.ref?.age).toBe(20);
+    expect(myCoMap.ref?.ref.name).toBe("Jane");
+  });
+
   it("should not change original property after calling $set", () => {
     const MyCoMap = co.map({
       name: co.string(),
@@ -130,6 +153,33 @@ describe("CoMap2", () => {
       ["name", "John"],
       ["age", 31],
     ]);
+  });
+
+  it("should return support $set with relations", async () => {
+    const NestedCoMap = co.map({
+      name: co.string(),
+      age: co.number(),
+    });
+
+    const MyCoMap = co.map({
+      name: co.string(),
+      age: co.number(),
+      ref: NestedCoMap,
+    });
+
+    const myCoMap = MyCoMap.create({ name: "John", age: 30 });
+    myCoMap.$set("ref", NestedCoMap.create({ name: "Jane", age: 20 }));
+
+    const updated = await myCoMap.$resolve({
+      resolve: {
+        ref: true,
+      },
+    });
+
+    expect(updated.ref).toEqual({
+      name: "Jane",
+      age: 20,
+    });
   });
 
   it("should return the same instance on $updated if there are no changes", () => {

@@ -12,6 +12,7 @@ import {
   RelationsKeys,
   RelationsToResolve,
   RelationsToResolveStrict,
+  SelfReference,
   isRelationRef,
 } from "./schema.js";
 import { CoValueResolutionNode, ensureCoValueLoaded } from "./subscribe.js";
@@ -24,7 +25,7 @@ type ChildMap<D extends CoMap<any>> = Map<
 type PropertyType<
   D extends CoMap<any>,
   K extends keyof D["schema"],
-> = D["schema"][K] extends ZodTypeAny ? TypeOf<D["schema"][K]> : D["schema"][K];
+> = CoMapInit<D>[K];
 
 export class CoMapInstanceClass<
   D extends CoMap<any>,
@@ -190,7 +191,7 @@ function getValue<D extends CoMap<any>>(
   if (descriptor && typeof key === "string") {
     const value = raw.get(key);
 
-    if (descriptor instanceof CoMap || descriptor === "self") {
+    if (descriptor instanceof CoMap || descriptor === SelfReference) {
       if (value === undefined) {
         return undefined;
       } else {
@@ -245,7 +246,7 @@ function createCoMapFromInit<D extends CoMap<any>>(
     const fields = Object.keys(init) as (keyof D["schema"])[];
 
     for (const key of fields) {
-      const initValue = init[key as keyof typeof init];
+      const initValue = init[key];
 
       const descriptor = schema.get(key);
 
@@ -256,13 +257,19 @@ function createCoMapFromInit<D extends CoMap<any>>(
       if (isRelationRef(descriptor)) {
         if (initValue === null || initValue === undefined) {
           rawInit[key] = null;
-        } else if ("$id" in initValue) {
-          rawInit[key] = (initValue as unknown as Loaded<CoMap<{}>, true>).$id;
-          refs.set(key as string, initValue as unknown as Loaded<any, any>);
         } else {
-          const instance = descriptor.create(initValue, owner);
-          rawInit[key] = (instance as unknown as Loaded<CoMap<{}>, true>).$id;
-          refs.set(key as string, instance as unknown as Loaded<any, any>);
+          let instance: Loaded<any, any>;
+
+          if ("$id" in initValue) {
+            instance = initValue as unknown as Loaded<any, any>;
+          } else if (descriptor === SelfReference) {
+            instance = schema.create(initValue, owner);
+          } else {
+            instance = descriptor.create(initValue, owner);
+          }
+
+          rawInit[key] = instance.$id;
+          refs.set(key as string, instance);
         }
       } else {
         rawInit[key] = descriptor.parse(initValue);
