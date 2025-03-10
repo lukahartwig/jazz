@@ -136,7 +136,12 @@ export function useCoState<V extends CoValue, D>(
   );
 
   return React.useMemo(() => {
-    return id ? value : undefined;
+    if (!id) {
+      observable.reset();
+      return undefined;
+    }
+
+    return value;
   }, [id, value]);
 }
 
