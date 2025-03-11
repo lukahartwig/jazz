@@ -18,7 +18,7 @@ class ListOfTasks extends CoList.Of(co.ref(Task)) {}
 ```
 </CodeGroup>
 
-To create a CoList:
+To create a `CoList`:
 
 <CodeGroup>
 ```ts
@@ -63,7 +63,7 @@ console.log(todoTasks.length); // 1
 
 ## Updating CoLists
 
-Update CoLists just like you would JavaScript arrays:
+Update `CoList`s just like you would JavaScript arrays:
 
 <CodeGroup>
 ```ts
@@ -75,18 +75,17 @@ tasks.push(Task.create({          // Add complex items
   status: "todo"
 }));
 
-// Remove items
-const lastItem = resources.pop();    // Remove and return last item
-resources.shift();                   // Remove first item
-
 // Replace items
 resources[0] = "Cucumber";           // Replace by index
+
+// Modify nested items
+tasks[0].status = "complete";        // Update properties of references
 ```
 </CodeGroup>
 
 ### Deleting Items
 
-Remove specific items with `splice`:
+Remove specific items by index with `splice`, or remove the first or last item with `pop` or `shift`:
 
 <CodeGroup>
 ```ts
@@ -98,14 +97,15 @@ console.log(resources);              // ["Cucumber", "Peppers"]
 resources.splice(0, 1);
 console.log(resources);              // ["Peppers"]
 
-// Modify nested items
-tasks[0].status = "complete";        // Update properties of references
+// Remove items
+const lastItem = resources.pop();    // Remove and return last item
+resources.shift();                   // Remove first item
 ```
 </CodeGroup>
 
 ### Array Methods
 
-CoLists support the standard JavaScript array methods you already know:
+`CoList`s support the standard JavaScript array methods you already know:
 
 <CodeGroup>
 ```ts
