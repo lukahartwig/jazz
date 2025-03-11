@@ -10,7 +10,7 @@ import {
   SelfReference,
   ValidateResolve,
 } from "../coValue/types.js";
-import { CoMapInstanceClass } from "./instance.js";
+import { createCoMap } from "./instance.js";
 
 export type CoMapSchemaShape = {
   [key: string]: CoMapSchema<any> | ZodTypeAny | SelfReference;
@@ -37,7 +37,7 @@ export type CoMapInitStrict<
   I,
 > = I extends CoMapInit<D> ? CoMapInit<D> : I;
 
-type CoMapInitToRelationsToResolve<
+export type CoMapInitToRelationsToResolve<
   S extends CoMapSchemaShape,
   I extends CoMapInit<CoMapSchema<S>>,
   CurrentDepth extends number[] = [],
@@ -94,11 +94,6 @@ export class CoMapSchema<S extends CoMapSchemaShape> {
       | Group,
   ): Loaded<CoMapSchema<S>, CoMapInitToRelationsToResolve<S, I>> {
     const { owner, uniqueness } = parseCoValueCreateOptions(options);
-    return CoMapInstanceClass.fromInit<CoMapSchema<S>>(
-      this,
-      init,
-      owner,
-      uniqueness,
-    ) as any;
+    return createCoMap<CoMapSchema<S>>(this, init, owner, uniqueness) as any;
   }
 }

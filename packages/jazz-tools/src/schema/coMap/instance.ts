@@ -38,82 +38,47 @@ type PropertyType<
   K extends keyof D["shape"],
 > = CoMapInit<D>[K];
 
-export class CoMapInstanceClass<
+export type CoMap<
+  D extends CoMapSchema<any>,
+  R extends RelationsToResolve<D> = true,
+> = {
+  $jazz: CoMapJazzApi<D, R>;
+};
+
+export class CoMapJazzApi<
   D extends CoMapSchema<any>,
   R extends RelationsToResolve<D> = true,
 > {
-  $raw: RawCoMap;
-  $schema: D;
-  $id: ID<D>;
+  raw: RawCoMap;
+  schema: D;
+  id: ID<D>;
   _resolutionNode: CoValueResolutionNode<D, R> | undefined;
   refs: ChildMap<D> = new Map();
-  protected $lastUpdateTx: number;
+  protected lastUpdateTx: number;
+  declare _instance: CoMap<D, R>;
 
   constructor(
     schema: D,
     raw: RawCoMap,
     resolutionNode?: CoValueResolutionNode<D, R>,
   ) {
-    this.$schema = schema;
-    this.$raw = raw;
-    this.$lastUpdateTx = raw.totalProcessedTransactions;
-    this.$id = raw.id as unknown as ID<D>;
+    this.schema = schema;
+    this.raw = raw;
+    this.lastUpdateTx = raw.totalProcessedTransactions;
+    this.id = raw.id as unknown as ID<D>;
     this._resolutionNode = resolutionNode;
   }
 
-  static fromInit<D extends CoMapSchema<any>>(
-    schema: D,
-    init: CoMapInit<D>,
-    owner: Account | Group,
-    uniqueness?: CoValueUniqueness,
-  ) {
-    const { raw, refs } = createCoMapFromInit(init, owner, schema, uniqueness);
-
-    return CoMapInstanceClass.fromRaw(schema, raw, refs);
-  }
-
-  static fromRaw<
-    D extends CoMapSchema<any>,
-    R extends RelationsToResolve<D> = true,
-  >(
-    schema: D,
-    raw: RawCoMap,
-    refs?: ChildMap<D>,
-    resolutionNode?: CoValueResolutionNode<D, R>,
-  ) {
-    const instance = Object.create(
-      new CoMapInstanceClass(schema, raw, resolutionNode),
-    );
-
-    const isRecord = false;
-    const fields = isRecord ? raw.keys() : schema.keys();
-
-    for (const key of fields) {
-      Object.defineProperty(instance, key, {
-        value: getValue(raw, schema, key as keyof D["shape"]),
-        writable: false,
-        enumerable: true,
-        configurable: true,
-      });
-    }
-
-    if (refs) {
-      for (const [key, value] of refs.entries()) {
-        if (value) {
-          instance._fillRef(key as any, value);
-        }
-      }
-    }
-
-    return instance as Loaded<D, R>;
+  _setInstance(instance: CoMap<D, R>) {
+    this._instance = instance;
   }
 
   _fillRef<K extends RelationsKeys<D>>(key: K, value: Loaded<any, any>) {
-    const descriptor = this.$schema.get(key);
+    const descriptor = this.schema.get(key);
 
     if (descriptor && isRelationRef(descriptor)) {
       this.refs.set(key, value);
-      Object.defineProperty(this, key, {
+      Object.defineProperty(this._instance, key, {
         value,
         writable: false,
         enumerable: true,
@@ -124,18 +89,18 @@ export class CoMapInstanceClass<
     }
   }
 
-  $set<K extends keyof D["shape"]>(key: K, value: PropertyType<D, K>) {
-    setValue(this.$raw, this.$schema, key, value as JsonValue);
+  set<K extends keyof D["shape"]>(key: K, value: PropertyType<D, K>) {
+    setValue(this.raw, this.schema, key, value as JsonValue);
   }
 
-  $updated(refs?: ChildMap<D>): Loaded<D, R> {
-    if (this.$lastUpdateTx === this.$raw.totalProcessedTransactions && !refs) {
+  updated(refs?: ChildMap<D>): Loaded<D, R> {
+    if (this.lastUpdateTx === this.raw.totalProcessedTransactions && !refs) {
       return this as Loaded<D, R>;
     }
 
-    return CoMapInstanceClass.fromRaw<D, R>(
-      this.$schema,
-      this.$raw,
+    return createCoMapFromRaw<D, R>(
+      this.schema,
+      this.raw,
       refs ?? this.refs,
       this._resolutionNode,
     );
@@ -148,7 +113,7 @@ export class CoMapInstanceClass<
    *
    * @category Subscription & Loading
    */
-  $resolve<R extends RelationsToResolve<D>>(options: {
+  resolve<R extends RelationsToResolve<D>>(options: {
     resolve: RelationsToResolveStrict<D, R>;
   }): Promise<Loaded<D, R>> {
     return ensureCoValueLoaded<D, R>(this as LoadedCoMap<D, true>, {
@@ -156,7 +121,7 @@ export class CoMapInstanceClass<
     });
   }
 
-  $request<R extends RelationsToResolve<D>>(options: {
+  request<R extends RelationsToResolve<D>>(options: {
     resolve: RelationsToResolveStrict<D, R>;
   }) {
     this._resolutionNode?.request(options.resolve);
@@ -170,12 +135,12 @@ export class CoMapInstanceClass<
    *
    * @category Subscription & Loading
    */
-  $waitForSync(options?: { timeout?: number }) {
-    return this.$raw.core.waitForSync(options);
+  waitForSync(options?: { timeout?: number }) {
+    return this.raw.core.waitForSync(options);
   }
 
   get _loadedAs(): Account | AnonymousJazzAgent {
-    const rawAccount = this.$raw.core.node.account;
+    const rawAccount = this.raw.core.node.account;
 
     if (rawAccount instanceof RawAccount) {
       return coValuesCache.get(rawAccount, () =>
@@ -183,16 +148,64 @@ export class CoMapInstanceClass<
       );
     }
 
-    return new AnonymousJazzAgent(this.$raw.core.node);
+    return new AnonymousJazzAgent(this.raw.core.node);
   }
 
-  get $owner(): Account | Group {
-    return coValuesCache.get(this.$raw.group, () =>
-      this.$raw.group instanceof RawAccount
-        ? RegisteredSchemas["Account"].fromRaw(this.$raw.group)
-        : RegisteredSchemas["Group"].fromRaw(this.$raw.group),
+  get owner(): Account | Group {
+    return coValuesCache.get(this.raw.group, () =>
+      this.raw.group instanceof RawAccount
+        ? RegisteredSchemas["Account"].fromRaw(this.raw.group)
+        : RegisteredSchemas["Group"].fromRaw(this.raw.group),
     );
   }
+}
+
+export function createCoMap<D extends CoMapSchema<any>>(
+  schema: D,
+  init: CoMapInit<D>,
+  owner: Account | Group,
+  uniqueness?: CoValueUniqueness,
+) {
+  const { raw, refs } = createCoMapFromInit(init, owner, schema, uniqueness);
+
+  return createCoMapFromRaw<D, true>(schema, raw, refs);
+}
+
+export function createCoMapFromRaw<
+  D extends CoMapSchema<any>,
+  R extends RelationsToResolve<D>,
+>(
+  schema: D,
+  raw: RawCoMap,
+  refs?: ChildMap<D>,
+  resolutionNode?: CoValueResolutionNode<D, R>,
+) {
+  const instance = Object.create({
+    $jazz: new CoMapJazzApi(schema, raw, resolutionNode),
+  });
+  instance.$jazz._setInstance(instance);
+
+  const isRecord = false;
+  const fields = isRecord ? raw.keys() : schema.keys();
+
+  for (const key of fields) {
+    Object.defineProperty(instance, key, {
+      value: getValue(raw, schema, key as keyof D["shape"]),
+      writable: false,
+      enumerable: true,
+      configurable: true,
+    });
+  }
+
+  if (refs) {
+    for (const [key, value] of refs.entries()) {
+      if (value) {
+        instance._fillRef(key as any, value);
+      }
+    }
+  }
+
+  return instance as Loaded<D, R>;
 }
 
 function getValue<D extends CoMapSchema<any>>(
@@ -232,7 +245,10 @@ function setValue<D extends CoMapSchema<any>>(
       if (value === null) {
         raw.set(key, null);
       } else {
-        raw.set(key, (value as unknown as Loaded<CoMapSchema<{}>, true>).$id);
+        raw.set(
+          key,
+          (value as unknown as Loaded<CoMapSchema<{}>, true>).$jazz.id,
+        );
       }
     } else {
       raw.set(key, descriptor.parse(value));

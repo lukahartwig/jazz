@@ -1,5 +1,5 @@
 import { TypeOf, ZodTypeAny } from "zod";
-import { CoMapInstanceClass } from "../coMap/instance.js";
+import { CoMap } from "../coMap/instance.js";
 import { CoMapSchema, CoValueSchema } from "../coMap/schema.js";
 
 export const SelfReference = "SelfReference" as const;
@@ -61,7 +61,7 @@ export type LoadedCoMap<
   Depth extends RelationsToResolve<D>,
   Options extends "nullable" | "non-nullable" = "non-nullable",
   CurrentDepth extends number[] = [],
-> = CoMapInstanceClass<D, Depth> &
+> = CoMap<D, Depth> &
   (D extends CoMapSchema<infer S>
     ? IsDepthLimit<CurrentDepth> & isResolveLeaf<Depth> extends true // The & here is used as OR operator
       ? {

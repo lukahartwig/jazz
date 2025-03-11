@@ -1,6 +1,6 @@
 import { assert, beforeEach, describe, expect, it } from "vitest";
 import { createJazzTestAccount } from "../testing.js";
-import { co } from "./schema.js";
+import { co, z } from "./schema.js";
 import { loadCoValue, subscribeToCoValue } from "./subscribe.js";
 
 beforeEach(async () => {
@@ -12,13 +12,13 @@ beforeEach(async () => {
 describe("CoMap load", () => {
   it("should load a CoMap without nested values", async () => {
     const NestedCoMap = co.map({
-      name: co.string(),
-      age: co.number(),
+      name: z.string(),
+      age: z.number(),
     });
 
     const MyCoMap = co.map({
-      name: co.string(),
-      age: co.number(),
+      name: z.string(),
+      age: z.number(),
       ref: NestedCoMap,
     });
 
@@ -28,7 +28,7 @@ describe("CoMap load", () => {
       ref: NestedCoMap.create({ name: "Jane", age: 20 }),
     });
 
-    const loaded = await loadCoValue(MyCoMap, myCoMap.$id, {
+    const loaded = await loadCoValue(MyCoMap, myCoMap.$jazz.id, {
       resolve: true,
     });
 
@@ -41,13 +41,13 @@ describe("CoMap load", () => {
 
   it("should $resolve nested values", async () => {
     const NestedCoMap = co.map({
-      name: co.string(),
-      age: co.number(),
+      name: z.string(),
+      age: z.number(),
     });
 
     const MyCoMap = co.map({
-      name: co.string(),
-      age: co.number(),
+      name: z.string(),
+      age: z.number(),
       ref: NestedCoMap,
     });
 
@@ -57,7 +57,7 @@ describe("CoMap load", () => {
       ref: NestedCoMap.create({ name: "Jane", age: 20 }),
     });
 
-    const loaded = await loadCoValue(MyCoMap, myCoMap.$id, {
+    const loaded = await loadCoValue(MyCoMap, myCoMap.$jazz.id, {
       resolve: true,
     });
 
@@ -67,7 +67,7 @@ describe("CoMap load", () => {
     expect(loaded.age).toBe(30);
     expect(loaded.ref).toBe(null);
 
-    const loaded2 = await loaded.$resolve({
+    const loaded2 = await loaded.$jazz.resolve({
       resolve: { ref: true },
     });
 
@@ -79,13 +79,13 @@ describe("CoMap load", () => {
 
   it("should load a CoMap with nested values", async () => {
     const NestedCoMap = co.map({
-      name: co.string(),
-      age: co.number(),
+      name: z.string(),
+      age: z.number(),
     });
 
     const MyCoMap = co.map({
-      name: co.string(),
-      age: co.number(),
+      name: z.string(),
+      age: z.number(),
       ref: NestedCoMap,
     });
 
@@ -95,7 +95,7 @@ describe("CoMap load", () => {
       ref: NestedCoMap.create({ name: "Jane", age: 20 }),
     });
 
-    const loaded = await loadCoValue(MyCoMap, myCoMap.$id, {
+    const loaded = await loadCoValue(MyCoMap, myCoMap.$jazz.id, {
       resolve: {
         ref: true,
       },
@@ -111,13 +111,13 @@ describe("CoMap load", () => {
 
   it("should handle immutable updates", async () => {
     const NestedCoMap = co.map({
-      name: co.string(),
-      age: co.number(),
+      name: z.string(),
+      age: z.number(),
     });
 
     const MyCoMap = co.map({
-      name: co.string(),
-      age: co.number(),
+      name: z.string(),
+      age: z.number(),
       ref: NestedCoMap,
     });
 
@@ -127,7 +127,7 @@ describe("CoMap load", () => {
       ref: NestedCoMap.create({ name: "Jane", age: 20 }),
     });
 
-    const loaded = await loadCoValue(MyCoMap, myCoMap.$id, {
+    const loaded = await loadCoValue(MyCoMap, myCoMap.$jazz.id, {
       resolve: {
         ref: true,
       },
@@ -140,23 +140,23 @@ describe("CoMap load", () => {
     expect(loaded.ref.name).toBe("Jane");
     expect(loaded.ref.age).toBe(20);
 
-    loaded.ref.$set("name", "John");
+    loaded.ref.$jazz.set("name", "John");
 
     expect(loaded.ref.name).toBe("Jane");
-    expect(loaded.ref.$updated().name).toBe("John");
+    expect(loaded.ref.$jazz.updated().name).toBe("John");
   });
 });
 
 describe("CoMap subscribe", () => {
   it("should syncronously load a CoMap without nested values", async () => {
     const NestedCoMap = co.map({
-      name: co.string(),
-      age: co.number(),
+      name: z.string(),
+      age: z.number(),
     });
 
     const MyCoMap = co.map({
-      name: co.string(),
-      age: co.number(),
+      name: z.string(),
+      age: z.number(),
       ref: NestedCoMap,
     });
 
@@ -170,7 +170,7 @@ describe("CoMap subscribe", () => {
 
     subscribeToCoValue(
       MyCoMap,
-      myCoMap.$id,
+      myCoMap.$jazz.id,
       {
         resolve: true,
       },
@@ -186,13 +186,13 @@ describe("CoMap subscribe", () => {
 
   it("should syncronously load a CoMap with nested values", async () => {
     const NestedCoMap = co.map({
-      name: co.string(),
-      age: co.number(),
+      name: z.string(),
+      age: z.number(),
     });
 
     const MyCoMap = co.map({
-      name: co.string(),
-      age: co.number(),
+      name: z.string(),
+      age: z.number(),
       ref: NestedCoMap,
     });
 
@@ -206,7 +206,7 @@ describe("CoMap subscribe", () => {
 
     subscribeToCoValue(
       MyCoMap,
-      myCoMap.$id,
+      myCoMap.$jazz.id,
       {
         resolve: {
           ref: true,
@@ -225,13 +225,13 @@ describe("CoMap subscribe", () => {
 
   it("should handle immutable updates", async () => {
     const NestedCoMap = co.map({
-      name: co.string(),
-      age: co.number(),
+      name: z.string(),
+      age: z.number(),
     });
 
     const MyCoMap = co.map({
-      name: co.string(),
-      age: co.number(),
+      name: z.string(),
+      age: z.number(),
       ref: NestedCoMap,
     });
 
@@ -245,7 +245,7 @@ describe("CoMap subscribe", () => {
 
     subscribeToCoValue(
       MyCoMap,
-      myCoMap.$id,
+      myCoMap.$jazz.id,
       {
         resolve: {
           ref: true,
@@ -271,13 +271,13 @@ describe("CoMap subscribe", () => {
 
   it("should update only the changed path", async () => {
     const NestedCoMap = co.map({
-      name: co.string(),
-      age: co.number(),
+      name: z.string(),
+      age: z.number(),
     });
 
     const MyCoMap = co.map({
-      name: co.string(),
-      age: co.number(),
+      name: z.string(),
+      age: z.number(),
       ref: NestedCoMap,
       ref2: NestedCoMap,
     });
@@ -293,7 +293,7 @@ describe("CoMap subscribe", () => {
 
     subscribeToCoValue(
       MyCoMap,
-      myCoMap.$id,
+      myCoMap.$jazz.id,
       {
         resolve: {
           ref: true,
@@ -319,15 +319,15 @@ describe("CoMap subscribe", () => {
 
   it("should support $request", async () => {
     const MyCoMap = co.map({
-      name: co.string(),
-      age: co.number(),
+      name: z.string(),
+      age: z.number(),
       ref: co.map({
-        name: co.string(),
-        age: co.number(),
+        name: z.string(),
+        age: z.number(),
       }),
       ref2: co.map({
-        name: co.string(),
-        age: co.number(),
+        name: z.string(),
+        age: z.number(),
       }),
     });
 
@@ -345,7 +345,7 @@ describe("CoMap subscribe", () => {
 
     subscribeToCoValue(
       MyCoMap,
-      myCoMap.$id,
+      myCoMap.$jazz.id,
       {
         resolve: {
           ref: true,

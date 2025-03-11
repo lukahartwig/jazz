@@ -2,7 +2,7 @@ import { LocalNode, RawCoMap } from "cojson";
 import { Account } from "../exports.js";
 import { activeAccountContext } from "../implementation/activeAccountContext.js";
 import { AnonymousJazzAgent, ID } from "../internal.js";
-import { CoMapInstanceClass, isRelationRef } from "./coMap/instance.js";
+import { CoMap, createCoMapFromRaw, isRelationRef } from "./coMap/instance.js";
 import { CoMapSchema, CoValueSchema } from "./coMap/schema.js";
 import {
   Loaded,
@@ -102,7 +102,7 @@ export class CoValueResolutionNode<
 
   handleUpdate(value: RawCoMap) {
     if (!this.value) {
-      this.value = CoMapInstanceClass.fromRaw<D, R>(
+      this.value = createCoMapFromRaw<D, R>(
         this.schema,
         value,
         this.childValues,
@@ -272,16 +272,20 @@ export async function ensureCoValueLoaded<
   D extends CoValueSchema<any>,
   R extends RelationsToResolve<D>,
 >(
-  existing: CoMapInstanceClass<D, true>,
+  existing: CoMap<D, true>,
   options?: { resolve?: RelationsToResolveStrict<D, R> } | undefined,
 ) {
-  const response = await loadCoValue<D, R>(existing.$schema, existing.$id, {
-    loadAs: existing._loadedAs,
-    resolve: options?.resolve,
-  });
+  const response = await loadCoValue<D, R>(
+    existing.$jazz.schema,
+    existing.$jazz.id,
+    {
+      loadAs: existing.$jazz._loadedAs,
+      resolve: options?.resolve,
+    },
+  );
 
   if (!response) {
-    throw new Error("Failed to deeply load CoValue " + existing.$id);
+    throw new Error("Failed to deeply load CoValue " + existing.$jazz.id);
   }
 
   return response;

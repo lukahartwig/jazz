@@ -20,10 +20,12 @@ beforeEach(() => {
   cojsonInternals.CO_VALUE_LOADING_CONFIG.TIMEOUT = 1;
 });
 
+const { co, z } = SchemaV2;
+
 describe("useCoState2", () => {
   it("should return the correct value", async () => {
-    const TestMap = SchemaV2.co.map({
-      value: SchemaV2.co.string(),
+    const TestMap = co.map({
+      value: z.string(),
     });
 
     const account = await createJazzTestAccount({
@@ -34,16 +36,19 @@ describe("useCoState2", () => {
       value: "123",
     });
 
-    const { result } = renderHook(() => useCoState2(TestMap, map.$id, {}), {
-      account,
-    });
+    const { result } = renderHook(
+      () => useCoState2(TestMap, map.$jazz.id, {}),
+      {
+        account,
+      },
+    );
 
     expect(result.current?.value).toBe("123");
   });
 
   it("should update the value when the coValue changes", async () => {
-    const TestMap = SchemaV2.co.map({
-      value: SchemaV2.co.string(),
+    const TestMap = co.map({
+      value: z.string(),
     });
 
     const account = await createJazzTestAccount({
@@ -54,26 +59,29 @@ describe("useCoState2", () => {
       value: "123",
     });
 
-    const { result } = renderHook(() => useCoState2(TestMap, map.$id, {}), {
-      account,
-    });
+    const { result } = renderHook(
+      () => useCoState2(TestMap, map.$jazz.id, {}),
+      {
+        account,
+      },
+    );
 
     expect(result.current?.value).toBe("123");
 
     act(() => {
-      map.$set("value", "456");
+      map.$jazz.set("value", "456");
     });
 
     expect(result.current?.value).toBe("456");
   });
 
   it("should load nested values if requested", async () => {
-    const TestNestedMap = SchemaV2.co.map({
-      value: SchemaV2.co.string(),
+    const TestNestedMap = co.map({
+      value: z.string(),
     });
 
-    const TestMap = SchemaV2.co.map({
-      value: SchemaV2.co.string(),
+    const TestMap = co.map({
+      value: z.string(),
       nested: TestNestedMap,
     });
 
@@ -90,7 +98,7 @@ describe("useCoState2", () => {
 
     const { result } = renderHook(
       () =>
-        useCoState2(TestMap, map.$id, {
+        useCoState2(TestMap, map.$jazz.id, {
           resolve: {
             nested: true,
           },
@@ -105,10 +113,10 @@ describe("useCoState2", () => {
   });
 
   it("should load nested values when $requested", async () => {
-    const TestMap = SchemaV2.co.map({
-      value: SchemaV2.co.string(),
-      nested: SchemaV2.co.map({
-        value: SchemaV2.co.string(),
+    const TestMap = co.map({
+      value: z.string(),
+      nested: co.map({
+        value: z.string(),
       }),
     });
 
@@ -127,11 +135,14 @@ describe("useCoState2", () => {
       value: "456",
     });
 
-    const { result } = renderHook(() => useCoState2(TestMap, map.$id, {}), {
-      account,
-    });
+    const { result } = renderHook(
+      () => useCoState2(TestMap, map.$jazz.id, {}),
+      {
+        account,
+      },
+    );
 
-    result.current?.$request({
+    result.current?.$jazz.request({
       resolve: {
         nested: true,
       },
@@ -147,8 +158,8 @@ describe("useCoState2", () => {
   });
 
   it.skip("should return null if the coValue is not found", async () => {
-    const TestMap = SchemaV2.co.map({
-      value: SchemaV2.co.string(),
+    const TestMap = co.map({
+      value: z.string(),
     });
 
     const map = TestMap.create({
@@ -160,7 +171,7 @@ describe("useCoState2", () => {
     });
 
     const { result } = renderHook(
-      () => useCoState2(TestMap, (map.$id + "123") as any),
+      () => useCoState2(TestMap, (map.$jazz.id + "123") as any),
       {
         account,
       },
@@ -174,8 +185,8 @@ describe("useCoState2", () => {
   });
 
   it.skip("should return null if the coValue is not accessible", async () => {
-    const TestMap = SchemaV2.co.map({
-      value: SchemaV2.co.string(),
+    const TestMap = co.map({
+      value: z.string(),
     });
 
     const someoneElse = await createJazzTestAccount({
@@ -193,7 +204,7 @@ describe("useCoState2", () => {
       isCurrentActiveAccount: true,
     });
 
-    const { result } = renderHook(() => useCoState2(TestMap, map.$id), {
+    const { result } = renderHook(() => useCoState2(TestMap, map.$jazz.id), {
       account,
     });
 
@@ -205,8 +216,8 @@ describe("useCoState2", () => {
   });
 
   it("should not return null if the coValue is shared with everyone", async () => {
-    const TestMap = SchemaV2.co.map({
-      value: SchemaV2.co.string(),
+    const TestMap = co.map({
+      value: z.string(),
     });
 
     const someoneElse = await createJazzTestAccount({
@@ -227,7 +238,7 @@ describe("useCoState2", () => {
       isCurrentActiveAccount: true,
     });
 
-    const { result } = renderHook(() => useCoState2(TestMap, map.$id), {
+    const { result } = renderHook(() => useCoState2(TestMap, map.$jazz.id), {
       account,
     });
 
@@ -239,8 +250,8 @@ describe("useCoState2", () => {
   });
 
   it.skip("should return a value when the coValue becomes accessible", async () => {
-    const TestMap = SchemaV2.co.map({
-      value: SchemaV2.co.string(),
+    const TestMap = co.map({
+      value: z.string(),
     });
 
     const someoneElse = await createJazzTestAccount({
@@ -260,7 +271,7 @@ describe("useCoState2", () => {
       isCurrentActiveAccount: true,
     });
 
-    const { result } = renderHook(() => useCoState2(TestMap, map.$id), {
+    const { result } = renderHook(() => useCoState2(TestMap, map.$jazz.id), {
       account,
     });
 
@@ -279,12 +290,12 @@ describe("useCoState2", () => {
   });
 
   it.skip("should update when an inner coValue is updated", async () => {
-    const TestNestedMap = SchemaV2.co.map({
-      value: SchemaV2.co.string(),
+    const TestNestedMap = co.map({
+      value: z.string(),
     });
 
-    const TestMap = SchemaV2.co.map({
-      value: SchemaV2.co.string(),
+    const TestMap = co.map({
+      value: z.string(),
       nested: TestNestedMap,
     });
 
@@ -312,7 +323,7 @@ describe("useCoState2", () => {
 
     const { result } = renderHook(
       () =>
-        useCoState2(TestMap, map.$id, {
+        useCoState2(TestMap, map.$jazz.id, {
           resolve: {
             nested: true,
           },

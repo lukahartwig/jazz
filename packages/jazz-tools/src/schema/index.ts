@@ -1,4 +1,4 @@
-import { co } from "./schema.js";
+import { co, z } from "./schema.js";
 import {
   ensureCoValueLoaded,
   loadCoValue,
@@ -7,6 +7,7 @@ import {
 
 export const SchemaV2 = {
   co,
+  z,
   subscribeToCoValue: subscribeToCoValue,
   ensureCoValueLoaded: ensureCoValueLoaded,
   loadCoValue: loadCoValue,
