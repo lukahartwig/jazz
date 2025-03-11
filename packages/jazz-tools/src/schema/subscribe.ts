@@ -39,7 +39,7 @@ class Subscription {
 
   constructor(
     public node: LocalNode,
-    public id: ID<CoMapSchema<any>>,
+    public id: ID<CoValueSchema<any>>,
     public listener: (value: RawCoMap) => void,
   ) {
     const value = this.node.coValuesStore.get(this.id as any);
@@ -82,7 +82,10 @@ export class CoValueResolutionNode<
   D extends CoValueSchema<any>,
   R extends RelationsToResolve<D>,
 > {
-  childNodes = new Map<string, CoValueResolutionNode<CoMapSchema<any>, any>>();
+  childNodes = new Map<
+    string,
+    CoValueResolutionNode<CoValueSchema<any>, any>
+  >();
   childValues = new Map<string, Loaded<any, any> | undefined>();
   value: Loaded<D, R> | undefined;
   promise: ResolvablePromise<void> | undefined;
@@ -175,7 +178,7 @@ export class CoValueResolutionNode<
         }
 
         if (value && isRelationRef(refDescriptor) && resolve[key]) {
-          const childSchema = refDescriptor as CoMapSchema<any>;
+          const childSchema = refDescriptor as CoValueSchema<any>;
 
           this.childValues.set(key, undefined);
           const child = new CoValueResolutionNode(

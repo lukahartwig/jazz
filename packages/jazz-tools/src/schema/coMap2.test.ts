@@ -22,30 +22,29 @@ describe("CoMap2", () => {
   });
 
   it("should create a CoMap with nested values", () => {
-    const NestedCoMap2 = co.map({
-      name: z.string(),
-      age2: z.number(),
-    });
-
     const NestedCoMap = co.map({
       name: z.string(),
-      age: z.number(),
-      ref: NestedCoMap2,
+      age2: z.number(),
     });
 
     const MyCoMap = co.map({
       name: z.string(),
       age: z.number(),
-      ref: NestedCoMap,
+      ref: co.map({
+        name: z.string(),
+        age: z.number(),
+        ref: NestedCoMap,
+      }),
     });
 
     const myCoMap = MyCoMap.create({
       name: "John",
       age: 30,
-      ref: NestedCoMap.create({
+      // Maps declared in the schema can be referenced through the shape property
+      ref: MyCoMap.shape.ref.create({
         name: "Jane",
         age: 20,
-        ref: NestedCoMap2.create({ name: "Jane", age2: 20 }),
+        ref: NestedCoMap.create({ name: "Jane", age2: 20 }),
       }),
     });
 
@@ -62,28 +61,52 @@ describe("CoMap2", () => {
     expect(myCoMap.ref?.ref.name).toBe("Jane");
   });
 
-  // it("should create a CoMap with self references", () => {
-  //   const MyCoMap = co.map({
-  //     name: z.string(),
-  //     age: z.number(),
-  //     ref: co.self(),
-  //   });
+  it("should create a CoMap with self references", () => {
+    const MyCoMap = co.map({
+      name: z.string(),
+      age: z.number(),
+      ref: co.self(),
+    });
 
-  //   const myCoMap = MyCoMap.create({
-  //     name: "John",
-  //     age: 30,
-  //     ref: {
-  //       name: "Jane",
-  //       age: 20,
-  //       ref: { name: "Jane", age: 20 },
-  //     },
-  //   });
+    const myCoMap = MyCoMap.create({
+      name: "John",
+      age: 30,
+      ref: {
+        name: "Jane",
+        age: 20,
+        ref: { name: "Jane", age: 20 },
+      },
+    });
 
-  //   expect(myCoMap.name).toBe("John");
-  //   expect(myCoMap.age).toBe(30);
-  //   expect(myCoMap.ref?.age).toBe(20);
-  //   expect(myCoMap.ref?.ref.name).toBe("Jane");
-  // });
+    expect(myCoMap.name).toBe("John");
+    expect(myCoMap.age).toBe(30);
+    expect(myCoMap.ref?.age).toBe(20);
+    expect(myCoMap.ref?.ref.name).toBe("Jane");
+  });
+
+  it("should create a CoMap with self references on nested maps", () => {
+    const MyCoMap = co.map({
+      name: z.string(),
+      age: z.number(),
+      ref: co.map({
+        name: z.string(),
+        child: co.self(),
+      }),
+    });
+
+    const myCoMap = MyCoMap.create({
+      name: "John",
+      age: 30,
+      ref: {
+        name: "Jane",
+        child: { name: "Jane", child: { name: "Jane" } },
+      },
+    });
+
+    expect(myCoMap.name).toBe("John");
+    expect(myCoMap.age).toBe(30);
+    expect(myCoMap.ref?.child?.child?.name).toBe("Jane");
+  });
 
   it("should not change original property after calling $set", () => {
     const MyCoMap = co.map({

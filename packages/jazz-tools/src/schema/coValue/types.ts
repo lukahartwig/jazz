@@ -10,11 +10,6 @@ type DEPTH_LIMIT = 5;
 export type IsDepthLimit<CurrentDepth extends number[]> =
   DEPTH_LIMIT extends CurrentDepth["length"] ? true : false;
 
-export type CoValue<
-  D extends CoValueSchema<any>,
-  R extends RelationsToResolve<D>,
-> = LoadedCoMap<D, R>;
-
 export type RelationsToResolveStrict<
   T extends CoValueSchema<any>,
   V,
