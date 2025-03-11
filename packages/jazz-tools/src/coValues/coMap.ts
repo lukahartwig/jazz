@@ -40,6 +40,7 @@ import {
   subscribeToExistingCoValue,
   subscriptionsScopes,
 } from "../internal.js";
+import { RegisteredAccount } from "../types.js";
 import { type Account } from "./account.js";
 import { type Group } from "./group.js";
 import { RegisteredSchemas } from "./registeredSchemas.js";
@@ -47,7 +48,7 @@ import { RegisteredSchemas } from "./registeredSchemas.js";
 type CoMapEdit<V> = {
   value?: V;
   ref?: RefIfCoValue<V>;
-  by?: Account;
+  by?: RegisteredAccount;
   madeAt: Date;
   key?: string;
 };

@@ -1,3 +1,4 @@
+import LatencyChart from "@/components/LatencyChart";
 import { clsx } from "clsx";
 import { HeroHeader } from "gcmp-design-system/src/app/components/molecules/HeroHeader";
 import type { Metadata } from "next";
@@ -12,10 +13,6 @@ export const metadata: Metadata = {
     title,
   },
 };
-
-const LatencyChart = dynamic(() => import("@/components/LatencyChart"), {
-  ssr: false,
-});
 
 interface DataRow {
   up: boolean;

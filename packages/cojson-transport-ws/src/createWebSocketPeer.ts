@@ -139,7 +139,9 @@ export function createWebSocketPeer({
   function handleClose() {
     incoming
       .push("Disconnected")
-      .catch((e) => logger.error("Error while pushing disconnect msg", e));
+      .catch((e) =>
+        logger.error("Error while pushing disconnect msg", { err: e }),
+      );
     emitClosedEvent();
   }
 
@@ -148,7 +150,7 @@ export function createWebSocketPeer({
   // biome-ignore lint/suspicious/noExplicitAny: WebSocket error event type
   websocket.addEventListener("error" as any, (err) => {
     if (err.message) {
-      logger.warn(err.message);
+      logger.warn("WebSocket error", { err });
     }
 
     handleClose();
@@ -157,7 +159,9 @@ export function createWebSocketPeer({
   const pingTimeout = createPingTimeoutListener(expectPings, () => {
     incoming
       .push("PingTimeout")
-      .catch((e) => logger.error("Error while pushing ping timeout", e));
+      .catch((e) =>
+        logger.error("Error while pushing ping timeout", { err: e }),
+      );
     emitClosedEvent();
   });
 
@@ -175,9 +179,7 @@ export function createWebSocketPeer({
     const result = deserializeMessages(event.data);
 
     if (!result.ok) {
-      logger.warn(
-        `Error while deserializing messages: ${getErrorMessage(result.error)}`,
-      );
+      logger.warn("Error while deserializing messages", { err: result.error });
       return;
     }
 
@@ -201,7 +203,9 @@ export function createWebSocketPeer({
       if (msg && "action" in msg) {
         incoming
           .push(msg)
-          .catch((e) => logger.error("Error while pushing incoming msg", e));
+          .catch((e) =>
+            logger.error("Error while pushing incoming msg", { err: e }),
+          );
       }
     }
   }

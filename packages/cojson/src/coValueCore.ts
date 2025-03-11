@@ -328,10 +328,7 @@ export class CoValueCore {
         try {
           listener(content);
         } catch (e) {
-          logger.error(
-            "Error in listener for coValue " + this.id,
-            parseError(e),
-          );
+          logger.error("Error in listener for coValue " + this.id, { err: e });
         }
       }
     } else {
@@ -345,10 +342,9 @@ export class CoValueCore {
               try {
                 listener(content);
               } catch (e) {
-                logger.error(
-                  "Error in listener for coValue " + this.id,
-                  parseError(e),
-                );
+                logger.error("Error in listener for coValue " + this.id, {
+                  err: e,
+                });
               }
             }
             resolve();
@@ -545,7 +541,9 @@ export class CoValueCore {
       }
 
       if (!decryptedChanges) {
-        logger.error("Failed to decrypt transaction despite having key");
+        logger.error("Failed to decrypt transaction despite having key", {
+          err: new Error("Failed to decrypt transaction despite having key"),
+        });
         continue;
       }
 

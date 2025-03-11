@@ -1,5 +1,18 @@
 # jazz-tools
 
+## 0.11.3
+
+### Patch Changes
+
+- Updated dependencies [68b0242]
+  - cojson@0.11.3
+
+## 0.11.2
+
+### Patch Changes
+
+- 6892dc6: Adds `applyDiff` to `CoList`
+
 ## 0.11.0
 
 ### Minor Changes

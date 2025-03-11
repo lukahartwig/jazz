@@ -285,7 +285,9 @@ async function loadCoValueFromPeers(
           ...coValueEntry.state.coValue.knownState(),
         })
         .catch((err) => {
-          logger.warn(`Failed to push load message to peer ${peer.id}`, err);
+          logger.warn(`Failed to push load message to peer ${peer.id}`, {
+            err,
+          });
         });
     } else {
       /**
@@ -299,7 +301,9 @@ async function loadCoValueFromPeers(
           sessions: {},
         })
         .catch((err) => {
-          logger.warn(`Failed to push load message to peer ${peer.id}`, err);
+          logger.warn(`Failed to push load message to peer ${peer.id}`, {
+            err,
+          });
         });
     }
 

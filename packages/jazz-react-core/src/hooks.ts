@@ -117,6 +117,8 @@ export function useCoState<
   const value = React.useSyncExternalStore<Resolved<V, R> | undefined | null>(
     React.useCallback(
       (callback) => {
+        observable.reset();
+
         if (!id) return () => {};
 
         // We subscribe to the context manager to react to the account updates

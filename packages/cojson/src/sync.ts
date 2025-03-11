@@ -187,7 +187,7 @@ export class SyncManager {
 
     if (entry.state.type !== "available") {
       entry.loadFromPeers([peer]).catch((e: unknown) => {
-        logger.error("Error sending load: " + getErrorMessage(e));
+        logger.error("Error sending load", { err: e });
       });
       return;
     }
@@ -204,7 +204,7 @@ export class SyncManager {
         action: "load",
         ...coValue.knownState(),
       }).catch((e: unknown) => {
-        logger.error("Error sending load: " + getErrorMessage(e));
+        logger.error("Error sending load", { err: e });
       });
     }
   }
@@ -234,7 +234,7 @@ export class SyncManager {
         asDependencyOf,
         ...coValue.knownState(),
       }).catch((e: unknown) => {
-        logger.error("Error sending known state: " + getErrorMessage(e));
+        logger.error("Error sending known state", { err: e });
       });
 
       peer.toldKnownState.add(id);
@@ -262,7 +262,7 @@ export class SyncManager {
         let lastYield = performance.now();
         for (const [_i, piece] of newContentPieces.entries()) {
           this.trySendToPeer(peer, piece).catch((e: unknown) => {
-            logger.error("Error sending content piece: " + getErrorMessage(e));
+            logger.error("Error sending content piece", { err: e });
           });
 
           if (performance.now() - lastYield > 10) {
@@ -275,7 +275,7 @@ export class SyncManager {
       };
 
       sendPieces().catch((e) => {
-        logger.error("Error sending new content piece, retrying", e);
+        logger.error("Error sending new content piece, retrying", { err: e });
         peer.optimisticKnownStates.dispatch({
           type: "SET",
           id,
@@ -358,13 +358,11 @@ export class SyncManager {
         }
       })
       .catch((e) => {
-        logger.error(
-          "Error processing messages from peer: " + getErrorMessage(e),
-          {
-            peerId: peer.id,
-            peerRole: peer.role,
-          },
-        );
+        logger.error("Error processing messages from peer", {
+          err: e,
+          peerId: peer.id,
+          peerRole: peer.role,
+        });
         if (peer.crashOnClose) {
           this.local.crashed = e;
           throw new Error(e);
@@ -404,13 +402,13 @@ export class SyncManager {
         // where we can get informations about the coValue
         if (msg.header || Object.keys(msg.sessions).length > 0) {
           entry.loadFromPeers([peer]).catch((e) => {
-            logger.error("Error loading coValue in handleLoad", e);
+            logger.error("Error loading coValue in handleLoad", { err: e });
           });
         }
         return;
       } else {
         this.local.loadCoValueCore(msg.id, peer.id).catch((e) => {
-          logger.error("Error loading coValue in handleLoad", e);
+          logger.error("Error loading coValue in handleLoad", { err: e });
         });
       }
     }
@@ -437,7 +435,7 @@ export class SyncManager {
               header: false,
               sessions: {},
             }).catch((e) => {
-              logger.error("Error sending known state back", e);
+              logger.error("Error sending known state back", { err: e });
             });
 
             return;
@@ -447,7 +445,9 @@ export class SyncManager {
           await this.sendNewContentIncludingDependencies(msg.id, peer);
         })
         .catch((e) => {
-          logger.error("Error loading coValue in handleLoad loading state", e);
+          logger.error("Error loading coValue in handleLoad loading state", {
+            err: e,
+          });
         });
     }
 
@@ -484,7 +484,7 @@ export class SyncManager {
             .catch((e) => {
               logger.error(
                 `Error loading coValue ${msg.id} to create loading state, as dependency of ${msg.asDependencyOf}`,
-                e,
+                { err: e },
               );
             });
         }
@@ -604,10 +604,11 @@ export class SyncManager {
       // );
 
       if (result.isErr()) {
-        logger.error("Failed to add transactions: " + result.error.type, {
+        logger.error("Failed to add transactions", {
           peerId: peer.id,
           peerRole: peer.role,
           id: msg.id,
+          err: result.error,
         });
         peer.erroredCoValues.set(msg.id, result.error);
         continue;
@@ -629,13 +630,11 @@ export class SyncManager {
         isCorrection: true,
         ...coValue.knownState(),
       }).catch((e) => {
-        logger.error(
-          "Error sending known state correction: " + getErrorMessage(e),
-          {
-            peerId: peer.id,
-            peerRole: peer.role,
-          },
-        );
+        logger.error("Error sending known state correction", {
+          peerId: peer.id,
+          peerRole: peer.role,
+          err: e,
+        });
       });
     } else {
       /**
@@ -649,9 +648,10 @@ export class SyncManager {
         action: "known",
         ...coValue.knownState(),
       }).catch((e: unknown) => {
-        logger.error("Error sending known state: " + getErrorMessage(e), {
+        logger.error("Error sending known state", {
           peerId: peer.id,
           peerRole: peer.role,
+          err: e,
         });
       });
     }

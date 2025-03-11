@@ -1,5 +1,6 @@
 import type { JsonValue, RawCoList } from "cojson";
 import { RawAccount } from "cojson";
+import { calcPatch } from "fast-myers-diff";
 import type {
   CoValue,
   CoValueClass,
@@ -33,6 +34,7 @@ import {
   subscriptionsScopes,
 } from "../internal.js";
 import { coValuesCache } from "../lib/cache.js";
+import { RegisteredAccount } from "../types.js";
 import { type Account } from "./account.js";
 import { type Group } from "./group.js";
 import { RegisteredSchemas } from "./registeredSchemas.js";
@@ -157,7 +159,7 @@ export class CoList<Item = any> extends Array<Item> implements CoValue {
     [idx: number]: {
       value?: Item;
       ref?: Item extends CoValue ? Ref<Item> : never;
-      by?: Account;
+      by?: RegisteredAccount;
       madeAt: Date;
     };
   } {
@@ -291,12 +293,24 @@ export class CoList<Item = any> extends Array<Item> implements CoValue {
 
     let appendAfter = Math.max(start - 1, 0);
     for (const item of toRawItems(items as Item[], this._schema[ItemsSym])) {
-      console.log(this._raw.asArray(), appendAfter);
       this._raw.append(item, appendAfter);
       appendAfter++;
     }
 
     return deleted;
+  }
+
+  applyDiff(other: Item[]) {
+    const current = this._raw.asArray() as Item[];
+    const cmp = isRefEncoded(this._schema[ItemsSym])
+      ? (aIdx: number, bIdx: number) =>
+          (current[aIdx] as CoValue).id === (other[bIdx] as CoValue).id
+      : undefined;
+    for (const [from, to, insert] of [
+      ...calcPatch(current, other, cmp),
+    ].reverse()) {
+      this.splice(from, to - from, ...insert);
+    }
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

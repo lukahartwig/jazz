@@ -19,8 +19,9 @@ export function DocNav({ className }: { className?: string }) {
         .map((item) => {
           if (!item.href?.startsWith("/docs")) return item;
 
+          const frameworkDone = (item.done as any)[framework] ?? 0;
           let done =
-            typeof item.done === "number" ? item.done : item.done[framework];
+            typeof item.done === "number" ? item.done : frameworkDone;
           let href = item.href.replace("/docs", `/docs/${framework}`);
 
           return {

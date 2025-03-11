@@ -40,6 +40,7 @@ import {
   subscribeToCoValueWithoutMe,
   subscribeToExistingCoValue,
 } from "../internal.js";
+import { RegisteredAccount } from "../types.js";
 import { type Account } from "./account.js";
 import { type Group } from "./group.js";
 import { RegisteredSchemas } from "./registeredSchemas.js";
@@ -57,7 +58,7 @@ export type SingleCoStreamEntry<Item> = SingleCoFeedEntry<Item>;
 export type SingleCoFeedEntry<Item> = {
   value: NonNullable<Item> extends CoValue ? NonNullable<Item> | null : Item;
   ref: NonNullable<Item> extends CoValue ? Ref<NonNullable<Item>> : never;
-  by?: Account | null;
+  by?: RegisteredAccount | null;
   madeAt: Date;
   tx: CojsonInternalTypes.TransactionID;
 };

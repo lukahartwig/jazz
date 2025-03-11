@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "NODE_OPTIONS=--max-old-space-size=8192 next dev",
+    "dev": "next dev",
     "build:generate-docs": "pnpm run generate:docs && pnpm run generate:llm-docs",
     "build": "next build",
     "start": "next start",
@@ -40,7 +40,7 @@
     "mdast-util-from-markdown": "^2.0.0",
     "mdast-util-mdx": "^3.0.0",
     "micromark-extension-mdxjs": "^3.0.0",
-    "next": "14.2.15",
+    "next": "15.2.1",
     "next-themes": "^0.2.1",
     "qrcode": "^1.5.4",
     "react": "^18",

@@ -16,8 +16,6 @@ export default function Home() {
     <>
       <HeroSection />
 
-      <ProblemStatementSection />
-
       <div className="container flex flex-col gap-12 mt-12 lg:gap-20 lg:mt-20">
         <HowJazzWorksSection />
 
@@ -31,6 +29,8 @@ export default function Home() {
             , and you can ship an app. It&apos;s just so nice!
           </p>
         </Testimonial>
+
+        <ProblemStatementSection />
 
         <ChatDemoSection />
 

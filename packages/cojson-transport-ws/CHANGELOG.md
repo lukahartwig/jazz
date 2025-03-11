@@ -1,5 +1,13 @@
 # cojson-transport-nodejs-ws
 
+## 0.11.3
+
+### Patch Changes
+
+- 68b0242: Improve the error logging to have more information on errors leveraging the pino err serializer
+- Updated dependencies [68b0242]
+  - cojson@0.11.3
+
 ## 0.11.0
 
 ### Patch Changes

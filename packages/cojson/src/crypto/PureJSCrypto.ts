@@ -195,9 +195,7 @@ export class PureJSCrypto extends CryptoProvider<Blake3State> {
     try {
       return JSON.parse(textDecoder.decode(plaintext));
     } catch (e) {
-      logger.error(
-        "Failed to decrypt/parse sealed message: " + (e as Error)?.message,
-      );
+      logger.error("Failed to decrypt/parse sealed message", { err: e });
       return undefined;
     }
   }

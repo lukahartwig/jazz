@@ -7,16 +7,19 @@ import type { Toc } from "@stefanprobst/rehype-extract-toc";
 import { Prose } from "gcmp-design-system/src/app/components/molecules/Prose";
 
 async function getMdxSource(slugPath: string, framework: string) {
+  // Try to import the framework-specific file first
   try {
-    return await import(`./${slugPath}.mdx`);
-  } catch (error) {
     return await import(`./${slugPath}/${framework}.mdx`);
+  } catch (error) {
+    // Fallback to vanilla
+    return await import(`./${slugPath}.mdx`);
   }
 }
 
 export async function generateMetadata({
-  params: { slug, framework },
-}: { params: { slug: string[]; framework: string } }) {
+  params,
+}: { params: Promise<{ slug: string[]; framework: string }> }) {
+  const { slug, framework } = await params;
   const slugPath = slug.join("/");
   try {
     const mdxSource = await getMdxSource(slugPath, framework);
@@ -39,8 +42,9 @@ export async function generateMetadata({
 }
 
 export default async function Page({
-  params: { slug, framework },
-}: { params: { slug: string[]; framework: string } }) {
+  params,
+}: { params: Promise<{ slug: string[]; framework: string }> }) {
+  const { slug, framework } = await params;
   const slugPath = slug.join("/");
   const bodyClassName = "overflow-x-hidden lg:flex-1 py-10  max-w-3xl mx-auto";
 

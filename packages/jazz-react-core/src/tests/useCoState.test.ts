@@ -338,4 +338,27 @@ describe("useCoState", () => {
       current: TestMap | null | undefined;
     }>();
   });
+
+  it("should set the value to undefined when the id is set to undefined", () => {
+    class TestMap extends CoMap {
+      value = co.string;
+    }
+
+    const map = TestMap.create({
+      value: "123",
+    });
+
+    const { result, rerender } = renderHook(
+      (props) => useCoState(TestMap, props.id),
+      {
+        initialProps: { id: map.id } as { id: ID<CoValue> | undefined },
+      },
+    );
+
+    expect(result.current?.value).toBe("123");
+
+    rerender({ id: undefined });
+
+    expect(result.current?.value).toBeUndefined();
+  });
 });

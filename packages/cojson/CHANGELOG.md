@@ -1,5 +1,11 @@
 # cojson
 
+## 0.11.3
+
+### Patch Changes
+
+- 68b0242: Improve the error logging to have more information on errors leveraging the pino err serializer
+
 ## 0.11.0
 
 ### Minor Changes
