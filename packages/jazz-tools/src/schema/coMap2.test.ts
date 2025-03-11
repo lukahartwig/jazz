@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { createJazzTestAccount } from "../testing.js";
-import { LoadedCoMap, co } from "./schema.js";
+import { co } from "./schema.js";
 
 beforeEach(async () => {
   await createJazzTestAccount({

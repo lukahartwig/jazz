@@ -1,40 +1,51 @@
 import { CoValueUniqueness, JsonValue, RawAccount, RawCoMap } from "cojson";
-import { TypeOf, ZodTypeAny } from "zod";
-import { RegisteredSchemas } from "../coValues/registeredSchemas.js";
-import type { Account, Group } from "../exports.js";
-import { AnonymousJazzAgent, ID } from "../internal.js";
-import { coValuesCache } from "../lib/cache.js";
+import { ZodTypeAny } from "zod";
+import type { Account } from "../../coValues/account.js";
+import type { Group } from "../../coValues/group.js";
+import { RegisteredSchemas } from "../../coValues/registeredSchemas.js";
+import { AnonymousJazzAgent, ID } from "../../internal.js";
+import { coValuesCache } from "../../lib/cache.js";
 import {
-  CoMap,
-  CoMapInit,
   Loaded,
   LoadedCoMap,
-  RelationsKeys,
   RelationsToResolve,
   RelationsToResolveStrict,
   SelfReference,
-  isRelationRef,
-} from "./schema.js";
-import { CoValueResolutionNode, ensureCoValueLoaded } from "./subscribe.js";
+} from "../coValue/types.js";
+import { CoValueResolutionNode, ensureCoValueLoaded } from "../subscribe.js";
+import { CoMapInit, CoMapSchema, CoValueSchema } from "./schema.js";
 
-type ChildMap<D extends CoMap<any>> = Map<
+type Relations<D extends CoValueSchema<any>> = D extends CoMapSchema<infer S>
+  ? {
+      [K in keyof S]: S[K] extends CoMapSchema<any>
+        ? S[K]
+        : S[K] extends SelfReference
+          ? D
+          : never;
+    }
+  : never;
+
+type RelationsKeys<D extends CoValueSchema<any>> = keyof Relations<D> &
+  (string | number);
+
+type ChildMap<D extends CoMapSchema<any>> = Map<
   RelationsKeys<D>,
   Loaded<any, any> | undefined
 >;
 
 type PropertyType<
-  D extends CoMap<any>,
-  K extends keyof D["schema"],
+  D extends CoMapSchema<any>,
+  K extends keyof D["shape"],
 > = CoMapInit<D>[K];
 
 export class CoMapInstanceClass<
-  D extends CoMap<any>,
+  D extends CoMapSchema<any>,
   R extends RelationsToResolve<D> = true,
 > {
   $raw: RawCoMap;
   $schema: D;
   $id: ID<D>;
-  $resolutionNode: CoValueResolutionNode<D, R> | undefined;
+  _resolutionNode: CoValueResolutionNode<D, R> | undefined;
   refs: ChildMap<D> = new Map();
   protected $lastUpdateTx: number;
 
@@ -47,10 +58,10 @@ export class CoMapInstanceClass<
     this.$raw = raw;
     this.$lastUpdateTx = raw.totalProcessedTransactions;
     this.$id = raw.id as unknown as ID<D>;
-    this.$resolutionNode = resolutionNode;
+    this._resolutionNode = resolutionNode;
   }
 
-  static fromInit<D extends CoMap<any>>(
+  static fromInit<D extends CoMapSchema<any>>(
     schema: D,
     init: CoMapInit<D>,
     owner: Account | Group,
@@ -61,7 +72,10 @@ export class CoMapInstanceClass<
     return CoMapInstanceClass.fromRaw(schema, raw, refs);
   }
 
-  static fromRaw<D extends CoMap<any>, R extends RelationsToResolve<D> = true>(
+  static fromRaw<
+    D extends CoMapSchema<any>,
+    R extends RelationsToResolve<D> = true,
+  >(
     schema: D,
     raw: RawCoMap,
     refs?: ChildMap<D>,
@@ -76,7 +90,7 @@ export class CoMapInstanceClass<
 
     for (const key of fields) {
       Object.defineProperty(instance, key, {
-        value: getValue(raw, schema, key as keyof D["schema"]),
+        value: getValue(raw, schema, key as keyof D["shape"]),
         writable: false,
         enumerable: true,
         configurable: true,
@@ -110,7 +124,7 @@ export class CoMapInstanceClass<
     }
   }
 
-  $set<K extends keyof D["schema"]>(key: K, value: PropertyType<D, K>) {
+  $set<K extends keyof D["shape"]>(key: K, value: PropertyType<D, K>) {
     setValue(this.$raw, this.$schema, key, value as JsonValue);
   }
 
@@ -123,14 +137,14 @@ export class CoMapInstanceClass<
       this.$schema,
       this.$raw,
       refs ?? this.refs,
-      this.$resolutionNode,
+      this._resolutionNode,
     );
   }
 
   /**
-   * Given an already loaded `CoMap`, ensure that the specified fields are loaded to the specified depth.
+   * Given an already loaded `CoMapSchema`, ensure that the specified fields are loaded to the specified depth.
    *
-   * Works like `CoMap.load()`, but you don't need to pass the ID or the account to load as again.
+   * Works like `CoMapSchema.load()`, but you don't need to pass the ID or the account to load as again.
    *
    * @category Subscription & Loading
    */
@@ -145,14 +159,14 @@ export class CoMapInstanceClass<
   $request<R extends RelationsToResolve<D>>(options: {
     resolve: RelationsToResolveStrict<D, R>;
   }) {
-    this.$resolutionNode?.request(options.resolve);
+    this._resolutionNode?.request(options.resolve);
 
     // TODO Merge with the current Resolve
     return this as Loaded<D, R, "nullable">;
   }
 
   /**
-   * Wait for the `CoMap` to be uploaded to the other peers.
+   * Wait for the `CoMapSchema` to be uploaded to the other peers.
    *
    * @category Subscription & Loading
    */
@@ -181,17 +195,17 @@ export class CoMapInstanceClass<
   }
 }
 
-function getValue<D extends CoMap<any>>(
+function getValue<D extends CoMapSchema<any>>(
   raw: RawCoMap,
   schema: D,
-  key: keyof D["schema"],
+  key: keyof D["shape"],
 ) {
   const descriptor = schema.get(key);
 
   if (descriptor && typeof key === "string") {
     const value = raw.get(key);
 
-    if (descriptor instanceof CoMap || descriptor === SelfReference) {
+    if (descriptor instanceof CoMapSchema || descriptor === SelfReference) {
       if (value === undefined) {
         return undefined;
       } else {
@@ -205,10 +219,10 @@ function getValue<D extends CoMap<any>>(
   }
 }
 
-function setValue<D extends CoMap<any>>(
+function setValue<D extends CoMapSchema<any>>(
   raw: RawCoMap,
   schema: D,
-  key: keyof D["schema"],
+  key: keyof D["shape"],
   value: JsonValue,
 ) {
   const descriptor = schema.get(key);
@@ -218,7 +232,7 @@ function setValue<D extends CoMap<any>>(
       if (value === null) {
         raw.set(key, null);
       } else {
-        raw.set(key, (value as unknown as Loaded<CoMap<{}>, true>).$id);
+        raw.set(key, (value as unknown as Loaded<CoMapSchema<{}>, true>).$id);
       }
     } else {
       raw.set(key, descriptor.parse(value));
@@ -228,7 +242,7 @@ function setValue<D extends CoMap<any>>(
   }
 }
 
-function createCoMapFromInit<D extends CoMap<any>>(
+function createCoMapFromInit<D extends CoMapSchema<any>>(
   init: CoMapInit<D> | undefined,
   owner: Account | Group,
   schema: D,
@@ -237,13 +251,13 @@ function createCoMapFromInit<D extends CoMap<any>>(
   const rawOwner = owner._raw;
 
   const rawInit = {} as {
-    [key in keyof D["schema"]]: JsonValue | undefined;
+    [key in keyof D["shape"]]: JsonValue | undefined;
   };
 
   const refs = new Map<string, Loaded<any, any>>();
 
   if (init) {
-    const fields = Object.keys(init) as (keyof D["schema"])[];
+    const fields = Object.keys(init) as (keyof D["shape"])[];
 
     for (const key of fields) {
       const initValue = init[key];
@@ -280,4 +294,10 @@ function createCoMapFromInit<D extends CoMap<any>>(
   const raw = rawOwner.createMap(rawInit, null, "private", uniqueness);
 
   return { raw, refs };
+}
+
+export function isRelationRef(
+  descriptor: CoMapSchema<any> | ZodTypeAny | SelfReference,
+): descriptor is CoMapSchema<any> | SelfReference {
+  return descriptor instanceof CoMapSchema || descriptor === SelfReference;
 }
