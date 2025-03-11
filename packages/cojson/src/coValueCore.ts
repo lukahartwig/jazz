@@ -221,8 +221,9 @@ export class CoValueCore {
     };
   }
 
-  get loadingState(): "unavailable" | "available" {
+  get loadingState(): "unavailable" | "available" | "loading" | "unknown" {
     // TODO: is this the correct check here?
+    // TODO: check if there's still syncing todo and return loading
     return this.header ? "available" : "unavailable";
   }
 
@@ -555,10 +556,6 @@ export class CoValueCore {
       signature,
       true,
     )._unsafeUnwrap({ withStackTrace: true });
-
-    if (success) {
-      void this.node.syncManager.syncCoValue(this);
-    }
 
     return success;
   }
@@ -1135,6 +1132,7 @@ export class CoValueCore {
         type: "syncing",
         confirmed: knownStateIn(msg),
         optimistic: knownStateIn(msg),
+        needsCorrection: false,
       });
     } else if (peerState.type === "requestedByThem") {
       peerState.confirmed = knownStateIn(msg);

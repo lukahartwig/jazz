@@ -55,7 +55,7 @@ test("Can create a FileStream in a group", () => {
   const stream = group.createBinaryStream();
 
   expect(stream.core.getCurrentContent().type).toEqual("costream");
-  expect(stream.headerMeta.type).toEqual("binary");
+  expect(stream.headerMeta?.type).toEqual("binary");
   expect(stream instanceof RawBinaryCoStream).toEqual(true);
 });
 

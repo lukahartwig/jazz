@@ -196,8 +196,8 @@ export class RawCoListView<
   }
 
   /** @category 6. Meta */
-  get headerMeta(): Meta {
-    return this.core.header.meta as Meta;
+  get headerMeta(): Meta | undefined {
+    return this.core.header?.meta as Meta | undefined;
   }
 
   /** @category 6. Meta */

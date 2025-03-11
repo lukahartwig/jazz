@@ -138,19 +138,6 @@ export class LocalNode {
       throw new Error("Must set account profile in initial migration");
     }
 
-    // we shouldn't need this, but it fixes account data not syncing for new accounts
-    function syncAllCoValuesAfterCreateAccount() {
-      for (const coValueEntry of nodeWithAccount.coValuesStore.getValues()) {
-        if (coValueEntry.loadingState === "available") {
-          void nodeWithAccount.syncManager.syncCoValue(coValueEntry);
-        }
-      }
-    }
-
-    syncAllCoValuesAfterCreateAccount();
-
-    setTimeout(syncAllCoValuesAfterCreateAccount, 500);
-
     return {
       node: nodeWithAccount,
       accountID: accountOnNodeWithAccount.id,
@@ -253,8 +240,6 @@ export class LocalNode {
       this,
     );
     this.coValuesStore.setExpectNonExisting(coValue.id, coValue);
-
-    void this.syncManager.syncCoValue(coValue);
 
     return coValue;
   }
