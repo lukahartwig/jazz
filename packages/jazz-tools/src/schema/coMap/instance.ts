@@ -55,7 +55,7 @@ export class CoMapJazzApi<
   _resolutionNode: CoValueResolutionNode<D, R> | undefined;
   refs: ChildMap<D> = new Map();
   protected lastUpdateTx: number;
-  declare _instance: CoMap<D, R>;
+  declare _instance: Loaded<D, R>;
 
   constructor(
     schema: D,
@@ -70,7 +70,7 @@ export class CoMapJazzApi<
   }
 
   _setInstance(instance: CoMap<D, R>) {
-    this._instance = instance;
+    this._instance = instance as unknown as Loaded<D, R>;
   }
 
   _fillRef<K extends RelationsKeys<D>>(key: K, value: Loaded<any, any>) {
@@ -95,7 +95,7 @@ export class CoMapJazzApi<
 
   updated(refs?: ChildMap<D>): Loaded<D, R> {
     if (this.lastUpdateTx === this.raw.totalProcessedTransactions && !refs) {
-      return this as Loaded<D, R>;
+      return this._instance;
     }
 
     return createCoMapFromRaw<D, R>(
@@ -113,10 +113,10 @@ export class CoMapJazzApi<
    *
    * @category Subscription & Loading
    */
-  resolve<R extends RelationsToResolve<D>>(options: {
-    resolve: RelationsToResolveStrict<D, R>;
-  }): Promise<Loaded<D, R>> {
-    return ensureCoValueLoaded<D, R>(this as LoadedCoMap<D, true>, {
+  resolve<O extends RelationsToResolve<D>>(options: {
+    resolve: RelationsToResolveStrict<D, O>;
+  }): Promise<Loaded<D, O>> {
+    return ensureCoValueLoaded<D, R, O>(this._instance, {
       resolve: options.resolve,
     });
   }
@@ -182,7 +182,7 @@ export function createCoMapFromRaw<
 ) {
   const instance = Object.create({
     $jazz: new CoMapJazzApi(schema, raw, resolutionNode),
-  });
+  }) as CoMap<D, R>;
   instance.$jazz._setInstance(instance);
 
   const isRecord = false;
@@ -200,12 +200,12 @@ export function createCoMapFromRaw<
   if (refs) {
     for (const [key, value] of refs.entries()) {
       if (value) {
-        instance._fillRef(key as any, value);
+        instance.$jazz._fillRef(key as any, value);
       }
     }
   }
 
-  return instance as Loaded<D, R>;
+  return instance as unknown as Loaded<D, R>;
 }
 
 function getValue<D extends CoMapSchema<any>>(
@@ -288,17 +288,23 @@ function createCoMapFromInit<D extends CoMapSchema<any>>(
         if (initValue === null || initValue === undefined) {
           rawInit[key] = null;
         } else {
-          let instance: Loaded<any, any>;
+          let instance: Loaded<CoValueSchema<{}>>;
 
-          if ("$id" in initValue) {
-            instance = initValue as unknown as Loaded<any, any>;
+          if ("$jazz" in initValue) {
+            instance = initValue as unknown as Loaded<CoValueSchema<{}>>;
           } else if (descriptor === SelfReference) {
-            instance = schema.create(initValue, owner);
+            instance = schema.create(
+              initValue as CoMapInit<any>,
+              owner,
+            ) as Loaded<CoValueSchema<{}>>;
           } else {
-            instance = descriptor.create(initValue, owner);
+            instance = descriptor.create(
+              initValue as CoMapInit<any>,
+              owner,
+            ) as Loaded<CoValueSchema<{}>>;
           }
 
-          rawInit[key] = instance.$id;
+          rawInit[key] = instance.$jazz.id;
           refs.set(key as string, instance);
         }
       } else {

@@ -8,6 +8,7 @@ import {
   Loaded,
   LoadedCoMap,
   SelfReference,
+  UnwrapZodType,
   ValidateResolve,
 } from "../coValue/types.js";
 import { createCoMap } from "./instance.js";
@@ -18,19 +19,23 @@ export type CoMapSchemaShape = {
 
 export type CoValueSchema<S extends CoMapSchemaShape> = CoMapSchema<S>;
 
-export type CoMapInit<D extends CoMapSchema<any>> = D extends CoMapSchema<
-  infer S
->
-  ? {
-      [K in keyof S]?: S[K] extends ZodTypeAny
-        ? TypeOf<S[K]>
-        : S[K] extends CoMapSchema<any>
-          ? CoMapInit<S[K]> | LoadedCoMap<S[K], any> | undefined
-          : S[K] extends SelfReference
-            ? CoMapInit<D> | LoadedCoMap<D, any> | undefined
-            : never;
-    }
-  : never;
+export type UnwrapReference<
+  D extends CoMapSchema<any>,
+  K extends keyof D["shape"],
+> = D["shape"][K] extends CoValueSchema<any>
+  ? D["shape"][K]
+  : D["shape"][K] extends SelfReference
+    ? D
+    : never;
+
+export type CoMapInit<D extends CoMapSchema<any>> = {
+  [K in keyof D["shape"]]: UnwrapReference<D, K> extends CoMapSchema<any>
+    ?
+        | CoMapInit<UnwrapReference<D, K>>
+        | LoadedCoMap<UnwrapReference<D, K>, any>
+        | undefined
+    : UnwrapZodType<D["shape"][K]>;
+};
 
 export type CoMapInitStrict<
   D extends CoMapSchema<any>,
@@ -46,23 +51,19 @@ export type CoMapInitToRelationsToResolve<
   : ValidateResolve<
       CoMapSchema<S>,
       {
-        [K in keyof S]: S[K] extends SelfReference
-          ? I[K] extends LoadedCoMap<CoMapSchema<S>, infer R>
+        [K in keyof S]: UnwrapReference<CoMapSchema<S>, K> extends CoMapSchema<
+          infer ChildSchema
+        >
+          ? I[K] extends LoadedCoMap<CoMapSchema<ChildSchema>, infer R>
             ? R
-            : I[K] extends CoMapInit<CoMapSchema<S>>
-              ? CoMapInitToRelationsToResolve<S, I[K], [0, ...CurrentDepth]>
+            : I[K] extends CoMapInit<CoMapSchema<ChildSchema>>
+              ? CoMapInitToRelationsToResolve<
+                  ChildSchema,
+                  I[K],
+                  [0, ...CurrentDepth]
+                >
               : never
-          : S[K] extends CoMapSchema<infer ChildSchema>
-            ? I[K] extends LoadedCoMap<CoMapSchema<ChildSchema>, infer R>
-              ? R
-              : I[K] extends CoMapInit<CoMapSchema<ChildSchema>>
-                ? CoMapInitToRelationsToResolve<
-                    ChildSchema,
-                    I[K],
-                    [0, ...CurrentDepth]
-                  >
-                : never
-            : never;
+          : never;
       },
       true
     >;

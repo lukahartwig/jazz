@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, expectTypeOf, it } from "vitest";
 import { createJazzTestAccount } from "../testing.js";
 import { co, z } from "./schema.js";
 
@@ -59,6 +59,8 @@ describe("CoMap2", () => {
     expect(myCoMap2.ref?.ref?.name).toBe("Jane");
     expect(myCoMap.ref?.age).toBe(20);
     expect(myCoMap.ref?.ref.name).toBe("Jane");
+
+    expectTypeOf(myCoMap.ref?.ref.name).toEqualTypeOf<string>();
   });
 
   it("should create a CoMap with self references", () => {
@@ -74,7 +76,7 @@ describe("CoMap2", () => {
       ref: {
         name: "Jane",
         age: 20,
-        ref: { name: "Jane", age: 20 },
+        ref: { name: "Jane", age: 20, ref: undefined },
       },
     });
 
@@ -99,7 +101,7 @@ describe("CoMap2", () => {
       age: 30,
       ref: {
         name: "Jane",
-        child: { name: "Jane", child: { name: "Jane" } },
+        child: { name: "Jane", child: { name: "Jane", child: undefined } },
       },
     });
 
@@ -190,7 +192,7 @@ describe("CoMap2", () => {
       ref: NestedCoMap,
     });
 
-    const myCoMap = MyCoMap.create({ name: "John", age: 30 });
+    const myCoMap = MyCoMap.create({ name: "John", age: 30, ref: undefined });
     myCoMap.$jazz.set("ref", NestedCoMap.create({ name: "Jane", age: 20 }));
 
     const updated = await myCoMap.$jazz.resolve({

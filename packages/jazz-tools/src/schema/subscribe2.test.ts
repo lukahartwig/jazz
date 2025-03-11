@@ -1,6 +1,6 @@
 import { assert, beforeEach, describe, expect, it } from "vitest";
 import { createJazzTestAccount } from "../testing.js";
-import { co, z } from "./schema.js";
+import { Loaded, co, z } from "./schema.js";
 import { loadCoValue, subscribeToCoValue } from "./subscribe.js";
 
 beforeEach(async () => {
@@ -249,7 +249,7 @@ describe("CoMap subscribe", () => {
       {
         resolve: {
           ref: true,
-        } as any,
+        },
       },
       (value) => {
         result = value;
@@ -263,7 +263,7 @@ describe("CoMap subscribe", () => {
 
     const resultBeforeSet = result;
 
-    result.ref.$set("name", "John");
+    result.ref.$jazz.set("name", "John");
 
     expect(result.ref.name).toBe("John");
     expect(resultBeforeSet.ref.name).toBe("Jane");
@@ -310,7 +310,7 @@ describe("CoMap subscribe", () => {
 
     const resultBeforeSet = result;
 
-    result.ref.$set("name", "John");
+    result.ref.$jazz.set("name", "John");
 
     expect(result.ref.name).toBe("John");
     expect(resultBeforeSet.ref.name).toBe("Jane");
@@ -363,7 +363,7 @@ describe("CoMap subscribe", () => {
     expect(john?.ref2).toBe(null);
 
     // To do autoloading inside components
-    john.$request({ resolve: { ref2: true } });
+    john.$jazz.request({ resolve: { ref2: true } });
 
     const janeAfterRequest = result.ref;
 

@@ -6,6 +6,7 @@ import { CoMap, createCoMapFromRaw, isRelationRef } from "./coMap/instance.js";
 import { CoMapSchema, CoValueSchema } from "./coMap/schema.js";
 import {
   Loaded,
+  LoadedCoMap,
   RelationsToResolve,
   RelationsToResolveStrict,
 } from "./coValue/types.js";
@@ -116,7 +117,7 @@ export class CoValueResolutionNode<
         this.listener?.(this.value);
       }
     } else if (this.isLoaded()) {
-      this.value = this.value.$updated() as Loaded<D, R>;
+      this.value = this.value.$jazz.updated() as Loaded<D, R>;
       this.listener?.(this.value);
     }
   }
@@ -125,7 +126,7 @@ export class CoValueResolutionNode<
     this.childValues.set(key, value);
 
     if (this.value && this.isLoaded()) {
-      this.value = this.value.$updated(this.childValues) as Loaded<D, R>;
+      this.value = this.value.$jazz.updated(this.childValues) as Loaded<D, R>;
       this.listener?.(this.value);
     }
   };
@@ -162,7 +163,7 @@ export class CoValueResolutionNode<
   async loadChildren() {
     const { node, resolve, schema } = this;
 
-    const raw = this.value?.$raw;
+    const raw = this.value?.$jazz.raw;
 
     if (raw === undefined) {
       throw new Error("RefNode is not initialized");
@@ -273,14 +274,15 @@ export function loadCoValue<
 
 export async function ensureCoValueLoaded<
   D extends CoValueSchema<any>,
+  I extends RelationsToResolve<D>,
   R extends RelationsToResolve<D>,
 >(
-  existing: CoMap<D, true>,
+  existing: Loaded<D, I>,
   options?: { resolve?: RelationsToResolveStrict<D, R> } | undefined,
 ) {
   const response = await loadCoValue<D, R>(
-    existing.$jazz.schema,
-    existing.$jazz.id,
+    existing.$jazz.schema as D,
+    existing.$jazz.id as ID<D>,
     {
       loadAs: existing.$jazz._loadedAs,
       resolve: options?.resolve,
