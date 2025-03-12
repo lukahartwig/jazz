@@ -13,11 +13,13 @@ export type markSelfReferenceAsOptional<T> = T extends SelfReference
 
 export function self() {
   // Self references are always optional
-  const selfRef: SelfReference = optional({
+  const selfRef = optional({
     [SelfReferenceSymbol]: true,
   });
 
-  return selfRef;
+  selfRef[SelfReferenceSymbol] = true;
+
+  return selfRef as SelfReference;
 }
 
 export function isSelfReference(value: unknown): value is SelfReference {

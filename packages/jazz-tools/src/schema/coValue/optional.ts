@@ -7,7 +7,7 @@ export type Optional<T extends CoValueSchema<any> | SelfReference> = T & {
   [OptionalSymbol]: true;
 };
 
-type isOptional<T> = T extends {
+export type isOptional<T> = T extends {
   [OptionalSymbol]: true;
 }
   ? true

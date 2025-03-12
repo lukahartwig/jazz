@@ -84,9 +84,11 @@ describe("CoMap - with zod based schema", () => {
       const Person = co.map({
         name: z.string(),
         age: z.number(),
-        address: co.map({
-          street: z.string(),
-        }),
+        address: co
+          .map({
+            street: z.string(),
+          })
+          .optional(),
       });
 
       const john = Person.create({
@@ -190,9 +192,8 @@ describe("CoMap - with zod based schema", () => {
         },
       });
 
-      expectTypeOf<typeof john>().toEqualTypeOf<
-        Loaded<typeof Person, { friend: { friend: true } }>
-      >();
+      expectTypeOf<typeof john.friend.friend.name>().toEqualTypeOf<string>();
+      expectTypeOf<typeof john.friend.friend.friend>().toEqualTypeOf<never>();
     });
 
     it("should not throw an error if a self reference is missing", () => {
@@ -257,6 +258,28 @@ describe("CoMap - with zod based schema", () => {
         ["name", "John"],
         ["age", 30],
       ]);
+    });
+
+    it("should work on equality checks", () => {
+      const Person = co.map({
+        name: z.string(),
+        age: z.number(),
+        address: co.map({
+          street: z.string(),
+        }),
+      });
+
+      const john = Person.create({
+        name: "John",
+        age: 30,
+        address: { street: "123 Main St" },
+      });
+
+      expect(john).toEqual({
+        name: "John",
+        age: 30,
+        address: { street: "123 Main St" },
+      });
     });
   });
 
@@ -350,8 +373,14 @@ describe("CoMap - with zod based schema", () => {
       });
 
       expect(john.friend.name).toBe("Jane");
-      expect(johnWithANewFriend.friend.name).toBe("Bob");
+      expect(johnWithANewFriend.friend?.name).toBe("Bob");
       expect(john.$jazz.updated().friend).toBe(johnWithANewFriend.friend);
+
+      const name = johnWithANewFriend.friend?.name;
+
+      // TODO: It would be interesting to keep the Loaded type as non-nullable when returning updated values
+      // because based on the set value we know for sure that the value is or is not undefined
+      expectTypeOf<typeof name>().toMatchTypeOf<string | undefined>();
     });
 
     it("should return the same instance on $updated if there are no changes", () => {

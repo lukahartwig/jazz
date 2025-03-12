@@ -93,15 +93,19 @@ export class CoMapJazzApi<
     const descriptor = this.schema.get(key);
 
     if (descriptor && isRelationRef(descriptor)) {
-      if (!isCoValue(value)) {
-        // To support inline CoMap creation on set
-        value = getSchemaFromDescriptor(this.schema, key).create(
-          value as CoMapInit<any>,
-          this.owner,
-        ) as PropertyType<D, K>;
-      }
+      if (!value) {
+        this.refs.delete(key as RelationsKeys<D>);
+      } else {
+        if (!isCoValue(value)) {
+          // To support inline CoMap creation on set
+          value = getSchemaFromDescriptor(this.schema, key).create(
+            value as CoMapInit<any>,
+            this.owner,
+          ) as PropertyType<D, K>;
+        }
 
-      this.refs.set(key as RelationsKeys<D>, value as Loaded<any, any>);
+        this.refs.set(key as RelationsKeys<D>, value as Loaded<any, any>);
+      }
     }
 
     setValue(this.raw, this.schema, key, value as JsonValue);
@@ -129,21 +133,12 @@ export class CoMapJazzApi<
    *
    * @category Subscription & Loading
    */
-  resolve<O extends RelationsToResolve<D>>(options: {
+  ensureLoaded<O extends RelationsToResolve<D>>(options: {
     resolve: RelationsToResolveStrict<D, O>;
   }): Promise<Loaded<D, O>> {
     return ensureCoValueLoaded<D, R, O>(this._instance, {
       resolve: options.resolve,
     });
-  }
-
-  request<R extends RelationsToResolve<D>>(options: {
-    resolve: RelationsToResolveStrict<D, R>;
-  }) {
-    this._resolutionNode?.request(options.resolve);
-
-    // TODO Merge with the current Resolve
-    return this as Loaded<D, R, "nullable">;
   }
 
   /**
@@ -264,9 +259,9 @@ function setValue<D extends CoMapSchema<any>>(
 
   if (descriptor && typeof key === "string") {
     if (isRelationRef(descriptor)) {
-      if (value === null) {
+      if (value === null || value === undefined) {
         if (isOptional(descriptor)) {
-          raw.set(key, null);
+          raw.set(key, undefined);
         } else {
           throw new Error(`Field ${key} is required`);
         }

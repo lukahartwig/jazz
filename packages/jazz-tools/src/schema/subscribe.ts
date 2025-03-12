@@ -4,6 +4,7 @@ import { activeAccountContext } from "../implementation/activeAccountContext.js"
 import { AnonymousJazzAgent, ID } from "../internal.js";
 import { CoMap, createCoMapFromRaw, isRelationRef } from "./coMap/instance.js";
 import { CoMapSchema, CoValueSchema } from "./coMap/schema.js";
+import { isSelfReference } from "./coValue/self.js";
 import {
   Loaded,
   LoadedCoMap,
@@ -117,8 +118,18 @@ export class CoValueResolutionNode<
         this.listener?.(this.value);
       }
     } else if (this.isLoaded()) {
-      this.value = this.value.$jazz.updated() as Loaded<D, R>;
-      this.listener?.(this.value);
+      const changesOnChildren = this.loadChildren();
+
+      if (this.isLoaded()) {
+        const value = this.value.$jazz.updated(
+          changesOnChildren ? this.childValues : undefined,
+        ) as Loaded<D, R>;
+
+        if (value !== this.value) {
+          this.value = value;
+          this.listener?.(this.value);
+        }
+      }
     }
   }
 
@@ -141,18 +152,6 @@ export class CoValueResolutionNode<
     return true;
   }
 
-  request(resolve: RelationsToResolve<D>) {
-    if (this.resolve === true || !this.resolve) {
-      this.resolve = resolve;
-    } else if (typeof this.resolve === "object") {
-      // TODO: Better merge strategy
-      // @ts-expect-error
-      this.resolve = { ...this.resolve, ...resolve };
-    }
-
-    this.loadChildren();
-  }
-
   setListener(listener: (value: Loaded<D, R>) => void) {
     this.listener = listener;
     if (this.value && this.isLoaded()) {
@@ -160,7 +159,7 @@ export class CoValueResolutionNode<
     }
   }
 
-  async loadChildren() {
+  loadChildren() {
     const { node, resolve, schema } = this;
 
     const raw = this.value?.$jazz.raw;
@@ -169,30 +168,66 @@ export class CoValueResolutionNode<
       throw new Error("RefNode is not initialized");
     }
 
-    if (typeof resolve === "object" && resolve !== null) {
-      for (const key of Object.keys(resolve)) {
-        const value = raw.get(key);
-        const refDescriptor = schema.get(key);
+    if (typeof resolve !== "object" || resolve === null) {
+      return false;
+    }
 
-        if (refDescriptor === undefined) {
-          continue;
-        }
+    let hasChanged = false;
 
-        if (value && isRelationRef(refDescriptor) && resolve[key]) {
-          const childSchema = refDescriptor as CoValueSchema<any>;
+    for (const key of Object.keys(resolve)) {
+      const value = raw.get(key);
+      const descriptor = schema.get(key);
 
-          this.childValues.set(key, undefined);
-          const child = new CoValueResolutionNode(
-            node,
-            resolve[key] as RelationsToResolve<any>,
-            raw.get(key) as ID<any>,
-            childSchema,
-          );
-          child.setListener((value) => this.handleChildUpdate(key, value));
-          this.childNodes.set(key, child);
+      if (descriptor === undefined) {
+        continue;
+      }
+
+      if (this.childNodes.has(key)) {
+        const child = this.childNodes.get(key);
+
+        if (child) {
+          if (child.id !== value) {
+            hasChanged = true;
+            const childNode = this.childNodes.get(key);
+
+            if (childNode) {
+              childNode.destroy();
+            }
+
+            this.childNodes.delete(key);
+            this.childValues.delete(key);
+          } else {
+            continue;
+          }
         }
       }
+
+      if (value && isRelationRef(descriptor) && resolve[key]) {
+        hasChanged = true;
+        let childSchema = descriptor as CoValueSchema<any>;
+
+        if (isSelfReference(childSchema)) {
+          childSchema = this.schema;
+        }
+
+        this.childValues.set(key, undefined);
+        const child = new CoValueResolutionNode(
+          node,
+          resolve[key] as RelationsToResolve<any>,
+          raw.get(key) as ID<any>,
+          childSchema,
+        );
+        child.setListener((value) => this.handleChildUpdate(key, value));
+        this.childNodes.set(key, child);
+      }
     }
+
+    return hasChanged;
+  }
+
+  destroy() {
+    this.subscription.unsubscribe();
+    this.childNodes.forEach((child) => child.destroy());
   }
 }
 

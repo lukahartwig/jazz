@@ -6,6 +6,7 @@ import {
   UnwrapReference,
 } from "../coMap/schema.js";
 import { Optional } from "./optional.js";
+import { SelfReference } from "./self.js";
 import { IsDepthLimit, flatten } from "./typeUtils.js";
 
 export type RelationsToResolveStrict<
@@ -45,7 +46,7 @@ export type isResolveLeaf<R> = R extends boolean | undefined
 export type Loaded<
   S extends CoValueSchema<any>,
   R extends RelationsToResolve<S> = true,
-  Options extends "nullable" | "non-nullable" = "non-nullable",
+  Options extends "nullable" | "non-nullable" = "nullable",
   CurrentDepth extends number[] = [],
 > = R extends never
   ? never
@@ -73,7 +74,7 @@ export type LoadedCoMap<
                         Options,
                         [0, ...CurrentDepth]
                       >
-                    | addNullable<Options>
+                    | addNullable<Options, S["shape"][K]>
                 : null
               : null
             : UnwrapZodType<S["shape"][K]>;
@@ -90,5 +91,13 @@ export type ValidateResolve<
   E,
 > = I extends RelationsToResolve<D> ? I : E;
 
-export type addNullable<O extends "nullable" | "non-nullable"> =
-  O extends "nullable" ? null : never;
+export type addNullable<
+  O extends "nullable" | "non-nullable",
+  T,
+> = O extends "nullable"
+  ? T extends Optional<infer U>
+    ? null | undefined
+    : T extends SelfReference
+      ? undefined | null
+      : never
+  : never;

@@ -111,7 +111,11 @@ export class CoMapSchema<S extends CoMapSchemaShape> {
         }
       | Account
       | Group,
-  ): Loaded<CoMapSchema<S>, CoMapInitToRelationsToResolve<S, I>> {
+  ): Loaded<
+    CoMapSchema<S>,
+    CoMapInitToRelationsToResolve<S, I>,
+    "non-nullable"
+  > {
     const { owner, uniqueness } = parseCoValueCreateOptions(options);
     return createCoMap<CoMapSchema<S>>(this, init, owner, uniqueness) as any;
   }
