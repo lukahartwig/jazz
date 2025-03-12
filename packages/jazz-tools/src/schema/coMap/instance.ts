@@ -5,12 +5,12 @@ import type { Group } from "../../coValues/group.js";
 import { RegisteredSchemas } from "../../coValues/registeredSchemas.js";
 import { AnonymousJazzAgent, ID } from "../../internal.js";
 import { coValuesCache } from "../../lib/cache.js";
+import { isOptional } from "../coValue/optional.js";
+import { SelfReference, isSelfReference } from "../coValue/self.js";
 import {
   Loaded,
-  LoadedCoMap,
   RelationsToResolve,
   RelationsToResolveStrict,
-  SelfReference,
 } from "../coValue/types.js";
 import { CoValueResolutionNode, ensureCoValueLoaded } from "../subscribe.js";
 import { CoMapInit, CoMapSchema, CoValueSchema } from "./schema.js";
@@ -218,14 +218,20 @@ function getValue<D extends CoMapSchema<any>>(
   if (descriptor && typeof key === "string") {
     const value = raw.get(key);
 
-    if (descriptor instanceof CoMapSchema || descriptor === SelfReference) {
+    if (descriptor instanceof CoMapSchema || isSelfReference(descriptor)) {
       if (value === undefined) {
         return undefined;
       } else {
         return null;
       }
     } else {
-      return descriptor.parse(value);
+      try {
+        return descriptor.parse(value);
+      } catch (error) {
+        throw new Error(
+          `Failed to parse field ${key}: ${JSON.stringify(error)}`,
+        );
+      }
     }
   } else {
     return undefined;
@@ -243,7 +249,11 @@ function setValue<D extends CoMapSchema<any>>(
   if (descriptor && typeof key === "string") {
     if (isRelationRef(descriptor)) {
       if (value === null) {
-        raw.set(key, null);
+        if (isOptional(descriptor)) {
+          raw.set(key, null);
+        } else {
+          throw new Error(`Field ${key} is required`);
+        }
       } else {
         raw.set(
           key,
@@ -251,7 +261,14 @@ function setValue<D extends CoMapSchema<any>>(
         );
       }
     } else {
-      raw.set(key, descriptor.parse(value));
+      // TODO: Provide better parse errors with the field information
+      try {
+        raw.set(key, descriptor.parse(value));
+      } catch (error) {
+        throw new Error(
+          `Failed to parse field ${key}: ${JSON.stringify(error)}`,
+        );
+      }
     }
 
     return true;
@@ -273,7 +290,7 @@ function createCoMapFromInit<D extends CoMapSchema<any>>(
   const refs = new Map<string, Loaded<any, any>>();
 
   if (init) {
-    const fields = Object.keys(init) as (keyof D["shape"])[];
+    const fields = schema.keys() as (keyof D["shape"] & string)[];
 
     for (const key of fields) {
       const initValue = init[key];
@@ -286,13 +303,17 @@ function createCoMapFromInit<D extends CoMapSchema<any>>(
 
       if (isRelationRef(descriptor)) {
         if (initValue === null || initValue === undefined) {
-          rawInit[key] = null;
+          if (isOptional(descriptor)) {
+            rawInit[key] = null;
+          } else {
+            throw new Error(`Field ${key} is required`);
+          }
         } else {
           let instance: Loaded<CoValueSchema<{}>>;
 
           if ("$jazz" in initValue) {
             instance = initValue as unknown as Loaded<CoValueSchema<{}>>;
-          } else if (descriptor === SelfReference) {
+          } else if (isSelfReference(descriptor)) {
             instance = schema.create(
               initValue as CoMapInit<any>,
               owner,
@@ -308,7 +329,13 @@ function createCoMapFromInit<D extends CoMapSchema<any>>(
           refs.set(key as string, instance);
         }
       } else {
-        rawInit[key] = descriptor.parse(initValue);
+        try {
+          rawInit[key] = descriptor.parse(initValue);
+        } catch (error) {
+          throw new Error(
+            `Failed to parse field ${key}: ${JSON.stringify(error)}`,
+          );
+        }
       }
     }
   }
@@ -321,5 +348,5 @@ function createCoMapFromInit<D extends CoMapSchema<any>>(
 export function isRelationRef(
   descriptor: CoMapSchema<any> | ZodTypeAny | SelfReference,
 ): descriptor is CoMapSchema<any> | SelfReference {
-  return descriptor instanceof CoMapSchema || descriptor === SelfReference;
+  return descriptor instanceof CoMapSchema || isSelfReference(descriptor);
 }

@@ -3,11 +3,16 @@ import { TypeOf, ZodTypeAny, z } from "zod";
 import { Account } from "../../coValues/account.js";
 import { Group } from "../../coValues/group.js";
 import { parseCoValueCreateOptions } from "../../internal.js";
+import { Optional, addOptional, optional } from "../coValue/optional.js";
+import { SelfReference, markSelfReferenceAsOptional } from "../coValue/self.js";
 import {
   IsDepthLimit,
+  addQuestionMarks,
+  flatten,
+} from "../coValue/typeUtils.js";
+import {
   Loaded,
   LoadedCoMap,
-  SelfReference,
   UnwrapZodType,
   ValidateResolve,
 } from "../coValue/types.js";
@@ -28,14 +33,24 @@ export type UnwrapReference<
     ? D
     : never;
 
-export type CoMapInit<D extends CoMapSchema<any>> = {
-  [K in keyof D["shape"]]: UnwrapReference<D, K> extends CoMapSchema<any>
-    ?
-        | CoMapInit<UnwrapReference<D, K>>
-        | LoadedCoMap<UnwrapReference<D, K>, any>
-        | undefined
-    : UnwrapZodType<D["shape"][K]>;
-};
+export type CoMapInit<
+  D extends CoMapSchema<any>,
+  CurrentDepth extends number[] = [],
+> = IsDepthLimit<CurrentDepth> extends true
+  ? {}
+  : flatten<
+      addQuestionMarks<{
+        [K in keyof D["shape"]]: UnwrapReference<D, K> extends CoMapSchema<any>
+          ?
+              | CoMapInit<UnwrapReference<D, K>, [0, ...CurrentDepth]>
+              | LoadedCoMap<UnwrapReference<D, K>, any>
+              | addOptional<UnwrapReference<D, K>>
+              | markSelfReferenceAsOptional<D["shape"][K]> // Self references are always optional
+          : D["shape"][K] extends ZodTypeAny
+            ? TypeOf<D["shape"][K]>
+            : never;
+      }>
+    >;
 
 export type CoMapInitStrict<
   D extends CoMapSchema<any>,
@@ -70,10 +85,13 @@ export type CoMapInitToRelationsToResolve<
 
 export class CoMapSchema<S extends CoMapSchemaShape> {
   shape: S;
-  optional = true;
 
   constructor(schema: S) {
     this.shape = schema;
+  }
+
+  optional() {
+    return optional(this);
   }
 
   get(key: keyof S) {
@@ -81,7 +99,7 @@ export class CoMapSchema<S extends CoMapSchemaShape> {
   }
 
   keys() {
-    return Object.keys(this.shape) as (keyof S)[];
+    return Object.keys(this.shape) as (keyof S & string)[];
   }
 
   create<I extends CoMapInit<CoMapSchema<S>>>(

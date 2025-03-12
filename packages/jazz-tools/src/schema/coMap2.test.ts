@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, expectTypeOf, it } from "vitest";
 import { createJazzTestAccount } from "../testing.js";
-import { co, z } from "./schema.js";
+import { CoMapInit } from "./coMap/schema.js";
+import { Loaded, co, z } from "./schema.js";
 
 beforeEach(async () => {
   await createJazzTestAccount({
@@ -8,17 +9,41 @@ beforeEach(async () => {
   });
 });
 
-describe("CoMap2", () => {
+describe("CoMap - with zod based schema", () => {
   it("should create a CoMap with basic property access", () => {
-    const MyCoMap = co.map({
+    const Person = co.map({
       name: z.string(),
       age: z.number(),
     });
 
-    const myCoMap = MyCoMap.create({ name: "John", age: 30 });
+    const john = Person.create({ name: "John", age: 30 });
 
-    expect(myCoMap.name).toBe("John");
-    expect(myCoMap.age).toBe(30);
+    expect(john.name).toBe("John");
+    expect(john.age).toBe(30);
+  });
+
+  it("should generate the right CoMapInit type", () => {
+    const Person = co.map({
+      name: z.string(),
+      age: z.number(),
+    });
+
+    expectTypeOf<CoMapInit<typeof Person>>().toEqualTypeOf<{
+      name: string;
+      age: number;
+    }>();
+  });
+
+  it("should throw an error if a required field is missing", () => {
+    const Person = co.map({
+      name: z.string(),
+      age: z.number(),
+    });
+
+    // @ts-expect-error - age is required
+    expect(() => Person.create({ name: "John" })).toThrow(
+      /^Field age is required/,
+    );
   });
 
   it("should create a CoMap with nested values", () => {
@@ -33,7 +58,7 @@ describe("CoMap2", () => {
       ref: co.map({
         name: z.string(),
         age: z.number(),
-        ref: NestedCoMap,
+        ref: NestedCoMap.optional(),
       }),
     });
 
@@ -76,7 +101,7 @@ describe("CoMap2", () => {
       ref: {
         name: "Jane",
         age: 20,
-        ref: { name: "Jane", age: 20, ref: undefined },
+        ref: { name: "Jane", age: 20 },
       },
     });
 
@@ -92,7 +117,7 @@ describe("CoMap2", () => {
       age: z.number(),
       ref: co.map({
         name: z.string(),
-        child: co.self(),
+        child: co.optional(co.self()),
       }),
     });
 
@@ -189,7 +214,7 @@ describe("CoMap2", () => {
     const MyCoMap = co.map({
       name: z.string(),
       age: z.number(),
-      ref: NestedCoMap,
+      ref: NestedCoMap.optional(),
     });
 
     const myCoMap = MyCoMap.create({ name: "John", age: 30, ref: undefined });
@@ -216,5 +241,50 @@ describe("CoMap2", () => {
     const myCoMap = MyCoMap.create({ name: "John", age: 30 });
 
     expect(myCoMap.$jazz.updated()).toBe(myCoMap);
+  });
+
+  it("should support optional values", async () => {
+    const NestedCoMap = co.map({
+      name: z.string(),
+      age: z.number(),
+    });
+
+    const MyCoMap = co.map({
+      name: z.optional(z.string()),
+      age: z.number(),
+      ref: co.optional(NestedCoMap),
+    });
+
+    const myCoMap = MyCoMap.create({
+      age: 30,
+    });
+
+    expect(myCoMap.name).toBeUndefined();
+    expect(myCoMap.age).toBe(30);
+
+    expectTypeOf(myCoMap.name).toEqualTypeOf<string | undefined>();
+    expectTypeOf(myCoMap.age).toEqualTypeOf<number>();
+    expectTypeOf(myCoMap.ref).toEqualTypeOf<never>();
+  });
+
+  it("should check for required references", async () => {
+    const NestedCoMap = co.map({
+      name: z.string(),
+      age: z.number(),
+    });
+
+    const MyCoMap = co.map({
+      name: z.optional(z.string()),
+      age: z.number(),
+      ref: NestedCoMap,
+    });
+
+    // @ts-expect-error - ref is required
+    expect(() => MyCoMap.create({ ref: { name: "Jane", age: 20 } })).toThrow(
+      /^Failed to parse field age/,
+    );
+
+    // @ts-expect-error - ref is required
+    expect(() => MyCoMap.create({ age: 30 })).toThrow(/^Field ref is required/);
   });
 });

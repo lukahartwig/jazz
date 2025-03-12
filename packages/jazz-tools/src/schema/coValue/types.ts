@@ -2,18 +2,11 @@ import { TypeOf, ZodTypeAny } from "zod";
 import { CoMap } from "../coMap/instance.js";
 import {
   CoMapSchema,
-  CoMapSchemaShape,
   CoValueSchema,
   UnwrapReference,
 } from "../coMap/schema.js";
-
-export const SelfReference = "SelfReference" as const;
-export type SelfReference = typeof SelfReference;
-
-type DEPTH_LIMIT = 5;
-
-export type IsDepthLimit<CurrentDepth extends number[]> =
-  DEPTH_LIMIT extends CurrentDepth["length"] ? true : false;
+import { Optional } from "./optional.js";
+import { IsDepthLimit, flatten } from "./typeUtils.js";
 
 export type RelationsToResolveStrict<
   T extends CoValueSchema<any>,
@@ -21,21 +14,21 @@ export type RelationsToResolveStrict<
 > = V extends RelationsToResolve<T> ? RelationsToResolve<T> : V;
 
 export type RelationsToResolve<
-  D extends CoValueSchema<any>,
+  S extends CoValueSchema<any>,
   CurrentDepth extends number[] = [],
 > =
   | true
   | (IsDepthLimit<CurrentDepth> extends true
       ? true
-      : D extends CoMapSchema<any>
+      : S extends CoMapSchema<any>
         ?
             | {
-                [K in keyof D["shape"]]?: UnwrapReference<
-                  D,
+                [K in keyof S["shape"]]?: UnwrapReference<
+                  S,
                   K
                 > extends CoValueSchema<any>
                   ? RelationsToResolve<
-                      UnwrapReference<D, K>,
+                      UnwrapReference<S, K>,
                       [0, ...CurrentDepth]
                     >
                   : never;
@@ -43,49 +36,51 @@ export type RelationsToResolve<
             | true
         : true);
 
-export type isResolveLeaf<Depth> = Depth extends boolean | undefined
+export type isResolveLeaf<R> = R extends boolean | undefined
   ? true
-  : keyof Depth extends never // Depth = {}
+  : keyof R extends never // R = {}
     ? true
     : false;
 
 export type Loaded<
-  D extends CoValueSchema<any>,
-  Depth extends RelationsToResolve<D> = true,
+  S extends CoValueSchema<any>,
+  R extends RelationsToResolve<S> = true,
   Options extends "nullable" | "non-nullable" = "non-nullable",
   CurrentDepth extends number[] = [],
-> = Depth extends never
+> = R extends never
   ? never
-  : D extends CoMapSchema<any>
-    ? LoadedCoMap<D, Depth, Options, CurrentDepth>
+  : S extends CoMapSchema<any>
+    ? LoadedCoMap<S, R, Options, CurrentDepth>
     : never;
 
 export type LoadedCoMap<
-  D extends CoMapSchema<any>,
-  Depth extends RelationsToResolve<D>,
+  S extends CoMapSchema<any>,
+  R extends RelationsToResolve<S>,
   Options extends "nullable" | "non-nullable" = "non-nullable",
   CurrentDepth extends number[] = [],
-> = CoMap<D, Depth> &
-  (D extends CoMapSchema<any>
+> = flatten<
+  (S extends CoMapSchema<any>
     ? {
-        [K in keyof D["shape"]]: D["shape"][K] extends ZodTypeAny
-          ? TypeOf<D["shape"][K]>
-          : UnwrapReference<D, K> extends CoValueSchema<any>
-            ? Depth[K] extends RelationsToResolve<UnwrapReference<D, K>>
-              ? IsDepthLimit<CurrentDepth> & isResolveLeaf<Depth> extends false
+        [K in keyof S["shape"]]: S["shape"][K] extends ZodTypeAny
+          ? TypeOf<S["shape"][K]>
+          : UnwrapReference<S, K> extends CoValueSchema<any>
+            ? R[K] extends RelationsToResolve<UnwrapReference<S, K>>
+              ? IsDepthLimit<CurrentDepth> & isResolveLeaf<R> extends false
                 ?
                     | Loaded<
-                        UnwrapReference<D, K>,
-                        Depth[K],
+                        UnwrapReference<S, K>,
+                        R[K],
                         Options,
                         [0, ...CurrentDepth]
                       >
                     | addNullable<Options>
                 : null
               : null
-            : UnwrapZodType<D["shape"][K]>;
+            : UnwrapZodType<S["shape"][K]>;
       }
-    : never);
+    : never) &
+    CoMap<S, R>
+>;
 
 export type UnwrapZodType<T, O = null> = T extends ZodTypeAny ? TypeOf<T> : O;
 
