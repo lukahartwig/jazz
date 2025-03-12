@@ -40,14 +40,14 @@ export type CoMapInit<
   ? {}
   : flatten<
       addQuestionMarks<{
-        [K in keyof D["shape"]]: UnwrapReference<D, K> extends CoMapSchema<any>
-          ?
-              | CoMapInit<UnwrapReference<D, K>, [0, ...CurrentDepth]>
-              | LoadedCoMap<UnwrapReference<D, K>, any>
-              | addOptional<UnwrapReference<D, K>>
-              | markSelfReferenceAsOptional<D["shape"][K]> // Self references are always optional
-          : D["shape"][K] extends ZodTypeAny
-            ? TypeOf<D["shape"][K]>
+        [K in keyof D["shape"]]: D["shape"][K] extends ZodTypeAny
+          ? TypeOf<D["shape"][K]>
+          : UnwrapReference<D, K> extends CoMapSchema<any>
+            ?
+                | CoMapInit<UnwrapReference<D, K>, [0, ...CurrentDepth]>
+                | LoadedCoMap<UnwrapReference<D, K>, any>
+                | addOptional<UnwrapReference<D, K>>
+                | markSelfReferenceAsOptional<D["shape"][K]> // Self references are always optional
             : never;
       }>
     >;

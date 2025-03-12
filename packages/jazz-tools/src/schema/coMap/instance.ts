@@ -1,5 +1,5 @@
 import { CoValueUniqueness, JsonValue, RawAccount, RawCoMap } from "cojson";
-import { ZodTypeAny } from "zod";
+import { ZodType, ZodTypeAny } from "zod";
 import type { Account } from "../../coValues/account.js";
 import type { Group } from "../../coValues/group.js";
 import { RegisteredSchemas } from "../../coValues/registeredSchemas.js";
@@ -90,7 +90,23 @@ export class CoMapJazzApi<
   }
 
   set<K extends keyof D["shape"]>(key: K, value: PropertyType<D, K>) {
+    const descriptor = this.schema.get(key);
+
+    if (descriptor && isRelationRef(descriptor)) {
+      if (!isCoValue(value)) {
+        // To support inline CoMap creation on set
+        value = getSchemaFromDescriptor(this.schema, key).create(
+          value as CoMapInit<any>,
+          this.owner,
+        ) as PropertyType<D, K>;
+      }
+
+      this.refs.set(key as RelationsKeys<D>, value as Loaded<any, any>);
+    }
+
     setValue(this.raw, this.schema, key, value as JsonValue);
+
+    return this.updated();
   }
 
   updated(refs?: ChildMap<D>): Loaded<D, R> {
@@ -255,10 +271,14 @@ function setValue<D extends CoMapSchema<any>>(
           throw new Error(`Field ${key} is required`);
         }
       } else {
-        raw.set(
-          key,
-          (value as unknown as Loaded<CoMapSchema<{}>, true>).$jazz.id,
-        );
+        if (value && typeof value === "object" && "$jazz" in value) {
+          raw.set(
+            key,
+            (value as unknown as Loaded<CoMapSchema<{}>, true>).$jazz.id,
+          );
+        } else {
+          throw new Error(`The value assigned to ${key} is not a reference`);
+        }
       }
     } else {
       // TODO: Provide better parse errors with the field information
@@ -304,7 +324,7 @@ function createCoMapFromInit<D extends CoMapSchema<any>>(
       if (isRelationRef(descriptor)) {
         if (initValue === null || initValue === undefined) {
           if (isOptional(descriptor)) {
-            rawInit[key] = null;
+            rawInit[key] = undefined;
           } else {
             throw new Error(`Field ${key} is required`);
           }
@@ -313,13 +333,8 @@ function createCoMapFromInit<D extends CoMapSchema<any>>(
 
           if ("$jazz" in initValue) {
             instance = initValue as unknown as Loaded<CoValueSchema<{}>>;
-          } else if (isSelfReference(descriptor)) {
-            instance = schema.create(
-              initValue as CoMapInit<any>,
-              owner,
-            ) as Loaded<CoValueSchema<{}>>;
           } else {
-            instance = descriptor.create(
+            instance = getSchemaFromDescriptor(schema, key).create(
               initValue as CoMapInit<any>,
               owner,
             ) as Loaded<CoValueSchema<{}>>;
@@ -345,8 +360,29 @@ function createCoMapFromInit<D extends CoMapSchema<any>>(
   return { raw, refs };
 }
 
+function getSchemaFromDescriptor<
+  S extends CoMapSchema<any>,
+  K extends keyof S["shape"],
+>(schema: S, key: K) {
+  const descriptor = schema.get(key);
+
+  if (descriptor && isRelationRef(descriptor)) {
+    if (isSelfReference(descriptor)) {
+      return schema;
+    } else {
+      return descriptor;
+    }
+  } else {
+    throw new Error(`Field ${String(key)} is not a reference`);
+  }
+}
+
 export function isRelationRef(
   descriptor: CoMapSchema<any> | ZodTypeAny | SelfReference,
 ): descriptor is CoMapSchema<any> | SelfReference {
   return descriptor instanceof CoMapSchema || isSelfReference(descriptor);
+}
+
+export function isCoValue(value: unknown): value is CoMap<any, any> {
+  return typeof value === "object" && value !== null && "$jazz" in value;
 }
