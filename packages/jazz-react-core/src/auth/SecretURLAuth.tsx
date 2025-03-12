@@ -10,14 +10,16 @@ import {
  * `useSecretURLAuth` hook provides a `JazzAuth` object for secret URL authentication.
  * Allows you to create a pairing URL from an authenticated session and log in from another device.
  *
+ * @param origin - The origin URL to use when generating the secret URL.
+ *
  * @example
  * ```ts
- * const auth = useSecretURLAuth();
+ * const auth = useSecretURLAuth(window.location.origin);
  * ```
  *
  * @category Auth Providers
  */
-export function useSecretURLAuth() {
+export function useSecretURLAuth(origin: string) {
   const context = useJazzContext();
   const authSecretStorage = useAuthSecretStorage();
 
@@ -36,10 +38,10 @@ export function useSecretURLAuth() {
   const secretURL = useSyncExternalStore(
     useCallback(
       (callback) => {
-        authMethod.loadCurrentAccountSecretURL();
+        authMethod.loadCurrentAccountSecretURL(origin);
         return authMethod.subscribe(callback);
       },
-      [authMethod],
+      [authMethod, origin],
     ),
     () => authMethod.secretURL,
   );

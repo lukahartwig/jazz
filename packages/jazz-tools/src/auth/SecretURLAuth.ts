@@ -67,17 +67,18 @@ export class SecretURLAuth {
   /**
    * Creates a pairing URL for the given secret.
    *
+   * @param origin - The origin URL to use for the auth URL.
    * @param expiresAt - The expiration time in milliseconds. Defaults to 15 minutes.
    * @returns The pairing URL.
    */
-  createPairingURL = async (expiresAt?: number) => {
+  createPairingURL = async (origin: string, expiresAt?: number) => {
     const credentials = await this.authSecretStorage.get();
     if (!credentials?.secretSeed) {
       throw new Error("No existing authentication found");
     }
 
     const secret = this.encodeSecret(credentials.secretSeed);
-    return createAuthURL(secret, expiresAt);
+    return createAuthURL(secret, origin, expiresAt);
   };
 
   private encodeSecret = (secret: Uint8Array): string => {
@@ -88,14 +89,25 @@ export class SecretURLAuth {
     return base64URLtoBytes(encoded);
   };
 
-  getCurrentAccountSecretURL = async () => {
+  /**
+   * Returns the current account's secret URL.
+   *
+   * @param origin - The origin URL to use for the auth URL.
+   * @returns The current account's secret URL.
+   */
+  getCurrentAccountSecretURL = async (origin: string) => {
     const credentials = await this.authSecretStorage.get();
     if (!credentials?.secretSeed) throw new Error("No active session");
-    return createAuthURL(this.encodeSecret(credentials.secretSeed));
+    return createAuthURL(this.encodeSecret(credentials.secretSeed), origin);
   };
 
-  loadCurrentAccountSecretURL = async () => {
-    this.secretURL = await this.getCurrentAccountSecretURL();
+  /**
+   * Loads the current account's secret URL and notifies listeners.
+   *
+   * @param origin - The origin URL to use for the auth URL.
+   */
+  loadCurrentAccountSecretURL = async (origin: string) => {
+    this.secretURL = await this.getCurrentAccountSecretURL(origin);
     this.notify();
   };
 
@@ -119,17 +131,22 @@ export class SecretURLAuth {
  * Creates an authentication URL for the given secret.
  *
  * @param secret - The secret to encode.
+ * @param origin - The origin URL to use for the auth URL.
  * @param expiresAtParam - The expiration time in milliseconds. Defaults to 15 minutes from now.
  * @returns The authentication URL.
  */
-export function createAuthURL(secret: string, expiresAtParam?: number) {
+export function createAuthURL(
+  secret: string,
+  origin: string,
+  expiresAtParam?: number,
+) {
   const expiresAt = expiresAtParam ?? Date.now() + 15 * 60 * 1000;
   const payload = JSON.stringify({ s: secret, t: expiresAt });
   const encoded = bytesToBase64url(new TextEncoder().encode(payload)).replace(
     /=/g,
     "",
   );
-  return `${window.location.origin}/auth#${encoded}`;
+  return `${origin}/auth#${encoded}`;
 }
 
 /**

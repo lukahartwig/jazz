@@ -9,7 +9,11 @@ import {
   parseAuthURL,
 } from "../auth/SecretURLAuth.js";
 import { Account } from "../coValues/account.js";
-import { InMemoryKVStore, KvStoreContext } from "../exports.js";
+import {
+  AuthenticateAccountFunction,
+  InMemoryKVStore,
+  KvStoreContext,
+} from "../exports.js";
 import { ID } from "../internal.js";
 import { TestJSCrypto } from "../testing.js";
 
@@ -17,7 +21,7 @@ KvStoreContext.getInstance().initialize(new InMemoryKVStore());
 
 describe("SecretURLAuth", () => {
   let crypto: CryptoProvider;
-  let mockAuthenticate: any;
+  let mockAuthenticate: AuthenticateAccountFunction;
   let authSecretStorage: AuthSecretStorage;
   let secretURLAuth: SecretURLAuth;
 
@@ -37,7 +41,10 @@ describe("SecretURLAuth", () => {
   describe("logIn", () => {
     test("success with valid secret URL", async () => {
       const secretSeed = crypto.newRandomSecretSeed();
-      const validURL = createAuthURL(bytesToBase64url(secretSeed));
+      const validURL = createAuthURL(
+        bytesToBase64url(secretSeed),
+        window.location.origin,
+      );
 
       await secretURLAuth.logIn(validURL);
 
@@ -48,6 +55,7 @@ describe("SecretURLAuth", () => {
       const secretSeed = crypto.newRandomSecretSeed();
       const expiredURL = createAuthURL(
         bytesToBase64url(secretSeed),
+        window.location.origin,
         Date.now() - 1000,
       );
 
@@ -56,7 +64,10 @@ describe("SecretURLAuth", () => {
 
     test("fail with tampered URL", async () => {
       const secretSeed = crypto.newRandomSecretSeed();
-      const validURL = createAuthURL(bytesToBase64url(secretSeed));
+      const validURL = createAuthURL(
+        bytesToBase64url(secretSeed),
+        window.location.origin,
+      );
       const tamperedURL = validURL + "tampered";
 
       await expect(secretURLAuth.logIn(tamperedURL)).rejects.toThrow("Invalid");
@@ -73,7 +84,7 @@ describe("SecretURLAuth", () => {
         provider: "anonymous",
       });
 
-      const url = await secretURLAuth.createPairingURL();
+      const url = await secretURLAuth.createPairingURL(window.location.origin);
       const parsed = parseAuthURL(url);
 
       expect(parsed?.expiresAt).toBeGreaterThan(Date.now());
@@ -81,9 +92,9 @@ describe("SecretURLAuth", () => {
     });
 
     test("fail when no credentials", async () => {
-      await expect(secretURLAuth.createPairingURL()).rejects.toThrow(
-        "No existing authentication found",
-      );
+      await expect(
+        secretURLAuth.createPairingURL(window.location.origin),
+      ).rejects.toThrow("No existing authentication found");
     });
   });
 });
