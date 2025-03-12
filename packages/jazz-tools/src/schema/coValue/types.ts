@@ -24,20 +24,24 @@ export type RelationsToResolve<
   D extends CoValueSchema<any>,
   CurrentDepth extends number[] = [],
 > =
-  | boolean
+  | true
   | (IsDepthLimit<CurrentDepth> extends true
-      ? boolean
-      : D extends CoMapSchema<infer S>
+      ? true
+      : D extends CoMapSchema<any>
         ?
             | {
-                [K in keyof S]?: S[K] extends CoValueSchema<any>
-                  ? RelationsToResolve<S[K], [0, ...CurrentDepth]>
-                  : S[K] extends SelfReference
-                    ? RelationsToResolve<CoMapSchema<S>, [0, ...CurrentDepth]>
-                    : never;
+                [K in keyof D["shape"]]?: UnwrapReference<
+                  D,
+                  K
+                > extends CoValueSchema<any>
+                  ? RelationsToResolve<
+                      UnwrapReference<D, K>,
+                      [0, ...CurrentDepth]
+                    >
+                  : never;
               }
-            | boolean
-        : boolean);
+            | true
+        : true);
 
 export type isResolveLeaf<Depth> = Depth extends boolean | undefined
   ? true
