@@ -1,7 +1,10 @@
 import { SecretURLAuth } from "jazz-tools";
 import { useCallback, useMemo, useSyncExternalStore } from "react";
-import { useAuthSecretStorage, useJazzContext } from "../hooks.js";
-import { useIsAuthenticated } from "./useIsAuthenticated.js";
+import {
+  useAuthSecretStorage,
+  useIsAuthenticated,
+  useJazzContext,
+} from "../hooks.js";
 
 /**
  * `useSecretURLAuth` hook provides a `JazzAuth` object for secret URL authentication.

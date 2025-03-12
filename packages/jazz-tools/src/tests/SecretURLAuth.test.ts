@@ -1,20 +1,17 @@
 // @vitest-environment happy-dom
 
 import { AgentSecret, CryptoProvider, bytesToBase64url } from "cojson";
-import {
-  Account,
-  AuthSecretStorage,
-  ID,
-  InMemoryKVStore,
-  KvStoreContext,
-} from "jazz-tools";
 import { beforeEach, describe, expect, test, vi } from "vitest";
+import { AuthSecretStorage } from "../auth/AuthSecretStorage.js";
 import {
   SecretURLAuth,
   createAuthURL,
   parseAuthURL,
-} from "../auth/SecretURLAuth";
-import { TestJSCrypto } from "../testing";
+} from "../auth/SecretURLAuth.js";
+import { Account } from "../coValues/account.js";
+import { InMemoryKVStore, KvStoreContext } from "../exports.js";
+import { ID } from "../internal.js";
+import { TestJSCrypto } from "../testing.js";
 
 KvStoreContext.getInstance().initialize(new InMemoryKVStore());
 
