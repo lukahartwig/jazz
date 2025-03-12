@@ -27,25 +27,19 @@ export type JazzContextManagerProps<Acc extends Account> = {
 export class ReactNativeContextManager<
   Acc extends Account,
 > extends JazzContextManager<Acc, JazzContextManagerProps<Acc>> {
-  async createContext(
+  async getNewContext(
     props: JazzContextManagerProps<Acc>,
     authProps?: JazzContextManagerAuthProps,
   ) {
-    let currentContext;
-
-    // We need to store the props here to block the double effect execution
-    // on React. Otherwise when calling propsChanged this.props is undefined.
-    this.props = props;
-
     if (props.guestMode) {
-      currentContext = await createJazzReactNativeGuestContext({
+      return createJazzReactNativeGuestContext({
         sync: props.sync,
         storage: props.storage,
         authSecretStorage: this.authSecretStorage,
         CryptoProvider: props.CryptoProvider,
       });
     } else {
-      currentContext = await createJazzReactNativeContext<Acc>({
+      return createJazzReactNativeContext<Acc>({
         sync: props.sync,
         storage: props.storage,
         AccountSchema: props.AccountSchema,
@@ -56,8 +50,6 @@ export class ReactNativeContextManager<
         CryptoProvider: props.CryptoProvider,
       });
     }
-
-    await this.updateContext(props, currentContext, authProps);
   }
 
   getKvStore(): KvStore {

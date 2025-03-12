@@ -1,7 +1,7 @@
 export interface WebsocketEvents {
   close: { code: number; reason: string };
   message: { data: unknown };
-  open: void;
+  open: unknown;
 }
 
 export interface PingMsg {

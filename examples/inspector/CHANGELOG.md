@@ -1,5 +1,33 @@
 # jazz-example-inspector
 
+## 0.0.112
+
+### Patch Changes
+
+- Updated dependencies [68b0242]
+  - cojson-transport-ws@0.11.3
+  - cojson@0.11.3
+
+## 0.0.111
+
+### Patch Changes
+
+- Updated dependencies [b9d194a]
+- Updated dependencies [a4713df]
+- Updated dependencies [e22de9f]
+- Updated dependencies [34cbdc3]
+- Updated dependencies [0f67e0a]
+  - cojson@0.11.0
+  - cojson-transport-ws@0.11.0
+
+## 0.0.110
+
+### Patch Changes
+
+- Updated dependencies [f86e278]
+  - cojson@0.10.15
+  - cojson-transport-ws@0.10.15
+
 ## 0.0.109
 
 ### Patch Changes

@@ -231,7 +231,7 @@ export class LocalNode {
 
       return node;
     } catch (e) {
-      logger.error("Error withLoadedAccount: " + (e as Error)?.message);
+      logger.error("Error withLoadedAccount", { err: e });
       throw e;
     }
   }
@@ -270,8 +270,9 @@ export class LocalNode {
         this.syncManager.getServerAndStoragePeers(skipLoadingFromPeer);
 
       await entry.loadFromPeers(peers).catch((e) => {
-        logger.error("Error loading from peers: " + (e as Error)?.message, {
+        logger.error("Error loading from peers", {
           id,
+          err: e,
         });
       });
     }
@@ -326,9 +327,10 @@ export class LocalNode {
         unsubscribe = coValue.subscribe(callback);
       })
       .catch((e) => {
-        logger.error(
-          "Error subscribing to " + id + ": " + (e as Error)?.message,
-        );
+        logger.error("Subscription error", {
+          id,
+          err: e,
+        });
       });
 
     return () => {
@@ -530,7 +532,7 @@ export class LocalNode {
       } satisfies UnexpectedlyNotAccountError);
     }
 
-    return (coValue.getCurrentContent() as RawAccount).currentAgentID();
+    return ok((coValue.getCurrentContent() as RawAccount).currentAgentID());
   }
 
   resolveAccountAgentAsync(
@@ -573,7 +575,7 @@ export class LocalNode {
         } satisfies UnexpectedlyNotAccountError);
       }
 
-      return (coValue.getCurrentContent() as RawAccount).currentAgentID();
+      return ok((coValue.getCurrentContent() as RawAccount).currentAgentID());
     });
   }
 
@@ -601,9 +603,7 @@ export class LocalNode {
       this.crypto.seal({
         message: readKey.secret,
         from: this.account.currentSealerSecret(),
-        to: this.account
-          .currentSealerID()
-          ._unsafeUnwrap({ withStackTrace: true }),
+        to: this.account.currentSealerID(),
         nOnceMaterial: {
           in: groupCoValue.id,
           tx: groupCoValue.nextTransactionID(),

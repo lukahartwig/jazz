@@ -9,7 +9,7 @@ import {
   co,
 } from "jazz-tools";
 import { describe, expect, onTestFinished, test } from "vitest";
-import { startWorker } from "../index";
+import { startWorker } from "../index.js";
 
 async function setup<Acc extends Account>(AccountSchema?: AccountClass<Acc>) {
   const { server, port } = await setupSyncServer();

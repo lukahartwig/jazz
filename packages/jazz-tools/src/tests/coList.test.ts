@@ -4,6 +4,7 @@ import { describe, expect, test } from "vitest";
 import {
   Account,
   CoList,
+  CoMap,
   Group,
   co,
   createJazzContextFromExistingCredentials,
@@ -114,6 +115,76 @@ describe("Simple CoList operations", async () => {
       list.splice(1, 1, "salt", "pepper");
       expect(list.length).toBe(4);
       expect(list._raw.asArray()).toEqual(["bread", "salt", "pepper", "onion"]);
+    });
+
+    test("sort", () => {
+      const list = TestList.create(
+        ["hedgehog", "giraffe", "iguana", "flamingo"],
+        { owner: me },
+      );
+
+      list.sort();
+      expect(list._raw.asArray()).toEqual([
+        "flamingo",
+        "giraffe",
+        "hedgehog",
+        "iguana",
+      ]);
+
+      list.sort((a, b) => b.localeCompare(a));
+      expect(list._raw.asArray()).toEqual([
+        "iguana",
+        "hedgehog",
+        "giraffe",
+        "flamingo",
+      ]);
+    });
+
+    test("sort list of refs", async () => {
+      class Message extends CoMap {
+        text = co.string;
+      }
+
+      class Chat extends CoList.Of(co.ref(Message)) {}
+
+      const chat = Chat.create(
+        [
+          Message.create({ text: "world" }, { owner: me }),
+          Message.create({ text: "hello" }, { owner: me }),
+        ],
+        { owner: me },
+      );
+
+      chat.sort((a, b) => a!.text.localeCompare(b!.text));
+      expect(chat.map((m) => m!.text)).toEqual(["hello", "world"]);
+
+      chat.push(Message.create({ text: "beans on toast" }, { owner: me }));
+      chat.sort((a, b) => a!.text.localeCompare(b!.text));
+      expect(chat.map((m) => m!.text)).toEqual([
+        "beans on toast",
+        "hello",
+        "world",
+      ]);
+    });
+
+    test("applyDiff", () => {
+      const list = TestList.create(["bread", "butter", "onion"], {
+        owner: me,
+      });
+      // replace
+      list.applyDiff(["bread", "margarine", "onion"]);
+      expect(list._raw.asArray()).toEqual(["bread", "margarine", "onion"]);
+      // delete
+      list.applyDiff(["bread", "onion"]);
+      expect(list._raw.asArray()).toEqual(["bread", "onion"]);
+      // insert multiple
+      list.applyDiff(["bread", "margarine", "onion", "cheese"]);
+      expect(list._raw.asArray()).toEqual([
+        "bread",
+        "margarine",
+        "onion",
+        "cheese",
+      ]);
     });
   });
 });

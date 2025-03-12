@@ -113,7 +113,7 @@ export class SQLiteReactNative {
       );
 
       await db.execute(
-        `CREATE INDEX IF NOT EXISTS sessionsByCoValue ON sessions (coValue);`,
+        "CREATE INDEX IF NOT EXISTS sessionsByCoValue ON sessions (coValue);",
       );
 
       await db.execute(
@@ -125,7 +125,7 @@ export class SQLiteReactNative {
       );
 
       await db.execute(
-        `CREATE INDEX IF NOT EXISTS coValuesByID ON coValues (id);`,
+        "CREATE INDEX IF NOT EXISTS coValuesByID ON coValues (id);",
       );
 
       await db.execute("PRAGMA user_version = 1");
@@ -142,7 +142,7 @@ export class SQLiteReactNative {
       );
 
       await db.execute(
-        `ALTER TABLE sessions ADD COLUMN bytesSinceLastSignature INTEGER;`,
+        "ALTER TABLE sessions ADD COLUMN bytesSinceLastSignature INTEGER;",
       );
 
       await db.execute("PRAGMA user_version = 3");

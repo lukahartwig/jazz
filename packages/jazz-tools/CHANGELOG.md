@@ -1,5 +1,67 @@
 # jazz-tools
 
+## 0.11.3
+
+### Patch Changes
+
+- Updated dependencies [68b0242]
+  - cojson@0.11.3
+
+## 0.11.2
+
+### Patch Changes
+
+- 6892dc6: Adds `applyDiff` to `CoList`
+
+## 0.11.0
+
+### Minor Changes
+
+- b9d194a: Make members return inherited members
+  Added getRoleOf method to Account and Group
+  Added canRead, canWrite, canAdmin methods to Account so simplify permissions checks
+- 34cbdc3: Added revokeExtend method to Group
+- f039e8f: Remove co.members and use RegisteredAccount and the configured AccountSchema to setup the members Account class. Remove everyone from Group.members results
+- e22de9f: Fix profile migrations
+
+### Patch Changes
+
+- 6a96d8b: Add getParentGroups API to Group
+- a35249a: Fix CoMap.toJSON() with encoded fields
+- a4713df: Moving to the d.ts files for the exported type definitions
+- Updated dependencies [b9d194a]
+- Updated dependencies [a4713df]
+- Updated dependencies [e22de9f]
+- Updated dependencies [34cbdc3]
+- Updated dependencies [0f67e0a]
+  - cojson@0.11.0
+
+## 0.10.15
+
+### Patch Changes
+
+- 2f99de0: Avoid race conditions on context creation and run the anonymous migration only when the hook is provided
+- Updated dependencies [f86e278]
+  - cojson@0.10.15
+
+## 0.10.14
+
+### Patch Changes
+
+- 75211e3: Fixes invalid authentication state when logging out after signUp
+
+## 0.10.13
+
+### Patch Changes
+
+- 07feedd: Add registerNewUser and generateRandomPassphrase methods to PasskeyAuth and accept the username param on the signUp function
+
+## 0.10.12
+
+### Patch Changes
+
+- 4612e05: Fix type inference on `useCoState`
+
 ## 0.10.8
 
 ### Patch Changes

@@ -1,7 +1,7 @@
-import { type DB as DatabaseT } from "@op-engineering/op-sqlite";
-import {
+import type { DB as DatabaseT } from "@op-engineering/op-sqlite";
+import type {
   CojsonInternalTypes,
-  type OutgoingSyncQueue,
+  OutgoingSyncQueue,
   RawCoID,
   SessionID,
 } from "cojson";
@@ -29,14 +29,25 @@ export class SQLiteClient implements DBClientInterface {
 
     if (!rows || rows.length === 0) return;
 
-    const coValueRow = rows[0] as any & { rowID: number };
+    type DbCoValueRow = {
+      id: string;
+      header: string;
+      rowID: number;
+      [key: string]: unknown;
+    };
+
+    const coValueRow = rows[0] as DbCoValueRow;
     try {
       const parsedHeader =
-        coValueRow?.header &&
-        (JSON.parse(coValueRow.header) as CojsonInternalTypes.CoValueHeader);
+        coValueRow?.header && coValueRow.header.trim() !== ""
+          ? (JSON.parse(coValueRow.header) as CojsonInternalTypes.CoValueHeader)
+          : undefined;
+
+      if (!parsedHeader) return undefined;
 
       return {
         ...coValueRow,
+        id: coValueId,
         header: parsedHeader,
       };
     } catch (e) {
@@ -76,10 +87,13 @@ export class SQLiteClient implements DBClientInterface {
     if (!rows || rows.length === 0) return [];
 
     try {
-      return rows.map((row: any) => ({
-        ...row,
-        tx: JSON.parse(row.tx) as CojsonInternalTypes.Transaction,
-      }));
+      return rows.map((row) => {
+        const rowData = row as { ses: number; idx: number; tx: string };
+        return {
+          ...rowData,
+          tx: JSON.parse(rowData.tx) as CojsonInternalTypes.Transaction,
+        };
+      });
     } catch (e) {
       console.warn("Invalid JSON in transaction", e);
       return [];
@@ -126,7 +140,7 @@ export class SQLiteClient implements DBClientInterface {
         sessionUpdate.sessionID,
         sessionUpdate.lastIdx,
         sessionUpdate.lastSignature,
-        sessionUpdate.bytesSinceLastSignature!,
+        sessionUpdate.bytesSinceLastSignature ?? 0,
       ],
     );
     return rows[0]?.rowID as number;

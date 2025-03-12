@@ -1,7 +1,8 @@
-import { CojsonInternalTypes, SessionID } from "cojson";
-import RawCoID = CojsonInternalTypes.RawCoID;
-import Transaction = CojsonInternalTypes.Transaction;
-import Signature = CojsonInternalTypes.Signature;
+import type { CojsonInternalTypes, SessionID } from "cojson";
+
+type RawCoID = CojsonInternalTypes.RawCoID;
+type Transaction = CojsonInternalTypes.Transaction;
+type Signature = CojsonInternalTypes.Signature;
 
 export type CoValueRow = {
   id: CojsonInternalTypes.RawCoID;
@@ -72,7 +73,7 @@ export interface DBClientInterface {
     sessionRowID: number,
     idx: number,
     newTransaction: Transaction,
-  ): Promise<number> | void | unknown;
+  ): Promise<number> | undefined | unknown;
 
   addSignatureAfter({
     sessionRowID,
@@ -82,7 +83,7 @@ export interface DBClientInterface {
     sessionRowID: number;
     idx: number;
     signature: Signature;
-  }): Promise<number> | void | unknown;
+  }): Promise<number> | undefined | unknown;
 
-  transaction(callback: () => unknown): Promise<unknown> | void;
+  transaction(callback: () => unknown): Promise<unknown> | undefined;
 }

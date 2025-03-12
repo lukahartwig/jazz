@@ -32,6 +32,13 @@ export class MyAppRoot extends CoMap {
   myChats = co.ref(ListOfChats);
   myContacts = co.ref(ListOfAccounts);
 }
+
+// Register the Account schema so `useAccount` returns our custom `MyAppAccount`
+declare module "jazz-react" {
+    interface Register {
+        Account: MyAppAccount;
+    }
+}
 ```
 </CodeGroup>
 
@@ -92,6 +99,13 @@ export class MyAppProfile extends Profile {
   name = co.string; // compatible with default Profile schema
   avatar = co.optional.ref(ImageDefinition);
 }
+
+// Register the Account schema so `useAccount` returns our custom `MyAppAccount` // old
+declare module "jazz-react" {// old
+    interface Register {// old
+        Account: MyAppAccount;// old
+    }// old
+}// old
 ```
 </CodeGroup>
 
@@ -146,8 +160,9 @@ Jazz waits for the migration to finish before passing the account to your app's 
 ```ts
 export class MyAppAccount extends Account {
   root = co.ref(MyAppRoot);
+  profile = co.ref(MyAppProfile);
 
-  async migrate() {
+  async migrate(this: MyAppAccount, creationProps?: { name: string }) {
     // we specifically need to check for undefined, 
     // because the root might simply be not loaded (`null`) yet
     if (this.root === undefined) {
@@ -158,6 +173,17 @@ export class MyAppAccount extends Account {
         myChats: ListOfChats.create([], Group.create()),
         myContacts: ListOfAccounts.create([], Group.create())
       });
+    }
+
+    if (this.profile === undefined) {
+      const profileGroup = Group.create();
+      // Unlike the root, we want the profile to be publicly readable.
+      profileGroup.addMember("everyone", "reader");
+
+      this.profile = MyAppProfile.create({
+        name: creationProps?.name,
+        bookmarks: ListOfBookmarks.create([], profileGroup),
+      }, profileGroup);
     }
   }
 }
@@ -179,7 +205,7 @@ Now let's say we want to add a `myBookmarks` field to the `root` schema:
 export class MyAppAccount extends Account {
     root = co.ref(MyAppRoot);// old
 
-    async migrate() { // old
+    async migrate(this: MyAppAccount) {
       if (this.root === undefined) {  // old
         this.root = MyAppRoot.create({  // old
           myChats: ListOfChats.create([], Group.create()),  // old
@@ -188,11 +214,9 @@ export class MyAppAccount extends Account {
       } // old
 
       // We need to load the root field to check for the myContacts field
-      const result = await this.ensureLoaded({
+      const { root } = await this.ensureLoaded({
         root: {},
       });
-
-      const { root } = result;
 
       // we specifically need to check for undefined, 
       // because myBookmarks might simply be not loaded (`null`) yet 

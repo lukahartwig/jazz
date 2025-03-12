@@ -219,7 +219,7 @@ export async function createJazzContext<Acc extends Account>(options: {
       AccountSchema: options.AccountSchema,
       sessionProvider: options.sessionProvider,
       onLogOut: () => {
-        authSecretStorage.clear();
+        authSecretStorage.clearWithoutNotify();
       },
     });
   } else {
@@ -240,12 +240,12 @@ export async function createJazzContext<Acc extends Account>(options: {
       crypto,
       AccountSchema: options.AccountSchema,
       onLogOut: async () => {
-        await authSecretStorage.clear();
+        await authSecretStorage.clearWithoutNotify();
       },
     });
 
     if (!options.newAccountProps) {
-      await authSecretStorage.set({
+      await authSecretStorage.setWithoutNotify({
         accountID: context.account.id,
         secretSeed,
         accountSecret: context.node.account.agentSecret,

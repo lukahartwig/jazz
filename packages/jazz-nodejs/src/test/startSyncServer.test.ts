@@ -5,7 +5,7 @@ import { createWorkerAccount } from "jazz-run/createWorkerAccount";
 import { startSyncServer } from "jazz-run/startSyncServer";
 import { CoMap, co } from "jazz-tools";
 import { describe, expect, test } from "vitest";
-import { startWorker } from "../index";
+import { startWorker } from "../index.js";
 
 class TestMap extends CoMap {
   value = co.string;

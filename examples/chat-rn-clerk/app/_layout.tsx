@@ -1,5 +1,6 @@
 import "../global.css";
 import { ClerkLoaded, ClerkProvider } from "@clerk/clerk-expo";
+import { secureStore } from "@clerk/clerk-expo/secure-store";
 import { useFonts } from "expo-font";
 import { Slot } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
@@ -33,7 +34,11 @@ export default function RootLayout() {
   }
 
   return (
-    <ClerkProvider tokenCache={tokenCache} publishableKey={publishableKey}>
+    <ClerkProvider
+      tokenCache={tokenCache}
+      publishableKey={publishableKey}
+      __experimental_resourceCache={secureStore}
+    >
       <ClerkLoaded>
         <JazzAndAuth>
           <Slot />

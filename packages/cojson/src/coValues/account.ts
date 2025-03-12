@@ -1,4 +1,3 @@
-import { Result, ok } from "neverthrow";
 import { CoID, RawCoValue } from "../coValue.js";
 import {
   CoValueCore,
@@ -47,10 +46,11 @@ export class RawAccount<
 > extends RawGroup<Meta> {
   _cachedCurrentAgentID: AgentID | undefined;
 
-  currentAgentID(): Result<AgentID, InvalidAccountAgentIDError> {
+  currentAgentID(): AgentID {
     if (this._cachedCurrentAgentID) {
-      return ok(this._cachedCurrentAgentID);
+      return this._cachedCurrentAgentID;
     }
+
     const agents = this.keys()
       .filter((k): k is AgentID => k.startsWith("sealer_"))
       .sort(
@@ -65,7 +65,7 @@ export class RawAccount<
 
     this._cachedCurrentAgentID = agents[0];
 
-    return ok(agents[0]!);
+    return agents[0]!;
   }
 
   createInvite(_: AccountRole): InviteSecret {
@@ -77,10 +77,10 @@ export interface ControlledAccountOrAgent {
   id: RawAccountID | AgentID;
   agentSecret: AgentSecret;
 
-  currentAgentID: () => Result<AgentID, InvalidAccountAgentIDError>;
-  currentSignerID: () => Result<SignerID, InvalidAccountAgentIDError>;
+  currentAgentID: () => AgentID;
+  currentSignerID: () => SignerID;
   currentSignerSecret: () => SignerSecret;
-  currentSealerID: () => Result<SealerID, InvalidAccountAgentIDError>;
+  currentSealerID: () => SealerID;
   currentSealerSecret: () => SealerSecret;
 }
 
@@ -116,17 +116,17 @@ export class RawControlledAccount<Meta extends AccountMeta = AccountMeta>
     return this.core.node.acceptInvite(groupOrOwnedValueID, inviteSecret);
   }
 
-  currentAgentID(): Result<AgentID, InvalidAccountAgentIDError> {
+  currentAgentID(): AgentID {
     if (this._cachedCurrentAgentID) {
-      return ok(this._cachedCurrentAgentID);
+      return this._cachedCurrentAgentID;
     }
     const agentID = this.crypto.getAgentID(this.agentSecret);
     this._cachedCurrentAgentID = agentID;
-    return ok(agentID);
+    return agentID;
   }
 
   currentSignerID() {
-    return this.currentAgentID().map((id) => this.crypto.getAgentSignerID(id));
+    return this.crypto.getAgentSignerID(this.currentAgentID());
   }
 
   currentSignerSecret(): SignerSecret {
@@ -134,7 +134,7 @@ export class RawControlledAccount<Meta extends AccountMeta = AccountMeta>
   }
 
   currentSealerID() {
-    return this.currentAgentID().map((id) => this.crypto.getAgentSealerID(id));
+    return this.crypto.getAgentSealerID(this.currentAgentID());
   }
 
   currentSealerSecret(): SealerSecret {
@@ -153,11 +153,11 @@ export class ControlledAgent implements ControlledAccountOrAgent {
   }
 
   currentAgentID() {
-    return ok(this.crypto.getAgentID(this.agentSecret));
+    return this.crypto.getAgentID(this.agentSecret);
   }
 
   currentSignerID() {
-    return this.currentAgentID().map((id) => this.crypto.getAgentSignerID(id));
+    return this.crypto.getAgentSignerID(this.currentAgentID());
   }
 
   currentSignerSecret(): SignerSecret {
@@ -165,7 +165,7 @@ export class ControlledAgent implements ControlledAccountOrAgent {
   }
 
   currentSealerID() {
-    return this.currentAgentID().map((id) => this.crypto.getAgentSealerID(id));
+    return this.crypto.getAgentSealerID(this.currentAgentID());
   }
 
   currentSealerSecret(): SealerSecret {

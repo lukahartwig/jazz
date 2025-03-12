@@ -163,7 +163,7 @@ export abstract class CryptoProvider<Blake3State = any> {
     try {
       return parseJSON(this.decryptRaw(encrypted, keySecret, nOnceMaterial));
     } catch (e) {
-      logger.error("Decryption error: " + (e as Error)?.message);
+      logger.error("Decryption error", { err: e });
       return undefined;
     }
   }

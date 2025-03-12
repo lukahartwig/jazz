@@ -83,7 +83,10 @@ export default function CoJsonViewerApp() {
 
   const addAccount = (id: RawAccountID, secret: AgentSecret) => {
     const newAccount = { id, secret };
-    setAccounts([...accounts, newAccount]);
+    const accountExists = accounts.some((account) => account.id === id);
+    if (!accountExists) {
+      setAccounts([...accounts, newAccount]);
+    }
     setCurrentAccount(newAccount);
   };
 

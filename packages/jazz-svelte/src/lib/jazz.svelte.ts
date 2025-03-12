@@ -1,6 +1,4 @@
-import {
-  consumeInviteLinkFromWindowLocation
-} from 'jazz-browser';
+import { consumeInviteLinkFromWindowLocation } from 'jazz-browser';
 import type {
   AnonymousJazzAgent,
   AuthSecretStorage,
@@ -63,11 +61,15 @@ export function getAuthSecretStorage() {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
-export interface Register { }
+export interface Register {}
 
-export type RegisteredAccount = Register extends { Account: infer Acc }
-  ? Acc
-  : Account;
+export type RegisteredAccount = Register extends { Account: infer Acc } ? Acc : Account;
+
+declare module "jazz-tools" {
+  export interface Register {
+    Account: RegisteredAccount;
+  }
+}
 
 export function useAccount(): { me: RegisteredAccount; logOut: () => void };
 export function useAccount<D extends DepthsIn<RegisteredAccount>>(
@@ -80,7 +82,10 @@ export function useAccount<D extends DepthsIn<RegisteredAccount>>(
  */
 export function useAccount<D extends DepthsIn<RegisteredAccount>>(
   depth?: D
-): { me: RegisteredAccount | DeeplyLoaded<RegisteredAccount, D> | undefined | null; logOut: () => void } {
+): {
+  me: RegisteredAccount | DeeplyLoaded<RegisteredAccount, D> | undefined | null;
+  logOut: () => void;
+} {
   const ctx = getJazzContext<RegisteredAccount>();
   if (!ctx?.current) {
     throw new Error('useAccount must be used within a JazzProvider');
@@ -131,7 +136,14 @@ export function useAccountOrGuest<D extends DepthsIn<RegisteredAccount>>(
  */
 export function useAccountOrGuest<D extends DepthsIn<RegisteredAccount>>(
   depth?: D
-): { me: RegisteredAccount | DeeplyLoaded<RegisteredAccount, D> | undefined | null | AnonymousJazzAgent } {
+): {
+  me:
+    | RegisteredAccount
+    | DeeplyLoaded<RegisteredAccount, D>
+    | undefined
+    | null
+    | AnonymousJazzAgent;
+} {
   const ctx = getJazzContext<RegisteredAccount>();
 
   if (!ctx?.current) {
@@ -175,7 +187,7 @@ export function useAccountOrGuest<D extends DepthsIn<RegisteredAccount>>(
  */
 export function useCoState<V extends CoValue, D extends DepthsIn<V> = []>(
   Schema: CoValueClass<V>,
-  id: ID<V> | undefined,
+  id: ID<CoValue> | undefined,
   depth: D = [] as D
 ): {
   current?: DeeplyLoaded<V, D> | null;
@@ -267,4 +279,3 @@ export function useAcceptInvite<V extends CoValue>({
     });
   });
 }
-

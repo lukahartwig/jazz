@@ -34,6 +34,7 @@ export const docNavigationItems = [
         href: "/docs/inspector",
         done: 100,
       },
+      { name: "FAQ", href: "/docs/faq", done: 100 },
     ],
   },
   {
@@ -65,6 +66,12 @@ export const docNavigationItems = [
   {
     name: "Upgrade guides",
     items: [
+      {
+        // upgrade guides
+        name: "0.11.0 - Roles and permissions",
+        href: "/docs/upgrade/0-11-0",
+        done: 100,
+      },
       {
         // upgrade guides
         name: "0.10.0 - New authentication flow",
@@ -111,28 +118,43 @@ export const docNavigationItems = [
     name: "Using CoValues",
     items: [
       {
-        name: "Creation & ownership",
-        href: "/docs/using-covalues/creation",
+        name: "CoMaps",
+        href: "/docs/using-covalues/comaps",
+        done: 80,
+      },
+      {
+        name: "CoLists",
+        href: "/docs/using-covalues/colists",
+        done: 80,
+      },
+      {
+        name: "CoFeeds",
+        href: "/docs/using-covalues/cofeeds",
+        done: 80,
+      },
+      {
+        name: "FileStreams",
+        href: "/docs/using-covalues/filestreams",
         done: 0,
       },
       {
-        name: "Reading",
-        href: "/docs/using-covalues/reading",
+        name: "SchemaUnions",
+        href: "/docs/using-covalues/schemaunions",
         done: 0,
       },
       {
-        name: "Subscribing & deep loading",
-        href: "/docs/using-covalues/subscription-and-loading",
+        name: "Loading & subscribing",
+        href: "/docs/using-covalues/loading-and-subscribing",
         done: 0,
       },
       {
-        name: "Writing & deleting",
-        href: "/docs/using-covalues/writing",
+        name: "History & time travel",
+        href: "/docs/using-covalues/history-and-time-travel",
         done: 0,
       },
       {
-        name: "Metadata & time-travel",
-        href: "/docs/using-covalues/metadata",
+        name: "Access control",
+        href: "/docs/using-covalues/access-control",
         done: 0,
       },
     ],

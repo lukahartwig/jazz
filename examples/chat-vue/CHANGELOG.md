@@ -1,5 +1,74 @@
 # chat-vue
 
+## 0.0.65
+
+### Patch Changes
+
+- jazz-browser@0.11.3
+- jazz-tools@0.11.3
+- jazz-vue@0.11.3
+
+## 0.0.64
+
+### Patch Changes
+
+- Updated dependencies [6892dc6]
+  - jazz-tools@0.11.2
+  - jazz-browser@0.11.2
+  - jazz-vue@0.11.2
+
+## 0.0.63
+
+### Patch Changes
+
+- Updated dependencies [6a96d8b]
+- Updated dependencies [a35249a]
+- Updated dependencies [b9d194a]
+- Updated dependencies [a4713df]
+- Updated dependencies [34cbdc3]
+- Updated dependencies [18428ea]
+- Updated dependencies [f039e8f]
+- Updated dependencies [e22de9f]
+  - jazz-tools@0.11.0
+  - jazz-browser@0.11.0
+  - jazz-vue@0.11.0
+
+## 0.0.62
+
+### Patch Changes
+
+- Updated dependencies [2f99de0]
+  - jazz-tools@0.10.15
+  - jazz-browser@0.10.15
+  - jazz-vue@0.10.15
+
+## 0.0.61
+
+### Patch Changes
+
+- Updated dependencies [75211e3]
+  - jazz-tools@0.10.14
+  - jazz-browser@0.10.14
+  - jazz-vue@0.10.14
+
+## 0.0.60
+
+### Patch Changes
+
+- Updated dependencies [07feedd]
+  - jazz-tools@0.10.13
+  - jazz-browser@0.10.13
+  - jazz-vue@0.10.13
+
+## 0.0.59
+
+### Patch Changes
+
+- Updated dependencies [4612e05]
+  - jazz-tools@0.10.12
+  - jazz-vue@0.10.12
+  - jazz-browser@0.10.12
+
 ## 0.0.58
 
 ### Patch Changes

@@ -155,7 +155,7 @@ test("New transactions in a group correctly update owned values, including subsc
 
   map.subscribe(listener);
 
-  expect(listener.mock.calls[0][0].get("hello")).toBe("world");
+  expect(listener.mock.calls[0]?.[0].get("hello")).toBe("world");
 
   const resignationThatWeJustLearnedAbout = {
     privacy: "trusting",
@@ -192,7 +192,7 @@ test("New transactions in a group correctly update owned values, including subsc
   expect(manuallyAdddedTxSuccess).toBe(true);
 
   expect(listener.mock.calls.length).toBe(2);
-  expect(listener.mock.calls[1][0].get("hello")).toBe(undefined);
+  expect(listener.mock.calls[1]?.[0].get("hello")).toBe(undefined);
 
   expect(map.core.getValidSortedTransactions().length).toBe(0);
 });

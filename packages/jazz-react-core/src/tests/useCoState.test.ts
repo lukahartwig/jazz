@@ -1,8 +1,8 @@
 // @vitest-environment happy-dom
 
 import { cojsonInternals } from "cojson";
-import { CoMap, co } from "jazz-tools";
-import { beforeEach, describe, expect, it } from "vitest";
+import { CoMap, CoValue, ID, co } from "jazz-tools";
+import { beforeEach, describe, expect, expectTypeOf, it } from "vitest";
 import { useCoState } from "../index.js";
 import { createJazzTestAccount, setupJazzTestSync } from "../testing.js";
 import { act, renderHook, waitFor } from "./testUtils.js";
@@ -156,5 +156,45 @@ describe("useCoState", () => {
     await waitFor(() => {
       expect(result.current).toBeNull();
     });
+  });
+
+  it("should return the same type as Schema", () => {
+    class TestMap extends CoMap {
+      value = co.string;
+    }
+
+    const map = TestMap.create({
+      value: "123",
+    });
+
+    const { result } = renderHook(() =>
+      useCoState(TestMap, map.id as ID<CoValue>, []),
+    );
+    expectTypeOf(result).toEqualTypeOf<{
+      current: TestMap | null | undefined;
+    }>();
+  });
+
+  it("should set the value to undefined when the id is set to undefined", () => {
+    class TestMap extends CoMap {
+      value = co.string;
+    }
+
+    const map = TestMap.create({
+      value: "123",
+    });
+
+    const { result, rerender } = renderHook(
+      (props) => useCoState(TestMap, props.id, []),
+      {
+        initialProps: { id: map.id } as { id: ID<CoValue> | undefined },
+      },
+    );
+
+    expect(result.current?.value).toBe("123");
+
+    rerender({ id: undefined });
+
+    expect(result.current?.value).toBeUndefined();
   });
 });

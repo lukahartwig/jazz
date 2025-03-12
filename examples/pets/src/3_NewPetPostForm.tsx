@@ -34,7 +34,7 @@ export function NewPetPostForm() {
       if (newPetPost) {
         newPetPost.name = name;
       } else {
-        const petPostGroup = Group.create({ owner: me });
+        const petPostGroup = Group.create();
         const petPost = PartialPetPost.create(
           {
             name,

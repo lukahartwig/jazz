@@ -1,15 +1,15 @@
 import {
   CojsonInternalTypes,
   MAX_RECOMMENDED_TX_SIZE,
-  OutgoingSyncQueue,
-  SessionID,
-  SyncMessage,
+  type OutgoingSyncQueue,
+  type SessionID,
+  type SyncMessage,
   cojsonInternals,
   emptyKnownState,
   logger,
 } from "cojson";
 import { collectNewTxs, getDependedOnCoValues } from "./syncUtils.js";
-import { DBClientInterface, StoredSessionRow } from "./types.js";
+import type { DBClientInterface, StoredSessionRow } from "./types.js";
 import NewContentMessage = CojsonInternalTypes.NewContentMessage;
 import KnownStateMessage = CojsonInternalTypes.KnownStateMessage;
 import RawCoID = CojsonInternalTypes.RawCoID;
@@ -82,12 +82,15 @@ export class SyncManager {
 
     // reverse it to send the top level id the last in the order
     const collectedMessages = Object.values(outputMessages).reverse();
-    collectedMessages.forEach(({ knownMessage, contentMessages }) => {
+    for (const { knownMessage, contentMessages } of collectedMessages) {
       this.sendStateMessage(knownMessage);
 
-      contentMessages?.length &&
-        contentMessages.forEach((msg) => this.sendStateMessage(msg));
-    });
+      if (contentMessages?.length) {
+        for (const msg of contentMessages) {
+          this.sendStateMessage(msg);
+        }
+      }
+    }
   }
 
   private async collectCoValueData(
@@ -106,7 +109,9 @@ export class SyncManager {
         action: "known",
         ...emptyKnownState(peerKnownState.id),
       };
-      asDependencyOf && (emptyKnownMessage.asDependencyOf = asDependencyOf);
+      if (asDependencyOf) {
+        emptyKnownMessage.asDependencyOf = asDependencyOf;
+      }
       messageMap[peerKnownState.id] = { knownMessage: emptyKnownMessage };
       return messageMap;
     }
@@ -153,7 +158,9 @@ export class SyncManager {
       action: "known",
       ...newCoValueKnownState,
     };
-    asDependencyOf && (knownMessage.asDependencyOf = asDependencyOf);
+    if (asDependencyOf) {
+      knownMessage.asDependencyOf = asDependencyOf;
+    }
     messageMap[newCoValueKnownState.id] = {
       knownMessage: knownMessage,
       contentMessages: newContentMessages,
@@ -272,11 +279,13 @@ export class SyncManager {
 
     const nextIdx = sessionRow?.lastIdx || 0;
 
+    if (!msg.new[sessionID]) throw new Error("Session ID not found");
+
     const sessionUpdate = {
       coValue: storedCoValueRowID,
       sessionID,
       lastIdx: newLastIdx,
-      lastSignature: msg.new[sessionID]!.lastSignature,
+      lastSignature: msg.new[sessionID].lastSignature,
       bytesSinceLastSignature: newBytesSinceLastSignature,
     };
 
@@ -289,7 +298,7 @@ export class SyncManager {
       await this.dbClient.addSignatureAfter({
         sessionRowID,
         idx: newLastIdx - 1,
-        signature: msg.new[sessionID]!.lastSignature,
+        signature: msg.new[sessionID].lastSignature,
       });
     }
 
@@ -306,11 +315,15 @@ export class SyncManager {
 
   handleDone(_msg: CojsonInternalTypes.DoneMessage) {}
 
-  async sendStateMessage(msg: any): Promise<unknown> {
-    return this.toLocalNode
-      .push(msg)
-      .catch((e) =>
-        logger.error(`Error sending ${msg.action} state, id ${msg.id}`, e),
-      );
+  async sendStateMessage(
+    msg:
+      | CojsonInternalTypes.KnownStateMessage
+      | CojsonInternalTypes.NewContentMessage,
+  ): Promise<unknown> {
+    return this.toLocalNode.push(msg).catch((e) =>
+      logger.error(`Error sending ${msg.action} state, id ${msg.id}`, {
+        err: e,
+      }),
+    );
   }
 }

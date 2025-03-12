@@ -1,7 +1,7 @@
-import { createServer } from "http";
+import { createServer } from "node:http";
 import { ControlledAgent, LocalNode } from "cojson";
 import { WasmCrypto } from "cojson/crypto/WasmCrypto";
-import { WebSocket, WebSocketServer } from "ws";
+import { type WebSocket, WebSocketServer } from "ws";
 import { createWebSocketPeer } from "../createWebSocketPeer";
 
 export const startSyncServer = async (port?: number) => {
@@ -75,16 +75,18 @@ export const startSyncServer = async (port?: number) => {
 
   server.listen(port ?? 0);
 
-  port = (server.address() as { port: number }).port;
-  const syncServer = `ws://localhost:${port}`;
+  const actualPort = (server.address() as { port: number }).port;
+  const syncServer = `ws://localhost:${actualPort}`;
 
   return {
     close: () => {
-      connections.forEach((ws) => ws.close());
+      for (const ws of connections) {
+        ws.close();
+      }
       server.close();
     },
     syncServer,
-    port,
+    port: actualPort,
     localNode,
   };
 };

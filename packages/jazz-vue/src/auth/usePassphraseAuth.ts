@@ -30,6 +30,7 @@ export function usePassphraseAuth({
     return new PassphraseAuth(
       context.value.node.crypto,
       context.value.authenticate,
+      context.value.register,
       authSecretStorage,
       wordlist,
     );
@@ -51,6 +52,8 @@ export function usePassphraseAuth({
     state: isAuthenticated.value ? "signedIn" : "anonymous",
     logIn: authMethod.value.logIn,
     signUp: authMethod.value.signUp,
+    registerNewAccount: authMethod.value.registerNewAccount,
+    generateRandomPassphrase: authMethod.value.generateRandomPassphrase,
     passphrase: passphrase.value,
   }));
 }

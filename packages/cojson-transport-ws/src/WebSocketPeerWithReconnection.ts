@@ -1,4 +1,4 @@
-import { Peer, logger } from "cojson";
+import { type Peer, logger } from "cojson";
 import { createWebSocketPeer } from "./createWebSocketPeer.js";
 
 export class WebSocketPeerWithReconnection {
@@ -61,7 +61,7 @@ export class WebSocketPeerWithReconnection {
       const timeout = this.reconnectionTimeout * this.reconnectionAttempts;
 
       logger.debug(
-        "Websocket disconnected, trying to reconnect in " + timeout + "ms",
+        `Websocket disconnected, trying to reconnect in ${timeout}ms`,
       );
 
       await this.waitForOnline(timeout);

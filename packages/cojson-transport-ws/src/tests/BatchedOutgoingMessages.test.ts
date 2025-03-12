@@ -1,5 +1,5 @@
-import { SyncMessage } from "cojson";
-import { CojsonInternalTypes } from "cojson";
+import type { SyncMessage } from "cojson";
+import type { CojsonInternalTypes } from "cojson";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import {
   BatchedOutgoingMessages,

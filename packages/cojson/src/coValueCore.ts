@@ -184,9 +184,7 @@ export class CoValueCore {
       this.header.meta?.type === "account"
         ? (this.node.currentSessionID.replace(
             this.node.account.id,
-            this.node.account
-              .currentAgentID()
-              ._unsafeUnwrap({ withStackTrace: true }),
+            this.node.account.currentAgentID(),
           ) as SessionID)
         : this.node.currentSessionID;
 
@@ -330,10 +328,7 @@ export class CoValueCore {
         try {
           listener(content);
         } catch (e) {
-          logger.error(
-            "Error in listener for coValue " + this.id,
-            parseError(e),
-          );
+          logger.error("Error in listener for coValue " + this.id, { err: e });
         }
       }
     } else {
@@ -347,10 +342,9 @@ export class CoValueCore {
               try {
                 listener(content);
               } catch (e) {
-                logger.error(
-                  "Error in listener for coValue " + this.id,
-                  parseError(e),
-                );
+                logger.error("Error in listener for coValue " + this.id, {
+                  err: e,
+                });
               }
             }
             resolve();
@@ -455,9 +449,7 @@ export class CoValueCore {
       this.header.meta?.type === "account"
         ? (this.node.currentSessionID.replace(
             this.node.account.id,
-            this.node.account
-              .currentAgentID()
-              ._unsafeUnwrap({ withStackTrace: true }),
+            this.node.account.currentAgentID(),
           ) as SessionID)
         : this.node.currentSessionID;
 
@@ -549,7 +541,9 @@ export class CoValueCore {
       }
 
       if (!decryptedChanges) {
-        logger.error("Failed to decrypt transaction despite having key");
+        logger.error("Failed to decrypt transaction despite having key", {
+          err: new Error("Failed to decrypt transaction despite having key"),
+        });
         continue;
       }
 
@@ -639,9 +633,7 @@ export class CoValueCore {
       // Try to find key revelation for us
       const lookupAccountOrAgentID =
         this.header.meta?.type === "account"
-          ? this.node.account
-              .currentAgentID()
-              ._unsafeUnwrap({ withStackTrace: true })
+          ? this.node.account.currentAgentID()
           : this.node.account.id;
 
       const lastReadyKeyEdit = content.lastEditAt(

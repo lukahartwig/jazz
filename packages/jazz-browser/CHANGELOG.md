@@ -1,5 +1,78 @@
 # jazz-browser
 
+## 0.11.3
+
+### Patch Changes
+
+- Updated dependencies [68b0242]
+  - cojson-transport-ws@0.11.3
+  - cojson@0.11.3
+  - cojson-storage-indexeddb@0.11.3
+  - jazz-tools@0.11.3
+
+## 0.11.2
+
+### Patch Changes
+
+- Updated dependencies [6892dc6]
+  - jazz-tools@0.11.2
+
+## 0.11.0
+
+### Minor Changes
+
+- 18428ea: PasskeyAuth: Sets `profile.name` only if a non-empty username is passed to `signUp`
+
+### Patch Changes
+
+- a4713df: Moving to the d.ts files for the exported type definitions
+- Updated dependencies [6a96d8b]
+- Updated dependencies [a35249a]
+- Updated dependencies [b9d194a]
+- Updated dependencies [b9d194a]
+- Updated dependencies [a4713df]
+- Updated dependencies [e22de9f]
+- Updated dependencies [34cbdc3]
+- Updated dependencies [0f67e0a]
+- Updated dependencies [f039e8f]
+- Updated dependencies [e22de9f]
+  - jazz-tools@0.11.0
+  - cojson@0.11.0
+  - cojson-storage-indexeddb@0.11.0
+  - cojson-transport-ws@0.11.0
+
+## 0.10.15
+
+### Patch Changes
+
+- Updated dependencies [2f99de0]
+- Updated dependencies [f86e278]
+  - jazz-tools@0.10.15
+  - cojson@0.10.15
+  - cojson-storage-indexeddb@0.10.15
+  - cojson-transport-ws@0.10.15
+
+## 0.10.14
+
+### Patch Changes
+
+- Updated dependencies [75211e3]
+  - jazz-tools@0.10.14
+
+## 0.10.13
+
+### Patch Changes
+
+- Updated dependencies [07feedd]
+  - jazz-tools@0.10.13
+
+## 0.10.12
+
+### Patch Changes
+
+- Updated dependencies [4612e05]
+  - jazz-tools@0.10.12
+
 ## 0.10.9
 
 ### Patch Changes

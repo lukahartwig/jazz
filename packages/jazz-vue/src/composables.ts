@@ -165,7 +165,7 @@ export { useAccount, useAccountOrGuest };
 
 export function useCoState<V extends CoValue, D>(
   Schema: CoValueClass<V>,
-  id: MaybeRef<ID<V> | undefined>,
+  id: MaybeRef<ID<CoValue> | undefined>,
   depth: D & DepthsIn<V> = [] as D & DepthsIn<V>,
 ): Ref<DeeplyLoaded<V, D> | undefined | null> {
   const state: ShallowRef<DeeplyLoaded<V, D> | undefined | null> =

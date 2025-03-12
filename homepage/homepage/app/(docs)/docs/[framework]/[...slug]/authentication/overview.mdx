@@ -211,7 +211,7 @@ The clerk provider is not built into `jazz-react` and needs the `jazz-react-auth
 </ContentByFramework>
 
 <ContentByFramework framework="react-native">
-The clerk provider is not built into `jazz-react-native` and needs the `jazz-react-native-auth-clerk` package to be installed.
+The clerk provider is not built into `jazz-react-native` and needs the `jazz-react-native-auth-clerk` package to be installed.  Note the `__experimental_resourceCache` option.  This helps render Clerk components when offline.
 </ContentByFramework>
 
 After installing the package you can use the `JazzProviderWithClerk` component to wrap your app:
@@ -249,6 +249,7 @@ createRoot(document.getElementById("root")!).render(
 <CodeGroup>
 ```tsx
 import { JazzProviderWithClerk } from "jazz-react-native-auth-clerk";
+import { secureStore } from "@clerk/clerk-expo/secure-store";
 
 function JazzAndAuth({ children }: { children: React.ReactNode }) {
   const clerk = useClerk();
@@ -275,7 +276,11 @@ export default function RootLayout() {
   }
 
   return (
-    <ClerkProvider tokenCache={tokenCache} publishableKey={publishableKey}>
+    <ClerkProvider
+      tokenCache={tokenCache}
+      publishableKey={publishableKey}
+      __experimental_resourceCache={secureStore}
+    >
       <ClerkLoaded>
         <JazzAndAuth>
           <Slot />
@@ -380,7 +385,7 @@ export async function onAnonymousAccountDiscarded(
 ```
 </CodeGroup>
 
-To see how this works in reality we suggest you to try 
+To see how this works in reality we suggest you to try
 to upload a song in the [music player demo](https://music-demo.jazz.tools/) and then
 try to log in with an existing account.
 

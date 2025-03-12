@@ -136,18 +136,29 @@ async function scaffoldProject({
     const packageJsonPath = `${projectName}/package.json`;
     const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf8"));
 
-    // Replace workspace: dependencies with latest
-    if (packageJson.dependencies) {
-      const latestVersions = await getLatestPackageVersions(
-        packageJson.dependencies,
-      );
+    // Helper function to update workspace dependencies
+    async function updateWorkspaceDependencies(
+      dependencyType: "dependencies" | "devDependencies",
+    ) {
+      if (packageJson[dependencyType]) {
+        const latestVersions = await getLatestPackageVersions(
+          packageJson[dependencyType],
+        );
 
-      Object.entries(packageJson.dependencies).forEach(([pkg, version]) => {
-        if (typeof version === "string" && version.includes("workspace:")) {
-          packageJson.dependencies[pkg] = latestVersions[pkg];
-        }
-      });
+        Object.entries(packageJson[dependencyType]).forEach(
+          ([pkg, version]) => {
+            if (typeof version === "string" && version.includes("workspace:")) {
+              packageJson[dependencyType][pkg] = latestVersions[pkg];
+            }
+          },
+        );
+      }
     }
+
+    await Promise.all([
+      updateWorkspaceDependencies("dependencies"),
+      updateWorkspaceDependencies("devDependencies"),
+    ]);
 
     packageJson.name = projectName;
     fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
@@ -236,6 +247,59 @@ module.exports = withNativeWind(config, { input: "./src/global.css" });
       rnSpinner.fail(chalk.red("Failed to setup React Native"));
       throw error;
     }
+  }
+
+  // Step 5: Clone cursor-docs
+  const docsSpinner = ora({
+    text: chalk.blue(`Adding .cursor directory...`),
+    spinner: "dots",
+  }).start();
+
+  try {
+    // Create a temporary directory for cursor-docs
+    const tempDocsDir = `${projectName}-cursor-docs-temp`;
+    const emitter = degit("garden-co/jazz/packages/cursor-docs", {
+      cache: false,
+      force: true,
+      verbose: true,
+    });
+
+    // Clone cursor-docs to temp directory
+    await emitter.clone(tempDocsDir);
+
+    // Copy only the .cursor directory to project root
+    const cursorDirSource = `${tempDocsDir}/.cursor`;
+    const cursorDirTarget = `${projectName}/.cursor`;
+
+    if (fs.existsSync(cursorDirSource)) {
+      fs.cpSync(cursorDirSource, cursorDirTarget, { recursive: true });
+      docsSpinner.succeed(chalk.green(".cursor directory added successfully"));
+    } else {
+      docsSpinner.fail(chalk.red(".cursor directory not found in cursor-docs"));
+    }
+
+    // Clean up temp directory
+    fs.rmSync(tempDocsDir, { recursive: true, force: true });
+  } catch (error) {
+    docsSpinner.fail(chalk.red("Failed to add .cursor directory"));
+    throw error;
+  }
+
+  // Step 6: Git init
+  const gitSpinner = ora({
+    text: chalk.blue("Initializing git repository..."),
+    spinner: "dots",
+  }).start();
+
+  try {
+    execSync(
+      `cd "${projectName}" && git init && git add . && git commit -m "Initial commit from create-jazz-app"`,
+      { stdio: "pipe" },
+    );
+    gitSpinner.succeed(chalk.green("Git repository initialized"));
+  } catch (error) {
+    gitSpinner.fail(chalk.red("Failed to initialize git repository"));
+    throw error;
   }
 
   // Final success message

@@ -1,11 +1,15 @@
 import {
-  CojsonInternalTypes,
-  JsonValue,
-  SessionID,
-  Stringified,
+  type CojsonInternalTypes,
+  type JsonValue,
+  type SessionID,
+  type Stringified,
   cojsonInternals,
 } from "cojson";
-import { StoredCoValueRow, StoredSessionRow, TransactionRow } from "./types.js";
+import type {
+  StoredCoValueRow,
+  StoredSessionRow,
+  TransactionRow,
+} from "./types.js";
 
 export function collectNewTxs({
   newTxsInSession,
@@ -19,19 +23,17 @@ export function collectNewTxs({
   firstNewTxIdx: number;
 }) {
   for (const tx of newTxsInSession) {
-    let sessionEntry =
-      newContentMessages[newContentMessages.length - 1]!.new[
-        sessionRow.sessionID
-      ];
+    const lastMessage = newContentMessages[newContentMessages.length - 1];
+    if (!lastMessage) return;
+
+    let sessionEntry = lastMessage.new[sessionRow.sessionID];
     if (!sessionEntry) {
       sessionEntry = {
         after: firstNewTxIdx,
         lastSignature: "WILL_BE_REPLACED" as CojsonInternalTypes.Signature,
         newTransactions: [],
       };
-      newContentMessages[newContentMessages.length - 1]!.new[
-        sessionRow.sessionID
-      ] = sessionEntry;
+      lastMessage.new[sessionRow.sessionID] = sessionEntry;
     }
 
     sessionEntry.newTransactions.push(tx.tx);

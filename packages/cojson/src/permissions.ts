@@ -56,7 +56,7 @@ function logPermissionError(
     return;
   }
 
-  logger.warn("Permission error: " + message, attributes);
+  logger.debug("Permission error: " + message, attributes);
 }
 
 export function determineValidTransactions(
@@ -101,8 +101,7 @@ export function determineValidTransactions(
         }
 
         const transactorRoleAtTxTime =
-          groupAtTime.roleOfInternal(effectiveTransactor)?.role ||
-          groupAtTime.roleOfInternal(EVERYONE)?.role;
+          groupAtTime.roleOfInternal(effectiveTransactor)?.role;
 
         if (
           transactorRoleAtTxTime !== "admin" &&
@@ -135,8 +134,8 @@ export function determineValidTransactions(
 }
 
 function isHigherRole(a: Role, b: Role | undefined) {
-  if (a === undefined) return false;
-  if (b === undefined) return true;
+  if (a === undefined || a === "revoked") return false;
+  if (b === undefined || b === "revoked") return true;
   if (b === "admin") return false;
   if (a === "admin") return true;
 
@@ -476,16 +475,7 @@ function agentInAccountOrMemberInGroup(
   groupAtTime: RawGroup,
 ): RawAccountID | AgentID | undefined {
   if (transactor === groupAtTime.id && groupAtTime instanceof RawAccount) {
-    return groupAtTime.currentAgentID().match(
-      (agentID) => agentID,
-      (e) => {
-        logger.error(
-          "Error while determining current agent ID in valid transactions",
-          e,
-        );
-        return undefined;
-      },
-    );
+    return groupAtTime.currentAgentID();
   }
   return transactor;
 }
