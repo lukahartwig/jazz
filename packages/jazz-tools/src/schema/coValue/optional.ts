@@ -15,6 +15,22 @@ export type isOptional<T> = T extends {
 
 export type addOptional<T> = isOptional<T> extends true ? undefined : never;
 
+export function carryOptional<
+  S extends CoValueSchema<any>,
+  V extends Optional<CoValueSchema<any>> | CoValueSchema<any>,
+>(
+  value: V,
+  newSchema: S,
+): V extends Optional<CoValueSchema<any>> ? Optional<S> : S {
+  if (isOptional(value)) {
+    return optional(newSchema);
+  } else {
+    return newSchema as V extends Optional<CoValueSchema<any>>
+      ? Optional<S>
+      : S;
+  }
+}
+
 export function optional<T extends CoValueSchema<any> | SelfReference>(
   value: T,
 ): Optional<T> {

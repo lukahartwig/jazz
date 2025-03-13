@@ -13,7 +13,12 @@ import {
   RelationsToResolveStrict,
 } from "../coValue/types.js";
 import { CoValueResolutionNode, ensureCoValueLoaded } from "../subscribe.js";
-import { CoMapInit, CoMapSchema, CoValueSchema } from "./schema.js";
+import {
+  CoMapInit,
+  CoMapSchema,
+  CoMapSchemaKey,
+  CoValueSchema,
+} from "./schema.js";
 
 type Relations<D extends CoValueSchema<any>> = D extends CoMapSchema<infer S>
   ? {
@@ -35,7 +40,7 @@ type ChildMap<D extends CoMapSchema<any>> = Map<
 
 type PropertyType<
   D extends CoMapSchema<any>,
-  K extends keyof D["shape"],
+  K extends CoMapSchemaKey<D>,
 > = CoMapInit<D>[K];
 
 export type CoMap<
@@ -89,7 +94,7 @@ export class CoMapJazzApi<
     }
   }
 
-  set<K extends keyof D["shape"]>(key: K, value: PropertyType<D, K>) {
+  set<K extends CoMapSchemaKey<D>>(key: K, value: PropertyType<D, K>) {
     const descriptor = this.schema.get(key);
 
     if (descriptor && isRelationRef(descriptor)) {
@@ -201,7 +206,7 @@ export function createCoMapFromRaw<
 
   for (const key of fields) {
     Object.defineProperty(instance, key, {
-      value: getValue(raw, schema, key as keyof D["shape"]),
+      value: getValue(raw, schema, key as CoMapSchemaKey<D>),
       writable: false,
       enumerable: true,
       configurable: true,
@@ -222,7 +227,7 @@ export function createCoMapFromRaw<
 function getValue<D extends CoMapSchema<any>>(
   raw: RawCoMap,
   schema: D,
-  key: keyof D["shape"],
+  key: CoMapSchemaKey<D>,
 ) {
   const descriptor = schema.get(key);
 
@@ -252,7 +257,7 @@ function getValue<D extends CoMapSchema<any>>(
 function setValue<D extends CoMapSchema<any>>(
   raw: RawCoMap,
   schema: D,
-  key: keyof D["shape"],
+  key: CoMapSchemaKey<D>,
   value: JsonValue,
 ) {
   const descriptor = schema.get(key);
@@ -299,16 +304,20 @@ function createCoMapFromInit<D extends CoMapSchema<any>>(
   const rawOwner = owner._raw;
 
   const rawInit = {} as {
-    [key in keyof D["shape"]]: JsonValue | undefined;
+    [key in CoMapSchemaKey<D>]: JsonValue | undefined;
   };
 
   const refs = new Map<string, Loaded<any, any>>();
 
   if (init) {
-    const fields = schema.keys() as (keyof D["shape"] & string)[];
+    const fields = schema.keys() as (CoMapSchemaKey<D> & string)[];
 
     for (const key of fields) {
-      const initValue = init[key];
+      const initValue = init[key] as
+        | Loaded<CoValueSchema<{}>>
+        | CoMapInit<any>
+        | undefined
+        | null;
 
       const descriptor = schema.get(key);
 
@@ -327,10 +336,10 @@ function createCoMapFromInit<D extends CoMapSchema<any>>(
           let instance: Loaded<CoValueSchema<{}>>;
 
           if ("$jazz" in initValue) {
-            instance = initValue as unknown as Loaded<CoValueSchema<{}>>;
+            instance = initValue as Loaded<CoValueSchema<{}>>;
           } else {
             instance = getSchemaFromDescriptor(schema, key).create(
-              initValue as CoMapInit<any>,
+              initValue,
               owner,
             ) as Loaded<CoValueSchema<{}>>;
           }
@@ -357,7 +366,7 @@ function createCoMapFromInit<D extends CoMapSchema<any>>(
 
 function getSchemaFromDescriptor<
   S extends CoMapSchema<any>,
-  K extends keyof S["shape"],
+  K extends CoMapSchemaKey<S>,
 >(schema: S, key: K) {
   const descriptor = schema.get(key);
 
