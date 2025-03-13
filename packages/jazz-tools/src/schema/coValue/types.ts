@@ -1,7 +1,9 @@
 import { TypeOf, ZodTypeAny } from "zod";
 import { CoMap } from "../coMap/instance.js";
 import {
+  CoMapFieldDescriptorType,
   CoMapSchema,
+  CoMapSchemaKey,
   CoValueSchema,
   UnwrapReference,
 } from "../coMap/schema.js";
@@ -24,7 +26,7 @@ export type RelationsToResolve<
       : S extends CoMapSchema<any>
         ?
             | {
-                [K in keyof S["shape"]]?: UnwrapReference<
+                [K in CoMapSchemaKey<S>]?: UnwrapReference<
                   S,
                   K
                 > extends CoValueSchema<any>
@@ -62,28 +64,33 @@ export type LoadedCoMap<
 > = flatten<
   (S extends CoMapSchema<any>
     ? {
-        [K in keyof S["shape"]]: S["shape"][K] extends ZodTypeAny
-          ? TypeOf<S["shape"][K]>
+        [K in CoMapSchemaKey<S>]: CoMapFieldDescriptorType<
+          S,
+          K
+        > extends ZodTypeAny
+          ? TypeOf<CoMapFieldDescriptorType<S, K>>
           : UnwrapReference<S, K> extends CoValueSchema<any>
-            ? R[K] extends RelationsToResolve<UnwrapReference<S, K>>
-              ? IsDepthLimit<CurrentDepth> & isResolveLeaf<R> extends false
-                ?
-                    | Loaded<
-                        UnwrapReference<S, K>,
-                        R[K],
-                        Options,
-                        [0, ...CurrentDepth]
-                      >
-                    | addNullable<Options, S["shape"][K]>
+            ? K extends keyof R
+              ? R[K] extends RelationsToResolve<UnwrapReference<S, K>>
+                ? IsDepthLimit<CurrentDepth> & isResolveLeaf<R> extends false
+                  ?
+                      | Loaded<
+                          UnwrapReference<S, K>,
+                          R[K],
+                          Options,
+                          [0, ...CurrentDepth]
+                        >
+                      | addNullable<Options, CoMapFieldDescriptorType<S, K>>
+                  : null
                 : null
               : null
-            : UnwrapZodType<S["shape"][K]>;
+            : UnwrapZodType<CoMapFieldDescriptorType<S, K>, never>;
       }
     : never) &
     CoMap<S, R>
 >;
 
-export type UnwrapZodType<T, O = null> = T extends ZodTypeAny ? TypeOf<T> : O;
+export type UnwrapZodType<T, O> = T extends ZodTypeAny ? TypeOf<T> : O;
 
 export type ValidateResolve<
   D extends CoValueSchema<any>,

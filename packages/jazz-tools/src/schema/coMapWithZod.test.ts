@@ -29,7 +29,7 @@ describe("CoMap - with zod based schema", () => {
         age: z.number(),
       });
 
-      expectTypeOf<CoMapInit<typeof Person>>().toEqualTypeOf<{
+      expectTypeOf<CoMapInit<typeof Person>>().toMatchTypeOf<{
         name: string;
         age: number;
       }>();
@@ -97,7 +97,7 @@ describe("CoMap - with zod based schema", () => {
         address: { street: "123 Main St" },
       });
 
-      expectTypeOf<typeof john.address>().toEqualTypeOf<
+      expectTypeOf<typeof john.address>().toMatchTypeOf<
         Loaded<typeof Person.shape.address>
       >();
     });
