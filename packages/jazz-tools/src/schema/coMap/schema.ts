@@ -52,7 +52,7 @@ export type UnwrapRecordReference<S extends AnyCoMapSchemaDefinition> =
   CoMapRecordFieldType<S> extends CoValueSchema
     ? CoMapRecordFieldType<S>
     : CoMapRecordFieldType<S> extends SelfReference
-      ? S
+      ? AnyCoMapSchemaDefinitionToSchema<S>
       : never;
 
 export type UnwrapReference<
@@ -61,9 +61,7 @@ export type UnwrapReference<
 > = S["shape"][K] extends CoValueSchema
   ? S["shape"][K]
   : S["shape"][K] extends SelfReference
-    ? S extends CoMapSchema<infer S, infer R>
-      ? CoMapSchema<S, R, true>
-      : never
+    ? AnyCoMapSchemaDefinitionToSchema<S>
     : never;
 
 export type CoMapInit<
@@ -148,9 +146,9 @@ export type CoMapInitToRelationsToResolve<
                       I[K],
                       [0, ...CurrentDepth]
                     >
-                  : "1"
-              : "2"
-            : "3";
+                  : never
+              : never
+            : never;
         } & (S["record"] extends undefined
           ? unknown
           : {
@@ -164,9 +162,9 @@ export type CoMapInitToRelationsToResolve<
                           I[K],
                           [0, ...CurrentDepth]
                         >
-                      : "1"
-                  : "2"
-                : "3";
+                      : never
+                  : never
+                : never;
             }),
         true
       >
@@ -181,6 +179,10 @@ export type CoMapSchemaDefinition<
   record: R;
   isOptional: O;
 };
+
+export type AnyCoMapSchemaDefinitionToSchema<
+  D extends AnyCoMapSchemaDefinition,
+> = CoMapSchema<D["shape"], D["record"], D["isOptional"]>;
 
 export type AnyCoMapSchema =
   | CoMapSchema<any, undefined>
@@ -238,9 +240,8 @@ export class CoMapSchema<
   }
 
   create<I>(
-    init: R extends undefined
-      ? CoMapInitStrict<CoMapSchema<S, undefined, false>, I>
-      : I,
+    init: I,
+    // init: CoMapInitStrict<CoMapSchemaDefinition<S, R>, I>,
     options?:
       | {
           owner: Account | Group;
@@ -254,6 +255,6 @@ export class CoMapSchema<
     "non-nullable" // We want the loaded type to reflect the init input as we know for sure if values are available or not
   > {
     const { owner, uniqueness } = parseCoValueCreateOptions(options);
-    return createCoMap(this, init as any, owner, uniqueness) as any;
+    return createCoMap(this as any, init as any, owner, uniqueness) as any;
   }
 }

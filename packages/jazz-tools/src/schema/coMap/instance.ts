@@ -16,6 +16,7 @@ import { CoValueResolutionNode, ensureCoValueLoaded } from "../subscribe.js";
 import {
   AnyCoMapSchema,
   AnyCoMapSchemaDefinition,
+  AnyCoMapSchemaDefinitionToSchema,
   CoMapInit,
   CoMapSchema,
   CoMapSchemaKey,

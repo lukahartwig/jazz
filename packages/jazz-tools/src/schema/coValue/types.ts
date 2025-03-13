@@ -2,6 +2,8 @@ import { TypeOf, ZodTypeAny } from "zod";
 import { CoMap } from "../coMap/instance.js";
 import {
   AnyCoMapSchema,
+  AnyCoMapSchemaDefinition,
+  AnyCoMapSchemaDefinitionToSchema,
   CoMapFieldType,
   CoMapRecordFieldType,
   CoMapRecordKey,
@@ -25,7 +27,7 @@ export type RelationsToResolve<
   | true
   | (IsDepthLimit<CurrentDepth> extends true
       ? true
-      : S extends AnyCoMapSchema
+      : S extends AnyCoMapSchemaDefinition
         ? {
             [K in keyof S["shape"]]?: UnwrapReference<
               S,
@@ -33,14 +35,16 @@ export type RelationsToResolve<
             > extends CoValueSchema
               ? RelationsToResolve<UnwrapReference<S, K>, [0, ...CurrentDepth]>
               : never;
-          } & {
-            [K in CoMapRecordKey<S>]?: UnwrapRecordReference<S> extends CoValueSchema
-              ? RelationsToResolve<
-                  UnwrapRecordReference<S>,
-                  [0, ...CurrentDepth]
-                >
-              : never;
-          }
+          } & (S["record"] extends undefined
+            ? unknown
+            : {
+                [K in CoMapRecordKey<S>]?: UnwrapRecordReference<S> extends CoValueSchema
+                  ? RelationsToResolve<
+                      UnwrapRecordReference<S>,
+                      [0, ...CurrentDepth]
+                    >
+                  : never;
+              })
         : true);
 
 export type isResolveLeaf<R> = R extends boolean | undefined
@@ -56,8 +60,8 @@ export type Loaded<
   CurrentDepth extends number[] = [],
 > = R extends never
   ? never
-  : S extends AnyCoMapSchema
-    ? LoadedCoMap<S, R, Options, CurrentDepth>
+  : S extends AnyCoMapSchemaDefinition
+    ? LoadedCoMap<AnyCoMapSchemaDefinitionToSchema<S>, R, Options, CurrentDepth>
     : never;
 
 export type LoadedCoMap<
@@ -66,7 +70,7 @@ export type LoadedCoMap<
   Options extends "nullable" | "non-nullable" = "non-nullable",
   CurrentDepth extends number[] = [],
 > = flatten<
-  (S extends AnyCoMapSchema
+  (S extends AnyCoMapSchemaDefinition
     ? {
         [K in keyof S["shape"]]: CoMapFieldType<S, K> extends ZodTypeAny
           ? TypeOf<CoMapFieldType<S, K>>

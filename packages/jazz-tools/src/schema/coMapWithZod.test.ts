@@ -1,6 +1,10 @@
 import { beforeEach, describe, expect, expectTypeOf, it } from "vitest";
 import { createJazzTestAccount } from "../testing.js";
-import { CoMapInit, CoMapInitToRelationsToResolve } from "./coMap/schema.js";
+import {
+  CoMapInit,
+  CoMapInitToRelationsToResolve,
+  CoMapSchemaDefinition,
+} from "./coMap/schema.js";
 import { Loaded, RelationsToResolve, co, z } from "./schema.js";
 
 beforeEach(async () => {
@@ -110,11 +114,6 @@ describe("CoMap - with zod based schema", () => {
           street: z.string(),
         }),
       });
-
-      type X = Loaded<typeof Person, { address: true }>;
-      type R = RelationsToResolve<typeof Person>;
-      type I = CoMapInit<typeof Person>;
-      type RI = CoMapInitToRelationsToResolve<typeof Person, I>;
 
       const john = Person.create({
         name: "John",
@@ -245,8 +244,6 @@ describe("CoMap - with zod based schema", () => {
       const john = Person.create({
         extra: { extra: "extra" },
       });
-
-      type X = Loaded<typeof Person, { extra: true }>;
 
       expect(john.extra.extra).toBe("extra");
     });
