@@ -9,30 +9,27 @@ import { IsDepthLimit, addQuestionMarks } from "../coValue/typeUtils.js";
 import { Loaded, LoadedCoMap, ValidateResolve } from "../coValue/types.js";
 import { CoMap, createCoMap } from "./instance.js";
 
-export type CoMapFieldDescriptor =
-  | CoMapSchema<any>
-  | ZodTypeAny
-  | SelfReference;
+export type CoMapField = CoMapSchema<any> | ZodTypeAny | SelfReference;
 
 export type CoMapSchemaShape = {
-  [key: string]: CoMapFieldDescriptor;
+  [key: string]: CoMapField;
 };
 
 export type CoMapSchemaKey<S extends CoMapSchema<any>> = keyof S["shape"];
 
-export type CoMapFieldDescriptorType<
+export type CoMapFieldType<
   S extends CoMapSchema<any>,
   K extends CoMapSchemaKey<S>,
-> = S["shape"][K] extends CoMapFieldDescriptor ? S["shape"][K] : never;
+> = S["shape"][K] extends CoMapField ? S["shape"][K] : never;
 
 export type CoValueSchema<S extends CoMapSchemaShape> = CoMapSchema<S>;
 
 export type UnwrapReference<
   D extends CoMapSchema<any>,
   K extends CoMapSchemaKey<D>,
-> = CoMapFieldDescriptorType<D, K> extends CoValueSchema<any>
-  ? CoMapFieldDescriptorType<D, K>
-  : CoMapFieldDescriptorType<D, K> extends SelfReference
+> = CoMapFieldType<D, K> extends CoValueSchema<any>
+  ? CoMapFieldType<D, K>
+  : CoMapFieldType<D, K> extends SelfReference
     ? D
     : never;
 
@@ -42,17 +39,14 @@ export type CoMapInit<
 > = IsDepthLimit<CurrentDepth> extends true
   ? {}
   : addQuestionMarks<{
-      [K in CoMapSchemaKey<D>]: CoMapFieldDescriptorType<
-        D,
-        K
-      > extends ZodTypeAny
-        ? TypeOf<CoMapFieldDescriptorType<D, K>>
+      [K in CoMapSchemaKey<D>]: CoMapFieldType<D, K> extends ZodTypeAny
+        ? TypeOf<CoMapFieldType<D, K>>
         : UnwrapReference<D, K> extends CoMapSchema<any>
           ?
               | CoMapInit<UnwrapReference<D, K>, [0, ...CurrentDepth]>
               | LoadedCoMap<UnwrapReference<D, K>, any>
               | addOptional<UnwrapReference<D, K>>
-              | markSelfReferenceAsOptional<CoMapFieldDescriptorType<D, K>> // Self references are always optional
+              | markSelfReferenceAsOptional<CoMapFieldType<D, K>> // Self references are always optional
           : never;
     }>;
 
@@ -71,11 +65,8 @@ type CoMapSimpleInit<
 > = IsDepthLimit<CurrentDepth> extends true
   ? {}
   : {
-      [K in CoMapSchemaKey<D>]?: CoMapFieldDescriptorType<
-        D,
-        K
-      > extends ZodTypeAny
-        ? TypeOf<CoMapFieldDescriptorType<D, K>>
+      [K in CoMapSchemaKey<D>]?: CoMapFieldType<D, K> extends ZodTypeAny
+        ? TypeOf<CoMapFieldType<D, K>>
         : any;
     };
 

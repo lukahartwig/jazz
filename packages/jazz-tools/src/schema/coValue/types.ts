@@ -1,7 +1,7 @@
 import { TypeOf, ZodTypeAny } from "zod";
 import { CoMap } from "../coMap/instance.js";
 import {
-  CoMapFieldDescriptorType,
+  CoMapFieldType,
   CoMapSchema,
   CoMapSchemaKey,
   CoValueSchema,
@@ -64,27 +64,19 @@ export type LoadedCoMap<
 > = flatten<
   (S extends CoMapSchema<any>
     ? {
-        [K in CoMapSchemaKey<S>]: CoMapFieldDescriptorType<
-          S,
-          K
-        > extends ZodTypeAny
-          ? TypeOf<CoMapFieldDescriptorType<S, K>>
-          : UnwrapReference<S, K> extends CoValueSchema<any>
-            ? K extends keyof R
-              ? R[K] extends RelationsToResolve<UnwrapReference<S, K>>
+        [K in CoMapSchemaKey<S>]: CoMapFieldType<S, K> extends ZodTypeAny
+          ? TypeOf<CoMapFieldType<S, K>>
+          : UnwrapReference<S, K> extends infer ChildSchema
+            ? ChildSchema extends CoMapSchema<any>
+              ? R[K] extends RelationsToResolve<ChildSchema>
                 ? IsDepthLimit<CurrentDepth> & isResolveLeaf<R> extends false
                   ?
-                      | Loaded<
-                          UnwrapReference<S, K>,
-                          R[K],
-                          Options,
-                          [0, ...CurrentDepth]
-                        >
-                      | addNullable<Options, CoMapFieldDescriptorType<S, K>>
+                      | Loaded<ChildSchema, R[K], Options, [0, ...CurrentDepth]>
+                      | addNullable<Options, CoMapFieldType<S, K>>
                   : null
                 : null
               : null
-            : UnwrapZodType<CoMapFieldDescriptorType<S, K>, never>;
+            : UnwrapZodType<CoMapFieldType<S, K>, never>;
       }
     : never) &
     CoMap<S, R>
