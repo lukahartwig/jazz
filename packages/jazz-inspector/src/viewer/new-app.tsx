@@ -61,10 +61,10 @@ export function JazzInspector({ position = "right" }: { position?: Position }) {
     return (
       <button
         onClick={() => setOpen(true)}
+        className="bg-blue-600 font-bold border-green-500 border-2 rounded-xl shadow-xl"
         style={{
           position: "fixed",
           margin: "1rem",
-          backgroundColor: "white",
           border: "1px solid #e5e7eb",
           borderRadius: "0.5rem",
           padding: "0.5rem",
