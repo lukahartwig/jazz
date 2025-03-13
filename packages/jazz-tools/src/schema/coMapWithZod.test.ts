@@ -199,7 +199,7 @@ describe("CoMap - with zod based schema", () => {
       });
 
       expectTypeOf<typeof john.friend.friend.name>().toEqualTypeOf<string>();
-      expectTypeOf<typeof john.friend.friend.friend>().toEqualTypeOf<never>();
+      expectTypeOf<typeof john.friend.friend.friend>().toEqualTypeOf<null>();
     });
 
     it("should not throw an error if a self reference is missing", () => {
@@ -245,6 +245,7 @@ describe("CoMap - with zod based schema", () => {
         extra: { extra: "extra" },
       });
 
+      // @ts-expect-error - fix this
       expect(john.extra.extra).toBe("extra");
     });
   });

@@ -9,6 +9,7 @@ import {
   IsDepthLimit,
   addQuestionMarks,
   flatten,
+  simplifyRelationsToResolve,
 } from "../coValue/typeUtils.js";
 import {
   Loaded,
@@ -149,40 +150,43 @@ export type CoMapInitToRelationsToResolve<
   : I extends CoMapSimpleInit<S>
     ? ValidateResolve<
         S,
-        {
-          [K in keyof S["shape"]]: UnwrapReference<
-            S,
-            K
-          > extends infer ChildSchema
-            ? ChildSchema extends AnyCoMapSchema
-              ? I[K] extends CoMap<ChildSchema, infer R>
-                ? R
-                : I[K] extends CoMapSimpleInit<ChildSchema>
-                  ? CoMapInitToRelationsToResolve<
-                      ChildSchema,
-                      I[K],
-                      [0, ...CurrentDepth]
-                    >
-                  : never
-              : never
-            : never;
-        } & (S["record"] extends undefined
-          ? unknown
-          : {
-              [K in CoMapRecordKey<S>]: UnwrapRecordReference<S> extends infer ChildSchema
-                ? ChildSchema extends AnyCoMapSchema
-                  ? I[K] extends CoMap<ChildSchema, infer R>
-                    ? R
-                    : I[K] extends CoMapSimpleInit<ChildSchema>
-                      ? CoMapInitToRelationsToResolve<
-                          ChildSchema,
-                          I[K],
-                          [0, ...CurrentDepth]
-                        >
-                      : never
-                  : never
-                : never;
-            }),
+        simplifyRelationsToResolve<
+          {
+            [K in keyof I & CoMapSchemaRelationsKeys<S>]: UnwrapReference<
+              S,
+              K
+            > extends infer ChildSchema
+              ? ChildSchema extends AnyCoMapSchema
+                ? I[K] extends CoMap<ChildSchema, infer R>
+                  ? R
+                  : I[K] extends CoMapSimpleInit<ChildSchema>
+                    ? CoMapInitToRelationsToResolve<
+                        ChildSchema,
+                        I[K],
+                        [0, ...CurrentDepth]
+                      >
+                    : never
+                : never
+              : never;
+          } & (S["record"] extends undefined
+            ? unknown
+            : {
+                [K in keyof I &
+                  CoMapRecordKey<S>]: UnwrapRecordReference<S> extends infer ChildSchema
+                  ? ChildSchema extends AnyCoMapSchema
+                    ? I[K] extends CoMap<ChildSchema, infer R>
+                      ? R
+                      : I[K] extends CoMapSimpleInit<ChildSchema>
+                        ? CoMapInitToRelationsToResolve<
+                            ChildSchema,
+                            I[K],
+                            [0, ...CurrentDepth]
+                          >
+                        : never
+                    : never
+                  : never;
+              })
+        >,
         true
       >
     : true;
@@ -226,7 +230,7 @@ export class CoMapSchema<
     this.isOptional = isOptional;
   }
 
-  optional() {
+  optional(): CoMapSchema<S, R, true> {
     return new CoMapSchema(this.shape, this.record, true);
   }
 
@@ -244,7 +248,9 @@ export class CoMapSchema<
     return undefined;
   }
 
-  catchall<T extends CoMapField>(type: T) {
+  catchall<T extends CoMapField>(
+    type: T,
+  ): CoMapSchema<S, { key: ZodString; value: T }, O> {
     const record = {
       key: z.string(),
       value: type,
@@ -257,9 +263,8 @@ export class CoMapSchema<
     return Object.keys(this.shape) as (keyof S & string)[];
   }
 
-  create<I>(
-    // init: CoMapInitStrict<CoMapSchemaDefinition<S, R>, I>,
-    init: I,
+  create<I extends CoMapInit<CoMapSchemaDefinition<S, R>>>(
+    init: CoMapInitStrict<CoMapSchemaDefinition<S, R>, I>,
     options?:
       | {
           owner: Account | Group;

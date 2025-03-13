@@ -4,6 +4,7 @@ import {
   AnyCoMapSchemaDefinition,
   CoMapInit,
   CoMapInitStrict,
+  CoMapInitToRelationsToResolve,
   CoMapSchemaDefinition,
   CoValueSchema,
   UnwrapReference,
@@ -395,6 +396,99 @@ describe("CoMap - with zod based schema", () => {
               street: string;
             } & CoMap<typeof Person.shape.address, true>);
       }>();
+    });
+  });
+
+  describe("CoMapInitToRelationsToResolve", () => {
+    it("should properly parse a schema without relations", () => {
+      const Person = co.map({
+        name: z.string(),
+        age: z.number(),
+      });
+
+      type Result = CoMapInitToRelationsToResolve<
+        typeof Person,
+        {
+          name: string;
+          age: number;
+        }
+      >;
+
+      expectTypeOf<Result>().toEqualTypeOf<true>();
+    });
+
+    it("should properly parse a schema with a relation", () => {
+      const Person = co.map({
+        name: z.string(),
+        age: z.number(),
+        address: co.map({
+          street: z.string(),
+        }),
+      });
+
+      type Result = CoMapInitToRelationsToResolve<
+        typeof Person,
+        {
+          name: string;
+          age: number;
+          address: {
+            street: string;
+          };
+        }
+      >;
+
+      expectTypeOf<Result>().toEqualTypeOf<{
+        address: true;
+      }>();
+    });
+
+    it("should properly parse a schema with a self reference", () => {
+      const Person = co.map({
+        name: z.string(),
+        age: z.number(),
+        friend: co.self(),
+      });
+
+      type Result = CoMapInitToRelationsToResolve<
+        typeof Person,
+        {
+          name: string;
+          age: number;
+          friend: {
+            name: string;
+            age: number;
+          };
+        }
+      >;
+
+      expectTypeOf<Result>().toEqualTypeOf<{
+        friend: true;
+      }>();
+    });
+
+    it("should return the same result when providing a SchemaDefinition", () => {
+      const Person = co.map({
+        name: z.string(),
+        age: z.number(),
+        address: co.map({
+          street: z.string(),
+        }),
+      });
+
+      type PersonSchema = typeof Person;
+      type PersonSchemaDefinition = CoMapSchemaDefinition<
+        PersonSchema["shape"],
+        PersonSchema["record"],
+        PersonSchema["isOptional"]
+      >;
+      type Result = RelationsToResolve<PersonSchemaDefinition>;
+
+      expectTypeOf<Result>().toEqualTypeOf<
+        | true
+        | {
+            address?: true;
+          }
+      >();
     });
   });
 

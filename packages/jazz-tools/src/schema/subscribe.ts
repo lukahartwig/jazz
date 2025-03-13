@@ -103,15 +103,16 @@ export class CoValueResolutionNode<
 
   handleUpdate(value: RawCoMap) {
     if (!this.value) {
-      this.value = createCoMapFromRaw<D, R>(
+      const instance = createCoMapFromRaw<D, R>(
         this.schema,
         value,
         this.childValues,
         this,
       );
+      this.value = instance;
       this.loadChildren();
       if (this.isLoaded()) {
-        this.listener?.(this.value);
+        this.listener?.(instance);
       }
     } else if (this.isLoaded()) {
       const changesOnChildren = this.loadChildren();
@@ -123,7 +124,7 @@ export class CoValueResolutionNode<
 
         if (value !== this.value) {
           this.value = value;
-          this.listener?.(this.value);
+          this.listener?.(value);
         }
       }
     }

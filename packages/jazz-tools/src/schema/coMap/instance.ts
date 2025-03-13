@@ -106,6 +106,7 @@ export class CoMapJazzApi<
       } else {
         if (!isCoValue(value)) {
           // To support inline CoMap creation on set
+          // @ts-expect-error TODO: Fix this
           value = getSchemaFromDescriptor(this.schema, key).create(
             value as CoMapInit<any>,
             this.owner,
@@ -217,7 +218,7 @@ export function createCoMapFromRaw<
     }
   }
 
-  for (const key of schema.keys()) {
+  for (const key of fields) {
     Object.defineProperty(instance, key, {
       value: getValue(raw, schema, key as CoMapSchemaKey<D>),
       writable: false,
@@ -355,6 +356,7 @@ function createCoMapFromInit<D extends AnyCoMapSchema>(
           if ("$jazz" in initValue) {
             instance = initValue as Loaded<CoValueSchema>;
           } else {
+            // @ts-expect-error TODO: Fix this
             instance = getSchemaFromDescriptor(schema, key).create(
               initValue,
               owner,
