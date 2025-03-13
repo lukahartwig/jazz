@@ -13,13 +13,18 @@ type Position =
   | "right"
   | "left";
 
-export function JazzInspector({ position = "right" }: { position?: Position }) {
+export function JazzInspector({
+  position = "right",
+  hidden,
+}: { position?: Position; hidden?: boolean }) {
   const [open, setOpen] = useState(false);
   const [coValueId, setCoValueId] = useState<CoID<RawCoValue> | "">("");
   const { path, addPages, goToIndex, goBack, setPage } = usePagePath();
 
   const { me } = useAccount();
   const localNode = me._raw.core.node;
+
+  if (hidden) return;
 
   const handleCoValueIdSubmit = (e: React.FormEvent) => {
     e.preventDefault();
