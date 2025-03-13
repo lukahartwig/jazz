@@ -5,7 +5,7 @@ import { optional } from "./coValue/optional.js";
 import { self } from "./coValue/self.js";
 
 function map<S extends CoMapSchemaShape>(schema: S) {
-  return new CoMapSchema(schema);
+  return new CoMapSchema(schema, undefined, false);
 }
 
 export const co = {

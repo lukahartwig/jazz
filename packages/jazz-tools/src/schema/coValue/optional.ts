@@ -1,51 +1,22 @@
 import { CoValueSchema } from "../coMap/schema.js";
 import { SelfReference } from "./self.js";
 
-export const OptionalSymbol = "Optional" as const;
-
-export type Optional<T extends CoValueSchema<any> | SelfReference> = T & {
-  [OptionalSymbol]: true;
-};
+export const OptionalSymbol = "isOptional" as const;
 
 export type isOptional<T> = T extends {
-  [OptionalSymbol]: true;
+  isOptional: true;
 }
   ? true
   : false;
 
 export type addOptional<T> = isOptional<T> extends true ? undefined : never;
 
-export function carryOptional<
-  S extends CoValueSchema<any>,
-  V extends Optional<CoValueSchema<any>> | CoValueSchema<any>,
->(
-  value: V,
-  newSchema: S,
-): V extends Optional<CoValueSchema<any>> ? Optional<S> : S {
-  if (isOptional(value)) {
-    return optional(newSchema);
-  } else {
-    return newSchema as V extends Optional<CoValueSchema<any>>
-      ? Optional<S>
-      : S;
-  }
+export function optional<T extends CoValueSchema>(value: T) {
+  return value.optional();
 }
 
-export function optional<T extends CoValueSchema<any> | SelfReference>(
+export function isOptional<T extends CoValueSchema | SelfReference>(
   value: T,
-): Optional<T> {
-  return Object.create(value, {
-    [OptionalSymbol]: {
-      value: true,
-      writable: true,
-      enumerable: false,
-      configurable: false,
-    },
-  });
-}
-
-export function isOptional<T extends CoValueSchema<any> | SelfReference>(
-  value: T,
-): value is Optional<T> {
-  return OptionalSymbol in value;
+): value is T & { isOptional: true } {
+  return value.isOptional;
 }

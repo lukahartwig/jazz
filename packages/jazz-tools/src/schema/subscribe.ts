@@ -2,18 +2,17 @@ import { LocalNode, RawCoMap } from "cojson";
 import { Account } from "../exports.js";
 import { activeAccountContext } from "../implementation/activeAccountContext.js";
 import { AnonymousJazzAgent, ID } from "../internal.js";
-import { CoMap, createCoMapFromRaw, isRelationRef } from "./coMap/instance.js";
-import { CoMapSchema, CoValueSchema } from "./coMap/schema.js";
+import { createCoMapFromRaw, isRelationRef } from "./coMap/instance.js";
+import { CoValueSchema } from "./coMap/schema.js";
 import { isSelfReference } from "./coValue/self.js";
 import {
   Loaded,
-  LoadedCoMap,
   RelationsToResolve,
   RelationsToResolveStrict,
 } from "./coValue/types.js";
 
 type SubscribeListener<
-  D extends CoValueSchema<any>,
+  D extends CoValueSchema,
   R extends RelationsToResolve<D>,
 > = (value: Loaded<D, R>, unsubscribe: () => void) => void;
 
@@ -41,7 +40,7 @@ class Subscription {
 
   constructor(
     public node: LocalNode,
-    public id: ID<CoValueSchema<any>>,
+    public id: ID<CoValueSchema>,
     public listener: (value: RawCoMap) => void,
   ) {
     const value = this.node.coValuesStore.get(this.id as any);
@@ -81,13 +80,10 @@ class Subscription {
 }
 
 export class CoValueResolutionNode<
-  D extends CoValueSchema<any>,
+  D extends CoValueSchema,
   R extends RelationsToResolve<D>,
 > {
-  childNodes = new Map<
-    string,
-    CoValueResolutionNode<CoValueSchema<any>, any>
-  >();
+  childNodes = new Map<string, CoValueResolutionNode<CoValueSchema, any>>();
   childValues = new Map<string, Loaded<any, any> | undefined>();
   value: Loaded<D, R> | undefined;
   promise: ResolvablePromise<void> | undefined;
@@ -204,7 +200,7 @@ export class CoValueResolutionNode<
 
       if (value && isRelationRef(descriptor) && resolve[key]) {
         hasChanged = true;
-        let childSchema = descriptor as CoValueSchema<any>;
+        let childSchema = descriptor as CoValueSchema;
 
         if (isSelfReference(childSchema)) {
           childSchema = this.schema;
@@ -232,7 +228,7 @@ export class CoValueResolutionNode<
 }
 
 export function subscribeToCoValue<
-  D extends CoValueSchema<any>,
+  D extends CoValueSchema,
   R extends RelationsToResolve<D>,
 >(
   schema: D,
@@ -275,7 +271,7 @@ export function subscribeToCoValue<
 }
 
 export function loadCoValue<
-  D extends CoValueSchema<any>,
+  D extends CoValueSchema,
   R extends RelationsToResolve<D>,
 >(
   schema: D,
@@ -308,7 +304,7 @@ export function loadCoValue<
 }
 
 export async function ensureCoValueLoaded<
-  D extends CoValueSchema<any>,
+  D extends CoValueSchema,
   I extends RelationsToResolve<D>,
   R extends RelationsToResolve<D>,
 >(

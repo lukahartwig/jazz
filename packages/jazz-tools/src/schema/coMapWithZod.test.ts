@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, expectTypeOf, it } from "vitest";
 import { createJazzTestAccount } from "../testing.js";
-import { CoMapInit } from "./coMap/schema.js";
-import { Loaded, co, z } from "./schema.js";
+import { CoMapInit, CoMapInitToRelationsToResolve } from "./coMap/schema.js";
+import { Loaded, RelationsToResolve, co, z } from "./schema.js";
 
 beforeEach(async () => {
   await createJazzTestAccount({
@@ -111,6 +111,11 @@ describe("CoMap - with zod based schema", () => {
         }),
       });
 
+      type X = Loaded<typeof Person, { address: true }>;
+      type R = RelationsToResolve<typeof Person>;
+      type I = CoMapInit<typeof Person>;
+      type RI = CoMapInitToRelationsToResolve<typeof Person, I>;
+
       const john = Person.create({
         name: "John",
         age: 30,
@@ -131,6 +136,8 @@ describe("CoMap - with zod based schema", () => {
           street: z.string(),
         }),
       });
+
+      type X = keyof CoMapInit<typeof Person>;
 
       // @ts-expect-error - address is required
       expect(() => Person.create({ name: "John", age: 30 })).toThrow(
@@ -209,6 +216,39 @@ describe("CoMap - with zod based schema", () => {
       });
 
       expect(john.friend).toBeUndefined();
+    });
+
+    it("should accept extra properties when catchall is used", () => {
+      const Person = co
+        .map({
+          name: z.string(),
+          age: z.number(),
+        })
+        .catchall(z.union([z.string(), z.number()]));
+
+      const john = Person.create({
+        name: "John",
+        age: 30,
+        extra: "extra",
+      });
+
+      expect(john.extra).toBe("extra");
+    });
+
+    it("should accept extra relations when catchall is used", () => {
+      const Person = co.map({}).catchall(
+        co.map({
+          extra: z.string(),
+        }),
+      );
+
+      const john = Person.create({
+        extra: { extra: "extra" },
+      });
+
+      type X = Loaded<typeof Person, { extra: true }>;
+
+      expect(john.extra.extra).toBe("extra");
     });
   });
 

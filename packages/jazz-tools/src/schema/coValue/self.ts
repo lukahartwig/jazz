@@ -1,25 +1,19 @@
-import { CoValueSchema } from "../coMap/schema.js";
-import { optional } from "./optional.js";
-
 export const SelfReferenceSymbol = "SelfReference" as const;
 
 export type SelfReference = {
   [SelfReferenceSymbol]: true;
+  isOptional: true;
 };
 
 export type markSelfReferenceAsOptional<T> = T extends SelfReference
   ? undefined
   : never;
 
-export function self() {
-  // Self references are always optional
-  const selfRef = optional({
+export function self(): SelfReference {
+  return {
     [SelfReferenceSymbol]: true,
-  });
-
-  selfRef[SelfReferenceSymbol] = true;
-
-  return selfRef as SelfReference;
+    isOptional: true,
+  };
 }
 
 export function isSelfReference(value: unknown): value is SelfReference {
