@@ -3,11 +3,7 @@
 import { AgentSecret, CryptoProvider, bytesToBase64url } from "cojson";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import { AuthSecretStorage } from "../auth/AuthSecretStorage.js";
-import {
-  SecretURLAuth,
-  createAuthURL,
-  parseAuthURL,
-} from "../auth/SecretURLAuth.js";
+import { SecretURLAuth } from "../auth/SecretURLAuth.js";
 import { Account } from "../coValues/account.js";
 import {
   AuthenticateAccountFunction,
@@ -15,7 +11,7 @@ import {
   KvStoreContext,
 } from "../exports.js";
 import { ID } from "../internal.js";
-import { TestJSCrypto } from "../testing.js";
+import { TestJSCrypto, createJazzTestAccount } from "../testing.js";
 
 KvStoreContext.getInstance().initialize(new InMemoryKVStore());
 
@@ -24,6 +20,7 @@ describe("SecretURLAuth", () => {
   let mockAuthenticate: AuthenticateAccountFunction;
   let authSecretStorage: AuthSecretStorage;
   let secretURLAuth: SecretURLAuth;
+  let account: Account;
 
   beforeEach(async () => {
     KvStoreContext.getInstance().getStorage().clearAll();
@@ -31,51 +28,20 @@ describe("SecretURLAuth", () => {
     mockAuthenticate = vi.fn();
     authSecretStorage = new AuthSecretStorage();
 
+    account = await createJazzTestAccount({
+      isCurrentActiveAccount: true,
+    });
+
     secretURLAuth = new SecretURLAuth(
       crypto as CryptoProvider,
       mockAuthenticate,
       authSecretStorage,
+      window.location.origin,
     );
   });
 
-  describe("logIn", () => {
-    test("success with valid secret URL", async () => {
-      const secretSeed = crypto.newRandomSecretSeed();
-      const validURL = createAuthURL(
-        bytesToBase64url(secretSeed),
-        window.location.origin,
-      );
-
-      await secretURLAuth.logIn(validURL);
-
-      expect(mockAuthenticate).toHaveBeenCalled();
-    });
-
-    test("fail with expired URL", async () => {
-      const secretSeed = crypto.newRandomSecretSeed();
-      const expiredURL = createAuthURL(
-        bytesToBase64url(secretSeed),
-        window.location.origin,
-        Date.now() - 1000,
-      );
-
-      await expect(secretURLAuth.logIn(expiredURL)).rejects.toThrow("expired");
-    });
-
-    test("fail with tampered URL", async () => {
-      const secretSeed = crypto.newRandomSecretSeed();
-      const validURL = createAuthURL(
-        bytesToBase64url(secretSeed),
-        window.location.origin,
-      );
-      const tamperedURL = validURL + "tampered";
-
-      await expect(secretURLAuth.logIn(tamperedURL)).rejects.toThrow("Invalid");
-    });
-  });
-
-  describe("createPairingURL", () => {
-    test("generate valid URL with expiration", async () => {
+  describe("createAuthTransferURL", () => {
+    test("creates a URL", async () => {
       const secretSeed = crypto.newRandomSecretSeed();
       await authSecretStorage.set({
         accountID: "test-account" as ID<Account>,
@@ -84,17 +50,37 @@ describe("SecretURLAuth", () => {
         provider: "anonymous",
       });
 
-      const url = await secretURLAuth.createPairingURL(window.location.origin);
-      const parsed = parseAuthURL(url);
+      const { url, transfer } = await secretURLAuth.createAuthTransferURL();
 
-      expect(parsed?.expiresAt).toBeGreaterThan(Date.now());
-      expect(parsed?.secret).toBe(bytesToBase64url(secretSeed));
+      expect(url).toBeDefined();
+      expect(transfer.status).toBe("init");
+      expect(transfer.acceptedBy).toBeUndefined();
+      expect(transfer.secret).toBe(bytesToBase64url(secretSeed));
     });
 
-    test("fail when no credentials", async () => {
-      await expect(
-        secretURLAuth.createPairingURL(window.location.origin),
-      ).rejects.toThrow("No existing authentication found");
+    // TODO: More tests
+  });
+
+  describe("logIn", () => {
+    test("does something", async () => {
+      const secretSeed = crypto.newRandomSecretSeed();
+      await authSecretStorage.set({
+        accountID: "test-account" as ID<Account>,
+        accountSecret: "test-secret" as AgentSecret,
+        secretSeed,
+        provider: "anonymous",
+      });
+
+      const { transfer } = await secretURLAuth.createAuthTransferURL();
+
+      expect(transfer.status).toBe("init");
+
+      const result = await secretURLAuth.logIn(transfer.id);
+
+      expect(result.status).toBe("authorized");
+      expect(mockAuthenticate).toHaveBeenCalled();
     });
+
+    // TODO: More tests
   });
 });

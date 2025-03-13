@@ -1,4 +1,4 @@
-import { SecretURLAuth } from "jazz-tools";
+import { ID, SecretURLAuth, SecretURLAuthTransfer } from "jazz-tools";
 import { useCallback, useMemo, useSyncExternalStore } from "react";
 import {
   useAuthSecretStorage,
@@ -32,25 +32,26 @@ export function useSecretURLAuth(origin: string) {
       context.node.crypto,
       context.authenticate,
       authSecretStorage,
+      origin,
     );
-  }, []);
+  }, [origin]);
 
-  const secretURL = useSyncExternalStore(
-    useCallback(
-      (callback) => {
-        authMethod.loadCurrentAccountSecretURL(origin);
-        return authMethod.subscribe(callback);
-      },
-      [authMethod, origin],
-    ),
-    () => authMethod.secretURL,
+  const role = useSyncExternalStore(
+    useCallback((callback) => authMethod.subscribe(callback), [authMethod]),
+    () => authMethod.role,
   );
 
+  const createUrl = async (expiresAt?: Date) => {
+    const result = await authMethod.createAuthTransferURL(expiresAt);
+    return result.url;
+  };
+
   const isAuthenticated = useIsAuthenticated();
+
   return {
     state: isAuthenticated ? "signedIn" : "anonymous",
     logIn: authMethod.logIn,
-    createPairingURL: authMethod.createPairingURL,
-    secretURL,
+    createUrl,
+    role,
   } as const;
 }
