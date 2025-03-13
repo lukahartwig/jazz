@@ -10,6 +10,8 @@ import {
 import { Group } from "../exports.js";
 import { createJazzTestAccount, setupJazzTestSync } from "../testing.js";
 import { waitFor } from "../tests/utils.js";
+import { flatten } from "./coValue/typeUtils.js";
+import { MaybeLoaded } from "./coValue/types.js";
 import { Loaded, co, z } from "./schema.js";
 import { loadCoValue, subscribeToCoValue } from "./subscribe.js";
 
@@ -50,13 +52,15 @@ describe("CoMap with Zod", () => {
         resolve: true,
       });
 
-      assert(loaded);
+      assert(loaded.$jazzState === "loaded");
 
       expect(loaded.name).toBe("John");
       expect(loaded.age).toBe(30);
       expect(loaded.address).toBe(null);
 
-      expectTypeOf(loaded.address).toEqualTypeOf<null>();
+      expectTypeOf(loaded.address).toEqualTypeOf<
+        MaybeLoaded<typeof Person.shape.address>
+      >();
     });
 
     it("should load a CoMap with nested values", async () => {
@@ -86,7 +90,7 @@ describe("CoMap with Zod", () => {
         resolve: { address: true },
       });
 
-      assert(loaded);
+      assert(loaded.$jazzState === "loaded");
 
       expect(loaded.name).toBe("John");
       expect(loaded.age).toBe(30);
@@ -95,6 +99,18 @@ describe("CoMap with Zod", () => {
       expectTypeOf(loaded.address).toEqualTypeOf<
         Loaded<typeof Person.shape.address, true>
       >();
+
+      const shallowlyLoaded = await loadCoValue(Person, john.$jazz.id, {
+        resolve: true,
+      });
+
+      assert(shallowlyLoaded.$jazzState === "loaded");
+
+      if (!shallowlyLoaded) {
+        throw new Error("shallowlyLoaded is undefined");
+      }
+
+      type AddressType = typeof shallowlyLoaded.address;
     });
 
     it("should load a CoMap with self references", async () => {
@@ -125,7 +141,7 @@ describe("CoMap with Zod", () => {
         resolve: { friend: true },
       });
 
-      assert(loaded);
+      assert(loaded.$jazzState === "loaded");
 
       expect(loaded.name).toBe("John");
       expect(loaded.age).toBe(30);
@@ -167,7 +183,7 @@ describe("CoMap with Zod", () => {
         resolve: { address: true },
       });
 
-      assert(loaded);
+      assert(loaded.$jazzState === "loaded");
 
       expect(loaded.name).toBe("John");
       expect(loaded.age).toBe(30);
@@ -334,7 +350,7 @@ describe("CoMap with Zod", () => {
         resolve: true,
       });
 
-      assert(loaded);
+      assert(loaded.$jazzState === "loaded");
 
       const { address } = await loaded.$jazz.ensureLoaded({
         resolve: { address: true },
@@ -378,7 +394,7 @@ describe("CoMap with Zod", () => {
           resolve: true,
         });
 
-        assert(loaded);
+        assert(loaded.$jazzState === "loaded");
 
         await expect(
           loaded.$jazz.ensureLoaded({
@@ -418,7 +434,7 @@ describe("CoMap with Zod", () => {
           resolve: true,
         });
 
-        assert(loaded);
+        assert(loaded.$jazzState === "loaded");
 
         await expect(
           loaded.$jazz.ensureLoaded({

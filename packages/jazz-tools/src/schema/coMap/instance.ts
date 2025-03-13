@@ -42,7 +42,22 @@ export type CoMap<
   D extends CoMapSchema<any>,
   R extends RelationsToResolve<D> = true,
 > = {
+  $jazzState: "loaded";
   $jazz: CoMapJazzApi<D, R>;
+};
+
+export type UnloadedCoMap<D extends CoMapSchema<any>> = {
+  $jazzState: "unloaded";
+  $jazz: UnloadedCoMapJazzAPI<D>;
+};
+
+export type UnloadedCoMapJazzAPI<S extends CoMapSchema<any>> = {
+  id: ID<S>;
+  schema: S;
+  errors: {
+    path: string; // TODO: PathsIn<S>,
+    error: string;
+  }[];
 };
 
 export class CoMapJazzApi<

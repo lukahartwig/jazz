@@ -10,6 +10,7 @@ import {
   LoadedCoMap,
   RelationsToResolve,
   RelationsToResolveStrict,
+  Unloaded,
 } from "./coValue/types.js";
 
 type SubscribeListener<
@@ -285,7 +286,7 @@ export function loadCoValue<
     loadAs?: Account | AnonymousJazzAgent;
   },
 ) {
-  return new Promise<Loaded<D, R> | undefined>((resolve) => {
+  return new Promise<Loaded<D, R> | Unloaded<D>>((resolve) => {
     subscribeToCoValue<D, R>(
       schema,
       id,

@@ -1,5 +1,6 @@
 import { TypeOf, ZodTypeAny } from "zod";
-import { CoMap } from "../coMap/instance.js";
+import { ID } from "../../internal.js";
+import { CoMap, UnloadedCoMap } from "../coMap/instance.js";
 import {
   CoMapSchema,
   CoValueSchema,
@@ -75,13 +76,19 @@ export type LoadedCoMap<
                         [0, ...CurrentDepth]
                       >
                     | addNullable<Options, S["shape"][K]>
-                : null
-              : null
+                : MaybeLoaded<S["shape"][K]>
+              : MaybeLoaded<S["shape"][K]>
             : UnwrapZodType<S["shape"][K]>;
       }
     : never) &
     CoMap<S, R>
 >;
+
+export type Unloaded<S extends CoValueSchema<any>> = S extends CoMapSchema<any>
+  ? flatten<UnloadedCoMap<S>>
+  : never;
+
+export type MaybeLoaded<S extends CoValueSchema<any>> = Unloaded<S> | Loaded<S>;
 
 export type UnwrapZodType<T, O = null> = T extends ZodTypeAny ? TypeOf<T> : O;
 
