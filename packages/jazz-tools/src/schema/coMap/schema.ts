@@ -7,7 +7,7 @@ import { addOptional, carryOptional, optional } from "../coValue/optional.js";
 import { SelfReference, markSelfReferenceAsOptional } from "../coValue/self.js";
 import { IsDepthLimit, addQuestionMarks } from "../coValue/typeUtils.js";
 import { Loaded, LoadedCoMap, ValidateResolve } from "../coValue/types.js";
-import { createCoMap } from "./instance.js";
+import { CoMap, createCoMap } from "./instance.js";
 
 export type CoMapFieldDescriptor =
   | CoMapSchema<any>
@@ -80,27 +80,29 @@ type CoMapSimpleInit<
     };
 
 export type CoMapInitToRelationsToResolve<
-  S extends CoMapSchemaShape,
-  I extends CoMapSimpleInit<CoMapSchema<S>>,
+  S extends CoMapSchema<any>,
+  I extends CoMapSimpleInit<S>,
   CurrentDepth extends number[] = [],
 > = IsDepthLimit<CurrentDepth> extends true
   ? true
   : ValidateResolve<
-      CoMapSchema<S>,
+      S,
       {
-        [K in CoMapSchemaKey<CoMapSchema<S>>]: UnwrapReference<
-          CoMapSchema<S>,
+        [K in CoMapSchemaKey<S>]: UnwrapReference<
+          S,
           K
-        > extends CoMapSchema<infer ChildSchema>
-          ? I[K] extends LoadedCoMap<CoMapSchema<ChildSchema>, infer R>
-            ? R
-            : I[K] extends CoMapSimpleInit<CoMapSchema<ChildSchema>>
-              ? CoMapInitToRelationsToResolve<
-                  ChildSchema,
-                  I[K],
-                  [0, ...CurrentDepth]
-                >
-              : never
+        > extends infer ChildSchema
+          ? ChildSchema extends CoMapSchema<any>
+            ? I[K] extends CoMap<ChildSchema, infer R>
+              ? R
+              : I[K] extends CoMapSimpleInit<ChildSchema>
+                ? CoMapInitToRelationsToResolve<
+                    ChildSchema,
+                    I[K],
+                    [0, ...CurrentDepth]
+                  >
+                : never
+            : never
           : never;
       },
       true
@@ -136,7 +138,7 @@ export class CoMapSchema<S extends CoMapSchemaShape> {
       | Group,
   ): Loaded<
     CoMapSchema<S>,
-    CoMapInitToRelationsToResolve<S, I>,
+    CoMapInitToRelationsToResolve<CoMapSchema<S>, I>,
     "non-nullable" // We want the loaded type to reflect the init input as we know for sure if values are available or not
   > {
     const { owner, uniqueness } = parseCoValueCreateOptions(options);
