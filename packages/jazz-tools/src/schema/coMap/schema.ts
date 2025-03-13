@@ -10,7 +10,12 @@ import {
   addQuestionMarks,
   flatten,
 } from "../coValue/typeUtils.js";
-import { Loaded, LoadedCoMap, ValidateResolve } from "../coValue/types.js";
+import {
+  Loaded,
+  LoadedCoMap,
+  RelationsToResolve,
+  ValidateResolve,
+} from "../coValue/types.js";
 import { CoMap, createCoMap } from "./instance.js";
 
 export type CoMapField =
@@ -52,7 +57,7 @@ export type UnwrapRecordReference<S extends AnyCoMapSchemaDefinition> =
   CoMapRecordFieldType<S> extends CoValueSchema
     ? CoMapRecordFieldType<S>
     : CoMapRecordFieldType<S> extends SelfReference
-      ? AnyCoMapSchemaDefinitionToSchema<S>
+      ? CoMapSchemaDefToSchema<S>
       : never;
 
 export type UnwrapReference<
@@ -61,8 +66,14 @@ export type UnwrapReference<
 > = S["shape"][K] extends CoValueSchema
   ? S["shape"][K]
   : S["shape"][K] extends SelfReference
-    ? AnyCoMapSchemaDefinitionToSchema<S>
+    ? CoMapSchemaDefToSchema<S>
     : never;
+
+export type CoMapSchemaRelationsKeys<S extends AnyCoMapSchemaDefinition> = {
+  [K in keyof S["shape"]]: S["shape"][K] extends CoValueSchema | SelfReference
+    ? K
+    : never;
+}[keyof S["shape"]];
 
 export type CoMapInit<
   S extends AnyCoMapSchemaDefinition,
@@ -76,7 +87,10 @@ export type CoMapInit<
           : UnwrapReference<S, K> extends AnyCoMapSchema
             ?
                 | CoMapInit<UnwrapReference<S, K>, [0, ...CurrentDepth]>
-                | LoadedCoMap<UnwrapReference<S, K>, any>
+                | LoadedCoMap<
+                    UnwrapReference<S, K>,
+                    RelationsToResolve<UnwrapReference<S, K>>
+                  >
                 | addOptional<UnwrapReference<S, K>>
                 | markSelfReferenceAsOptional<CoMapFieldType<S, K>> // Self references are always optional
             : never;
@@ -91,7 +105,10 @@ export type CoMapInit<
               : UnwrapRecordReference<S> extends AnyCoMapSchema
                 ?
                     | CoMapInit<UnwrapRecordReference<S>, [0, ...CurrentDepth]>
-                    | LoadedCoMap<UnwrapRecordReference<S>, any>
+                    | LoadedCoMap<
+                        UnwrapRecordReference<S>,
+                        RelationsToResolve<UnwrapRecordReference<S>>
+                      >
                     | addOptional<UnwrapRecordReference<S>>
                     | markSelfReferenceAsOptional<CoMapRecordFieldType<S>> // Self references are always optional
                 : never
@@ -180,9 +197,10 @@ export type CoMapSchemaDefinition<
   isOptional: O;
 };
 
-export type AnyCoMapSchemaDefinitionToSchema<
-  D extends AnyCoMapSchemaDefinition,
-> = CoMapSchema<D["shape"], D["record"], D["isOptional"]>;
+export type CoMapSchemaDefToSchema<D extends AnyCoMapSchemaDefinition> =
+  D extends AnyCoMapSchema
+    ? D
+    : CoMapSchema<D["shape"], D["record"], D["isOptional"]>;
 
 export type AnyCoMapSchema =
   | CoMapSchema<any, undefined>
@@ -240,8 +258,8 @@ export class CoMapSchema<
   }
 
   create<I>(
-    init: I,
     // init: CoMapInitStrict<CoMapSchemaDefinition<S, R>, I>,
+    init: I,
     options?:
       | {
           owner: Account | Group;

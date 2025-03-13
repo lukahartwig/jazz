@@ -136,7 +136,7 @@ describe("CoMap - with zod based schema", () => {
         }),
       });
 
-      type X = keyof CoMapInit<typeof Person>;
+      type X = CoMapInit<typeof Person>;
 
       // @ts-expect-error - address is required
       expect(() => Person.create({ name: "John", age: 30 })).toThrow(

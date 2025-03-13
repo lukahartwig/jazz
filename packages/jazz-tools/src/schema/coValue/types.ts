@@ -3,17 +3,22 @@ import { CoMap } from "../coMap/instance.js";
 import {
   AnyCoMapSchema,
   AnyCoMapSchemaDefinition,
-  AnyCoMapSchemaDefinitionToSchema,
   CoMapFieldType,
   CoMapRecordFieldType,
   CoMapRecordKey,
   CoMapSchema,
+  CoMapSchemaDefToSchema,
+  CoMapSchemaRelationsKeys,
   CoValueSchema,
   CoValueSchemaDefinition,
   UnwrapRecordReference,
   UnwrapReference,
 } from "../coMap/schema.js";
-import { IsDepthLimit, flatten } from "./typeUtils.js";
+import {
+  IsDepthLimit,
+  flatten,
+  simplifyRelationsToResolve,
+} from "./typeUtils.js";
 
 export type RelationsToResolveStrict<
   T extends CoValueSchema,
@@ -28,23 +33,28 @@ export type RelationsToResolve<
   | (IsDepthLimit<CurrentDepth> extends true
       ? true
       : S extends AnyCoMapSchemaDefinition
-        ? {
-            [K in keyof S["shape"]]?: UnwrapReference<
-              S,
-              K
-            > extends CoValueSchema
-              ? RelationsToResolve<UnwrapReference<S, K>, [0, ...CurrentDepth]>
-              : never;
-          } & (S["record"] extends undefined
-            ? unknown
-            : {
-                [K in CoMapRecordKey<S>]?: UnwrapRecordReference<S> extends CoValueSchema
-                  ? RelationsToResolve<
-                      UnwrapRecordReference<S>,
-                      [0, ...CurrentDepth]
-                    >
-                  : never;
-              })
+        ? simplifyRelationsToResolve<
+            {
+              [K in CoMapSchemaRelationsKeys<S>]?: UnwrapReference<
+                S,
+                K
+              > extends CoValueSchema
+                ? RelationsToResolve<
+                    UnwrapReference<S, K>,
+                    [0, ...CurrentDepth]
+                  >
+                : never;
+            } & (S["record"] extends undefined
+              ? unknown
+              : {
+                  [K in CoMapRecordKey<S>]?: UnwrapRecordReference<S> extends CoValueSchema
+                    ? RelationsToResolve<
+                        UnwrapRecordReference<S>,
+                        [0, ...CurrentDepth]
+                      >
+                    : never;
+                })
+          >
         : true);
 
 export type isResolveLeaf<R> = R extends boolean | undefined
@@ -55,18 +65,18 @@ export type isResolveLeaf<R> = R extends boolean | undefined
 
 export type Loaded<
   S extends CoValueSchemaDefinition,
-  R extends RelationsToResolve<S> = true,
+  R = true,
   Options extends "nullable" | "non-nullable" = "nullable",
   CurrentDepth extends number[] = [],
 > = R extends never
   ? never
   : S extends AnyCoMapSchemaDefinition
-    ? LoadedCoMap<AnyCoMapSchemaDefinitionToSchema<S>, R, Options, CurrentDepth>
+    ? LoadedCoMap<CoMapSchemaDefToSchema<S>, R, Options, CurrentDepth>
     : never;
 
 export type LoadedCoMap<
   S extends AnyCoMapSchema,
-  R extends RelationsToResolve<S>,
+  R,
   Options extends "nullable" | "non-nullable" = "non-nullable",
   CurrentDepth extends number[] = [],
 > = flatten<
@@ -118,7 +128,7 @@ export type LoadedCoMap<
                 : UnwrapZodType<CoMapFieldType<S, K>, never>;
           })
     : never) &
-    CoMap<S, R>
+    (R extends RelationsToResolve<S> ? CoMap<S, R> : unknown)
 >;
 
 export type UnwrapZodType<T, O> = T extends ZodTypeAny ? TypeOf<T> : O;

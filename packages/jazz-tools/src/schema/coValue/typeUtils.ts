@@ -19,3 +19,5 @@ type DEPTH_LIMIT = 5;
 
 export type IsDepthLimit<CurrentDepth extends number[]> =
   DEPTH_LIMIT extends CurrentDepth["length"] ? true : false;
+
+export type simplifyRelationsToResolve<R> = keyof R extends never ? true : R;

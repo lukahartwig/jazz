@@ -16,7 +16,6 @@ import { CoValueResolutionNode, ensureCoValueLoaded } from "../subscribe.js";
 import {
   AnyCoMapSchema,
   AnyCoMapSchemaDefinition,
-  AnyCoMapSchemaDefinitionToSchema,
   CoMapInit,
   CoMapSchema,
   CoMapSchemaKey,
@@ -186,7 +185,12 @@ export function createCoMap<D extends AnyCoMapSchema>(
   owner: Account | Group,
   uniqueness?: CoValueUniqueness,
 ) {
-  const { raw, refs } = createCoMapFromInit(init, owner, schema, uniqueness);
+  const { raw, refs } = createCoMapFromInit(
+    init as any,
+    owner,
+    schema,
+    uniqueness,
+  );
 
   return createCoMapFromRaw<D, true>(schema, raw, refs);
 }
