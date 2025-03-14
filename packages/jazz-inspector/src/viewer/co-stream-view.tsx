@@ -278,11 +278,6 @@ function RenderCoStream({
       {userCoIds.map((id, idx) => (
         <div
           className="p-3 rounded-lg overflow-hidden bg-white border border-gray-200 cursor-pointer shadow-sm hover:bg-gray-100/5"
-          onMouseOver={(e) =>
-            (e.currentTarget.style.backgroundColor =
-              "rgba(243, 244, 246, 0.05)")
-          }
-          onMouseOut={(e) => (e.currentTarget.style.backgroundColor = "white")}
           key={id}
         >
           <AccountOrGroupPreview coId={id as CoID<RawCoValue>} node={node} />
