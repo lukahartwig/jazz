@@ -4,7 +4,7 @@ import { cojsonInternals } from "cojson";
 import { CoValue, Group, ID, SchemaV2 } from "jazz-tools";
 import { beforeEach, describe, expect, expectTypeOf, it } from "vitest";
 import { createJazzTestAccount, setupJazzTestSync } from "../testing.js";
-import { useCoState2 } from "../useCoState2.js";
+import { useCoStateWithZod } from "../useCoStateWithZod.js";
 import { act, renderHook, waitFor } from "./testUtils.js";
 
 beforeEach(async () => {
@@ -22,7 +22,7 @@ beforeEach(() => {
 
 const { co, z } = SchemaV2;
 
-describe("useCoState2", () => {
+describe("useCoStateWithZod", () => {
   it("should return the correct value", async () => {
     const TestMap = co.map({
       value: z.string(),
@@ -37,7 +37,7 @@ describe("useCoState2", () => {
     });
 
     const { result } = renderHook(
-      () => useCoState2(TestMap, map.$jazz.id, {}),
+      () => useCoStateWithZod(TestMap, map.$jazz.id, {}),
       {
         account,
       },
@@ -60,7 +60,7 @@ describe("useCoState2", () => {
     });
 
     const { result } = renderHook(
-      () => useCoState2(TestMap, map.$jazz.id, {}),
+      () => useCoStateWithZod(TestMap, map.$jazz.id, {}),
       {
         account,
       },
@@ -98,7 +98,7 @@ describe("useCoState2", () => {
 
     const { result } = renderHook(
       () =>
-        useCoState2(TestMap, map.$jazz.id, {
+        useCoStateWithZod(TestMap, map.$jazz.id, {
           resolve: {
             nested: true,
           },
@@ -126,7 +126,7 @@ describe("useCoState2", () => {
     });
 
     const { result } = renderHook(
-      () => useCoState2(TestMap, (map.$jazz.id + "123") as any),
+      () => useCoStateWithZod(TestMap, (map.$jazz.id + "123") as any),
       {
         account,
       },
@@ -159,9 +159,12 @@ describe("useCoState2", () => {
       isCurrentActiveAccount: true,
     });
 
-    const { result } = renderHook(() => useCoState2(TestMap, map.$jazz.id), {
-      account,
-    });
+    const { result } = renderHook(
+      () => useCoStateWithZod(TestMap, map.$jazz.id),
+      {
+        account,
+      },
+    );
 
     expect(result.current).toBeUndefined();
 
@@ -193,9 +196,12 @@ describe("useCoState2", () => {
       isCurrentActiveAccount: true,
     });
 
-    const { result } = renderHook(() => useCoState2(TestMap, map.$jazz.id), {
-      account,
-    });
+    const { result } = renderHook(
+      () => useCoStateWithZod(TestMap, map.$jazz.id),
+      {
+        account,
+      },
+    );
 
     expect(result.current).toBeUndefined();
 
@@ -226,9 +232,12 @@ describe("useCoState2", () => {
       isCurrentActiveAccount: true,
     });
 
-    const { result } = renderHook(() => useCoState2(TestMap, map.$jazz.id), {
-      account,
-    });
+    const { result } = renderHook(
+      () => useCoStateWithZod(TestMap, map.$jazz.id),
+      {
+        account,
+      },
+    );
 
     expect(result.current).toBeUndefined();
 
@@ -278,7 +287,7 @@ describe("useCoState2", () => {
 
     const { result } = renderHook(
       () =>
-        useCoState2(TestMap, map.$jazz.id, {
+        useCoStateWithZod(TestMap, map.$jazz.id, {
           resolve: {
             nested: true,
           },

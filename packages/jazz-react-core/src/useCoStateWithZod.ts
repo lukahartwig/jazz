@@ -92,7 +92,7 @@ function useCoValueObservable<
   };
 }
 
-export function useCoState2<
+export function useCoStateWithZod<
   V extends CoValueSchema,
   const R extends ResolveQuery<V> = true,
 >(

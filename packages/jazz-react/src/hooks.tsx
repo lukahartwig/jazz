@@ -58,5 +58,5 @@ export {
   useJazzContext,
   useAccount,
   useAccountOrGuest,
-  useCoState2,
+  useCoStateWithZod,
 } from "jazz-react-core";

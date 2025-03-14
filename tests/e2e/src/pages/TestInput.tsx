@@ -1,4 +1,4 @@
-import { useAccount, useCoState2 as useCoState } from "jazz-react";
+import { useAccount, useCoStateWithZod as useCoState } from "jazz-react";
 import { Group, ID, SchemaV2, co } from "jazz-tools";
 import { useEffect, useState } from "react";
 
