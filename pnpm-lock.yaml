@@ -67,6 +67,9 @@ importers:
       jazz-browser-media-images:
         specifier: workspace:*
         version: link:../../packages/jazz-browser-media-images
+      jazz-inspector:
+        specifier: workspace:*
+        version: link:../../packages/jazz-inspector
       jazz-react:
         specifier: workspace:*
         version: link:../../packages/jazz-react
