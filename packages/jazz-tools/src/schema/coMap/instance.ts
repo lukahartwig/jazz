@@ -97,6 +97,7 @@ export class CoMapJazzApi<
   }
 
   set<K extends CoMapSchemaKey<D>>(key: K, value: PropertyType<D, K>) {
+    // TODO: Shall we throw if the key doesn't match the Record key schema?
     const descriptor = this.schema.get(key);
 
     if (descriptor && isRelationRef(descriptor)) {
@@ -251,6 +252,7 @@ function getValue<D extends AnyCoMapSchema>(
       }
     } else {
       try {
+        // TODO: If something fails on parse, we should navigate the history and get the last valid value
         return descriptor.parse(value);
       } catch (error) {
         throw new Error(
@@ -362,6 +364,7 @@ function createCoMapFromInit<D extends AnyCoMapSchema>(
           refs.set(key as string, instance);
         }
       } else {
+        // TODO: Provide better parse errors with the field information
         try {
           rawInit[key] = descriptor.parse(initValue);
         } catch (error) {
