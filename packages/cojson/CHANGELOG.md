@@ -1,5 +1,11 @@
 # cojson
 
+## 0.11.5
+
+### Patch Changes
+
+- 60f5b3f: Downgrade the WasmCrypto initialization error logging to a warning
+
 ## 0.11.4
 
 ### Patch Changes
