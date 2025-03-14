@@ -56,6 +56,7 @@ export function JazzInspector({ position = "right" }: { position?: Position }) {
             fill="#3313F7"
           />
         </svg>
+        <span className="sr-only">Open Jazz Inspector</span>
       </button>
     );
   }
