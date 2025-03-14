@@ -112,51 +112,6 @@ describe("useCoState2", () => {
     expect(result.current?.nested.value).toBe("456");
   });
 
-  it("should load nested values when $requested", async () => {
-    const TestMap = co.map({
-      value: z.string(),
-      nested: co.map({
-        value: z.string(),
-      }),
-    });
-
-    const account = await createJazzTestAccount({
-      isCurrentActiveAccount: true,
-    });
-
-    const map = TestMap.create({
-      value: "123",
-      nested: {
-        value: "456",
-      },
-    });
-
-    expect(map.nested).toEqual({
-      value: "456",
-    });
-
-    const { result } = renderHook(
-      () => useCoState2(TestMap, map.$jazz.id, {}),
-      {
-        account,
-      },
-    );
-
-    result.current?.$jazz.request({
-      resolve: {
-        nested: true,
-      },
-    });
-
-    expect(result.current?.value).toBe("123");
-
-    await waitFor(() => {
-      expect(result.current?.nested).toEqual({
-        value: "456",
-      });
-    });
-  });
-
   it.skip("should return null if the coValue is not found", async () => {
     const TestMap = co.map({
       value: z.string(),

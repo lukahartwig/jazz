@@ -1,7 +1,7 @@
 import { AnonymousJazzAgent, ID, SchemaV2 } from "jazz-tools";
 import type { Account } from "jazz-tools";
 import type {
-  CoMapSchema,
+  CoValueSchema,
   Loaded,
   ResolveQuery,
   ResolveQueryStrict,
@@ -14,7 +14,7 @@ import {
 } from "./utils.js";
 
 export function createCoValueObservable<
-  V extends AnyCoMapSchema,
+  V extends CoValueSchema,
   const R extends ResolveQuery<V>,
 >() {
   let currentValue: Loaded<V, R> | undefined | null = undefined;
@@ -73,7 +73,7 @@ export function createCoValueObservable<
 }
 
 function useCoValueObservable<
-  V extends AnyCoMapSchema,
+  V extends CoValueSchema,
   const R extends ResolveQuery<V>,
 >() {
   const [initialValue] = useState(() => createCoValueObservable<V, R>());
@@ -93,7 +93,7 @@ function useCoValueObservable<
 }
 
 export function useCoState2<
-  V extends AnyCoMapSchema,
+  V extends CoValueSchema,
   const R extends ResolveQuery<V> = true,
 >(
   Schema: V,

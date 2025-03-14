@@ -24,7 +24,7 @@ export const co = {
 
 export { z };
 export type { CoMap } from "./coMap/instance.js";
-export type { CoMapSchema } from "./coMap/schema.js";
+export type { CoValueSchema } from "./coMap/schema.js";
 export type {
   ResolveQuery,
   ResolveQueryStrict,
