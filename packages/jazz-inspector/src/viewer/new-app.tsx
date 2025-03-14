@@ -27,60 +27,22 @@ export function JazzInspector({ position = "right" }: { position?: Position }) {
       setPage(coValueId);
     }
   };
-
-  const positionStyles = {
-    "bottom right": {
-      bottom: 0,
-      right: 0,
-    },
-    "bottom left": {
-      bottom: 0,
-      left: 0,
-    },
-    "top right": {
-      top: 0,
-      right: 0,
-    },
-    "top left": {
-      top: 0,
-      left: 0,
-    },
-    right: {
-      right: 0,
-      top: "50%",
-      transform: "translateY(-50%)",
-    },
-    left: {
-      left: 0,
-      top: "50%",
-      transform: "translateY(-50%)",
-    },
+  const positionClasses = {
+    "bottom right": "bottom-0 right-0",
+    "bottom left": "bottom-0 left-0",
+    "top right": "top-0 right-0",
+    "top left": "top-0 left-0",
+    right: "right-0 top-1/2 -translate-y-1/2",
+    left: "left-0 top-1/2 -translate-y-1/2",
   };
-
   if (!open) {
     return (
       <button
         onClick={() => setOpen(true)}
-        className="bg-blue-600 font-bold border-green-500 border-2 rounded-xl shadow-xl"
-        style={{
-          position: "fixed",
-          margin: "1rem",
-          border: "1px solid #e5e7eb",
-          borderRadius: "0.5rem",
-          padding: "0.5rem",
-          boxShadow:
-            "0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)",
-          ...positionStyles[position],
-        }}
+        className={`fixed w-10 h-10 inline-block bottom-0 right-0 m-4 bg-white border rounded-md shadow-md p-1.5 ${positionClasses[position]}`}
       >
         <svg
-          style={{
-            width: "1.5rem",
-            height: "1.5rem",
-            position: "relative",
-            left: "-1px",
-            top: "1px",
-          }}
+          className="w-full h-auto relative -left-px top-px"
           xmlns="http://www.w3.org/2000/svg"
           width="119"
           height="115"
@@ -99,25 +61,8 @@ export function JazzInspector({ position = "right" }: { position?: Position }) {
   }
 
   return (
-    <div
-      style={{
-        position: "fixed",
-        bottom: 0,
-        left: 0,
-        width: "100%",
-        backgroundColor: "white",
-        borderTop: "1px solid #e5e7eb",
-        padding: "1rem",
-      }}
-    >
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: "1rem",
-        }}
-      >
+    <div className="fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 p-4">
+      <div className="flex justify-between items-center mb-4">
         <Breadcrumbs path={path} onBreadcrumbClick={goToIndex} />
         <button onClick={() => setOpen(false)}>Close</button>
       </div>
@@ -131,60 +76,25 @@ export function JazzInspector({ position = "right" }: { position?: Position }) {
         <form
           onSubmit={handleCoValueIdSubmit}
           aria-hidden={path.length !== 0}
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "center",
-            alignItems: "center",
-            gap: "0.5rem",
-            height: "100%",
-            width: "100%",
-            marginBottom: "5rem",
-            transition: "all 150ms",
-            opacity: path.length > 0 ? 0 : 1,
-            transform:
-              path.length > 0 ? "translateY(-0.5rem) scale(0.95)" : "none",
-          }}
+          className={`flex flex-col justify-center items-center gap-2 h-full w-full mb-20 transition-all duration-150 ${
+            path.length > 0
+              ? "opacity-0 translate-y-[-0.5rem] scale-95"
+              : "opacity-100"
+          }`}
         >
-          <fieldset
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: "0.5rem",
-              fontSize: "0.875rem",
-            }}
-          >
-            <h2
-              style={{
-                fontSize: "1.875rem",
-                fontWeight: 500,
-                color: "#030712",
-                textAlign: "center",
-                marginBottom: "1rem",
-              }}
-            >
+          <fieldset className="flex flex-col gap-2 text-sm">
+            <h2 className="text-[1.875rem] font-medium text-gray-900 text-center mb-4">
               Jazz CoValue Inspector
             </h2>
             <input
-              style={{
-                border: "1px solid #e5e7eb",
-                padding: "1rem",
-                borderRadius: "0.5rem",
-                minWidth: "21rem",
-                fontFamily: "monospace",
-              }}
+              className="border border-gray-200 p-4 rounded-lg min-w-[21rem] font-mono"
               placeholder="co_z1234567890abcdef123456789"
               value={coValueId}
               onChange={(e) => setCoValueId(e.target.value as CoID<RawCoValue>)}
             />
             <button
               type="submit"
-              style={{
-                backgroundColor: "rgb(99 102 241)",
-                color: "white",
-                padding: "0.5rem 1rem",
-                borderRadius: "0.375rem",
-              }}
+              className="bg-indigo-500 text-white py-2 px-4 rounded-md hover:bg-indigo-400"
               onMouseOver={(e) =>
                 (e.currentTarget.style.backgroundColor =
                   "rgba(99 102 241, 0.8)")
@@ -198,13 +108,7 @@ export function JazzInspector({ position = "right" }: { position?: Position }) {
             <hr />
             <button
               type="button"
-              style={{
-                border: "1px solid #e5e7eb",
-                display: "inline-block",
-                padding: "0.375rem 0.5rem",
-                color: "black",
-                borderRadius: "0.375rem",
-              }}
+              className="border border-gray-200 inline-block py-1.5 px-2 text-black rounded-md"
               onClick={() => {
                 setCoValueId(me._raw.id);
                 setPage(me._raw.id);
