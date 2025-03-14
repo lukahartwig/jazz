@@ -17,6 +17,8 @@ export function ValueRenderer({
   compact?: boolean;
   onCoIDClick?: (childNode: CoID<RawCoValue>) => void;
 }) {
+  const [isExpanded, setIsExpanded] = useState(false);
+
   if (typeof json === "undefined" || json === undefined) {
     return <span className="text-gray-400">undefined</span>;
   }
@@ -65,27 +67,35 @@ export function ValueRenderer({
     );
   }
 
-  if (Array.isArray(json)) {
-    return (
-      <span title={JSON.stringify(json)}>
-        Array <span className="text-gray-500">({json.length})</span>
-      </span>
-    );
-  }
-
   if (typeof json === "object") {
     return (
       <span
         title={JSON.stringify(json, null, 2)}
-        className="inline-block max-w-64 overflow-hidden text-ellipsis whitespace-nowrap"
+        className="inline-block max-w-64"
       >
         {compact ? (
           <span>
             Object{" "}
             <span className="text-gray-500">({Object.keys(json).length})</span>
+            <pre className="mt-1 text-sm whitespace-pre-wrap">
+              {isExpanded
+                ? JSON.stringify(json, null, 2)
+                : JSON.stringify(json, null, 2)
+                    .split("\n")
+                    .slice(0, 3)
+                    .join("\n") + (Object.keys(json).length > 2 ? "\n..." : "")}
+            </pre>
+            <button
+              onClick={() => setIsExpanded(!isExpanded)}
+              className="text-xs text-gray-500 hover:text-gray-700"
+            >
+              {isExpanded ? "Show less" : "Show more"}
+            </button>
           </span>
         ) : (
-          JSON.stringify(json, null, 2)
+          <pre className="whitespace-pre-wrap">
+            {JSON.stringify(json, null, 2)}
+          </pre>
         )}
       </span>
     );
