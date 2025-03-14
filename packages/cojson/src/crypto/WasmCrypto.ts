@@ -54,7 +54,7 @@ export class WasmCrypto extends CryptoProvider<Blake3State> {
     try {
       await initialize();
     } catch (e) {
-      logger.error(
+      logger.warn(
         "Failed to initialize WasmCrypto, falling back to PureJSCrypto",
         { err: e },
       );
