@@ -96,13 +96,6 @@ export function JazzInspector({ position = "right" }: { position?: Position }) {
             <button
               type="submit"
               className="bg-indigo-500 text-white py-2 px-4 rounded-md hover:bg-indigo-400"
-              onMouseOver={(e) =>
-                (e.currentTarget.style.backgroundColor =
-                  "rgba(99 102 241, 0.8)")
-              }
-              onMouseOut={(e) =>
-                (e.currentTarget.style.backgroundColor = "rgb(99 102 241)")
-              }
             >
               Inspect
             </button>

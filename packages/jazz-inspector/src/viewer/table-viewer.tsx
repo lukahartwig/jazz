@@ -78,14 +78,6 @@ export function TableView({
                     ])
                   }
                   className="p-4 whitespace-nowrap text-sm text-gray-500 rounded hover:bg-gray-100 hover:text-blue-500"
-                  onMouseOver={(e) => {
-                    e.currentTarget.style.backgroundColor = "#f3f4f6";
-                    e.currentTarget.style.color = "#3b82f6";
-                  }}
-                  onMouseOut={(e) => {
-                    e.currentTarget.style.backgroundColor = "transparent";
-                    e.currentTarget.style.color = "#6b7280";
-                  }}
                 >
                   <LinkIcon />
                 </button>
@@ -130,12 +122,6 @@ export function TableView({
             <button
               onClick={loadMore}
               className="px-4 py-2 bg-blue text-white rounded hover:bg-blue-800"
-              onMouseOver={(e) => {
-                e.currentTarget.style.backgroundColor = "#2563eb";
-              }}
-              onMouseOut={(e) => {
-                e.currentTarget.style.backgroundColor = "#3b82f6";
-              }}
             >
               Load more
             </button>
