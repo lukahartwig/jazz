@@ -44,11 +44,13 @@ export function ValueRenderer({
   }
 
   if (typeof json === "string") {
-    return <span className="text-teal-900 font-mono">{json}</span>;
+    return (
+      <span className="text-teal-900 font-mono dark:text-teal-200">{json}</span>
+    );
   }
 
   if (typeof json === "number") {
-    return <span className="text-purple-500">{json}</span>;
+    return <span className="text-purple-500 dark:text-purple-200">{json}</span>;
   }
 
   if (typeof json === "boolean") {
@@ -215,7 +217,7 @@ export function AccountOrGroupPreview({
   const displayText = showId ? `${displayName} (${coId})` : displayName;
 
   const className = onClick
-    ? "text-blue-500 cursor-pointer underline"
+    ? "text-blue cursor-pointer underline dark:text-blue-400"
     : "text-gray-500";
 
   return (

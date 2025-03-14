@@ -14,7 +14,7 @@ export const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
     <div className="relative z-20 bg-blue-400/10 backdrop-blur-sm rounded-lg inline-flex px-2 py-1 whitespace-pre transition-all items-center gap-1 min-h-[2.5rem]">
       <button
         onClick={() => onBreadcrumbClick(-1)}
-        className="flex items-center justify-center p-1 rounded-sm transition-colors hover:bg-blue-800"
+        className="flex items-center justify-center p-1 rounded-sm transition-colors"
         aria-label="Go to home"
       >
         Start
@@ -32,7 +32,7 @@ export const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
             )}
             <button
               onClick={() => onBreadcrumbClick(index)}
-              className="text-blue-800 hover:underline"
+              className="text-blue hover:underline dark:text-blue-400"
             >
               {index === 0 ? page.name || "Root" : page.name}
             </button>

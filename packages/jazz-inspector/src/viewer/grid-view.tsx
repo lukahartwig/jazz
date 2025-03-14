@@ -22,8 +22,8 @@ export function GridView({
           key={childIndex}
           className={`p-3 rounded-lg overflow-hidden transition-colors ${
             isCoId(child)
-              ? "bg-white border border-gray-200 cursor-pointer shadow-sm hover:bg-gray-100/5"
-              : "bg-gray-50"
+              ? " border border-gray-200 cursor-pointer shadow-sm hover:bg-gray-100/5"
+              : "bg-gray-50  dark:bg-gray-925"
           }`}
           onClick={() =>
             isCoId(child) &&
@@ -35,7 +35,7 @@ export function GridView({
               <span className="font-medium flex justify-between">
                 {key}
 
-                <div className="py-1 px-2 text-xs bg-gray-100 rounded">
+                <div className="py-1 px-2 text-xs bg-gray-100 rounded dark:bg-gray-900">
                   <ResolveIcon coId={child as CoID<RawCoValue>} node={node} />
                 </div>
               </span>

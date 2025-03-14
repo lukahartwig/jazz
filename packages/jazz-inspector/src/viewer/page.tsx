@@ -57,7 +57,7 @@ export function Page({
       style={style}
       className={
         className +
-        " absolute z-10 inset-0 bg-white border border-black/5 rounded-xl shadow-lg p-6 w-full h-full bg-clip-padding"
+        " absolute z-10 inset-0 border rounded-xl shadow-lg p-6 w-full h-full bg-clip-padding"
       }
     >
       {!isTopLevel && (

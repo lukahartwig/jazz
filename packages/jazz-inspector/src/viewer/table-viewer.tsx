@@ -57,14 +57,14 @@ export function TableView({
             {["", ...keys].map((key) => (
               <th
                 key={key}
-                className="p-3 bg-gray-50 text-left text-xs font-medium text-gray-500 rounded"
+                className="p-3 bg-gray-50  dark:bg-gray-925 text-left text-xs font-medium text-gray-500 rounded"
               >
                 {key}
               </th>
             ))}
           </tr>
         </thead>
-        <tbody className="bg-white border-t border-gray-200">
+        <tbody className=" border-t border-gray-200">
           {resolvedRows.slice(0, visibleRowsCount).map((item, index) => (
             <tr key={index}>
               <td className="p-1">
