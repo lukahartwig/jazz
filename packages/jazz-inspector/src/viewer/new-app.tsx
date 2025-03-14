@@ -95,7 +95,7 @@ export function JazzInspector({ position = "right" }: { position?: Position }) {
             />
             <button
               type="submit"
-              className="bg-indigo-500 text-white py-2 px-4 rounded-md hover:bg-indigo-400"
+              className="bg-blue text-white py-2 px-4 rounded-md hover:bg-blue-800"
             >
               Inspect
             </button>
