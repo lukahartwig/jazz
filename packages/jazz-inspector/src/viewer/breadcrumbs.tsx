@@ -11,10 +11,10 @@ export const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
   onBreadcrumbClick,
 }) => {
   return (
-    <div className="relative z-20 bg-indigo-400/10 backdrop-blur-sm rounded-lg inline-flex px-2 py-1 whitespace-pre transition-all items-center gap-1 min-h-[2.5rem]">
+    <div className="relative z-20 bg-blue-400/10 backdrop-blur-sm rounded-lg inline-flex px-2 py-1 whitespace-pre transition-all items-center gap-1 min-h-[2.5rem]">
       <button
         onClick={() => onBreadcrumbClick(-1)}
-        className="flex items-center justify-center p-1 rounded-sm transition-colors hover:bg-indigo-600/10"
+        className="flex items-center justify-center p-1 rounded-sm transition-colors hover:bg-blue-800"
         aria-label="Go to home"
       >
         Start
@@ -28,17 +28,11 @@ export const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
             }`}
           >
             {index === 0 ? null : (
-              <span className="text-indigo-600/30">{" / "}</span>
+              <span className="text-blue-600/30">{" / "}</span>
             )}
             <button
               onClick={() => onBreadcrumbClick(index)}
-              className="text-indigo-800 hover:underline"
-              onMouseOver={(e) =>
-                (e.currentTarget.style.textDecoration = "underline")
-              }
-              onMouseOut={(e) =>
-                (e.currentTarget.style.textDecoration = "none")
-              }
+              className="text-blue-800 hover:underline"
             >
               {index === 0 ? page.name || "Root" : page.name}
             </button>
