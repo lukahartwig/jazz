@@ -80,7 +80,7 @@ export function IssueVersionHistory({ id }: { id: ID<Issue> }) {
       <div className="flex flex-col text-sm gap-2">
         <h2 className="sr-only">Edits</h2>
         {edits.map((edit, i) => (
-          <div>
+          <div key={i}>
             <p className="text-xs text-stone-400">
               {edit.madeAt.toLocaleString()}
             </p>
