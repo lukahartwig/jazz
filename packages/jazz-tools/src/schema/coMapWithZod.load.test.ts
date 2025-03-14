@@ -97,6 +97,66 @@ describe("CoMap with Zod", () => {
       >();
     });
 
+    it("should load a CoMap with a catchall static property", async () => {
+      const anotherAccount = await createJazzTestAccount();
+
+      const Person = co.map({}).catchall(z.string());
+
+      const group = Group.create(anotherAccount);
+      group.addMember("everyone", "reader");
+
+      const john = Person.create(
+        {
+          name: "John",
+          catchall: "catchall",
+        },
+        group,
+      );
+
+      const loaded = await loadCoValue(Person, john.$jazz.id, {
+        resolve: { address: true },
+      });
+
+      assert(loaded);
+
+      expect(loaded.name).toBe("John");
+      expect(loaded.catchall).toBe("catchall");
+    });
+
+    it("should load a CoMap with a catchall relation", async () => {
+      const anotherAccount = await createJazzTestAccount();
+
+      const Person = co.map({}).catchall(
+        co.map({
+          catchall: z.string(),
+        }),
+      );
+
+      const group = Group.create(anotherAccount);
+      group.addMember("everyone", "reader");
+
+      const john = Person.create(
+        {
+          name: {
+            catchall: "catchall",
+          },
+          catchall: {
+            catchall: "catchall",
+          },
+        },
+        group,
+      );
+
+      const loaded = await loadCoValue(Person, john.$jazz.id, {
+        resolve: { catchall: true },
+      });
+
+      assert(loaded);
+
+      expect(loaded.catchall?.catchall).toBe("catchall");
+      expect(loaded.name).toBe(null);
+    });
+
     it("should load a CoMap with self references", async () => {
       const anotherAccount = await createJazzTestAccount();
 
@@ -561,6 +621,89 @@ describe("CoMap with Zod", () => {
       name: "John",
       age: 30,
       address: { street: "456 Main St" },
+    });
+
+    expect(resultBeforeSet).not.toBe(result);
+  });
+
+  it("should emit when a catchall relation is updated", async () => {
+    const Friends = co.map({}).catchall(
+      co.map({
+        name: z.string(),
+      }),
+    );
+
+    const friends = Friends.create({
+      john: {
+        name: "John",
+      },
+    });
+
+    let result: any;
+
+    subscribeToCoValue(
+      Friends,
+      friends.$jazz.id,
+      { resolve: { john: true } },
+      (value) => {
+        result = value;
+      },
+    );
+
+    const resultBeforeSet = result;
+
+    friends.$jazz.set("john", {
+      name: "John Doe",
+    });
+
+    expect(result).toEqual({
+      john: {
+        name: "John Doe",
+      },
+    });
+
+    expect(resultBeforeSet).not.toBe(result);
+  });
+
+  it("should emit when a catchall relation outside the resolve is added", async () => {
+    const Friends = co.map({}).catchall(
+      co.map({
+        name: z.string(),
+      }),
+    );
+
+    const friends = Friends.create({
+      john: {
+        name: "John",
+      },
+    });
+
+    let result: any;
+
+    subscribeToCoValue(
+      Friends,
+      friends.$jazz.id,
+      { resolve: { john: true } },
+      (value) => {
+        result = value;
+      },
+    );
+
+    const resultBeforeSet = result;
+
+    const { jane } = friends.$jazz.set("jane", {
+      name: "Jane",
+    });
+
+    expect(result).toEqual({
+      john: {
+        name: "John",
+      },
+      jane: null,
+    });
+
+    expect(jane).toEqual({
+      name: "Jane",
     });
 
     expect(resultBeforeSet).not.toBe(result);

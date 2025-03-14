@@ -23,6 +23,34 @@ describe("CoMap - with zod based schema", () => {
       expect(john.age).toBe(30);
     });
 
+    it("should disallow value mutations", () => {
+      const Person = co.map({
+        name: z.string(),
+        age: z.number(),
+      });
+
+      const john = Person.create({ name: "John", age: 30 });
+
+      // @ts-expect-error - name is read-only
+      expect(() => (john.name = "Jane")).toThrow();
+      // @ts-expect-error - age is read-only
+      expect(() => (john.age = 31)).toThrow();
+    });
+
+    it("should disallow extra properties", () => {
+      const Person = co.map({
+        name: z.string(),
+        age: z.number(),
+      });
+      // @ts-expect-error - x is not a valid property
+      const john = Person.create({ name: "John", age: 30, x: 1 });
+
+      expect(john).toEqual({
+        name: "John",
+        age: 30,
+      });
+    });
+
     it("should generate the right CoMapInit type", () => {
       const Person = co.map({
         name: z.string(),
@@ -220,7 +248,7 @@ describe("CoMap - with zod based schema", () => {
       expect(john.friend).toBeUndefined();
     });
 
-    it.only("should accept extra properties when catchall is used", () => {
+    it("should accept extra properties when catchall is used", () => {
       const Person = co
         .map({
           name: z.string(),
@@ -248,8 +276,35 @@ describe("CoMap - with zod based schema", () => {
         extra: { extra: "extra" },
       });
 
-      // @ts-expect-error - fix this
       expect(john.extra.extra).toBe("extra");
+    });
+
+    it("should accept relations when co.record is used", () => {
+      const Friends = co.record(
+        z.string().max(3),
+        co.map({
+          name: z.string(),
+        }),
+      );
+
+      const friends = Friends.create({
+        joe: { name: "joe" },
+      });
+
+      expect(friends.joe.name).toBe("joe");
+    });
+
+    // TODO: Does this make sense?
+    it("should accept support co.self() as a catchall", () => {
+      const Person = co.map({}).catchall(co.self());
+
+      const john = Person.create({
+        extra: { extra: {} },
+      });
+
+      expect(john).toEqual({
+        extra: { extra: {} },
+      });
     });
   });
 
@@ -390,6 +445,102 @@ describe("CoMap - with zod based schema", () => {
       expect(johnAfterMoving.address.street).toBe("456 Main St");
       expect(john.$jazz.updated().address).toBe(johnAfterMoving.address);
       expect(johnAfterMoving.address.$jazz.owner).toBe(john.$jazz.owner);
+    });
+
+    it("should update catchall properties", () => {
+      const Friends = co.map({}).catchall(z.string());
+
+      const friends = Friends.create({
+        first: "John",
+      });
+
+      const friendsAfterAddingJane = friends.$jazz.set("second", "Jane");
+
+      expect(friends).toEqual({
+        first: "John",
+      });
+
+      expect(friendsAfterAddingJane.second).toBe("Jane");
+
+      expect(friendsAfterAddingJane).toEqual({
+        first: "John",
+        second: "Jane",
+      });
+    });
+
+    it("should update nested values with catchall relations", () => {
+      const Friends = co.map({}).catchall(
+        co.map({
+          name: z.string(),
+        }),
+      );
+
+      const friends = Friends.create({
+        john: {
+          name: "John",
+        },
+      });
+
+      const friendsAfterAddingJane = friends.$jazz.set("jane", {
+        name: "Jane",
+      });
+
+      expect(friends).toEqual({
+        john: {
+          name: "John",
+        },
+      });
+
+      expect(friendsAfterAddingJane).toEqual({
+        john: { name: "John" },
+        jane: { name: "Jane" },
+      });
+    });
+
+    it("should accept new relations when co.record is used", () => {
+      const Friends = co.record(
+        z.string().max(3),
+        co.map({
+          name: z.string(),
+        }),
+      );
+
+      const friends = Friends.create({
+        joe: { name: "joe" },
+      });
+
+      const friendsAfterAddingBob = friends.$jazz.set("bob", {
+        name: "bob",
+      });
+
+      expect(friends.joe.name).toBe("joe");
+
+      // @ts-expect-error - Loaded is not updated on set yet
+      expect(friendsAfterAddingBob.bob.name).toBe("bob");
+
+      expect(friendsAfterAddingBob).toEqual({
+        joe: { name: "joe" },
+        bob: { name: "bob" },
+      });
+    });
+
+    it("should do nothing when assigning a relation on a non-valid key", () => {
+      const Friends = co.record(
+        z.string().max(3),
+        co.map({
+          name: z.string(),
+        }),
+      );
+
+      const friends = Friends.create({
+        joe: { name: "joe" },
+      });
+
+      const friendsAfterAddingJohnDoe = friends.$jazz.set("johndoe", {
+        name: "johndoe",
+      });
+
+      expect(friendsAfterAddingJohnDoe).toBe(friends);
     });
 
     it("should update nested values with self references", () => {

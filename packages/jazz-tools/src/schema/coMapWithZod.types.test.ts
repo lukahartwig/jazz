@@ -47,14 +47,25 @@ describe("CoMap - with zod based schema", () => {
     });
 
     it("should pick up relations from the catchall", () => {
-      const Person = co.map({
-        name: z.string(),
-        age: z.number(),
-      });
+      const Person = co
+        .map({
+          name: z.string(),
+          age: z.number(),
+        })
+        .catchall(
+          co.map({
+            street: z.string(),
+          }),
+        );
 
       type Result = ResolveQuery<typeof Person>;
 
-      expectTypeOf<Result>().toEqualTypeOf<true>();
+      expectTypeOf<Result>().toEqualTypeOf<
+        | true
+        | {
+            [x: string]: true | undefined;
+          }
+      >();
     });
 
     it("should properly parse a schema with a self reference", () => {
@@ -200,6 +211,49 @@ describe("CoMap - with zod based schema", () => {
             | undefined;
         } & CoMap<typeof Person, { address: true }>
       >();
+    });
+
+    it("should pick up properties from the catchall", () => {
+      const Person = co
+        .map({
+          name: z.string(),
+        })
+        .catchall(z.string());
+
+      type Result = Loaded<typeof Person, { address: true }>;
+
+      expectTypeOf<Result>().toMatchTypeOf<{
+        name: string;
+        [x: string]: string;
+      }>();
+    });
+
+    it("should pick up relations from the catchall", () => {
+      const Person = co
+        .map({
+          name: z.string(),
+          age: z.number(),
+        })
+        .catchall(
+          co.map({
+            street: z.string(),
+          }),
+        );
+
+      type Result = Loaded<typeof Person, { address: true }>;
+
+      expectTypeOf<Result>().toMatchTypeOf<{
+        name: string;
+        age: number;
+        address:
+          | {
+              street: string;
+              $jazz: any;
+            }
+          | null
+          | undefined;
+        $jazz: any;
+      }>();
     });
 
     it("should properly parse a schema with a self reference", () => {
@@ -364,6 +418,37 @@ describe("CoMap - with zod based schema", () => {
       }>();
     });
 
+    it("should properly parse a schema with a catchall", () => {
+      const Person = co
+        .map({
+          name: z.string(),
+          age: z.number(),
+        })
+        .catchall(
+          co.map({
+            street: z.string(),
+          }),
+        );
+
+      type Result = CoMapInit<typeof Person>;
+
+      expectTypeOf<Result>().toMatchTypeOf<
+        {
+          name: string;
+          age: number;
+        } & Record<
+          string,
+          | {
+              street: string;
+            }
+          | {
+              readonly street: string;
+              $jazz: any;
+            }
+        >
+      >;
+    });
+
     it("should properly parse a schema with a self reference", () => {
       const Person = co.map({
         name: z.string(),
@@ -447,6 +532,32 @@ describe("CoMap - with zod based schema", () => {
       expectTypeOf<Result>().toEqualTypeOf<{
         address: true;
       }>();
+    });
+
+    it("should properly parse a schema with a catchal relation", () => {
+      const Person = co
+        .map({
+          name: z.string(),
+          age: z.number(),
+        })
+        .catchall(
+          co.map({
+            street: z.string(),
+          }),
+        );
+
+      type Result = CoMapInitToRelationsToResolve<
+        typeof Person,
+        {
+          address: {
+            street: string;
+          };
+        }
+      >;
+
+      expectTypeOf<Result>().toMatchTypeOf<{
+        address: true;
+      }>;
     });
 
     it("should properly parse a schema with a self reference", () => {

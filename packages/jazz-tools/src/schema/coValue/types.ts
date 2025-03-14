@@ -2,10 +2,10 @@ import { TypeOf, ZodTypeAny } from "zod";
 import { CoMap } from "../coMap/instance.js";
 import {
   AnyCoMapSchema,
-  CoMapFieldType,
-  CoMapRecordFieldType,
+  CoMapRecordDef,
   CoMapRecordKey,
   CoMapSchemaRelationsKeys,
+  CoMapSchemaStaticPropKeys,
   CoMapSchemaToClass,
   CoValueSchema,
   UnwrapRecordReference,
@@ -34,16 +34,16 @@ export type ResolveQuery<
               > extends CoValueSchema
                 ? ResolveQuery<UnwrapReference<S, K>, [0, ...CurrentDepth]>
                 : never;
-            } & (S["record"] extends undefined
-              ? unknown
-              : {
+            } & (S["record"] extends CoMapRecordDef
+              ? {
                   [K in CoMapRecordKey<S>]?: UnwrapRecordReference<S> extends CoValueSchema
                     ? ResolveQuery<
                         UnwrapRecordReference<S>,
                         [0, ...CurrentDepth]
                       >
                     : never;
-                })
+                }
+              : unknown)
           >
         : true);
 
@@ -72,52 +72,48 @@ export type LoadedCoMap<
 > = flatten<
   (S extends AnyCoMapSchema
     ? {
-        [K in keyof S["shape"]]: CoMapFieldType<S, K> extends ZodTypeAny
-          ? TypeOf<CoMapFieldType<S, K>>
-          : UnwrapReference<S, K> extends infer ChildSchema
-            ? ChildSchema extends AnyCoMapSchema
-              ? K extends keyof R
-                ? R[K] extends ResolveQuery<ChildSchema>
+        readonly [K in CoMapSchemaStaticPropKeys<S>]: S["shape"][K] extends ZodTypeAny
+          ? TypeOf<S["shape"][K]>
+          : never;
+      } & {
+        readonly [K in CoMapSchemaRelationsKeys<S>]: UnwrapReference<
+          S,
+          K
+        > extends infer ChildSchema
+          ? ChildSchema extends AnyCoMapSchema
+            ? R[K] extends ResolveQuery<ChildSchema>
+              ? IsDepthLimit<CurrentDepth> & isQueryLeafNode<R> extends false
+                ?
+                    | Loaded<ChildSchema, R[K], Options, [0, ...CurrentDepth]>
+                    | addNullable<Options, S["shape"][K]>
+                : null
+              : null
+            : null
+          : never;
+      } & (S["record"] extends CoMapRecordDef
+          ? S["record"]["value"] extends ZodTypeAny
+            ? {
+                readonly [K in CoMapRecordKey<S>]: TypeOf<S["record"]["value"]>;
+              }
+            : {
+                readonly [K in CoMapRecordKey<S> &
+                  keyof R]: R[K] extends ResolveQuery<UnwrapRecordReference<S>>
                   ? IsDepthLimit<CurrentDepth> &
                       isQueryLeafNode<R> extends false
                     ?
                         | Loaded<
-                            ChildSchema,
+                            UnwrapRecordReference<S>,
                             R[K],
                             Options,
                             [0, ...CurrentDepth]
                           >
-                        | addNullable<Options, CoMapFieldType<S, K>>
+                        | addNullable<Options, { isOptional: true }>
                     : null
-                  : null
-                : null
-              : null
-            : UnwrapZodType<CoMapFieldType<S, K>, never>;
-      } & (S["record"] extends undefined
-        ? unknown
-        : {
-            [K in CoMapRecordKey<S>]: CoMapRecordFieldType<S> extends ZodTypeAny
-              ? TypeOf<CoMapRecordFieldType<S>>
-              : UnwrapRecordReference<S> extends infer ChildSchema
-                ? ChildSchema extends AnyCoMapSchema
-                  ? K extends keyof R
-                    ? R[K] extends ResolveQuery<ChildSchema>
-                      ? IsDepthLimit<CurrentDepth> &
-                          isQueryLeafNode<R> extends false
-                        ?
-                            | Loaded<
-                                ChildSchema,
-                                R[K],
-                                Options,
-                                [0, ...CurrentDepth]
-                              >
-                            | addNullable<Options, CoMapFieldType<S, K>>
-                        : null
-                      : null
-                    : null
-                  : null
-                : UnwrapZodType<CoMapFieldType<S, K>, never>;
-          })
+                  : null;
+              } & {
+                readonly [K in CoMapRecordKey<S>]: null;
+              }
+          : unknown)
     : never) &
     (R extends ResolveQuery<S> ? CoMap<S, R> : unknown)
 >;

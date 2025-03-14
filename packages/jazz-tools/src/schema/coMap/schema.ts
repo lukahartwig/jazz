@@ -35,17 +35,6 @@ export type CoMapRecordKey<S extends AnyCoMapSchema> =
 export type CoMapRecordFieldType<S extends AnyCoMapSchema> =
   S["record"] extends CoMapRecordDef ? S["record"]["value"] : never;
 
-export type CoMapFieldType<
-  S extends AnyCoMapSchema,
-  K extends CoMapSchemaKey<S>,
-> = S["shape"][K] extends CoMapField
-  ? S["shape"][K]
-  : S["record"] extends CoMapRecordDef
-    ? K extends TypeOf<S["record"]["key"]>
-      ? S["record"]["value"]
-      : never
-    : never;
-
 export type CoValueSchema = AnyCoMapSchema;
 
 export type UnwrapRecordReference<S extends AnyCoMapSchema> =
@@ -70,6 +59,10 @@ export type CoMapSchemaRelationsKeys<S extends AnyCoMapSchema> = {
     : never;
 }[keyof S["shape"]];
 
+export type CoMapSchemaStaticPropKeys<S extends AnyCoMapSchema> = {
+  [K in keyof S["shape"]]: S["shape"][K] extends ZodTypeAny ? K : never;
+}[keyof S["shape"]];
+
 export type CoMapInit<
   S extends AnyCoMapSchema,
   CurrentDepth extends number[] = [],
@@ -77,8 +70,8 @@ export type CoMapInit<
   ? {}
   : flatten<
       addQuestionMarks<{
-        [K in keyof S["shape"]]: CoMapFieldType<S, K> extends ZodTypeAny
-          ? TypeOf<CoMapFieldType<S, K>>
+        [K in keyof S["shape"]]: S["shape"][K] extends ZodTypeAny
+          ? TypeOf<S["shape"][K]>
           : UnwrapReference<S, K> extends AnyCoMapSchema
             ?
                 | CoMapInit<UnwrapReference<S, K>, [0, ...CurrentDepth]>
@@ -87,15 +80,14 @@ export type CoMapInit<
                     ResolveQuery<UnwrapReference<S, K>>
                   >
                 | addOptional<UnwrapReference<S, K>>
-                | markSelfReferenceAsOptional<CoMapFieldType<S, K>> // Self references are always optional
+                | markSelfReferenceAsOptional<S["shape"][K]> // Self references are always optional
             : never;
       }>
     > &
       (S["record"] extends undefined
         ? unknown
-        : Record<
-            CoMapRecordKey<S>,
-            CoMapRecordFieldType<S> extends ZodTypeAny
+        : {
+            [K in CoMapRecordKey<S>]: CoMapRecordFieldType<S> extends ZodTypeAny
               ? TypeOf<CoMapRecordFieldType<S>>
               : UnwrapRecordReference<S> extends AnyCoMapSchema
                 ?
@@ -106,8 +98,8 @@ export type CoMapInit<
                       >
                     | addOptional<UnwrapRecordReference<S>>
                     | markSelfReferenceAsOptional<CoMapRecordFieldType<S>> // Self references are always optional
-                : never
-          >);
+                : never;
+          });
 
 export type CoMapInitStrict<
   S extends AnyCoMapSchema,
@@ -124,15 +116,11 @@ type CoMapSimpleInit<
 > = IsDepthLimit<CurrentDepth> extends true
   ? {}
   : {
-      [K in keyof S["shape"]]?: CoMapFieldType<S, K> extends ZodTypeAny
-        ? TypeOf<CoMapFieldType<S, K>>
-        : any;
+      [K in keyof S["shape"]]?: any;
     } & (S["record"] extends undefined
       ? unknown
       : {
-          [K in CoMapRecordKey<S>]: CoMapRecordFieldType<S> extends ZodTypeAny
-            ? TypeOf<CoMapRecordFieldType<S>>
-            : any;
+          [K in CoMapRecordKey<S>]: any;
         });
 
 export type CoMapInitToRelationsToResolve<
@@ -263,7 +251,8 @@ export class CoMapSchemaClass<
   }
 
   create<I extends CoMapInit<CoMapSchema<S, R>>>(
-    init: CoMapInitStrict<CoMapSchema<S, R>, I>,
+    // Removing this extends check triggers "Expression produces a union type that is too complex to represent" error
+    init: R extends undefined ? CoMapInitStrict<CoMapSchema<S, R>, I> : I,
     options?:
       | {
           owner: Account | Group;

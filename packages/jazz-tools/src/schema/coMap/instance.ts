@@ -101,9 +101,9 @@ export class CoMapJazzApi<
       } else {
         if (!isCoValue(value)) {
           // To support inline CoMap creation on set
-          // @ts-expect-error TODO: Fix this
+          // @ts-expect-error AnyCoMapSchema does not provide the create method to avoid type recursion issues
           value = getSchemaFromDescriptor(this.schema, key).create(
-            value as CoMapInit<any>,
+            value,
             this.owner,
           ) as PropertyType<D, K>;
         }
@@ -351,7 +351,7 @@ function createCoMapFromInit<D extends AnyCoMapSchema>(
           if ("$jazz" in initValue) {
             instance = initValue as Loaded<CoValueSchema>;
           } else {
-            // @ts-expect-error TODO: Fix this
+            // @ts-expect-error AnyCoMapSchema does not provide the create method to avoid type recursion issues
             instance = getSchemaFromDescriptor(schema, key).create(
               initValue,
               owner,
