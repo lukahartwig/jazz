@@ -1,5 +1,12 @@
 # cojson-storage
 
+## 0.11.4
+
+### Patch Changes
+
+- Updated dependencies [7f036c1]
+  - cojson@0.11.4
+
 ## 0.11.3
 
 ### Patch Changes
