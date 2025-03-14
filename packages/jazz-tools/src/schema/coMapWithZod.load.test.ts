@@ -1,3 +1,4 @@
+import { cojsonInternals } from "cojson";
 import {
   assert,
   beforeEach,
@@ -19,6 +20,11 @@ beforeEach(async () => {
   await createJazzTestAccount({
     isCurrentActiveAccount: true,
   });
+});
+
+beforeEach(() => {
+  cojsonInternals.CO_VALUE_LOADING_CONFIG.MAX_RETRIES = 1;
+  cojsonInternals.CO_VALUE_LOADING_CONFIG.TIMEOUT = 1;
 });
 
 describe("CoMap with Zod", () => {
@@ -315,132 +321,202 @@ describe("CoMap with Zod", () => {
       >();
     });
 
-    it.todo(
-      "should return undefined if the value is not available",
-      async () => {
-        const Person = co.map({
-          name: z.string(),
-          age: z.number(),
-          address: co.map({
-            street: z.string(),
-          }),
-        });
+    it("should return undefined if the value is not available", async () => {
+      const Person = co.map({
+        name: z.string(),
+        age: z.number(),
+        address: co.map({
+          street: z.string(),
+        }),
+      });
 
-        const john = Person.create({
+      const john = Person.create({
+        name: "John",
+        age: 30,
+        address: { street: "123 Main St" },
+      });
+
+      const loaded = await loadCoValue(Person, (john.$jazz.id + "1") as any, {
+        resolve: { address: true },
+      });
+
+      expect(loaded).toBeUndefined();
+    });
+
+    it("should return undefined if one of the nested values is not available", async () => {
+      const anotherAccount = await createJazzTestAccount();
+      const Person = co.map({
+        name: z.string(),
+        age: z.number(),
+        address: co.map({
+          street: z.string(),
+        }),
+      });
+
+      const group = Group.create(anotherAccount);
+      group.addMember("everyone", "reader");
+
+      const john = Person.create(
+        {
           name: "John",
           age: 30,
           address: { street: "123 Main St" },
-        });
+        },
+        group,
+      );
 
-        const loaded = await loadCoValue(Person, (john.$jazz.id + "1") as any, {
-          resolve: { address: true },
-        });
+      john.$jazz.raw.set("address", "co_z1");
 
-        expect(loaded).toBeUndefined();
-      },
-    );
+      await john.$jazz.waitForSync();
 
-    it.todo(
-      "should return undefined if one of the nested values is not available",
-      async () => {
-        const anotherAccount = await createJazzTestAccount();
-        const Person = co.map({
-          name: z.string(),
-          age: z.number(),
-          address: co.map({
+      const loaded = await loadCoValue(Person, john.$jazz.id, {
+        resolve: { address: true },
+      });
+
+      expect(loaded).toBeUndefined();
+    });
+
+    it("should return a partial value if one of the optional nested values is not available", async () => {
+      const anotherAccount = await createJazzTestAccount();
+      const Person = co.map({
+        name: z.string(),
+        age: z.number(),
+        address: co
+          .map({
             street: z.string(),
-          }),
-        });
+          })
+          .optional(),
+      });
 
-        const group = Group.create(anotherAccount);
-        group.addMember("everyone", "reader");
+      const group = Group.create(anotherAccount);
+      group.addMember("everyone", "reader");
 
-        const john = Person.create(
-          {
-            name: "John",
-            age: 30,
-            address: { street: "123 Main St" },
-          },
-          group,
-        );
+      const john = Person.create(
+        {
+          name: "John",
+          age: 30,
+          address: { street: "123 Main St" },
+        },
+        group,
+      );
 
-        john.$jazz.raw.set("address", "co_z1");
+      john.$jazz.raw.set("address", "co_z1");
 
-        await john.$jazz.waitForSync();
+      await john.$jazz.waitForSync();
 
-        const loaded = await loadCoValue(Person, john.$jazz.id, {
-          resolve: { address: true },
-        });
+      const loaded = await loadCoValue(Person, john.$jazz.id, {
+        resolve: { address: true },
+      });
 
-        expect(loaded).toBeUndefined();
-      },
-    );
+      expect(loaded).toEqual({
+        name: "John",
+        age: 30,
+        address: undefined,
+      });
+    });
 
-    it.todo(
-      "should return undefined if the value is not accessible",
-      async () => {
-        const anotherAccount = await createJazzTestAccount();
+    it("should return undefined if the value is not accessible", async () => {
+      const anotherAccount = await createJazzTestAccount();
 
-        const Person = co.map({
-          name: z.string(),
-          age: z.number(),
-          address: co.map({
+      const Person = co.map({
+        name: z.string(),
+        age: z.number(),
+        address: co.map({
+          street: z.string(),
+        }),
+      });
+
+      const john = Person.create(
+        {
+          name: "John",
+          age: 30,
+          address: { street: "123 Main St" },
+        },
+        anotherAccount,
+      );
+
+      await john.$jazz.waitForSync();
+
+      const loaded = await loadCoValue(Person, john.$jazz.id as any, {
+        resolve: { address: true },
+      });
+
+      expect(loaded).toBeUndefined();
+    });
+
+    it("should return undefined if one of the nested values is not accessible", async () => {
+      const anotherAccount = await createJazzTestAccount();
+      const Person = co.map({
+        name: z.string(),
+        age: z.number(),
+        address: co.map({
+          street: z.string(),
+        }),
+      });
+
+      const group = Group.create(anotherAccount);
+      group.addMember("everyone", "reader");
+
+      const john = Person.create(
+        {
+          name: "John",
+          age: 30,
+          address: Person.shape.address.create(
+            { street: "123 Main St" },
+            anotherAccount,
+          ),
+        },
+        group,
+      );
+
+      await john.$jazz.waitForSync();
+
+      const loaded = await loadCoValue(Person, john.$jazz.id, {
+        resolve: { address: true },
+      });
+
+      expect(loaded).toBeUndefined();
+    });
+
+    it("should return a partial value if one of the optional nested values is not accessible", async () => {
+      const anotherAccount = await createJazzTestAccount();
+      const Person = co.map({
+        name: z.string(),
+        age: z.number(),
+        address: co
+          .map({
             street: z.string(),
-          }),
-        });
+          })
+          .optional(),
+      });
 
-        const john = Person.create(
-          {
-            name: "John",
-            age: 30,
-            address: { street: "123 Main St" },
-          },
-          anotherAccount,
-        );
+      const group = Group.create(anotherAccount);
+      group.addMember("everyone", "reader");
 
-        await john.$jazz.waitForSync();
+      const john = Person.create(
+        {
+          name: "John",
+          age: 30,
+          address: Person.shape.address.create(
+            { street: "123 Main St" },
+            anotherAccount,
+          ),
+        },
+        group,
+      );
 
-        const loaded = await loadCoValue(Person, john.$jazz.id as any, {
-          resolve: { address: true },
-        });
+      await john.$jazz.waitForSync();
 
-        expect(loaded).toBeUndefined();
-      },
-    );
+      const loaded = await loadCoValue(Person, john.$jazz.id, {
+        resolve: { address: true },
+      });
 
-    it.todo(
-      "should return undefined if one of the nested values is not accessible",
-      async () => {
-        const anotherAccount = await createJazzTestAccount();
-        const Person = co.map({
-          name: z.string(),
-          age: z.number(),
-          address: co.map({
-            street: z.string(),
-          }),
-        });
-
-        const group = Group.create(anotherAccount);
-        group.addMember("everyone", "reader");
-
-        const john = Person.create(
-          {
-            name: "John",
-            age: 30,
-            address: Person.shape.address.create({ street: "123 Main St" }),
-          },
-          group,
-        );
-
-        await john.$jazz.waitForSync();
-
-        const loaded = await loadCoValue(Person, john.$jazz.id, {
-          resolve: { address: true },
-        });
-
-        expect(loaded).toBeUndefined();
-      },
-    );
+      expect(loaded).toEqual({
+        name: "John",
+        age: 30,
+        address: undefined,
+      });
+    });
   });
 
   describe("ensureLoaded", () => {
@@ -483,87 +559,84 @@ describe("CoMap with Zod", () => {
       >();
     });
 
-    it.todo(
-      "should throw if one of the nested values is not available",
-      async () => {
-        const anotherAccount = await createJazzTestAccount();
-        const Person = co.map({
-          name: z.string(),
-          age: z.number(),
-          address: co.map({
-            street: z.string(),
-          }),
-        });
+    it("should throw if one of the nested values is not available", async () => {
+      const anotherAccount = await createJazzTestAccount();
+      const Person = co.map({
+        name: z.string(),
+        age: z.number(),
+        address: co.map({
+          street: z.string(),
+        }),
+      });
 
-        const group = Group.create(anotherAccount);
-        group.addMember("everyone", "reader");
+      const group = Group.create(anotherAccount);
+      group.addMember("everyone", "reader");
 
-        const john = Person.create(
-          {
-            name: "John",
-            age: 30,
-            address: { street: "123 Main St" },
-          },
-          group,
-        );
+      const john = Person.create(
+        {
+          name: "John",
+          age: 30,
+          address: { street: "123 Main St" },
+        },
+        group,
+      );
 
-        john.$jazz.raw.set("address", "co_z1");
+      john.$jazz.raw.set("address", "co_z1");
 
-        await john.$jazz.waitForSync();
+      await john.$jazz.waitForSync();
 
-        const loaded = await loadCoValue(Person, john.$jazz.id, {
-          resolve: true,
-        });
+      const loaded = await loadCoValue(Person, john.$jazz.id, {
+        resolve: true,
+      });
 
-        assert(loaded);
+      assert(loaded);
 
-        await expect(
-          loaded.$jazz.ensureLoaded({
-            resolve: { address: true },
-          }),
-        ).rejects.toThrow();
-      },
-    );
+      await expect(
+        loaded.$jazz.ensureLoaded({
+          resolve: { address: true },
+        }),
+      ).rejects.toThrow();
+    });
 
-    it.todo(
-      "should throw if one of the nested values is not accessible",
-      async () => {
-        const anotherAccount = await createJazzTestAccount();
-        const Person = co.map({
-          name: z.string(),
-          age: z.number(),
-          address: co.map({
-            street: z.string(),
-          }),
-        });
+    it("should throw if one of the nested values is not accessible", async () => {
+      const anotherAccount = await createJazzTestAccount();
+      const Person = co.map({
+        name: z.string(),
+        age: z.number(),
+        address: co.map({
+          street: z.string(),
+        }),
+      });
 
-        const group = Group.create(anotherAccount);
-        group.addMember("everyone", "reader");
+      const group = Group.create(anotherAccount);
+      group.addMember("everyone", "reader");
 
-        const john = Person.create(
-          {
-            name: "John",
-            age: 30,
-            address: Person.shape.address.create({ street: "123 Main St" }),
-          },
-          group,
-        );
+      const john = Person.create(
+        {
+          name: "John",
+          age: 30,
+          address: Person.shape.address.create(
+            { street: "123 Main St" },
+            anotherAccount,
+          ),
+        },
+        group,
+      );
 
-        await john.$jazz.waitForSync();
+      await john.$jazz.waitForSync();
 
-        const loaded = await loadCoValue(Person, john.$jazz.id, {
-          resolve: true,
-        });
+      const loaded = await loadCoValue(Person, john.$jazz.id, {
+        resolve: true,
+      });
 
-        assert(loaded);
+      assert(loaded);
 
-        await expect(
-          loaded.$jazz.ensureLoaded({
-            resolve: { address: true },
-          }),
-        ).rejects.toThrow();
-      },
-    );
+      await expect(
+        loaded.$jazz.ensureLoaded({
+          resolve: { address: true },
+        }),
+      ).rejects.toThrow();
+    });
   });
 
   describe("subscribe", () => {

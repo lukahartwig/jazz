@@ -112,7 +112,7 @@ describe("useCoStateWithZod", () => {
     expect(result.current?.nested.value).toBe("456");
   });
 
-  it.skip("should return null if the coValue is not found", async () => {
+  it.only("should return null if the coValue is not found", async () => {
     const TestMap = co.map({
       value: z.string(),
     });
@@ -139,7 +139,7 @@ describe("useCoStateWithZod", () => {
     });
   });
 
-  it.skip("should return null if the coValue is not accessible", async () => {
+  it("should return null if the coValue is not accessible", async () => {
     const TestMap = co.map({
       value: z.string(),
     });

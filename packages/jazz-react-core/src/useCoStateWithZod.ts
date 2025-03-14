@@ -42,6 +42,7 @@ export function createCoValueObservable<
         resolve: options.resolve,
         onUnavailable: () => {
           currentValue = null;
+          console.log("onUnavailable");
           options.onUnavailable?.();
         },
         onUnauthorized: () => {

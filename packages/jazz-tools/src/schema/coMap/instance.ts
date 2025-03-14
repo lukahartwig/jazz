@@ -17,6 +17,7 @@ import {
   CoMapSchemaKey,
   CoValueSchema,
 } from "./schema.js";
+import { getOwnerFromRawValue } from "./utils.js";
 
 type Relations<D extends CoValueSchema> = D extends AnyCoMapSchema
   ? {
@@ -33,7 +34,7 @@ type RelationsKeys<D extends CoValueSchema> = keyof Relations<D> &
 
 type ChildMap<D extends AnyCoMapSchema> = Map<
   RelationsKeys<D>,
-  Loaded<any, any> | undefined
+  Loaded<any, any> | undefined | null
 >;
 
 type PropertyType<
@@ -76,7 +77,10 @@ export class CoMapJazzApi<
     this._instance = instance as unknown as Loaded<D, R>;
   }
 
-  _fillRef<K extends RelationsKeys<D>>(key: K, value: Loaded<any, any>) {
+  _fillRef<K extends RelationsKeys<D>>(
+    key: K,
+    value: Loaded<any, any> | null | undefined,
+  ) {
     const descriptor = this.schema.get(key);
 
     if (descriptor && isRelationRef(descriptor)) {
@@ -167,11 +171,7 @@ export class CoMapJazzApi<
   }
 
   get owner(): Account | Group {
-    return coValuesCache.get(this.raw.group, () =>
-      this.raw.group instanceof RawAccount
-        ? RegisteredSchemas["Account"].fromRaw(this.raw.group)
-        : RegisteredSchemas["Group"].fromRaw(this.raw.group),
-    );
+    return getOwnerFromRawValue(this.raw);
   }
 }
 
@@ -224,7 +224,7 @@ export function createCoMapFromRaw<
 
   if (refs) {
     for (const [key, value] of refs.entries()) {
-      if (value) {
+      if (value !== null) {
         instance.$jazz._fillRef(key as any, value);
       }
     }
