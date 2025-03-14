@@ -70,8 +70,12 @@ export function BubbleBody(props: {
   );
 }
 
-export function BubbleText(props: { text: string }) {
-  return <p className="px-2 leading-relaxed">{props.text}</p>;
+export function BubbleText(props: { text: string; className?: string }) {
+  return (
+    <p className={clsx("px-2 leading-relaxed", props.className)}>
+      {props.text}
+    </p>
+  );
 }
 
 export function BubbleImage(props: { image: ImageDefinition }) {

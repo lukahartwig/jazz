@@ -208,3 +208,18 @@ export async function onAnonymousAccountDiscarded(
     me.root.rootPlaylist.tracks.push(track);
   }
 }
+
+export async function deletePlaylist(playlistId: string) {
+  const { root } = await MusicaAccount.getMe().ensureLoaded({
+    resolve: {
+      root: {
+        playlists: true,
+      },
+    },
+  });
+
+  const index = root.playlists.findIndex((p) => p?.id === playlistId);
+  if (index > -1) {
+    root.playlists.splice(index, 1);
+  }
+}

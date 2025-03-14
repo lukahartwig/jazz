@@ -280,6 +280,13 @@ export class CoList<Item = any> extends Array<Item> implements CoValue {
     return first;
   }
 
+  /**
+   * Splice the `CoList` at a given index.
+   *
+   * @param start - The index to start the splice.
+   * @param deleteCount - The number of items to delete.
+   * @param items - The items to insert.
+   */
   splice(start: number, deleteCount: number, ...items: Item[]): Item[] {
     const deleted = this.slice(start, start + deleteCount);
 
@@ -291,24 +298,62 @@ export class CoList<Item = any> extends Array<Item> implements CoValue {
       this._raw.delete(idxToDelete);
     }
 
-    let appendAfter = Math.max(start - 1, 0);
-    for (const item of toRawItems(items as Item[], this._schema[ItemsSym])) {
-      this._raw.append(item, appendAfter);
-      appendAfter++;
+    const rawItems = toRawItems(items as Item[], this._schema[ItemsSym]);
+
+    // If there are no items to insert, return the deleted items
+    if (rawItems.length === 0) {
+      return deleted;
+    }
+
+    // Fast path for single item insertion
+    if (rawItems.length === 1) {
+      const item = rawItems[0];
+      if (item === undefined) return deleted;
+      if (start === 0) {
+        this._raw.prepend(item);
+      } else {
+        this._raw.append(item, Math.max(start - 1, 0));
+      }
+      return deleted;
+    }
+
+    // Handle multiple items
+    if (start === 0) {
+      // Iterate in reverse order without creating a new array
+      for (let i = rawItems.length - 1; i >= 0; i--) {
+        const item = rawItems[i];
+        if (item === undefined) continue;
+        this._raw.prepend(item);
+      }
+    } else {
+      let appendAfter = Math.max(start - 1, 0);
+      for (const item of rawItems) {
+        if (item === undefined) continue;
+        this._raw.append(item, appendAfter);
+        appendAfter++;
+      }
     }
 
     return deleted;
   }
 
-  applyDiff(other: Item[]) {
+  /**
+   * Modify the `CoList` to match another list, where the changes are managed internally.
+   *
+   * @param result - The resolved list of items.
+   */
+  applyDiff(result: Item[]) {
     const current = this._raw.asArray() as Item[];
-    const cmp = isRefEncoded(this._schema[ItemsSym])
-      ? (aIdx: number, bIdx: number) =>
-          (current[aIdx] as CoValue).id === (other[bIdx] as CoValue).id
+    const comparator = isRefEncoded(this._schema[ItemsSym])
+      ? (aIdx: number, bIdx: number) => {
+          return (
+            (current[aIdx] as CoValue)?.id === (result[bIdx] as CoValue)?.id
+          );
+        }
       : undefined;
-    for (const [from, to, insert] of [
-      ...calcPatch(current, other, cmp),
-    ].reverse()) {
+
+    const patches = [...calcPatch(current, result, comparator)];
+    for (const [from, to, insert] of patches.reverse()) {
       this.splice(from, to - from, ...insert);
     }
   }
@@ -499,6 +544,12 @@ export class CoList<Item = any> extends Array<Item> implements CoValue {
   }
 }
 
+/**
+ * Convert an array of items to a raw array of items.
+ * @param items - The array of items to convert.
+ * @param itemDescriptor - The descriptor of the items.
+ * @returns The raw array of items.
+ */
 function toRawItems<Item>(items: Item[], itemDescriptor: Schema) {
   const rawItems =
     itemDescriptor === "json"
@@ -554,7 +605,19 @@ const CoListProxyHandler: ProxyHandler<CoList> = {
       } else if ("encoded" in itemDescriptor) {
         rawValue = itemDescriptor.encoded.encode(value);
       } else if (isRefEncoded(itemDescriptor)) {
-        rawValue = value.id;
+        if (value === null) {
+          if (itemDescriptor.optional) {
+            rawValue = null;
+          } else {
+            throw new Error(`Cannot set required reference ${key} to null`);
+          }
+        } else if (value?.id) {
+          rawValue = value.id;
+        } else {
+          throw new Error(
+            `Cannot set reference ${key} to a non-CoValue. Got ${value}`,
+          );
+        }
       }
       target._raw.replace(Number(key), rawValue);
       return true;

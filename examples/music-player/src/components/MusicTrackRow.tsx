@@ -50,6 +50,16 @@ export function MusicTrackRow({
     removeTrackFromPlaylist(playlist, track);
   }
 
+  function deleteTrack() {
+    if (!me || !track) return;
+    const tracks = me.root.rootPlaylist?.tracks;
+    if (!tracks) return;
+    const index = tracks.findIndex((t) => t?.id === trackId);
+    if (index !== -1) {
+      tracks.splice(index, 1);
+    }
+  }
+
   return (
     <li
       className={
@@ -88,6 +98,15 @@ export function MusicTrackRow({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
+              <DropdownMenuItem
+                key={`delete`}
+                onSelect={async () => {
+                  if (!track) return;
+                  deleteTrack();
+                }}
+              >
+                Delete
+              </DropdownMenuItem>
               {playlists.map((playlist, index) => (
                 <Fragment key={index}>
                   <DropdownMenuItem
