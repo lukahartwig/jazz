@@ -167,7 +167,16 @@ export class CoValueResolutionNode<
 
     let hasChanged = false;
 
-    for (const key of Object.keys(resolve)) {
+    const fieldsToLoad = resolve.$each
+      ? raw
+          .keys()
+          .filter((key: string) => !(key in schema.shape))
+          .map((key: string) => [key, resolve.$each])
+      : Object.entries(resolve);
+
+    const newNodes = new Map<string, CoValueResolutionNode<any, any>>();
+
+    for (const [key, query] of fieldsToLoad) {
       const value = raw.get(key);
       const descriptor = schema.get(key);
 
@@ -195,7 +204,7 @@ export class CoValueResolutionNode<
         }
       }
 
-      if (value && isRelationRef(descriptor) && resolve[key]) {
+      if (value && isRelationRef(descriptor) && query) {
         hasChanged = true;
         let childSchema = descriptor as CoValueSchema;
 
@@ -206,13 +215,20 @@ export class CoValueResolutionNode<
         this.childValues.set(key, undefined);
         const child = new CoValueResolutionNode(
           node,
-          resolve[key] as ResolveQuery<any>,
-          raw.get(key) as ID<any>,
+          query,
+          value as ID<any>,
           childSchema,
         );
-        child.setListener((value) => this.handleChildUpdate(key, value));
         this.childNodes.set(key, child);
+        newNodes.set(key, child);
       }
+    }
+
+    // Adding listeners after that all the child nodes are created
+    // to resolving the loaded state too early beacause setListener
+    // may invoke syncrounously invoke the listener if the child is already loaded
+    for (const [key, child] of newNodes) {
+      child.setListener((value) => this.handleChildUpdate(key, value));
     }
 
     return hasChanged;
