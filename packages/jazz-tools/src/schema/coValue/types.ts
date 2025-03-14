@@ -35,14 +35,19 @@ export type ResolveQuery<
                 ? ResolveQuery<UnwrapReference<S, K>, [0, ...CurrentDepth]>
                 : never;
             } & (S["record"] extends CoMapRecordDef
-              ? {
-                  [K in CoMapRecordKey<S>]?: UnwrapRecordReference<S> extends CoValueSchema
-                    ? ResolveQuery<
-                        UnwrapRecordReference<S>,
-                        [0, ...CurrentDepth]
-                      >
-                    : never;
-                }
+              ? UnwrapRecordReference<S> extends CoValueSchema
+                ? {
+                    [K in CoMapRecordKey<S>]?: ResolveQuery<
+                      UnwrapRecordReference<S>,
+                      [0, ...CurrentDepth]
+                    >;
+                  } & {
+                    $each?: ResolveQuery<
+                      UnwrapRecordReference<S>,
+                      [0, ...CurrentDepth]
+                    >;
+                  }
+                : unknown
               : unknown)
           >
         : true);
@@ -93,11 +98,15 @@ export type LoadedCoMap<
       } & (S["record"] extends CoMapRecordDef
           ? S["record"]["value"] extends ZodTypeAny
             ? {
+                // Filling the record properties
                 readonly [K in CoMapRecordKey<S>]: TypeOf<S["record"]["value"]>;
               }
             : {
-                readonly [K in CoMapRecordKey<S> &
-                  keyof R]: R[K] extends ResolveQuery<UnwrapRecordReference<S>>
+                // Filling the record relations directly resolved with the query
+                readonly [K in Exclude<
+                  CoMapRecordKey<S> & keyof R,
+                  "$each"
+                >]: R[K] extends ResolveQuery<UnwrapRecordReference<S>>
                   ? IsDepthLimit<CurrentDepth> &
                       isQueryLeafNode<R> extends false
                     ?
@@ -111,7 +120,22 @@ export type LoadedCoMap<
                     : null
                   : null;
               } & {
-                readonly [K in CoMapRecordKey<S>]: null;
+                // Either fill the record relations or set them as null
+                readonly [K in CoMapRecordKey<S>]: R extends {
+                  $each: ResolveQuery<UnwrapRecordReference<S>>;
+                }
+                  ? IsDepthLimit<CurrentDepth> &
+                      isQueryLeafNode<R> extends false
+                    ?
+                        | Loaded<
+                            UnwrapRecordReference<S>,
+                            R["$each"],
+                            Options,
+                            [0, ...CurrentDepth]
+                          >
+                        | addNullable<Options, { isOptional: true }>
+                    : null
+                  : null;
               }
           : unknown)
     : never) &

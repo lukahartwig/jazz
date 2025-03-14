@@ -157,6 +157,41 @@ describe("CoMap with Zod", () => {
       expect(loaded.name).toBe(null);
     });
 
+    it("should load all the relations on co.record when using $each", async () => {
+      const anotherAccount = await createJazzTestAccount();
+
+      const Friends = co.record(
+        z.string(),
+        co.map({
+          name: z.string(),
+        }),
+      );
+
+      const group = Group.create(anotherAccount);
+      group.addMember("everyone", "reader");
+
+      const friends = Friends.create(
+        {
+          joe: {
+            name: "joe",
+          },
+          bob: {
+            name: "bob",
+          },
+        },
+        group,
+      );
+
+      const loaded = await loadCoValue(Friends, friends.$jazz.id, {
+        resolve: { $each: true },
+      });
+
+      assert(loaded);
+
+      expect(loaded.joe?.name).toBe("joe");
+      expect(loaded.bob?.name).toBe("bob");
+    });
+
     it("should load a CoMap with self references", async () => {
       const anotherAccount = await createJazzTestAccount();
 

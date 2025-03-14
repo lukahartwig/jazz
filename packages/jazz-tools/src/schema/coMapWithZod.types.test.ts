@@ -64,6 +64,7 @@ describe("CoMap - with zod based schema", () => {
         | true
         | {
             [x: string]: true | undefined;
+            $each?: true;
           }
       >();
     });
@@ -248,6 +249,28 @@ describe("CoMap - with zod based schema", () => {
         address:
           | {
               street: string;
+              $jazz: any;
+            }
+          | null
+          | undefined;
+        $jazz: any;
+      }>();
+    });
+
+    it("should load nested properties on co.record when using $each", () => {
+      const Friends = co.record(
+        z.string(),
+        co.map({
+          name: z.string(),
+        }),
+      );
+
+      type Result = Loaded<typeof Friends, { $each: true }>;
+
+      expectTypeOf<Result>().toMatchTypeOf<{
+        [x: string]:
+          | {
+              name: string;
               $jazz: any;
             }
           | null

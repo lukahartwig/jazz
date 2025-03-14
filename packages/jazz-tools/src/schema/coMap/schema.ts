@@ -63,6 +63,16 @@ export type CoMapSchemaStaticPropKeys<S extends AnyCoMapSchema> = {
   [K in keyof S["shape"]]: S["shape"][K] extends ZodTypeAny ? K : never;
 }[keyof S["shape"]];
 
+type CoMapChildSchemaInit<
+  Field extends CoMapField,
+  S extends AnyCoMapSchema,
+  CurrentDepth extends number[],
+> =
+  | CoMapInit<S, CurrentDepth> // To accept inline init values
+  | LoadedCoMap<S, ResolveQuery<S>> // To accept Schema.create or loaded values as input
+  | addOptional<S> // Adds undefined if the schema is optional
+  | markSelfReferenceAsOptional<Field>; // Self references are always optional
+
 export type CoMapInit<
   S extends AnyCoMapSchema,
   CurrentDepth extends number[] = [],
@@ -73,14 +83,11 @@ export type CoMapInit<
         [K in keyof S["shape"]]: S["shape"][K] extends ZodTypeAny
           ? TypeOf<S["shape"][K]>
           : UnwrapReference<S, K> extends AnyCoMapSchema
-            ?
-                | CoMapInit<UnwrapReference<S, K>, [0, ...CurrentDepth]>
-                | LoadedCoMap<
-                    UnwrapReference<S, K>,
-                    ResolveQuery<UnwrapReference<S, K>>
-                  >
-                | addOptional<UnwrapReference<S, K>>
-                | markSelfReferenceAsOptional<S["shape"][K]> // Self references are always optional
+            ? CoMapChildSchemaInit<
+                S["shape"][K],
+                UnwrapReference<S, K>,
+                [0, ...CurrentDepth]
+              >
             : never;
       }>
     > &
@@ -90,14 +97,11 @@ export type CoMapInit<
             [K in CoMapRecordKey<S>]: CoMapRecordFieldType<S> extends ZodTypeAny
               ? TypeOf<CoMapRecordFieldType<S>>
               : UnwrapRecordReference<S> extends AnyCoMapSchema
-                ?
-                    | CoMapInit<UnwrapRecordReference<S>, [0, ...CurrentDepth]>
-                    | LoadedCoMap<
-                        UnwrapRecordReference<S>,
-                        ResolveQuery<UnwrapRecordReference<S>>
-                      >
-                    | addOptional<UnwrapRecordReference<S>>
-                    | markSelfReferenceAsOptional<CoMapRecordFieldType<S>> // Self references are always optional
+                ? CoMapChildSchemaInit<
+                    CoMapRecordFieldType<S>,
+                    UnwrapRecordReference<S>,
+                    [0, ...CurrentDepth]
+                  >
                 : never;
           });
 
@@ -117,11 +121,23 @@ type CoMapSimpleInit<
   ? {}
   : {
       [K in keyof S["shape"]]?: any;
-    } & (S["record"] extends undefined
-      ? unknown
-      : {
+    } & (S["record"] extends CoMapRecordDef
+      ? {
           [K in CoMapRecordKey<S>]: any;
-        });
+        }
+      : unknown);
+
+type CoMapChildInitToRelationsToResolve<
+  ChildSchema,
+  I,
+  CurrentDepth extends number[],
+> = ChildSchema extends AnyCoMapSchema
+  ? I extends CoMap<ChildSchema, infer R> // If the init is a CoMap, return the resolve query
+    ? R
+    : I extends CoMapSimpleInit<ChildSchema>
+      ? CoMapInitToRelationsToResolve<ChildSchema, I, CurrentDepth>
+      : never
+  : never;
 
 export type CoMapInitToRelationsToResolve<
   S extends AnyCoMapSchema,
@@ -133,40 +149,22 @@ export type CoMapInitToRelationsToResolve<
     ? ValidateQuery<
         S,
         {
-          [K in keyof I & CoMapSchemaRelationsKeys<S>]: UnwrapReference<
-            S,
-            K
-          > extends infer ChildSchema
-            ? ChildSchema extends AnyCoMapSchema
-              ? I[K] extends CoMap<ChildSchema, infer R>
-                ? R
-                : I[K] extends CoMapSimpleInit<ChildSchema>
-                  ? CoMapInitToRelationsToResolve<
-                      ChildSchema,
-                      I[K],
-                      [0, ...CurrentDepth]
-                    >
-                  : never
-              : never
-            : never;
-        } & (S["record"] extends undefined
-          ? unknown
-          : {
+          [K in keyof I &
+            CoMapSchemaRelationsKeys<S>]: CoMapChildInitToRelationsToResolve<
+            UnwrapReference<S, K>,
+            I[K],
+            [0, ...CurrentDepth]
+          >;
+        } & (S["record"] extends CoMapRecordDef
+          ? {
               [K in keyof I &
-                CoMapRecordKey<S>]: UnwrapRecordReference<S> extends infer ChildSchema
-                ? ChildSchema extends AnyCoMapSchema
-                  ? I[K] extends CoMap<ChildSchema, infer R>
-                    ? R
-                    : I[K] extends CoMapSimpleInit<ChildSchema>
-                      ? CoMapInitToRelationsToResolve<
-                          ChildSchema,
-                          I[K],
-                          [0, ...CurrentDepth]
-                        >
-                      : never
-                  : never
-                : never;
-            })
+                CoMapRecordKey<S>]: CoMapChildInitToRelationsToResolve<
+                UnwrapRecordReference<S>,
+                I[K],
+                [0, ...CurrentDepth]
+              >;
+            }
+          : unknown)
       >
     : true;
 
