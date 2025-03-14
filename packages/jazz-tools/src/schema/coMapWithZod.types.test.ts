@@ -1,11 +1,12 @@
 import { beforeEach, describe, expect, expectTypeOf, it } from "vitest";
 import { createJazzTestAccount } from "../testing.js";
+import { CoMapJazzApi } from "./coMap/instance.js";
 import {
-  AnyCoMapSchemaDefinition,
+  AnyCoMapSchema,
   CoMapInit,
   CoMapInitStrict,
   CoMapInitToRelationsToResolve,
-  CoMapSchemaDefinition,
+  CoMapSchema,
   CoValueSchema,
   UnwrapReference,
 } from "./coMap/schema.js";
@@ -92,7 +93,7 @@ describe("CoMap - with zod based schema", () => {
       });
 
       type PersonSchema = typeof Person;
-      type PersonSchemaDefinition = CoMapSchemaDefinition<
+      type PersonSchemaDefinition = CoMapSchema<
         PersonSchema["shape"],
         PersonSchema["record"],
         PersonSchema["isOptional"]
@@ -247,20 +248,19 @@ describe("CoMap - with zod based schema", () => {
       });
 
       type PersonSchema = typeof Person;
-      type PersonSchemaDefinition = CoMapSchemaDefinition<
+      type PersonSchemaDefinition = CoMapSchema<
         PersonSchema["shape"],
         PersonSchema["record"],
         PersonSchema["isOptional"]
       >;
       type Result = Loaded<PersonSchemaDefinition, true>;
 
-      expectTypeOf<Result>().toMatchTypeOf<
-        {
-          name: string;
-          age: number;
-          address: null;
-        } & CoMap<typeof Person, true>
-      >();
+      expectTypeOf<Result>().toMatchTypeOf<{
+        name: string;
+        age: number;
+        address: null;
+        $jazz: CoMapJazzApi<PersonSchemaDefinition, true>;
+      }>();
     });
 
     it("should return the same result when providing a SchemaDefinition {address: true}", () => {
@@ -273,22 +273,22 @@ describe("CoMap - with zod based schema", () => {
       });
 
       type PersonSchema = typeof Person;
-      type PersonSchemaDefinition = CoMapSchemaDefinition<
+      type PersonSchemaDefinition = CoMapSchema<
         PersonSchema["shape"],
         PersonSchema["record"],
         PersonSchema["isOptional"]
       >;
       type Result = Loaded<PersonSchemaDefinition, { address: true }>;
 
-      expectTypeOf<Result>().toMatchTypeOf<
-        {
-          name: string;
-          age: number;
-          address: {
-            street: string;
-          } & CoMap<typeof Person.shape.address, true>;
-        } & CoMap<typeof Person, { address: true }>
-      >();
+      expectTypeOf<Result>().toMatchTypeOf<{
+        name: string;
+        age: number;
+        address: {
+          street: string;
+          $jazz: any;
+        };
+        $jazz: any;
+      }>();
     });
   });
 
@@ -378,7 +378,7 @@ describe("CoMap - with zod based schema", () => {
       });
 
       type PersonSchema = typeof Person;
-      type PersonSchemaDefinition = CoMapSchemaDefinition<
+      type PersonSchemaDefinition = CoMapSchema<
         PersonSchema["shape"],
         PersonSchema["record"],
         PersonSchema["isOptional"]
@@ -476,7 +476,7 @@ describe("CoMap - with zod based schema", () => {
       });
 
       type PersonSchema = typeof Person;
-      type PersonSchemaDefinition = CoMapSchemaDefinition<
+      type PersonSchemaDefinition = CoMapSchema<
         PersonSchema["shape"],
         PersonSchema["record"],
         PersonSchema["isOptional"]
@@ -652,7 +652,7 @@ describe("CoMap - with zod based schema", () => {
       });
 
       type PersonSchema = typeof Person;
-      type PersonSchemaDefinition = CoMapSchemaDefinition<
+      type PersonSchemaDefinition = CoMapSchema<
         PersonSchema["shape"],
         PersonSchema["record"],
         PersonSchema["isOptional"]

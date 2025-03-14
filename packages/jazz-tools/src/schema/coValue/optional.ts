@@ -11,7 +11,7 @@ export type isOptional<T> = T extends {
 
 export type addOptional<T> = isOptional<T> extends true ? undefined : never;
 
-export function optional<T extends CoValueSchema>(value: T) {
+export function optional<T extends { optional: () => any }>(value: T) {
   return value.optional();
 }
 

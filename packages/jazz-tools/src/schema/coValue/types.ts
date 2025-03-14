@@ -2,15 +2,12 @@ import { TypeOf, ZodTypeAny } from "zod";
 import { CoMap } from "../coMap/instance.js";
 import {
   AnyCoMapSchema,
-  AnyCoMapSchemaDefinition,
   CoMapFieldType,
   CoMapRecordFieldType,
   CoMapRecordKey,
-  CoMapSchema,
-  CoMapSchemaDefToSchema,
   CoMapSchemaRelationsKeys,
+  CoMapSchemaToClass,
   CoValueSchema,
-  CoValueSchemaDefinition,
   UnwrapRecordReference,
   UnwrapReference,
 } from "../coMap/schema.js";
@@ -26,13 +23,13 @@ export type RelationsToResolveStrict<
 > = V extends RelationsToResolve<T> ? RelationsToResolve<T> : V;
 
 export type RelationsToResolve<
-  S extends CoValueSchemaDefinition,
+  S extends CoValueSchema,
   CurrentDepth extends number[] = [],
 > =
   | true
   | (IsDepthLimit<CurrentDepth> extends true
       ? true
-      : S extends AnyCoMapSchemaDefinition
+      : S extends AnyCoMapSchema
         ? simplifyRelationsToResolve<
             {
               [K in CoMapSchemaRelationsKeys<S>]?: UnwrapReference<
@@ -64,14 +61,14 @@ export type isResolveLeaf<R> = R extends boolean | undefined
     : false;
 
 export type Loaded<
-  S extends CoValueSchemaDefinition,
+  S extends CoValueSchema,
   R = true,
   Options extends "nullable" | "non-nullable" = "nullable",
   CurrentDepth extends number[] = [],
 > = R extends never
   ? never
-  : S extends AnyCoMapSchemaDefinition
-    ? LoadedCoMap<CoMapSchemaDefToSchema<S>, R, Options, CurrentDepth>
+  : S extends AnyCoMapSchema
+    ? LoadedCoMap<CoMapSchemaToClass<S>, R, Options, CurrentDepth>
     : never;
 
 export type LoadedCoMap<
@@ -80,7 +77,7 @@ export type LoadedCoMap<
   Options extends "nullable" | "non-nullable" = "non-nullable",
   CurrentDepth extends number[] = [],
 > = flatten<
-  (S extends AnyCoMapSchemaDefinition
+  (S extends AnyCoMapSchema
     ? {
         [K in keyof S["shape"]]: CoMapFieldType<S, K> extends ZodTypeAny
           ? TypeOf<CoMapFieldType<S, K>>
@@ -134,7 +131,7 @@ export type LoadedCoMap<
 export type UnwrapZodType<T, O> = T extends ZodTypeAny ? TypeOf<T> : O;
 
 export type ValidateResolve<
-  D extends CoValueSchemaDefinition,
+  D extends CoValueSchema,
   I,
   E,
 > = I extends RelationsToResolve<D> ? I : E;

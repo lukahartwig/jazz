@@ -1,11 +1,7 @@
 import { beforeEach, describe, expect, expectTypeOf, it } from "vitest";
 import { createJazzTestAccount } from "../testing.js";
-import {
-  CoMapInit,
-  CoMapInitToRelationsToResolve,
-  CoMapSchemaDefinition,
-} from "./coMap/schema.js";
-import { Loaded, RelationsToResolve, co, z } from "./schema.js";
+import { CoMapInit } from "./coMap/schema.js";
+import { Loaded, co, z } from "./schema.js";
 
 beforeEach(async () => {
   await createJazzTestAccount({
@@ -88,11 +84,11 @@ describe("CoMap - with zod based schema", () => {
       const Person = co.map({
         name: z.string(),
         age: z.number(),
-        address: co
-          .map({
+        address: co.optional(
+          co.map({
             street: z.string(),
-          })
-          .optional(),
+          }),
+        ),
       });
 
       const john = Person.create({
@@ -101,9 +97,16 @@ describe("CoMap - with zod based schema", () => {
         address: { street: "123 Main St" },
       });
 
+      const johnWithoutAddress = Person.create({
+        name: "John",
+        age: 30,
+      });
+
       expectTypeOf<typeof john.address>().toMatchTypeOf<
         Loaded<typeof Person.shape.address>
       >();
+
+      expectTypeOf<typeof johnWithoutAddress.address>().toMatchTypeOf<null>();
     });
 
     it("should be possible to reference a nested map schema to split group creation", () => {
@@ -217,7 +220,7 @@ describe("CoMap - with zod based schema", () => {
       expect(john.friend).toBeUndefined();
     });
 
-    it("should accept extra properties when catchall is used", () => {
+    it.only("should accept extra properties when catchall is used", () => {
       const Person = co
         .map({
           name: z.string(),

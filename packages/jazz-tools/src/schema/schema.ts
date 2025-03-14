@@ -1,11 +1,11 @@
 import { z } from "zod";
-import { CoMapSchema } from "./coMap/schema.js";
+import { CoMapSchemaClass } from "./coMap/schema.js";
 import { CoMapSchemaShape } from "./coMap/schema.js";
 import { optional } from "./coValue/optional.js";
 import { self } from "./coValue/self.js";
 
 function map<S extends CoMapSchemaShape>(schema: S) {
-  return new CoMapSchema(schema, undefined, false);
+  return new CoMapSchemaClass(schema, undefined, false);
 }
 
 export const co = {

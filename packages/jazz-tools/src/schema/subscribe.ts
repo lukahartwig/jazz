@@ -112,7 +112,7 @@ export class CoValueResolutionNode<
       this.value = instance;
       this.loadChildren();
       if (this.isLoaded()) {
-        this.listener?.(instance);
+        this.listener?.(this.value);
       }
     } else if (this.isLoaded()) {
       const changesOnChildren = this.loadChildren();

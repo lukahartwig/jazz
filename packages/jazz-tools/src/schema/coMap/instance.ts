@@ -15,15 +15,14 @@ import {
 import { CoValueResolutionNode, ensureCoValueLoaded } from "../subscribe.js";
 import {
   AnyCoMapSchema,
-  AnyCoMapSchemaDefinition,
   CoMapInit,
   CoMapSchema,
+  CoMapSchemaClass,
   CoMapSchemaKey,
   CoValueSchema,
-  CoValueSchemaDefinition,
 } from "./schema.js";
 
-type Relations<D extends CoValueSchemaDefinition> = D extends AnyCoMapSchema
+type Relations<D extends CoValueSchema> = D extends AnyCoMapSchema
   ? {
       [K in keyof D["shape"]]: D["shape"][K] extends AnyCoMapSchema
         ? D["shape"][K]
@@ -33,16 +32,16 @@ type Relations<D extends CoValueSchemaDefinition> = D extends AnyCoMapSchema
     }
   : never;
 
-type RelationsKeys<D extends CoValueSchemaDefinition> = keyof Relations<D> &
+type RelationsKeys<D extends CoValueSchema> = keyof Relations<D> &
   (string | number);
 
-type ChildMap<D extends AnyCoMapSchemaDefinition> = Map<
+type ChildMap<D extends AnyCoMapSchema> = Map<
   RelationsKeys<D>,
   Loaded<any, any> | undefined
 >;
 
 type PropertyType<
-  D extends AnyCoMapSchemaDefinition,
+  D extends AnyCoMapSchema,
   K extends CoMapSchemaKey<D>,
 > = CoMapInit<D>[K];
 
@@ -248,7 +247,7 @@ function getValue<D extends AnyCoMapSchema>(
   if (descriptor && typeof key === "string") {
     const value = raw.get(key);
 
-    if (descriptor instanceof CoMapSchema || isSelfReference(descriptor)) {
+    if (isRelationRef(descriptor)) {
       if (value === undefined) {
         return undefined;
       } else {
@@ -403,7 +402,7 @@ function getSchemaFromDescriptor<
 export function isRelationRef(
   descriptor: AnyCoMapSchema | ZodTypeAny | SelfReference,
 ): descriptor is AnyCoMapSchema | SelfReference {
-  return descriptor instanceof CoMapSchema || isSelfReference(descriptor);
+  return descriptor instanceof CoMapSchemaClass || isSelfReference(descriptor);
 }
 
 export function isCoValue(value: unknown): value is CoMap<any, any> {

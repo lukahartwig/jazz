@@ -19,29 +19,25 @@ import {
 } from "../coValue/types.js";
 import { CoMap, createCoMap } from "./instance.js";
 
-export type CoMapField =
-  | CoMapSchema<any, undefined>
-  | CoMapSchema<any, CoMapRecordDef>
-  | ZodTypeAny
-  | SelfReference;
+export type CoMapField = AnyCoMapSchema | ZodTypeAny | SelfReference;
 export type CoMapRecordDef = { key: ZodString; value: CoMapField };
 
 export type CoMapSchemaShape = {
   [key: string]: CoMapField;
 };
 
-export type CoMapSchemaKey<S extends AnyCoMapSchemaDefinition> =
+export type CoMapSchemaKey<S extends AnyCoMapSchema> =
   | keyof S["shape"]
   | CoMapRecordKey<S>;
 
-export type CoMapRecordKey<S extends AnyCoMapSchemaDefinition> =
+export type CoMapRecordKey<S extends AnyCoMapSchema> =
   S["record"] extends CoMapRecordDef ? TypeOf<S["record"]["key"]> : never;
 
-export type CoMapRecordFieldType<S extends AnyCoMapSchemaDefinition> =
+export type CoMapRecordFieldType<S extends AnyCoMapSchema> =
   S["record"] extends CoMapRecordDef ? S["record"]["value"] : never;
 
 export type CoMapFieldType<
-  S extends AnyCoMapSchemaDefinition,
+  S extends AnyCoMapSchema,
   K extends CoMapSchemaKey<S>,
 > = S["shape"][K] extends CoMapField
   ? S["shape"][K]
@@ -52,32 +48,31 @@ export type CoMapFieldType<
     : never;
 
 export type CoValueSchema = AnyCoMapSchema;
-export type CoValueSchemaDefinition = AnyCoMapSchemaDefinition;
 
-export type UnwrapRecordReference<S extends AnyCoMapSchemaDefinition> =
+export type UnwrapRecordReference<S extends AnyCoMapSchema> =
   CoMapRecordFieldType<S> extends CoValueSchema
     ? CoMapRecordFieldType<S>
     : CoMapRecordFieldType<S> extends SelfReference
-      ? CoMapSchemaDefToSchema<S>
+      ? CoMapSchemaToClass<S>
       : never;
 
 export type UnwrapReference<
-  S extends AnyCoMapSchemaDefinition,
+  S extends AnyCoMapSchema,
   K extends CoMapSchemaKey<S>,
 > = S["shape"][K] extends CoValueSchema
   ? S["shape"][K]
   : S["shape"][K] extends SelfReference
-    ? CoMapSchemaDefToSchema<S>
+    ? CoMapSchemaToClass<S>
     : never;
 
-export type CoMapSchemaRelationsKeys<S extends AnyCoMapSchemaDefinition> = {
+export type CoMapSchemaRelationsKeys<S extends AnyCoMapSchema> = {
   [K in keyof S["shape"]]: S["shape"][K] extends CoValueSchema | SelfReference
     ? K
     : never;
 }[keyof S["shape"]];
 
 export type CoMapInit<
-  S extends AnyCoMapSchemaDefinition,
+  S extends AnyCoMapSchema,
   CurrentDepth extends number[] = [],
 > = IsDepthLimit<CurrentDepth> extends true
   ? {}
@@ -116,7 +111,7 @@ export type CoMapInit<
           >);
 
 export type CoMapInitStrict<
-  S extends AnyCoMapSchemaDefinition,
+  S extends AnyCoMapSchema,
   I,
 > = I extends CoMapInit<S> ? CoMapInit<S> : I;
 
@@ -125,7 +120,7 @@ export type CoMapInitStrict<
  * It is used to build the resolve type for the create method without paying the compelxity cost of the full CoMapInit.
  */
 type CoMapSimpleInit<
-  S extends AnyCoMapSchemaDefinition,
+  S extends AnyCoMapSchema,
   CurrentDepth extends number[] = [],
 > = IsDepthLimit<CurrentDepth> extends true
   ? {}
@@ -142,7 +137,7 @@ type CoMapSimpleInit<
         });
 
 export type CoMapInitToRelationsToResolve<
-  S extends AnyCoMapSchemaDefinition,
+  S extends AnyCoMapSchema,
   I,
   CurrentDepth extends number[] = [],
 > = IsDepthLimit<CurrentDepth> extends true
@@ -191,35 +186,45 @@ export type CoMapInitToRelationsToResolve<
       >
     : true;
 
-export type CoMapSchemaDefinition<
-  S extends CoMapSchemaShape,
-  R extends CoMapRecordDef | undefined = CoMapRecordDef | undefined,
-  O extends boolean = boolean,
-> = {
-  shape: S;
-  record: R;
-  isOptional: O;
-};
-
-export type CoMapSchemaDefToSchema<D extends AnyCoMapSchemaDefinition> =
-  D extends AnyCoMapSchema
-    ? D
-    : CoMapSchema<D["shape"], D["record"], D["isOptional"]>;
-
-export type AnyCoMapSchema =
-  | CoMapSchema<any, undefined>
-  | CoMapSchema<any, CoMapRecordDef>
-  | CoMapSchema<any, undefined | CoMapRecordDef>;
-export type AnyCoMapSchemaDefinition =
-  | CoMapSchemaDefinition<any, undefined>
-  | CoMapSchemaDefinition<any, CoMapRecordDef>
-  | CoMapSchemaDefinition<any, undefined | CoMapRecordDef>;
-
-export class CoMapSchema<
+export interface CoMapSchema<
   S extends CoMapSchemaShape,
   R extends CoMapRecordDef | undefined = CoMapRecordDef | undefined,
   O extends boolean = boolean,
 > {
+  shape: S;
+  record: R;
+  isOptional: O;
+
+  get(key: CoMapSchemaKey<CoMapSchema<S, R>>): CoMapField | undefined;
+  optional(): CoMapSchema<S, R, true>;
+  catchall<T extends CoMapField>(
+    type: T,
+  ): CoMapSchema<S, { key: ZodString; value: T }, O>;
+  keys(): (keyof S & string)[];
+}
+
+export type CoMapSchemaToClass<D extends AnyCoMapSchema> =
+  D extends AnyCoMapSchema
+    ? D
+    : CoMapSchema<D["shape"], D["record"], D["isOptional"]>;
+
+export type AnyCoMapSchemaClass =
+  | CoMapSchemaClass<any, undefined, true>
+  | CoMapSchemaClass<any, CoMapRecordDef, false>
+  | CoMapSchemaClass<any, undefined | CoMapRecordDef, true>;
+
+export type AnyCoMapSchema =
+  | CoMapSchema<any, undefined>
+  | CoMapSchema<any, CoMapRecordDef>
+  | CoMapSchema<any, undefined | CoMapRecordDef>
+  | AnyCoMapSchemaClass;
+
+export class CoMapSchemaClass<
+  S extends CoMapSchemaShape,
+  R extends CoMapRecordDef | undefined = CoMapRecordDef | undefined,
+  O extends boolean = boolean,
+> implements CoMapSchema<S, R, O>
+{
   shape: S;
   record: R;
   isOptional: O;
@@ -230,11 +235,11 @@ export class CoMapSchema<
     this.isOptional = isOptional;
   }
 
-  optional(): CoMapSchema<S, R, true> {
-    return new CoMapSchema(this.shape, this.record, true);
+  optional() {
+    return new CoMapSchemaClass(this.shape, this.record, true);
   }
 
-  get(key: CoMapSchemaKey<CoMapSchemaDefinition<S, R>>) {
+  get(key: CoMapSchemaKey<CoMapSchema<S, R>>): CoMapField | undefined {
     if (this.shape[key]) {
       return this.shape[key];
     }
@@ -248,23 +253,21 @@ export class CoMapSchema<
     return undefined;
   }
 
-  catchall<T extends CoMapField>(
-    type: T,
-  ): CoMapSchema<S, { key: ZodString; value: T }, O> {
+  catchall<T extends CoMapField>(type: T) {
     const record = {
       key: z.string(),
       value: type,
     };
 
-    return new CoMapSchema(this.shape, record, this.isOptional);
+    return new CoMapSchemaClass(this.shape, record, this.isOptional);
   }
 
   keys() {
     return Object.keys(this.shape) as (keyof S & string)[];
   }
 
-  create<I extends CoMapInit<CoMapSchemaDefinition<S, R>>>(
-    init: CoMapInitStrict<CoMapSchemaDefinition<S, R>, I>,
+  create<I extends CoMapInit<CoMapSchema<S, R>>>(
+    init: CoMapInitStrict<CoMapSchema<S, R>, I>,
     options?:
       | {
           owner: Account | Group;
@@ -273,8 +276,8 @@ export class CoMapSchema<
       | Account
       | Group,
   ): Loaded<
-    CoMapSchemaDefinition<S, R, false>,
-    CoMapInitToRelationsToResolve<CoMapSchemaDefinition<S, R>, I>,
+    CoMapSchema<S, R, false>,
+    CoMapInitToRelationsToResolve<CoMapSchema<S, R>, I>,
     "non-nullable" // We want the loaded type to reflect the init input as we know for sure if values are available or not
   > {
     const { owner, uniqueness } = parseCoValueCreateOptions(options);
