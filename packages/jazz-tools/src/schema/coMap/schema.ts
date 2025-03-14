@@ -9,13 +9,12 @@ import {
   IsDepthLimit,
   addQuestionMarks,
   flatten,
-  simplifyRelationsToResolve,
 } from "../coValue/typeUtils.js";
 import {
   Loaded,
   LoadedCoMap,
-  RelationsToResolve,
-  ValidateResolve,
+  ResolveQuery,
+  ValidateQuery,
 } from "../coValue/types.js";
 import { CoMap, createCoMap } from "./instance.js";
 
@@ -85,7 +84,7 @@ export type CoMapInit<
                 | CoMapInit<UnwrapReference<S, K>, [0, ...CurrentDepth]>
                 | LoadedCoMap<
                     UnwrapReference<S, K>,
-                    RelationsToResolve<UnwrapReference<S, K>>
+                    ResolveQuery<UnwrapReference<S, K>>
                   >
                 | addOptional<UnwrapReference<S, K>>
                 | markSelfReferenceAsOptional<CoMapFieldType<S, K>> // Self references are always optional
@@ -103,7 +102,7 @@ export type CoMapInit<
                     | CoMapInit<UnwrapRecordReference<S>, [0, ...CurrentDepth]>
                     | LoadedCoMap<
                         UnwrapRecordReference<S>,
-                        RelationsToResolve<UnwrapRecordReference<S>>
+                        ResolveQuery<UnwrapRecordReference<S>>
                       >
                     | addOptional<UnwrapRecordReference<S>>
                     | markSelfReferenceAsOptional<CoMapRecordFieldType<S>> // Self references are always optional
@@ -143,46 +142,43 @@ export type CoMapInitToRelationsToResolve<
 > = IsDepthLimit<CurrentDepth> extends true
   ? true
   : I extends CoMapSimpleInit<S>
-    ? ValidateResolve<
+    ? ValidateQuery<
         S,
-        simplifyRelationsToResolve<
-          {
-            [K in keyof I & CoMapSchemaRelationsKeys<S>]: UnwrapReference<
-              S,
-              K
-            > extends infer ChildSchema
-              ? ChildSchema extends AnyCoMapSchema
-                ? I[K] extends CoMap<ChildSchema, infer R>
-                  ? R
-                  : I[K] extends CoMapSimpleInit<ChildSchema>
-                    ? CoMapInitToRelationsToResolve<
-                        ChildSchema,
-                        I[K],
-                        [0, ...CurrentDepth]
-                      >
-                    : never
-                : never
-              : never;
-          } & (S["record"] extends undefined
-            ? unknown
-            : {
-                [K in keyof I &
-                  CoMapRecordKey<S>]: UnwrapRecordReference<S> extends infer ChildSchema
-                  ? ChildSchema extends AnyCoMapSchema
-                    ? I[K] extends CoMap<ChildSchema, infer R>
-                      ? R
-                      : I[K] extends CoMapSimpleInit<ChildSchema>
-                        ? CoMapInitToRelationsToResolve<
-                            ChildSchema,
-                            I[K],
-                            [0, ...CurrentDepth]
-                          >
-                        : never
-                    : never
-                  : never;
-              })
-        >,
-        true
+        {
+          [K in keyof I & CoMapSchemaRelationsKeys<S>]: UnwrapReference<
+            S,
+            K
+          > extends infer ChildSchema
+            ? ChildSchema extends AnyCoMapSchema
+              ? I[K] extends CoMap<ChildSchema, infer R>
+                ? R
+                : I[K] extends CoMapSimpleInit<ChildSchema>
+                  ? CoMapInitToRelationsToResolve<
+                      ChildSchema,
+                      I[K],
+                      [0, ...CurrentDepth]
+                    >
+                  : never
+              : never
+            : never;
+        } & (S["record"] extends undefined
+          ? unknown
+          : {
+              [K in keyof I &
+                CoMapRecordKey<S>]: UnwrapRecordReference<S> extends infer ChildSchema
+                ? ChildSchema extends AnyCoMapSchema
+                  ? I[K] extends CoMap<ChildSchema, infer R>
+                    ? R
+                    : I[K] extends CoMapSimpleInit<ChildSchema>
+                      ? CoMapInitToRelationsToResolve<
+                          ChildSchema,
+                          I[K],
+                          [0, ...CurrentDepth]
+                        >
+                      : never
+                  : never
+                : never;
+            })
       >
     : true;
 

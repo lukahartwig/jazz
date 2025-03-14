@@ -7,11 +7,7 @@ import { AnonymousJazzAgent, ID } from "../../internal.js";
 import { coValuesCache } from "../../lib/cache.js";
 import { isOptional } from "../coValue/optional.js";
 import { SelfReference, isSelfReference } from "../coValue/self.js";
-import {
-  Loaded,
-  RelationsToResolve,
-  RelationsToResolveStrict,
-} from "../coValue/types.js";
+import { Loaded, ResolveQuery, ResolveQueryStrict } from "../coValue/types.js";
 import { CoValueResolutionNode, ensureCoValueLoaded } from "../subscribe.js";
 import {
   AnyCoMapSchema,
@@ -47,14 +43,14 @@ type PropertyType<
 
 export type CoMap<
   D extends AnyCoMapSchema,
-  R extends RelationsToResolve<D> = true,
+  R extends ResolveQuery<D> = true,
 > = {
   $jazz: CoMapJazzApi<D, R>;
 };
 
 export class CoMapJazzApi<
   D extends AnyCoMapSchema,
-  R extends RelationsToResolve<D> = true,
+  R extends ResolveQuery<D> = true,
 > {
   raw: RawCoMap;
   schema: D;
@@ -141,8 +137,8 @@ export class CoMapJazzApi<
    *
    * @category Subscription & Loading
    */
-  ensureLoaded<O extends RelationsToResolve<D>>(options: {
-    resolve: RelationsToResolveStrict<D, O>;
+  ensureLoaded<O extends ResolveQuery<D>>(options: {
+    resolve: ResolveQueryStrict<D, O>;
   }): Promise<Loaded<D, O>> {
     return ensureCoValueLoaded<D, R, O>(this._instance, {
       resolve: options.resolve,
@@ -197,7 +193,7 @@ export function createCoMap<D extends AnyCoMapSchema>(
 
 export function createCoMapFromRaw<
   D extends AnyCoMapSchema,
-  R extends RelationsToResolve<D>,
+  R extends ResolveQuery<D>,
 >(
   schema: D,
   raw: RawCoMap,

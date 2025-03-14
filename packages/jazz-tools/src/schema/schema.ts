@@ -18,7 +18,7 @@ export { z };
 export type { CoMap } from "./coMap/instance.js";
 export type { CoMapSchema } from "./coMap/schema.js";
 export type {
-  RelationsToResolve,
-  RelationsToResolveStrict,
+  ResolveQuery,
+  ResolveQueryStrict,
   Loaded,
 } from "./coValue/types.js";

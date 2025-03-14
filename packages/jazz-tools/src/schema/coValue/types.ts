@@ -11,18 +11,14 @@ import {
   UnwrapRecordReference,
   UnwrapReference,
 } from "../coMap/schema.js";
-import {
-  IsDepthLimit,
-  flatten,
-  simplifyRelationsToResolve,
-} from "./typeUtils.js";
+import { IsDepthLimit, flatten, simplifyResolveQuery } from "./typeUtils.js";
 
-export type RelationsToResolveStrict<
+export type ResolveQueryStrict<
   T extends CoValueSchema,
   V,
-> = V extends RelationsToResolve<T> ? RelationsToResolve<T> : V;
+> = V extends ResolveQuery<T> ? ResolveQuery<T> : V;
 
-export type RelationsToResolve<
+export type ResolveQuery<
   S extends CoValueSchema,
   CurrentDepth extends number[] = [],
 > =
@@ -30,22 +26,19 @@ export type RelationsToResolve<
   | (IsDepthLimit<CurrentDepth> extends true
       ? true
       : S extends AnyCoMapSchema
-        ? simplifyRelationsToResolve<
+        ? simplifyResolveQuery<
             {
               [K in CoMapSchemaRelationsKeys<S>]?: UnwrapReference<
                 S,
                 K
               > extends CoValueSchema
-                ? RelationsToResolve<
-                    UnwrapReference<S, K>,
-                    [0, ...CurrentDepth]
-                  >
+                ? ResolveQuery<UnwrapReference<S, K>, [0, ...CurrentDepth]>
                 : never;
             } & (S["record"] extends undefined
               ? unknown
               : {
                   [K in CoMapRecordKey<S>]?: UnwrapRecordReference<S> extends CoValueSchema
-                    ? RelationsToResolve<
+                    ? ResolveQuery<
                         UnwrapRecordReference<S>,
                         [0, ...CurrentDepth]
                       >
@@ -54,7 +47,7 @@ export type RelationsToResolve<
           >
         : true);
 
-export type isResolveLeaf<R> = R extends boolean | undefined
+export type isQueryLeafNode<R> = R extends boolean | undefined
   ? true
   : keyof R extends never // R = {}
     ? true
@@ -84,8 +77,9 @@ export type LoadedCoMap<
           : UnwrapReference<S, K> extends infer ChildSchema
             ? ChildSchema extends AnyCoMapSchema
               ? K extends keyof R
-                ? R[K] extends RelationsToResolve<ChildSchema>
-                  ? IsDepthLimit<CurrentDepth> & isResolveLeaf<R> extends false
+                ? R[K] extends ResolveQuery<ChildSchema>
+                  ? IsDepthLimit<CurrentDepth> &
+                      isQueryLeafNode<R> extends false
                     ?
                         | Loaded<
                             ChildSchema,
@@ -107,9 +101,9 @@ export type LoadedCoMap<
               : UnwrapRecordReference<S> extends infer ChildSchema
                 ? ChildSchema extends AnyCoMapSchema
                   ? K extends keyof R
-                    ? R[K] extends RelationsToResolve<ChildSchema>
+                    ? R[K] extends ResolveQuery<ChildSchema>
                       ? IsDepthLimit<CurrentDepth> &
-                          isResolveLeaf<R> extends false
+                          isQueryLeafNode<R> extends false
                         ?
                             | Loaded<
                                 ChildSchema,
@@ -125,16 +119,15 @@ export type LoadedCoMap<
                 : UnwrapZodType<CoMapFieldType<S, K>, never>;
           })
     : never) &
-    (R extends RelationsToResolve<S> ? CoMap<S, R> : unknown)
+    (R extends ResolveQuery<S> ? CoMap<S, R> : unknown)
 >;
 
 export type UnwrapZodType<T, O> = T extends ZodTypeAny ? TypeOf<T> : O;
 
-export type ValidateResolve<
+export type ValidateQuery<
   D extends CoValueSchema,
   I,
-  E,
-> = I extends RelationsToResolve<D> ? I : E;
+> = I extends ResolveQuery<D> ? simplifyResolveQuery<I> : true;
 
 export type addNullable<
   O extends "nullable" | "non-nullable",

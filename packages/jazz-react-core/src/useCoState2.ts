@@ -3,8 +3,8 @@ import type { Account } from "jazz-tools";
 import type {
   CoMapSchema,
   Loaded,
-  RelationsToResolve,
-  RelationsToResolveStrict,
+  ResolveQuery,
+  ResolveQueryStrict,
 } from "jazz-tools/dist/schema/schema.js";
 import { useCallback, useRef, useState, useSyncExternalStore } from "react";
 import { useJazzContextManager } from "./hooks.js";
@@ -15,7 +15,7 @@ import {
 
 export function createCoValueObservable<
   V extends AnyCoMapSchema,
-  const R extends RelationsToResolve<V>,
+  const R extends ResolveQuery<V>,
 >() {
   let currentValue: Loaded<V, R> | undefined | null = undefined;
   let subscriberCount = 0;
@@ -25,7 +25,7 @@ export function createCoValueObservable<
     id: ID<V>,
     options: {
       loadAs: Account | AnonymousJazzAgent;
-      resolve?: RelationsToResolveStrict<V, R>;
+      resolve?: ResolveQueryStrict<V, R>;
       onUnavailable?: () => void;
       onUnauthorized?: () => void;
       syncResolution?: boolean;
@@ -74,7 +74,7 @@ export function createCoValueObservable<
 
 function useCoValueObservable<
   V extends AnyCoMapSchema,
-  const R extends RelationsToResolve<V>,
+  const R extends ResolveQuery<V>,
 >() {
   const [initialValue] = useState(() => createCoValueObservable<V, R>());
   const ref = useRef(initialValue);
@@ -94,11 +94,11 @@ function useCoValueObservable<
 
 export function useCoState2<
   V extends AnyCoMapSchema,
-  const R extends RelationsToResolve<V> = true,
+  const R extends ResolveQuery<V> = true,
 >(
   Schema: V,
   id: ID<V> | undefined,
-  options?: { resolve?: RelationsToResolveStrict<V, R> },
+  options?: { resolve?: ResolveQueryStrict<V, R> },
 ): Loaded<V, R> | undefined | null {
   const contextManager = useJazzContextManager();
 

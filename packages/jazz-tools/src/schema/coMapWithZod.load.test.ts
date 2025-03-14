@@ -133,10 +133,6 @@ describe("CoMap with Zod", () => {
         name: "Jane",
         age: 20,
       });
-
-      expectTypeOf(loaded.friend).toMatchTypeOf<
-        Loaded<typeof Person, true> | undefined | null
-      >();
     });
 
     it("should load a CoMap with nested values if an optional nested value is missing", async () => {

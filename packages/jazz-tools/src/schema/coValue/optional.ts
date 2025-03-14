@@ -11,7 +11,9 @@ export type isOptional<T> = T extends {
 
 export type addOptional<T> = isOptional<T> extends true ? undefined : never;
 
-export function optional<T extends { optional: () => any }>(value: T) {
+export function optional<T extends { optional: () => any }>(
+  value: T,
+): T extends { optional: () => infer O } ? O : never {
   return value.optional();
 }
 

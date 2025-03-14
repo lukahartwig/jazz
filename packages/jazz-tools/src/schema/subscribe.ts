@@ -5,16 +5,12 @@ import { AnonymousJazzAgent, ID } from "../internal.js";
 import { createCoMapFromRaw, isRelationRef } from "./coMap/instance.js";
 import { CoValueSchema } from "./coMap/schema.js";
 import { isSelfReference } from "./coValue/self.js";
-import {
-  Loaded,
-  RelationsToResolve,
-  RelationsToResolveStrict,
-} from "./coValue/types.js";
+import { Loaded, ResolveQuery, ResolveQueryStrict } from "./coValue/types.js";
 
-type SubscribeListener<
-  D extends CoValueSchema,
-  R extends RelationsToResolve<D>,
-> = (value: Loaded<D, R>, unsubscribe: () => void) => void;
+type SubscribeListener<D extends CoValueSchema, R extends ResolveQuery<D>> = (
+  value: Loaded<D, R>,
+  unsubscribe: () => void,
+) => void;
 
 function createResolvablePromise<T>() {
   let resolve!: (value: T) => void;
@@ -81,7 +77,7 @@ class Subscription {
 
 export class CoValueResolutionNode<
   D extends CoValueSchema,
-  R extends RelationsToResolve<D>,
+  R extends ResolveQuery<D>,
 > {
   childNodes = new Map<string, CoValueResolutionNode<CoValueSchema, any>>();
   childValues = new Map<string, Loaded<any, any> | undefined>();
@@ -92,7 +88,7 @@ export class CoValueResolutionNode<
 
   constructor(
     public node: LocalNode,
-    public resolve: RelationsToResolve<D>,
+    public resolve: ResolveQuery<D>,
     public id: ID<D>,
     public schema: D,
   ) {
@@ -210,7 +206,7 @@ export class CoValueResolutionNode<
         this.childValues.set(key, undefined);
         const child = new CoValueResolutionNode(
           node,
-          resolve[key] as RelationsToResolve<any>,
+          resolve[key] as ResolveQuery<any>,
           raw.get(key) as ID<any>,
           childSchema,
         );
@@ -230,12 +226,12 @@ export class CoValueResolutionNode<
 
 export function subscribeToCoValue<
   D extends CoValueSchema,
-  R extends RelationsToResolve<D>,
+  R extends ResolveQuery<D>,
 >(
   schema: D,
   id: ID<D>,
   options: {
-    resolve?: RelationsToResolveStrict<D, R>;
+    resolve?: ResolveQueryStrict<D, R>;
     loadAs?: Account | AnonymousJazzAgent;
     onUnavailable?: () => void;
     onUnauthorized?: () => void;
@@ -271,14 +267,11 @@ export function subscribeToCoValue<
   return unsubscribe;
 }
 
-export function loadCoValue<
-  D extends CoValueSchema,
-  R extends RelationsToResolve<D>,
->(
+export function loadCoValue<D extends CoValueSchema, R extends ResolveQuery<D>>(
   schema: D,
   id: ID<D>,
   options?: {
-    resolve?: RelationsToResolveStrict<D, R>;
+    resolve?: ResolveQueryStrict<D, R>;
     loadAs?: Account | AnonymousJazzAgent;
   },
 ) {
@@ -306,11 +299,11 @@ export function loadCoValue<
 
 export async function ensureCoValueLoaded<
   D extends CoValueSchema,
-  I extends RelationsToResolve<D>,
-  R extends RelationsToResolve<D>,
+  I extends ResolveQuery<D>,
+  R extends ResolveQuery<D>,
 >(
   existing: Loaded<D, I>,
-  options?: { resolve?: RelationsToResolveStrict<D, R> } | undefined,
+  options?: { resolve?: ResolveQueryStrict<D, R> } | undefined,
 ) {
   const response = await loadCoValue<D, R>(
     existing.$jazz.schema as D,

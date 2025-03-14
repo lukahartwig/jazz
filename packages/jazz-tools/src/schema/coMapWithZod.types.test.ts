@@ -2,15 +2,11 @@ import { beforeEach, describe, expect, expectTypeOf, it } from "vitest";
 import { createJazzTestAccount } from "../testing.js";
 import { CoMapJazzApi } from "./coMap/instance.js";
 import {
-  AnyCoMapSchema,
   CoMapInit,
-  CoMapInitStrict,
   CoMapInitToRelationsToResolve,
   CoMapSchema,
-  CoValueSchema,
-  UnwrapReference,
 } from "./coMap/schema.js";
-import { CoMap, Loaded, RelationsToResolve, co, z } from "./schema.js";
+import { CoMap, Loaded, ResolveQuery, co, z } from "./schema.js";
 
 beforeEach(async () => {
   await createJazzTestAccount({
@@ -19,14 +15,14 @@ beforeEach(async () => {
 });
 
 describe("CoMap - with zod based schema", () => {
-  describe("RelationsToResolve", () => {
+  describe("ResolveQuery", () => {
     it("should properly parse a schema without relations", () => {
       const Person = co.map({
         name: z.string(),
         age: z.number(),
       });
 
-      type Result = RelationsToResolve<typeof Person>;
+      type Result = ResolveQuery<typeof Person>;
 
       expectTypeOf<Result>().toEqualTypeOf<true>();
     });
@@ -40,7 +36,7 @@ describe("CoMap - with zod based schema", () => {
         }),
       });
 
-      type Result = RelationsToResolve<typeof Person>;
+      type Result = ResolveQuery<typeof Person>;
 
       expectTypeOf<Result>().toEqualTypeOf<
         | true
@@ -50,6 +46,17 @@ describe("CoMap - with zod based schema", () => {
       >();
     });
 
+    it("should pick up relations from the catchall", () => {
+      const Person = co.map({
+        name: z.string(),
+        age: z.number(),
+      });
+
+      type Result = ResolveQuery<typeof Person>;
+
+      expectTypeOf<Result>().toEqualTypeOf<true>();
+    });
+
     it("should properly parse a schema with a self reference", () => {
       const Person = co.map({
         name: z.string(),
@@ -57,7 +64,7 @@ describe("CoMap - with zod based schema", () => {
         friend: co.self(),
       });
 
-      type Result = RelationsToResolve<typeof Person>;
+      type Result = ResolveQuery<typeof Person>;
 
       expectTypeOf<Result>().toMatchTypeOf<
         | true
@@ -98,7 +105,7 @@ describe("CoMap - with zod based schema", () => {
         PersonSchema["record"],
         PersonSchema["isOptional"]
       >;
-      type Result = RelationsToResolve<PersonSchemaDefinition>;
+      type Result = ResolveQuery<PersonSchemaDefinition>;
 
       expectTypeOf<Result>().toEqualTypeOf<
         | true
@@ -481,7 +488,7 @@ describe("CoMap - with zod based schema", () => {
         PersonSchema["record"],
         PersonSchema["isOptional"]
       >;
-      type Result = RelationsToResolve<PersonSchemaDefinition>;
+      type Result = ResolveQuery<PersonSchemaDefinition>;
 
       expectTypeOf<Result>().toEqualTypeOf<
         | true
@@ -489,199 +496,6 @@ describe("CoMap - with zod based schema", () => {
             address?: true;
           }
       >();
-    });
-  });
-
-  describe("CoMapInitStrict", () => {
-    it("should properly parse a schema without relations", () => {
-      const Person = co.map({
-        name: z.string(),
-        age: z.number().optional(),
-      });
-
-      type Ok = CoMapInitStrict<
-        typeof Person,
-        {
-          name: string;
-        }
-      >;
-
-      expectTypeOf<Ok>().toEqualTypeOf<{
-        name: string;
-        age?: number;
-      }>();
-
-      type Fail = CoMapInitStrict<
-        typeof Person,
-        {
-          name: string;
-          age: string;
-          anotherField: string;
-        }
-      >;
-
-      expectTypeOf<Fail>().toEqualTypeOf<{
-        name: string;
-        age: string;
-        anotherField: string;
-      }>();
-    });
-
-    it("should properly parse a schema with a relation", () => {
-      const Person = co.map({
-        name: z.string(),
-        age: z.number(),
-        address: co.map({
-          street: z.string(),
-        }),
-      });
-
-      type Ok = CoMapInitStrict<
-        typeof Person,
-        {
-          name: string;
-          age: number;
-          address: {
-            street: string;
-          };
-        }
-      >;
-
-      expectTypeOf<Ok>().toEqualTypeOf<CoMapInit<typeof Person>>();
-
-      type Fail = CoMapInitStrict<
-        typeof Person,
-        {
-          name: string;
-          anotherField: string;
-        }
-      >;
-
-      expectTypeOf<Fail>().toEqualTypeOf<{
-        name: string;
-        anotherField: string;
-      }>();
-    });
-
-    it("should properly parse a schema with an optional relation", () => {
-      const Person = co.map({
-        name: z.string(),
-        age: z.number(),
-        address: co
-          .map({
-            street: z.string(),
-          })
-          .optional(),
-      });
-
-      type Ok = CoMapInitStrict<
-        typeof Person,
-        {
-          name: string;
-          age: number;
-        }
-      >;
-
-      expectTypeOf<Ok>().toEqualTypeOf<CoMapInit<typeof Person>>();
-
-      type Fail = CoMapInitStrict<
-        typeof Person,
-        {
-          name: string;
-          anotherField: string;
-        }
-      >;
-
-      expectTypeOf<Fail>().toEqualTypeOf<{
-        name: string;
-        anotherField: string;
-      }>();
-    });
-
-    it("should properly parse a schema with a self reference", () => {
-      const Person = co.map({
-        name: z.string(),
-        age: z.number(),
-        friend: co.self(),
-      });
-
-      type Ok = CoMapInitStrict<
-        typeof Person,
-        {
-          name: string;
-          age: number;
-          friend: {
-            name: string;
-            age: number;
-          };
-        }
-      >;
-
-      type Ok2 = CoMapInitStrict<
-        typeof Person,
-        {
-          name: string;
-          age: number;
-        }
-      >;
-
-      expectTypeOf<Ok>().toEqualTypeOf<CoMapInit<typeof Person>>();
-      expectTypeOf<Ok2>().toEqualTypeOf<CoMapInit<typeof Person>>();
-
-      type Fail = CoMapInitStrict<
-        typeof Person,
-        {
-          name: string;
-          anotherField: string;
-        }
-      >;
-
-      expectTypeOf<Fail>().toEqualTypeOf<{
-        name: string;
-        anotherField: string;
-      }>();
-    });
-
-    it("should return the same result when providing a SchemaDefinition", () => {
-      const Person = co.map({
-        name: z.string(),
-        age: z.number(),
-        address: co.map({
-          street: z.string(),
-        }),
-      });
-
-      type PersonSchema = typeof Person;
-      type PersonSchemaDefinition = CoMapSchema<
-        PersonSchema["shape"],
-        PersonSchema["record"],
-        PersonSchema["isOptional"]
-      >;
-      type Ok = CoMapInitStrict<
-        PersonSchemaDefinition,
-        {
-          name: string;
-          age: number;
-          address: {
-            street: string;
-          };
-        }
-      >;
-
-      expectTypeOf<Ok>().toEqualTypeOf<CoMapInit<typeof Person>>();
-
-      type Fail = CoMapInitStrict<
-        PersonSchemaDefinition,
-        {
-          name: string;
-          anotherField: string;
-        }
-      >;
-
-      expectTypeOf<Fail>().toEqualTypeOf<{
-        name: string;
-        anotherField: string;
-      }>();
     });
   });
 });
