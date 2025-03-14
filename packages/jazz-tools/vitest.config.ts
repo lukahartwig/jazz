@@ -1,10 +1,14 @@
-import { defineProject } from "vitest/config";
+import { defineConfig } from "vitest/config";
 
-export default defineProject({
+export default defineConfig({
   test: {
-    name: "jazz-tools",
     typecheck: {
-      include: ["**/*.types.test.ts", "src/schema/coMapWithZod.types.test.ts"],
+      enabled: true,
+      include: [
+        "**/*.types.test.ts",
+        "src/schema/coMapWithZod.test.ts",
+        "src/schema/coMapWithZod.load.test.ts",
+      ],
       checker: "tsc",
     },
   },
