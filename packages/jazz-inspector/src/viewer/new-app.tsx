@@ -26,6 +26,7 @@ export function JazzInspector({ position = "right" }: { position?: Position }) {
     if (coValueId) {
       setPage(coValueId);
     }
+    setCoValueId("");
   };
   const positionClasses = {
     "bottom right": "bottom-0 right-0",
@@ -63,9 +64,29 @@ export function JazzInspector({ position = "right" }: { position?: Position }) {
 
   return (
     <div className="fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 p-4 dark:border-stone-900 dark:bg-stone-925">
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex items-center gap-4 mb-4">
         <Breadcrumbs path={path} onBreadcrumbClick={goToIndex} />
-        <button onClick={() => setOpen(false)}>Close</button>
+        <div className="flex-1">
+          <form onSubmit={handleCoValueIdSubmit}>
+            {path.length !== 0 && (
+              <input
+                className="border p-2 rounded-lg min-w-[21rem] font-mono"
+                placeholder="co_z1234567890abcdef123456789"
+                value={coValueId}
+                onChange={(e) =>
+                  setCoValueId(e.target.value as CoID<RawCoValue>)
+                }
+              />
+            )}
+          </form>
+        </div>
+        <button
+          className="ml-auto"
+          type="button"
+          onClick={() => setOpen(false)}
+        >
+          Close
+        </button>
       </div>
 
       <PageStack
