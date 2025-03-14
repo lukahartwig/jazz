@@ -224,7 +224,7 @@ function RenderCoBinaryStream({
         <LabelContentPair
           label="Mime Type"
           content={
-            <span className="font-mono bg-gray-100 rounded px-2 py-1 text-sm">
+            <span className="font-mono bg-gray-100 rounded px-2 py-1 text-sm dark:bg-stone-900">
               {mimeType || "No mime type"}
             </span>
           }
@@ -253,7 +253,7 @@ function RenderCoBinaryStream({
         <LabelContentPair
           label="Preview"
           content={
-            <div className="bg-gray-50 p-3 rounded">
+            <div className="bg-gray-50  dark:bg-gray-925 p-3 rounded">
               <RenderBlobImage blob={blob} />
             </div>
           }
@@ -277,7 +277,7 @@ function RenderCoStream({
     <div className="grid grid-cols-3 gap-2">
       {userCoIds.map((id, idx) => (
         <div
-          className="p-3 rounded-lg overflow-hidden bg-white border border-gray-200 cursor-pointer shadow-sm hover:bg-gray-100/5"
+          className="p-3 rounded-lg overflow-hidden  border border-gray-200 cursor-pointer shadow-sm hover:bg-gray-100/5"
           key={id}
         >
           <AccountOrGroupPreview coId={id as CoID<RawCoValue>} node={node} />
