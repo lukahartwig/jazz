@@ -22,7 +22,7 @@ class Task extends CoMap {
 // ...
 
 // Subscribe to a Task by ID
-const unsubscribe = Task.subscribe(taskId, { /* loading depth */ }, (updatedTask) => {
+const unsubscribe = Task.subscribe(taskId, { resolve: {} }, (updatedTask) => {
   console.log("Task updated:", updatedTask.title);
   console.log("New status:", updatedTask.status);
 });
@@ -31,6 +31,73 @@ const unsubscribe = Task.subscribe(taskId, { /* loading depth */ }, (updatedTask
 unsubscribe();
 ```
 </CodeGroup>
+
+## Loading States and Permission Checking
+
+When subscribing to or loading a CoValue, you need to handle three possible states:
+
+- `undefined`: The initial loading state, indicating the value is being fetched
+- `null`: The CoValue was not found or is not accessible (e.g., due to permissions)
+- `Value`: The successfully loaded CoValue instance
+
+This allows you to handle loading, error, and success states in your application:
+
+<CodeGroup>
+```ts
+Task.subscribe(taskId, { resolve: {} }, (task) => {
+  if (task === undefined) {
+    console.log("Task is loading...");
+  } else if (task === null) {
+    console.log("Task not found or not accessible");
+  } else {
+    console.log("Task loaded:", task.title);
+  }
+});
+```
+</CodeGroup>
+
+### Granular Permission Handling
+
+Jazz implements granular permission checking for collections of items. If a user has access to a list but not to some of its items, those items will be filtered out rather than causing the entire list to be inaccessible:
+
+<CodeGroup>
+```tsx
+class ListOfTasks extends CoList.Of(co.optional.ref(Task)) {}
+
+function TaskList({ projectId }) {
+  // Load a project and its tasks
+  const project = useCoState(Project, projectId, {
+    resolve: {
+      tasks: true
+    }
+  });
+
+  if (project === undefined) return <div>Loading...</div>;
+  if (project === null) return <div>Project not found or access denied</div>;
+
+  return (
+    <div>
+      <h1>{project.name}</h1>
+      <ul>
+        {/* 
+          If the user lacks permission to some tasks, 
+          those items will be null but others will be available
+        */}
+        {project.tasks.map((task, index) => 
+          task ? (
+            <li key={task.id}>{task.title}</li>
+          ) : (
+            <li key={index}>Task not accessible</li>
+          )
+        )}
+      </ul>
+    </div>
+  );
+}
+```
+</CodeGroup>
+
+This approach allows for more flexible UI experiences when working with collections where the user may have mixed permission levels for different items.
 
 ### Static vs. Instance Subscriptions
 
@@ -41,7 +108,7 @@ There are two main ways to subscribe to CoValues:
 <CodeGroup>
 ```ts
 // Subscribe by ID (static method)
-const unsubscribe = Task.subscribe(taskId, { /* loading depth */ }, (task) => {
+const unsubscribe = Task.subscribe(taskId, { resolve: {} }, (task) => {
   if (task) {
     console.log("Task loaded/updated:", task.title);
   }
@@ -59,7 +126,7 @@ const task = Task.create({
   title: "Cut the grass",
 });
 if (task) {
-  const unsubscribe = task.subscribe({ /* loading depth */ }, (updatedTask) => {
+  const unsubscribe = task.subscribe({ resolve: {} }, (updatedTask) => {
     console.log("Task updated:", updatedTask.title);
   });
 }
@@ -72,7 +139,7 @@ When working with related CoValues (like tasks in a project), you often need to 
 
 ### Loading Depth Specifications
 
-Loading depth specifications let you declare exactly which references to load and how deep to go:
+Loading depth specifications let you declare exactly which references to load and how deep to go using the `resolve` property:
 
 <CodeGroup>
 ```ts
@@ -88,59 +155,144 @@ class Task extends CoMap {
   assignee = co.optional.ref(TeamMember);
 }
 
-// Load just the project, not its tasks
-const project = await Project.load(projectId, {});
+// Load just the project, not its references
+const project = await Project.load(projectId, { 
+  resolve: {} 
+});
 
-// Load the project and its tasks (but not subtasks)
+// Load the project and its tasks
 const projectWithTasks = await Project.load(projectId, { 
-  tasks: {}
+  resolve: { 
+    tasks: true 
+  } 
 });
 
 // Load the project, its tasks, and their subtasks
 const projectDeep = await Project.load(projectId, {
-  tasks: {
-    subtasks: {}
+  resolve: {
+    tasks: {
+      $each: {
+        subtasks: true
+      }
+    }
   }
 });
 
 // Load the project, its tasks, and task assignees
 const projectWithAssignees = await Project.load(projectId, {
-  tasks: {
-    assignee: {}
+  resolve: {
+    tasks: {
+      $each: {
+        assignee: true
+      }
+    }
   }
-});
-
-// Complex loading pattern: load project, tasks with their subtasks, and the project owner
-const fullyLoaded = await Project.load(projectId, {
-  tasks: {
-    subtasks: {}
-  },
-  owner: {}
 });
 ```
 </CodeGroup>
 
-The depth specification object mirrors the structure of your data model, making it intuitive to express which parts of the graph you want to load.
+The depth specification uses the `resolve` property to define which parts of the graph you want to load, making it intuitive to express complex loading patterns.
 
-### Array Notation for Lists
+### Loading Lists
 
-For lists, you can use array notation to specify how to load the items:
+For lists, Jazz provides a simplified syntax using a boolean value:
 
 <CodeGroup>
 ```ts
-// Load project with all tasks but load each task shallowly
+// Load project with all tasks shallowly
 const project = await Project.load(projectId, {
-  tasks: [{}]
+  resolve: {
+    tasks: true  // Simplified syntax for loading all items in a list
+  }
 });
 
-// Load project with tasks and load subtasks for each task
+// For more complex loading patterns, use $each
 const project = await Project.load(projectId, {
-  tasks: [{
-    subtasks: [{}]
-  }]
+  resolve: {
+    tasks: {
+      $each: {
+        subtasks: true,
+        assignee: true
+      }
+    }
+  }
 });
 ```
 </CodeGroup>
+
+The boolean `true` value is a shorthand that indicates you want to load all items in the list without specifying deeper loading for each item. When you need to load nested properties of list items, use the more explicit `$each` syntax.
+
+### Auto-loading Behavior
+
+Jazz implements automatic loading of nested references on access, even if not explicitly requested in the depth specification. This provides a more intuitive development experience:
+
+<CodeGroup>
+```ts
+// Load just the project
+const project = await Project.load(projectId, { resolve: {} });
+
+// Later, access tasks - they will be automatically loaded when needed
+if (project) {
+  const tasks = project.tasks;  // Tasks will be auto-loaded on access
+  
+  // You can access properties of auto-loaded references
+  if (tasks.length > 0) {
+    console.log(tasks[0].title);  // Title will be available
+  }
+}
+```
+</CodeGroup>
+
+While auto-loading improves the developer experience, it's still best practice to explicitly specify loading patterns for performance-critical code to avoid unnecessary loading delays.
+
+## Type Safety with Resolved Type
+
+Jazz provides the `Resolved` type to help you define and enforce the structure of deeply loaded data in your application. This makes it easier to ensure that components receive the data they expect with proper TypeScript validation.
+
+<CodeGroup>
+```ts
+// Define a type that includes resolved nested data
+type ProjectWithTasks = Resolved<Project, {
+  tasks: true
+}>;
+
+// Component that expects a fully resolved project
+function TaskList({ project }: { project: ProjectWithTasks }) {
+  // TypeScript knows tasks are loaded, so this is type-safe
+  return (
+    <ul>
+      {project.tasks.map(task => (
+        <li key={task.id}>{task.title}</li>
+      ))}
+    </ul>
+  );
+}
+
+// For more complex resolutions
+type FullyLoadedProject = Resolved<Project, {
+  tasks: {
+    $each: {
+      subtasks: true,
+      assignee: true
+    }
+  },
+  owner: true
+}>;
+
+// Function that requires deeply resolved data
+function processProject(project: FullyLoadedProject) {
+  // Safe access to all resolved properties
+  console.log(`Project ${project.name} owned by ${project.owner.name}`);
+  
+  project.tasks.forEach(task => {
+    console.log(`Task: ${task.title}, Assigned to: ${task.assignee?.name}`);
+    console.log(`Subtasks: ${task.subtasks.length}`);
+  });
+}
+```
+</CodeGroup>
+
+Using the `Resolved` type helps catch errors at compile time rather than runtime, ensuring that your components and functions receive data with the proper resolution depth. This is especially useful for larger applications where data is passed between many components.
 
 ## Framework Integration
 
@@ -154,12 +306,19 @@ In React applications, the `useCoState` hook provides a convenient way to subscr
 function GardenPlanner({ projectId }: { projectId: ID<Project> }) {
   // Subscribe to a project and its tasks
   const project = useCoState(Project, projectId, {
-    tasks: [{}]
+    resolve: {
+      tasks: true
+    }
   });
 
   // Handle loading state
-  if (!project) {
+  if (project === undefined) {
     return <div>Loading garden project...</div>;
+  }
+  
+  // Handle not found or not accessible
+  if (project === null) {
+    return <div>Project not found or not accessible</div>;
   }
 
   return (
@@ -204,21 +363,26 @@ const props = defineProps({
 
 // Subscribe to a project and its tasks
 const project = useCoState(Project, props.projectId, {
-  tasks: [{}]
+  resolve: {
+    tasks: true
+  }
 });
 </script>
 
 <template>
-  <div v-if="project">
+  <div v-if="project === undefined">
+    Loading garden project...
+  </div>
+  <div v-else-if="project === null">
+    Project not found or not accessible
+  </div>
+  <div v-else>
     <h1>{{ project.name }}</h1>
     <ul>
       <li v-for="task in project.tasks" :key="task.id">
         {{ task.title }} - {{ task.status }}
       </li>
     </ul>
-  </div>
-  <div v-else>
-    Loading garden project...
   </div>
 </template>
 ```
@@ -239,19 +403,23 @@ In Svelte applications, you can use the `useCoState` function to subscribe to Co
   
   // Subscribe to a project and its tasks
   const project = useCoState(Project, projectId, {
-    tasks: [{}]
+    resolve: {
+      tasks: true
+    }
   });
 </script>
 
-{#if $project}
+{#if $project === undefined}
+  <div>Loading garden project...</div>
+{:else if $project === null}
+  <div>Project not found or not accessible</div>
+{:else}
   <h1>{$project.name}</h1>
   <ul>
     {#each $project.tasks as task (task.id)}
       <li>{task.title} - {task.status}</li>
     {/each}
   </ul>
-{:else}
-  <div>Loading garden project...</div>
 {/if}
 ```
 </CodeGroup>
@@ -264,12 +432,15 @@ Sometimes you need to make sure data is loaded before proceeding with an operati
 <CodeGroup>
 ```ts
 async function completeAllTasks(projectId: ID<Project>) {
-  // Ensure the project and its tasks are loaded
-  const project = await Project.load(projectId, {});
+  // Ensure the project is loaded
+  const project = await Project.load(projectId, { resolve: {} });
   if (!project) return;
   
+  // Ensure tasks are loaded
   const loadedProject = await project.ensureLoaded({
-    tasks: [{}]
+    resolve: {
+      tasks: true
+    }
   });
   
   // Now we can safely access and modify tasks
@@ -282,59 +453,78 @@ async function completeAllTasks(projectId: ID<Project>) {
 
 ## Performance Considerations
 
-Loading depth is directly related to performance. Loading too much data can slow down your application, while loading too little can lead to "undefined" references. Here are some guidelines:
+Loading depth is directly related to performance. Loading too much data can slow down your application, while loading too little can lead to unnecessary auto-loading delays. Here are some guidelines:
 
 - **Load only what you need** for the current view or operation
 - **Preload data** that will be needed soon to improve perceived performance
 - Use **caching** to avoid reloading data that hasn't changed
-
-{/* TODO: Add a note about supporting pagination */}
+- **Be explicit** about loading patterns in performance-critical code
 
 <CodeGroup>
 ```ts
 // Bad: Loading everything deeply
 const project = await Project.load(projectId, {
-  tasks: [{ 
-    subtasks: [{ 
-      comments: [{}] 
-    }]
-  }],
-  members: [{}],
-  resources: [{}]
+  resolve: {
+    tasks: {
+      $each: {
+        subtasks: {
+          $each: {
+            comments: {
+              $each: true
+            }
+          }
+        }
+      }
+    },
+    members: {
+      $each: true
+    },
+    resources: {
+      $each: true
+    }
+  }
 });
 
 // Better: Loading only what's needed for the current view
 const project = await Project.load(projectId, {
-  tasks: [{}]  // Just load the tasks shallowly
+  resolve: {
+    tasks: true  // Just load the tasks shallowly
+  }
 });
 
 // Later, when a task is selected:
 const task = await Task.load(selectedTaskId, {
-  subtasks: [{}]  // Now load its subtasks
+  resolve: {
+    subtasks: true  // Now load its subtasks
+  }
 });
 ```
 </CodeGroup>
 
-## Using a Loading Cache
+## Using the Load Cache
 
 By default, Jazz maintains a cache of loaded CoValues to avoid unnecessary network requests. This means that if you've already loaded a CoValue, subsequent load requests will use the cached version unless you explicitly request a refresh.
 
 <CodeGroup>
 ```ts
 // First load: fetches from network or local storage
-const project = await Project.load(projectId, {});
+const project = await Project.load(projectId, { resolve: {} });
 
 // Later loads: uses cached version if available
-const sameProject = await Project.load(projectId, {});
+const sameProject = await Project.load(projectId, { resolve: {} });
 ```
 </CodeGroup>
+
+
 
 ## Best Practices
 
 1. **Be explicit about loading depths**: Always specify exactly what you need
 2. **Clean up subscriptions**: Always store and call the unsubscribe function when you're done
-3. **Handle loading states**: Check for undefined/null before accessing properties
+3. **Handle all loading states**: Check for undefined (loading), null (not found), and success states
 4. **Use framework integrations**: They handle subscription lifecycle automatically
 5. **Balance depth and performance**: Load only what you need for the current view
+6. **Take advantage of auto-loading**: For simpler use cases, rely on automatic loading of nested references
+7. **Use the Resolved type**: Add compile-time type safety for components that require specific resolution patterns
 
 By effectively using subscriptions and deep loading, you can build responsive, collaborative applications that handle complex data relationships while maintaining good performance.
