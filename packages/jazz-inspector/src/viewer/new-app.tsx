@@ -74,28 +74,19 @@ export function JazzInspector({ position = "right" }: { position?: Position }) {
     <div className="fixed h-[50vh] flex flex-col bottom-0 left-0 w-full bg-white border-t border-gray-200 p-4 dark:border-stone-900 dark:bg-stone-925">
       <div className="flex items-center gap-4 mb-4">
         <Breadcrumbs path={path} onBreadcrumbClick={goToIndex} />
-        <div className="flex-1">
-          <form onSubmit={handleCoValueIdSubmit}>
-            {path.length !== 0 && (
-              <Input
-                label="CoValue ID"
-                className="min-w-[21rem] font-mono"
-                hideLabel
-                placeholder="co_z1234567890abcdef123456789"
-                value={coValueId}
-                onChange={(e) =>
-                  setCoValueId(e.target.value as CoID<RawCoValue>)
-                }
-              />
-            )}
-          </form>
-        </div>
-        <Button
-          variant="plain"
-          className="ml-auto"
-          type="button"
-          onClick={() => setOpen(false)}
-        >
+        <form onSubmit={handleCoValueIdSubmit} className="w-[21rem]">
+          {path.length !== 0 && (
+            <Input
+              label="CoValue ID"
+              className="font-mono"
+              hideLabel
+              placeholder="co_z1234567890abcdef123456789"
+              value={coValueId}
+              onChange={(e) => setCoValueId(e.target.value as CoID<RawCoValue>)}
+            />
+          )}
+        </form>
+        <Button variant="plain" type="button" onClick={() => setOpen(false)}>
           Close
         </Button>
       </div>

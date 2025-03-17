@@ -56,8 +56,7 @@ export function Page({
     <div
       style={style}
       className={
-        className +
-        " absolute z-10 inset-0 border rounded-xl shadow-lg p-6 w-full h-full bg-clip-padding"
+        className + " absolute z-10 inset-0 w-full h-full bg-clip-padding"
       }
     >
       {!isTopLevel && (
@@ -71,7 +70,7 @@ export function Page({
         ></div>
       )}
       <div className="flex justify-between items-center mb-4">
-        <div className="flex flex-col gap-2">
+        <div className="flex items-center gap-3">
           <h2 className="text-2xl font-bold flex flex-col items-start gap-1">
             <span>
               {name}
@@ -83,14 +82,12 @@ export function Page({
               ) : null}
             </span>
           </h2>
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-gray-700 font-medium py-0.5 px-1 -ml-0.5 rounded bg-gray-700/5 inline-block font-mono">
-              {type && <TypeIcon type={type} extendedType={extendedType} />}
-            </span>
-            <span className="text-xs text-gray-700 font-medium py-0.5 px-1 -ml-0.5 rounded bg-gray-700/5 inline-block font-mono">
-              {coId}
-            </span>
-          </div>
+          <span className="text-xs text-gray-700 font-medium py-0.5 px-1 -ml-0.5 rounded bg-gray-700/5 inline-block font-mono">
+            {type && <TypeIcon type={type} extendedType={extendedType} />}
+          </span>
+          <span className="text-xs text-gray-700 font-medium py-0.5 px-1 -ml-0.5 rounded bg-gray-700/5 inline-block font-mono">
+            {coId}
+          </span>
         </div>
       </div>
       <div className="overflow-auto max-h-[calc(100%-4rem)]">

@@ -17,7 +17,7 @@ export function GridView({
   const entries = Object.entries(data);
 
   return (
-    <div className="grid grid-cols-1 gap-4 p-2">
+    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
       {entries.map(([key, child], childIndex) => (
         <Button
           variant="plain"
