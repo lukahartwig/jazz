@@ -3,6 +3,7 @@ import { useAccount } from "jazz-react-core";
 import React, { useState } from "react";
 import { Breadcrumbs } from "./breadcrumbs.js";
 import { Button } from "./button.js";
+import { Input } from "./input.js";
 import { PageStack } from "./page-stack.js";
 import { usePagePath } from "./use-page-path.js";
 
@@ -76,8 +77,10 @@ export function JazzInspector({ position = "right" }: { position?: Position }) {
         <div className="flex-1">
           <form onSubmit={handleCoValueIdSubmit}>
             {path.length !== 0 && (
-              <input
-                className="border p-2 rounded-lg min-w-[21rem] font-mono"
+              <Input
+                label="CoValue ID"
+                className="min-w-[21rem] font-mono"
+                hideLabel
                 placeholder="co_z1234567890abcdef123456789"
                 value={coValueId}
                 onChange={(e) =>
@@ -113,19 +116,23 @@ export function JazzInspector({ position = "right" }: { position?: Position }) {
           }`}
         >
           <fieldset className="flex flex-col gap-2">
-            <h2 className="text-lg font-medium mb-4 text-stone-900 dark:text-white">
+            <h2 className="text-lg text-center font-medium mb-4 text-stone-900 dark:text-white">
               Jazz CoValue Inspector
             </h2>
-            <input
-              className="border border-gray-200 p-4 rounded-lg min-w-[21rem] font-mono"
+            <Input
+              label="CoValue ID"
+              className="min-w-[21rem] font-mono"
+              hideLabel
               placeholder="co_z1234567890abcdef123456789"
               value={coValueId}
               onChange={(e) => setCoValueId(e.target.value as CoID<RawCoValue>)}
             />
             <Button type="submit" variant="primary">
-              Inspect
+              Inspect CoValue
             </Button>
-            <hr />
+
+            <p className="text-center">or</p>
+
             <Button
               variant="secondary"
               onClick={() => {
