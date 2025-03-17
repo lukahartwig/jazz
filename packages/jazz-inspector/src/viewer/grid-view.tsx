@@ -24,8 +24,8 @@ export function GridView({
           key={childIndex}
           className={`p-3 text-left rounded-lg overflow-hidden transition-colors ${
             isCoId(child)
-              ? " border border-gray-200 cursor-pointer shadow-sm hover:bg-gray-100/5"
-              : "bg-gray-50  dark:bg-gray-925"
+              ? "border border-gray-200 shadow-sm hover:bg-gray-100/5"
+              : "bg-gray-50  dark:bg-gray-925 cursor-default"
           }`}
           onClick={() =>
             isCoId(child) &&
