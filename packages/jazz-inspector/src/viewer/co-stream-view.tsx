@@ -1,3 +1,4 @@
+import { Button } from "@/viewer/button";
 import {
   CoID,
   LocalNode,
@@ -146,10 +147,10 @@ const BinaryDownloadButton = ({
   };
 
   return (
-    <button onClick={downloadFile}>
+    <Button variant="secondary" onClick={downloadFile}>
       ⬇️ {label}
       {/* Download {mimeType === "application/pdf" ? "PDF" : "File"} */}
-    </button>
+    </Button>
   );
 };
 
@@ -243,7 +244,7 @@ function RenderCoBinaryStream({
               label={
                 mimeType === "application/pdf"
                   ? "Download PDF"
-                  : "Download File"
+                  : "Download file"
               }
             />
           }

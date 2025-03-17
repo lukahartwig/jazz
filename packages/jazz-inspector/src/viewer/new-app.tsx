@@ -2,6 +2,7 @@ import { CoID, RawCoValue } from "cojson";
 import { useAccount } from "jazz-react-core";
 import React, { useState } from "react";
 import { Breadcrumbs } from "./breadcrumbs.js";
+import { Button } from "./button.js";
 import { PageStack } from "./page-stack.js";
 import { usePagePath } from "./use-page-path.js";
 
@@ -42,9 +43,11 @@ export function JazzInspector({ position = "right" }: { position?: Position }) {
 
   if (!open) {
     return (
-      <button
+      <Button
+        variant="secondary"
+        size="sm"
         onClick={() => setOpen(true)}
-        className={`fixed w-10 h-10 inline-block bottom-0 right-0 m-4 bg-white border rounded-md shadow-md p-1.5 ${positionClasses[position]}`}
+        className={`fixed w-10 h-10 bg-white shadow-sm bottom-0 right-0 m-4 p-1.5 ${positionClasses[position]}`}
       >
         <svg
           className="w-full h-auto relative -left-px text-blue"
@@ -62,7 +65,7 @@ export function JazzInspector({ position = "right" }: { position?: Position }) {
           />
         </svg>
         <span className="sr-only">Open Jazz Inspector</span>
-      </button>
+      </Button>
     );
   }
 
@@ -84,13 +87,14 @@ export function JazzInspector({ position = "right" }: { position?: Position }) {
             )}
           </form>
         </div>
-        <button
+        <Button
+          variant="plain"
           className="ml-auto"
           type="button"
           onClick={() => setOpen(false)}
         >
           Close
-        </button>
+        </Button>
       </div>
 
       <PageStack
@@ -108,7 +112,7 @@ export function JazzInspector({ position = "right" }: { position?: Position }) {
               : "opacity-100"
           }`}
         >
-          <fieldset className="flex flex-col gap-2 text-sm">
+          <fieldset className="flex flex-col gap-2">
             <h2 className="text-lg font-medium mb-4 text-stone-900 dark:text-white">
               Jazz CoValue Inspector
             </h2>
@@ -118,23 +122,19 @@ export function JazzInspector({ position = "right" }: { position?: Position }) {
               value={coValueId}
               onChange={(e) => setCoValueId(e.target.value as CoID<RawCoValue>)}
             />
-            <button
-              type="submit"
-              className="bg-blue text-white py-2 px-4 rounded-md hover:bg-blue-800"
-            >
+            <Button type="submit" variant="primary">
               Inspect
-            </button>
+            </Button>
             <hr />
-            <button
-              type="button"
-              className="border border-gray-200 inline-block py-1.5 px-2 rounded-md"
+            <Button
+              variant="secondary"
               onClick={() => {
                 setCoValueId(me._raw.id);
                 setPage(me._raw.id);
               }}
             >
-              Inspect My Account
-            </button>
+              Inspect my account
+            </Button>
           </fieldset>
         </form>
       </PageStack>

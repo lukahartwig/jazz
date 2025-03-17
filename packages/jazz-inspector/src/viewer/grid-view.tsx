@@ -1,3 +1,4 @@
+import { Button } from "@/viewer/button";
 import { CoID, LocalNode, RawCoValue } from "cojson";
 import { JsonObject } from "cojson";
 import { ResolveIcon } from "./type-icon.js";
@@ -18,9 +19,10 @@ export function GridView({
   return (
     <div className="grid grid-cols-1 gap-4 p-2">
       {entries.map(([key, child], childIndex) => (
-        <div
+        <Button
+          variant="plain"
           key={childIndex}
-          className={`p-3 rounded-lg overflow-hidden transition-colors ${
+          className={`p-3 text-left rounded-lg overflow-hidden transition-colors ${
             isCoId(child)
               ? " border border-gray-200 cursor-pointer shadow-sm hover:bg-gray-100/5"
               : "bg-gray-50  dark:bg-gray-925"
@@ -56,7 +58,7 @@ export function GridView({
               />
             )}
           </div>
-        </div>
+        </Button>
       ))}
     </div>
   );
