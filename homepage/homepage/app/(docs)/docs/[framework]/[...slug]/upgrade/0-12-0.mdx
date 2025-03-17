@@ -1,15 +1,15 @@
 import { CodeGroup } from '@/components/forMdx'
 
-export const metadata = { title: "Jazz 0.11.0 - Deeply resolved data" };
+export const metadata = { title: "Jazz 0.12.0 - Deeply resolved data" };
 
-# Jazz 0.11.0 - Deeply resolved data
+# Jazz 0.12.0 - Deeply resolved data
 
 <h2 className="not-prose text-sm text-stone-600 dark:text-stone-400 mb-5 pb-2 border-b">
-  15 March 2025
+  17 March 2025
 </h2>
 
 <div>
-  Jazz 0.11.0 makes it easier and safer to load nested data. You can now specify exactly which nested data you want to load, and Jazz will check permissions and handle missing data gracefully. This helps catch errors earlier during development and makes your code more reliable.
+  Jazz 0.12.0 makes it easier and safer to load nested data. You can now specify exactly which nested data you want to load, and Jazz will check permissions and handle missing data gracefully. This helps catch errors earlier during development and makes your code more reliable.
 
   <h3>What's new?</h3>
   - New resolve API for a more type-safe deep loading
@@ -66,7 +66,7 @@ Playlist.load(id, {
 
   Now `undefined` means that the value is definitely loading, and `null` means that the value is temporarily missing.
 
-  We also have implemented a more granular permission checking, where if an optional coValue cannot be accessed, useCoState will return the data stripped of that coValue.
+  We also have implemented a more granular permission checking, where if an optional CoValue cannot be accessed, `useCoState` will return the data stripped of that CoValue.
 
 <CodeGroup>
 {/* prettier-ignore */}
