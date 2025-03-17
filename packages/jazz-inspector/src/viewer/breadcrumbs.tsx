@@ -12,7 +12,7 @@ export const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
   onBreadcrumbClick,
 }) => {
   return (
-    <div className="relative z-20 flex gap-2 items-center">
+    <div className="relative z-20 flex-1 flex gap-2 items-center">
       <Button variant="plain" onClick={() => onBreadcrumbClick(-1)}>
         Home
       </Button>
