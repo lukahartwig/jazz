@@ -1,4 +1,5 @@
 import clsx from "clsx";
+import { Button } from "@/viewer/button";
 import { CoID, JsonValue, LocalNode, RawCoValue } from "cojson";
 import React, { useEffect, useState } from "react";
 import { LinkIcon } from "../link-icon.js";
@@ -29,20 +30,32 @@ export function ValueRenderer({
   }
 
   if (typeof json === "string" && json.startsWith("co_")) {
-    return (
-      <span
-        className={clsx(
-          "inline-flex gap-1 items-center",
-          onCoIDClick && "text-blue-500 cursor-pointer hover:underline",
-        )}
-        onClick={() => {
-          onCoIDClick?.(json as CoID<RawCoValue>);
-        }}
-      >
+    const linkClasses = onCoIDClick
+      ? "text-blue cursor-pointer inline-flex gap-1 items-center dark:text-blue-400"
+      : "inline-flex gap-1 items-center";
+
+    const content = (
+      <>
         {json}
         {onCoIDClick && <LinkIcon />}
-      </span>
+      </>
     );
+
+    if (onCoIDClick) {
+      return (
+        <Button
+          className={linkClasses}
+          onClick={() => {
+            onCoIDClick?.(json as CoID<RawCoValue>);
+          }}
+          variant="plain"
+        >
+          {content}
+        </Button>
+      );
+    }
+
+    return <span className={linkClasses}>{content}</span>;
   }
 
   if (typeof json === "string") {
@@ -101,12 +114,13 @@ export function ValueRenderer({
                     .slice(0, 3)
                     .join("\n") + (Object.keys(json).length > 2 ? "\n..." : "")}
             </pre>
-            <button
+            <Button
+              variant="plain"
               onClick={() => setIsExpanded(!isExpanded)}
               className="text-xs text-gray-500 hover:text-gray-700"
             >
               {isExpanded ? "Show less" : "Show more"}
-            </button>
+            </Button>
           </span>
         ) : (
           <pre className="whitespace-pre-wrap">

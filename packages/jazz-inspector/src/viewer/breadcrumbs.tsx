@@ -1,3 +1,4 @@
+import { Button } from "@/viewer/button";
 import React from "react";
 import { PageInfo } from "./types.js";
 
@@ -11,14 +12,10 @@ export const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
   onBreadcrumbClick,
 }) => {
   return (
-    <div className="relative z-20 bg-blue-400/10 backdrop-blur-sm rounded-lg inline-flex px-2 py-1 whitespace-pre transition-all items-center gap-1 min-h-[2.5rem]">
-      <button
-        onClick={() => onBreadcrumbClick(-1)}
-        className="flex items-center justify-center p-1 rounded-sm transition-colors"
-        aria-label="Go to home"
-      >
-        Start
-      </button>
+    <div className="relative z-20 flex gap-2 items-center">
+      <Button variant="plain" onClick={() => onBreadcrumbClick(-1)}>
+        Home
+      </Button>
       {path.map((page, index) => {
         return (
           <span
@@ -30,12 +27,9 @@ export const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
             {index === 0 ? null : (
               <span className="text-blue-600/30">{" / "}</span>
             )}
-            <button
-              onClick={() => onBreadcrumbClick(index)}
-              className="text-blue hover:underline dark:text-blue-400"
-            >
+            <Button variant="tertiary" onClick={() => onBreadcrumbClick(index)}>
               {index === 0 ? page.name || "Root" : page.name}
-            </button>
+            </Button>
           </span>
         );
       })}

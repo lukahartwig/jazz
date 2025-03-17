@@ -1,3 +1,4 @@
+import { Button } from "@/viewer/button";
 import { CoID, LocalNode, RawCoValue } from "cojson";
 import type { JsonObject } from "cojson";
 import { useMemo, useState } from "react";
@@ -68,7 +69,8 @@ export function TableView({
           {resolvedRows.slice(0, visibleRowsCount).map((item, index) => (
             <tr key={index}>
               <td className="p-1">
-                <button
+                <Button
+                  variant="tertiary"
                   onClick={() =>
                     onNavigate([
                       {
@@ -77,10 +79,9 @@ export function TableView({
                       },
                     ])
                   }
-                  className="p-4 whitespace-nowrap text-sm text-gray-500 rounded hover:bg-gray-100 hover:text-blue-500"
                 >
                   <LinkIcon />
-                </button>
+                </Button>
               </td>
               {keys.map((key) => (
                 <td
@@ -119,12 +120,13 @@ export function TableView({
         </span>
         {hasMore && (
           <div className="text-center">
-            <button
+            <Button
+              variant="plain"
               onClick={loadMore}
               className="px-4 py-2 bg-blue text-white rounded hover:bg-blue-800"
             >
               Load more
-            </button>
+            </Button>
           </div>
         )}
       </div>
