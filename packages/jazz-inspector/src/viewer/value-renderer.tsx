@@ -1,8 +1,8 @@
-import clsx from "clsx";
-import { Button } from "@/viewer/button";
 import { CoID, JsonValue, LocalNode, RawCoValue } from "cojson";
+import clsx from "clsx";
 import React, { useEffect, useState } from "react";
 import { LinkIcon } from "../link-icon.js";
+import { Button } from "./button.js";
 import {
   isBrowserImage,
   resolveCoValue,
