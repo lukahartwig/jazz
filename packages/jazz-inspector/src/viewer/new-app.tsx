@@ -21,6 +21,8 @@ export function JazzInspector({ position = "right" }: { position?: Position }) {
   const { me } = useAccount();
   const localNode = me._raw.core.node;
 
+  if (process.env.NODE_ENV !== "development") return;
+
   const handleCoValueIdSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (coValueId) {
@@ -28,6 +30,7 @@ export function JazzInspector({ position = "right" }: { position?: Position }) {
     }
     setCoValueId("");
   };
+
   const positionClasses = {
     "bottom right": "bottom-0 right-0",
     "bottom left": "bottom-0 left-0",
@@ -36,6 +39,7 @@ export function JazzInspector({ position = "right" }: { position?: Position }) {
     right: "right-0 top-1/2 -translate-y-1/2",
     left: "left-0 top-1/2 -translate-y-1/2",
   };
+
   if (!open) {
     return (
       <button
