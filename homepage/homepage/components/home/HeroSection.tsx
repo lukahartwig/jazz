@@ -63,7 +63,7 @@ export function HeroSection() {
             <Link className="text-reset" href="/cloud">
               Jazz Cloud
             </Link>{" "}
-            for instant shareable magic.
+            for zero-config magic.
           </p>
         </Prose>
 
