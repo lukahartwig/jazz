@@ -52,7 +52,7 @@ export class JazzAccount extends Account {
 
     if (this.profile === undefined) {
       const group = Group.create();
-      group.addMember("everyone", "reader"); // The profile info are visible by everyone
+      group.addMember("everyone", "reader"); // The profile info is visible to everyone
 
       this.profile = JazzProfile.create(
         {
