@@ -9,10 +9,9 @@ import {
 } from "cojson";
 import { createWebSocketPeer } from "cojson-transport-ws";
 import { WasmCrypto } from "cojson/crypto/WasmCrypto";
+import { Breadcrumbs, PageStack } from "jazz-inspector";
 import { Trash2 } from "lucide-react";
 import React, { useState, useEffect } from "react";
-import { Breadcrumbs } from "./breadcrumbs";
-import { PageStack } from "./page-stack";
 import { usePagePath } from "./use-page-path";
 import { resolveCoValue, useResolvedCoValue } from "./use-resolve-covalue";
 
@@ -121,7 +120,7 @@ export default function CoJsonViewerApp() {
   }
 
   return (
-    <div className="w-full h-screen bg-gray-100 p-4 overflow-hidden flex flex-col">
+    <div className="w-full h-screen bg-white p-4 overflow-hidden flex flex-col">
       <div className="flex items-center mb-4 gap-4">
         <Breadcrumbs path={path} onBreadcrumbClick={goToIndex} />
         <div className="flex-1">

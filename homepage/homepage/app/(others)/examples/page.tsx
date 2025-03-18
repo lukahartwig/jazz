@@ -213,6 +213,30 @@ const ImageUploadIllustration = () => (
   </div>
 );
 
+const FileUploadIllustration = () => (
+  <div className="flex flex-col items-center justify-center h-full p-8">
+    <div className="p-3 w-[12rem] h-[8rem] border border-dashed border-blue dark:border-blue-500 rounded-lg flex gap-2 flex-col items-center justify-center">
+      <Icon
+        name="upload"
+        size="4xl"
+        className="stroke-blue mx-auto dark:stroke-blue-500"
+      />
+      <p className="whitespace-nowrap text-stone-900 dark:text-white">
+        take-five.mp3
+      </p>
+    </div>
+
+    <div className=" w-[12rem] h-2 rounded-full overflow-hidden bg-stone-200 mt-3">
+      <div className="w-3/4 h-full bg-green-500"/>
+    </div>
+    <div className="w-[12rem] flex justify-between text-xs mt-1.5">
+      <p>Uploading...</p>
+
+      <p>76%</p>
+    </div>
+  </div>
+);
+
 const ReactionsIllustration = () => (
   <div className="flex bg-stone-100 h-full flex-col items-center justify-center dark:bg-transparent">
     <div className="inline-flex justify-center gap-1.5 mx-auto">
@@ -346,11 +370,20 @@ const reactExamples: Example[] = [
   {
     name: "Image upload",
     slug: "image-upload",
-    description: "Learn how to upload and delete images",
+    description: "Learn how to upload and delete images.",
     tech: [tech.react],
     features: [features.imageUpload],
     demoUrl: "https://image-upload-demo.jazz.tools",
     illustration: <ImageUploadIllustration />,
+  },
+  {
+    name: "File upload",
+    slug: "filestream",
+    description: "Upload different types of files, and show upload progress, file size, and type.",
+    tech: [tech.react],
+    features: [features.fileUpload],
+    demoUrl: "https://file-upload-demo.jazz.tools",
+    illustration: <FileUploadIllustration />,
   },
   {
     name: "Reactions",

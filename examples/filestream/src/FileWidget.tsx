@@ -141,7 +141,7 @@ export function FileWidget() {
     return (
       <div className="flex flex-col gap-4">
         <div
-          className="flex flex-col border border-dashed border-2 border-stone-400 h-48 items-center justify-center bg-stone-100 m-5 rounded-md"
+          className="flex flex-col border-2 border-dashed border-stone-400 h-48 items-center justify-center bg-stone-100 m-5 rounded-md"
           ref={dragAndDropElementRef}
           onDragEnter={onDragEnter}
           onDragOver={onDragOver}

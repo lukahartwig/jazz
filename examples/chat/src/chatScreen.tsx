@@ -1,6 +1,6 @@
 import { createImage } from "jazz-browser-media-images";
-import { useCoState } from "jazz-react";
-import { ID } from "jazz-tools";
+import { useAccount, useCoState } from "jazz-react";
+import { Account, ID } from "jazz-tools";
 import { useState } from "react";
 import { Chat, Message } from "./schema.ts";
 import {
@@ -17,6 +17,7 @@ import {
 } from "./ui.tsx";
 
 export function ChatScreen(props: { chatID: ID<Chat> }) {
+  const account = useAccount();
   const chat = useCoState(Chat, props.chatID, [{}]);
   const [showNLastMessages, setShowNLastMessages] = useState(30);
 
@@ -47,7 +48,7 @@ export function ChatScreen(props: { chatID: ID<Chat> }) {
           chat
             .slice(-showNLastMessages)
             .reverse() // this plus flex-col-reverse on ChatBody gives us scroll-to-bottom behavior
-            .map((msg) => <ChatBubble msg={msg} key={msg.id} />)
+            .map((msg) => <ChatBubble me={account.me} msg={msg} key={msg.id} />)
         ) : (
           <EmptyChatMessage />
         )}
@@ -74,7 +75,20 @@ export function ChatScreen(props: { chatID: ID<Chat> }) {
   );
 }
 
-function ChatBubble(props: { msg: Message }) {
+function ChatBubble(props: { me: Account; msg: Message }) {
+  if (!props.me.canRead(props.msg)) {
+    return (
+      <BubbleContainer fromMe={false}>
+        <BubbleBody fromMe={false}>
+          <BubbleText
+            text="Message not readable"
+            className="text-gray-500 italic"
+          />
+        </BubbleBody>
+      </BubbleContainer>
+    );
+  }
+
   const lastEdit = props.msg._edits.text;
   const fromMe = lastEdit.by?.isMe;
   const { text, image } = props.msg;

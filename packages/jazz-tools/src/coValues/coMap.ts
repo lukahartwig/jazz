@@ -711,11 +711,15 @@ const CoMapProxyHandler: ProxyHandler<CoMap> = {
           } else {
             throw new Error(`Cannot set required reference ${key} to null`);
           }
-        } else {
+        } else if (value?.id) {
           target._raw.set(key, value.id);
           subscriptionsScopes
             .get(target)
             ?.onRefAccessedOrSet(target.id, value.id);
+        } else {
+          throw new Error(
+            `Cannot set reference ${key} to a non-CoValue. Got ${value}`,
+          );
         }
       }
       return true;
