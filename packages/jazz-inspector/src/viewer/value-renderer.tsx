@@ -1,3 +1,4 @@
+import clsx from "clsx";
 import { CoID, JsonValue, LocalNode, RawCoValue } from "cojson";
 import React, { useEffect, useState } from "react";
 import { LinkIcon } from "../link-icon.js";
@@ -28,13 +29,12 @@ export function ValueRenderer({
   }
 
   if (typeof json === "string" && json.startsWith("co_")) {
-    const linkClasses = onCoIDClick
-      ? "text-blue-500 cursor-pointer inline-flex gap-1 items-center"
-      : "inline-flex gap-1 items-center";
-
     return (
       <span
-        className={linkClasses}
+        className={clsx(
+          "inline-flex gap-1 items-center",
+          onCoIDClick && "text-blue-500 cursor-pointer hover:underline",
+        )}
         onClick={() => {
           onCoIDClick?.(json as CoID<RawCoValue>);
         }}
@@ -47,22 +47,38 @@ export function ValueRenderer({
 
   if (typeof json === "string") {
     return (
-      <span className="text-teal-900 font-mono dark:text-teal-200">{json}</span>
+      <span className="text-green-900 font-mono">
+        {/* <span className="select-none opacity-70">{'"'}</span> */}
+        {json}
+        {/* <span className="select-none opacity-70">{'"'}</span> */}
+      </span>
     );
   }
 
   if (typeof json === "number") {
-    return <span className="text-purple-500 dark:text-purple-200">{json}</span>;
+    return <span className="text-purple-500">{json}</span>;
   }
 
   if (typeof json === "boolean") {
     return (
       <span
-        className={`inline-block py-0.5 px-1 rounded ${
-          json ? "text-green-700 bg-green-50" : "text-amber-700 bg-amber-50"
-        } font-mono`}
+        className={clsx(
+          json
+            ? "text-green-700 bg-green-700/5"
+            : "text-amber-700 bg-amber-500/5",
+          "font-mono",
+          "inline-block px-1 py-0.5 rounded",
+        )}
       >
         {json.toString()}
+      </span>
+    );
+  }
+
+  if (Array.isArray(json)) {
+    return (
+      <span title={JSON.stringify(json)}>
+        Array <span className="text-gray-500">({json.length})</span>
       </span>
     );
   }
@@ -135,11 +151,16 @@ export const CoMapPreview = ({
       <div>
         <img
           src={snapshot.placeholderDataURL}
-          className="w-8 h-8 border-2 border-white shadow my-2"
+          className="size-8 border-2 border-white drop-shadow-md my-2"
         />
         <span className="text-gray-500 text-sm">
           {snapshot.originalSize[0]} x {snapshot.originalSize[1]}
         </span>
+
+        {/* <CoMapPreview coId={value[]} node={node} /> */}
+        {/* <ProgressiveImg image={value}>
+                    {({ src }) => <img src={src} className={clsx("w-full")} />}
+                </ProgressiveImg> */}
       </div>
     );
   }
@@ -165,13 +186,13 @@ export const CoMapPreview = ({
   }
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="text-sm flex flex-col gap-2 items-start">
       <div className="grid grid-cols-[auto_1fr] gap-2">
         {Object.entries(snapshot)
           .slice(0, limit)
           .map(([key, value]) => (
             <React.Fragment key={key}>
-              <span className="font-bold">{key}: </span>
+              <span className="font-medium">{key}: </span>
               <span>
                 <ValueRenderer json={value} />
               </span>
@@ -179,7 +200,7 @@ export const CoMapPreview = ({
           ))}
       </div>
       {Object.entries(snapshot).length > limit && (
-        <div className="text-left text-sm text-gray-500">
+        <div className="text-left text-xs text-gray-500 mt-2">
           {Object.entries(snapshot).length - limit} more
         </div>
       )}
@@ -226,13 +247,14 @@ export function AccountOrGroupPreview({
   const displayName = extendedType === "account" ? name || "Account" : "Group";
   const displayText = showId ? `${displayName} (${coId})` : displayName;
 
-  const className = onClick
-    ? "text-blue cursor-pointer underline dark:text-blue-400"
-    : "text-gray-500";
+  const props = onClick
+    ? {
+        onClick: () => onClick(displayName),
+        className: "text-blue-500 cursor-pointer hover:underline",
+      }
+    : {
+        className: "text-gray-500",
+      };
 
-  return (
-    <span className={className} onClick={() => onClick?.(displayName)}>
-      {displayText}
-    </span>
-  );
+  return <span {...props}>{displayText}</span>;
 }
