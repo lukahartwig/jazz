@@ -1,8 +1,7 @@
 import { LocalNode } from "cojson";
-import { Breadcrumbs } from "jazz-inspector";
-import { PageStack } from "jazz-inspector";
+import { Breadcrumbs, PageStack } from "jazz-inspector";
 import type { PageInfo } from "jazz-inspector";
-import { usePagePath } from "jazz-inspector";
+import { usePagePath } from "./use-page-path";
 
 export default function CoJsonViewer({
   defaultPath,

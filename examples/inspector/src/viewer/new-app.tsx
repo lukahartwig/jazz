@@ -9,12 +9,11 @@ import {
 } from "cojson";
 import { createWebSocketPeer } from "cojson-transport-ws";
 import { WasmCrypto } from "cojson/crypto/WasmCrypto";
-import { PageStack } from "jazz-inspector";
-import { Breadcrumbs } from "jazz-inspector";
-import { usePagePath } from "jazz-inspector";
-import { resolveCoValue, useResolvedCoValue } from "jazz-inspector";
+import { Breadcrumbs, PageStack } from "jazz-inspector";
 import { Trash2 } from "lucide-react";
 import React, { useState, useEffect } from "react";
+import { usePagePath } from "./use-page-path";
+import { resolveCoValue, useResolvedCoValue } from "./use-resolve-covalue";
 
 interface Account {
   id: CoID<RawAccount>;
