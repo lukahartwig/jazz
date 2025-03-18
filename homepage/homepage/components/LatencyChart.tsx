@@ -58,6 +58,16 @@ export default function LatencyChart({ data }: Props) {
     <>
       <TooltipProvider delayDuration={0} skipDelayDuration={0}>
         <figure className="flex items-stretch w-full gap-px justify-end">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className={cn("rounded-md grow hover:opacity-50 dark:bg-gray-900 bg-gray-200")} />
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>
+                <span className="font-semibold">No data</span>
+              </p>
+            </TooltipContent>
+          </Tooltip>
           {series.map(({ value, ts }) => {
             const valueClass = getClassForValue(value);
             return (
