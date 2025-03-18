@@ -149,9 +149,9 @@ export const docNavigationItems = [
         done: 0,
       },
       {
-        name: "Loading & subscribing",
-        href: "/docs/using-covalues/loading-and-subscribing",
-        done: 0,
+        name: "Subscriptions & Deep Loading",
+        href: "/docs/using-covalues/subscription-and-loading",
+        done: 80,
       },
       {
         name: "History & time travel",

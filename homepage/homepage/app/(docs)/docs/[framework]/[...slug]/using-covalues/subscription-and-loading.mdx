@@ -4,7 +4,7 @@ export const metadata = { title: "Subscriptions & Deep Loading" };
 
 # Subscriptions & Deep Loading
 
-When working with collaborative applications, you need to know when data changes and ensure you have all the necessary related data. Jazz provides powerful subscription and deep loading capabilities that make it easy to keep your UI in sync with the underlying data and efficiently load complex object graphs.
+When working with collaborative applications, you need to know when data changes and ensure you have all the necessary related data. Whether you're using [CoMaps](/docs/using-covalues/comaps), [CoLists](/docs/using-covalues/colists), or [CoFeeds](/docs/using-covalues/cofeeds), Jazz provides powerful subscription and deep loading capabilities that make it easy to keep your UI in sync with the underlying data and efficiently load complex object graphs.
 
 ## Understanding Subscriptions
 
@@ -27,8 +27,14 @@ const unsubscribe = Task.subscribe(taskId, { resolve: {} }, (updatedTask) => {
   console.log("New status:", updatedTask.status);
 });
 
-// Later, when you're done:
+// 🔑 Always clean up when you're done to prevent memory leaks
 unsubscribe();
+
+// For example, in a React component:
+// useEffect(() => {
+//   const unsubscribe = Task.subscribe(taskId, { resolve: {} }, onTaskUpdated);
+//   return () => unsubscribe(); // Clean up on unmount
+// }, [taskId]);
 ```
 </CodeGroup>
 
@@ -135,7 +141,7 @@ if (task) {
 
 ## Deep Loading
 
-When working with related CoValues (like tasks in a project), you often need to load not just the top-level object but also its nested references. Jazz provides a flexible mechanism for specifying exactly how much of the object graph to load.
+When working with related CoValues (like tasks in a project), you often need to load not just the top-level object but also its nested references. This is especially important when working with [CoMaps](/docs/using-covalues/comaps) that contain references to other CoValues or with [CoLists](/docs/using-covalues/colists) that contain multiple items. Jazz provides a flexible mechanism for specifying exactly how much of the object graph to load.
 
 ### Loading Depth Specifications
 
@@ -171,7 +177,9 @@ const projectWithTasks = await Project.load(projectId, {
 const projectDeep = await Project.load(projectId, {
   resolve: {
     tasks: {
+      // Load the tasks list and then...
       $each: {
+        // For each task in the list, also load its subtasks
         subtasks: true
       }
     }
@@ -195,7 +203,7 @@ The depth specification uses the `resolve` property to define which parts of the
 
 ### Loading Lists
 
-For lists, Jazz provides a simplified syntax using a boolean value:
+For [CoLists](/docs/using-covalues/colists), Jazz provides a simplified syntax using a boolean value:
 
 <CodeGroup>
 ```ts
@@ -249,6 +257,8 @@ While auto-loading improves the developer experience, it's still best practice t
 
 Jazz provides the `Resolved` type to help you define and enforce the structure of deeply loaded data in your application. This makes it easier to ensure that components receive the data they expect with proper TypeScript validation.
 
+The `Resolved` type is especially useful when passing data between components, as it guarantees that all necessary nested data has been loaded:
+
 <CodeGroup>
 ```ts
 // Define a type that includes resolved nested data
@@ -296,10 +306,14 @@ Using the `Resolved` type helps catch errors at compile time rather than runtime
 
 ## Framework Integration
 
-<ContentByFramework framework="react">
-### React Integration with useCoState
+The subscription patterns covered here work seamlessly with all [CoValue types](/docs/using-covalues/comaps) in your application.
 
-In React applications, the `useCoState` hook provides a convenient way to subscribe to CoValues and handle loading states:
+<ContentByFramework framework="vanilla">
+If you're using React in your project, check out our [React hooks](/docs/react/using-covalues/subscription-and-loading#framework-integration) which provide a more streamlined experience with automatic subscription management.
+</ContentByFramework>
+
+<ContentByFramework framework="react">
+Jazz provides a `useCoState` hook that provides a convenient way to subscribe to CoValues and handle loading states:
 
 <CodeGroup>
 ```tsx
@@ -347,84 +361,6 @@ function TaskList({ tasks }: { tasks: Task[] }) {
 The `useCoState` hook handles subscribing when the component mounts and unsubscribing when it unmounts, making it easy to keep your UI in sync with the underlying data.
 </ContentByFramework>
 
-<ContentByFramework framework="vue">
-### Vue Integration
-
-In Vue applications, you can use the `useCoState` composable to subscribe to CoValues:
-
-<CodeGroup>
-```vue
-<script setup>
-import { useCoState } from 'jazz-vue';
-
-const props = defineProps({
-  projectId: String
-});
-
-// Subscribe to a project and its tasks
-const project = useCoState(Project, props.projectId, {
-  resolve: {
-    tasks: true
-  }
-});
-</script>
-
-<template>
-  <div v-if="project === undefined">
-    Loading garden project...
-  </div>
-  <div v-else-if="project === null">
-    Project not found or not accessible
-  </div>
-  <div v-else>
-    <h1>{{ project.name }}</h1>
-    <ul>
-      <li v-for="task in project.tasks" :key="task.id">
-        {{ task.title }} - {{ task.status }}
-      </li>
-    </ul>
-  </div>
-</template>
-```
-</CodeGroup>
-</ContentByFramework>
-
-<ContentByFramework framework="svelte">
-### Svelte Integration
-
-In Svelte applications, you can use the `useCoState` function to subscribe to CoValues:
-
-<CodeGroup>
-```svelte
-<script>
-  import { useCoState } from 'jazz-svelte';
-  
-  export let projectId;
-  
-  // Subscribe to a project and its tasks
-  const project = useCoState(Project, projectId, {
-    resolve: {
-      tasks: true
-    }
-  });
-</script>
-
-{#if $project === undefined}
-  <div>Loading garden project...</div>
-{:else if $project === null}
-  <div>Project not found or not accessible</div>
-{:else}
-  <h1>{$project.name}</h1>
-  <ul>
-    {#each $project.tasks as task (task.id)}
-      <li>{task.title} - {task.status}</li>
-    {/each}
-  </ul>
-{/if}
-```
-</CodeGroup>
-</ContentByFramework>
-
 ## Ensuring Data is Loaded
 
 Sometimes you need to make sure data is loaded before proceeding with an operation. The `ensureLoaded` method lets you guarantee that a CoValue and its referenced data are loaded to a specific depth:
@@ -453,7 +389,9 @@ async function completeAllTasks(projectId: ID<Project>) {
 
 ## Performance Considerations
 
-Loading depth is directly related to performance. Loading too much data can slow down your application, while loading too little can lead to unnecessary auto-loading delays. Here are some guidelines:
+Loading depth is directly related to performance. Loading too much data can slow down your application, while loading too little can lead to unnecessary auto-loading delays. Finding the right balance is crucial for a responsive user experience.
+
+Here are some practical guidelines:
 
 - **Load only what you need** for the current view or operation
 - **Preload data** that will be needed soon to improve perceived performance
@@ -526,5 +464,3 @@ const sameProject = await Project.load(projectId, { resolve: {} });
 5. **Balance depth and performance**: Load only what you need for the current view
 6. **Take advantage of auto-loading**: For simpler use cases, rely on automatic loading of nested references
 7. **Use the Resolved type**: Add compile-time type safety for components that require specific resolution patterns
-
-By effectively using subscriptions and deep loading, you can build responsive, collaborative applications that handle complex data relationships while maintaining good performance.
