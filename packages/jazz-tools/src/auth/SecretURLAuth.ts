@@ -10,7 +10,13 @@ import { ID, co, subscribeToCoValue } from "../internal.js";
 import { AuthenticateAccountFunction } from "../types.js";
 import { AuthSecretStorage } from "./AuthSecretStorage.js";
 
-const transferStatuses = ["init", "pending", "authorized", "expired"] as const;
+const transferStatuses = [
+  "init",
+  "pending",
+  "authorized",
+  "expired",
+  "error",
+] as const;
 
 export class SecretURLAuthTransfer extends CoMap {
   status = co.literal(...transferStatuses);
@@ -38,7 +44,7 @@ export class SecretURLAuth {
     private origin: string,
   ) {}
 
-  public role: "provider" | "consumer" | undefined;
+  public status: (typeof transferStatuses)[number] | "idle" = "idle";
 
   /**
    * Creates an auth transfer URL for the given secret.
@@ -47,9 +53,6 @@ export class SecretURLAuth {
    * @returns The auth transfer URL.
    */
   createAuthTransferURL = async (expiresAt?: Date) => {
-    this.role = "provider";
-    this.notify();
-
     const credentials = await this.authSecretStorage.get();
     if (!credentials?.secretSeed) {
       throw new Error("No existing authentication found");
@@ -66,6 +69,9 @@ export class SecretURLAuth {
       },
       { owner: group },
     );
+    await transfer.waitForSync();
+    this.status = transfer.status;
+    this.notify();
 
     const url = createInviteLink(
       transfer,
@@ -74,22 +80,30 @@ export class SecretURLAuth {
       "authTransfer",
     );
 
-    waitForTransferProperty(transfer.id, "acceptedBy", 30 * 60 * 1000).then(
-      (t) => {
-        if (!t.acceptedBy || t.status === "authorized") {
-          return;
-        }
+    waitForTransferProperty(
+      transfer.id,
+      "acceptedBy",
+      Account.getMe(),
+      30 * 60 * 1000,
+    )
+      .then((t) => {
+        if (!t.acceptedBy || t.status === "authorized") return;
 
         if (t.expiresAt < new Date()) {
           t.status = "expired";
           return;
         }
 
-        console.log("adding group member!", t.acceptedBy);
-
         t._owner.castAs(Group).addMember(t.acceptedBy, "writer");
-      },
-    );
+      })
+      .catch(() => {
+        transfer.status = "error";
+      })
+      .finally(async () => {
+        await transfer.waitForSync();
+        this.status = transfer.status;
+        this.notify();
+      });
 
     return { url, transfer };
   };
@@ -98,47 +112,62 @@ export class SecretURLAuth {
    * Accepts an auth transfer and logs in.
    *
    * @param authTransferId - The SecretURLAuthTransfer ID to accept.
-   * @param timeoutMs - The timeout in milliseconds. Defaults to 10 seconds.
+   * @param timeoutMs - The timeout in milliseconds. Defaults to 15 seconds.
    * @returns The SecretURLAuthTransfer.
    */
   logIn = async (
     authTransferId: ID<SecretURLAuthTransfer>,
-    timeoutMs = 10000,
+    timeoutMs = 15000,
   ): Promise<SecretURLAuthTransfer> => {
-    this.role = "consumer";
-    this.notify();
-
-    let transfer = await SecretURLAuthTransfer.load(authTransferId, {});
+    const transfer = await SecretURLAuthTransfer.load(authTransferId, {});
     if (!transfer) throw new Error("Unable to load authentication transfer");
 
     transfer.acceptedBy = Account.getMe();
     transfer.status = "pending";
+    await transfer.waitForSync();
+    this.status = transfer.status;
+    this.notify();
 
-    transfer = await waitForTransferProperty(transfer.id, "secret", timeoutMs);
+    try {
+      const { secret } = await waitForTransferProperty(
+        transfer.id,
+        "secret",
+        Account.getMe(),
+        timeoutMs,
+      );
 
-    const secretSeed = base64URLtoBytes(transfer.secret);
-    const accountSecret = this.crypto.agentSecretFromSecretSeed(secretSeed);
+      transfer.status = "authorized";
+      await transfer.waitForSync();
+      this.status = transfer.status;
+      this.notify();
 
-    const accountID = cojsonInternals.idforHeader(
-      cojsonInternals.accountHeaderForInitialAgentSecret(
-        accountSecret,
+      const secretSeed = base64URLtoBytes(secret);
+      const accountSecret = this.crypto.agentSecretFromSecretSeed(secretSeed);
+
+      const accountID = cojsonInternals.idforHeader(
+        cojsonInternals.accountHeaderForInitialAgentSecret(
+          accountSecret,
+          this.crypto,
+        ),
         this.crypto,
-      ),
-      this.crypto,
-    ) as ID<Account>;
+      ) as ID<Account>;
 
-    await this.authenticate({ accountID, accountSecret });
+      await this.authenticate({ accountID, accountSecret });
 
-    await this.authSecretStorage.set({
-      accountID,
-      secretSeed,
-      accountSecret,
-      provider: "secretURL",
-    });
+      await this.authSecretStorage.set({
+        accountID,
+        secretSeed,
+        accountSecret,
+        provider: "secretURL",
+      });
 
-    transfer.status = "authorized";
-
-    return transfer;
+      return transfer;
+    } catch (e) {
+      transfer.status = "error";
+      this.status = transfer.status;
+      this.notify();
+      throw e;
+    }
   };
 
   listeners = new Set<() => void>();
@@ -162,14 +191,16 @@ export class SecretURLAuth {
  *
  * @param transferId - The ID of the SecretURLAuthTransfer to monitor.
  * @param key - The property key to wait for.
+ * @param account - The account to use for loading the transfer
  * @param timeoutMs - Maximum time to wait in milliseconds before timing out (default: 5000ms).
  * @returns Promise that resolves with the SecretURLAuthTransfer once the property is set
  * @throws Error if unable to load transfer or if timeout is reached
  */
 
-function waitForTransferProperty(
+export function waitForTransferProperty(
   transferId: ID<SecretURLAuthTransfer>,
   key: keyof SecretURLAuthTransfer,
+  account: Account,
   timeoutMs: number = 5000,
 ): Promise<SecretURLAuthTransfer> {
   let aborted = false;
@@ -181,7 +212,7 @@ function waitForTransferProperty(
     subscribeToCoValue(
       SecretURLAuthTransfer,
       transferId,
-      Account.getMe(),
+      account,
       {},
       (value, unsubscribe) => {
         if (aborted) return;

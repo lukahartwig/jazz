@@ -36,9 +36,9 @@ export function useSecretURLAuth(origin: string) {
     );
   }, [origin]);
 
-  const role = useSyncExternalStore(
+  const status = useSyncExternalStore(
     useCallback((callback) => authMethod.subscribe(callback), [authMethod]),
-    () => authMethod.role,
+    () => authMethod.status,
   );
 
   const createUrl = async (expiresAt?: Date) => {
@@ -52,6 +52,6 @@ export function useSecretURLAuth(origin: string) {
     state: isAuthenticated ? "signedIn" : "anonymous",
     logIn: authMethod.logIn,
     createUrl,
-    role,
+    status,
   } as const;
 }

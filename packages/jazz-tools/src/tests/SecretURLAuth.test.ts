@@ -3,7 +3,11 @@
 import { AgentSecret, CryptoProvider, bytesToBase64url } from "cojson";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import { AuthSecretStorage } from "../auth/AuthSecretStorage.js";
-import { SecretURLAuth } from "../auth/SecretURLAuth.js";
+import {
+  SecretURLAuth,
+  SecretURLAuthTransfer,
+  waitForTransferProperty,
+} from "../auth/SecretURLAuth.js";
 import { Account } from "../coValues/account.js";
 import {
   AuthenticateAccountFunction,
@@ -33,7 +37,7 @@ describe("SecretURLAuth", () => {
     });
 
     secretURLAuth = new SecretURLAuth(
-      crypto as CryptoProvider,
+      crypto,
       mockAuthenticate,
       authSecretStorage,
       window.location.origin,
@@ -52,17 +56,17 @@ describe("SecretURLAuth", () => {
 
       const { url, transfer } = await secretURLAuth.createAuthTransferURL();
 
-      expect(url).toBeDefined();
+      expect(url).toMatch(
+        /^http:\/\/localhost:3000#\/invite\/authTransfer\/co_z.*/,
+      );
       expect(transfer.status).toBe("init");
       expect(transfer.acceptedBy).toBeUndefined();
       expect(transfer.secret).toBe(bytesToBase64url(secretSeed));
     });
-
-    // TODO: More tests
   });
 
   describe("logIn", () => {
-    test("does something", async () => {
+    test("should authorize", async () => {
       const secretSeed = crypto.newRandomSecretSeed();
       await authSecretStorage.set({
         accountID: "test-account" as ID<Account>,
@@ -80,7 +84,45 @@ describe("SecretURLAuth", () => {
       expect(result.status).toBe("authorized");
       expect(mockAuthenticate).toHaveBeenCalled();
     });
+  });
 
-    // TODO: More tests
+  describe("waitForTransferProperty", () => {
+    let transfer: SecretURLAuthTransfer;
+
+    beforeEach(() => {
+      transfer = SecretURLAuthTransfer.create(
+        {
+          status: "init",
+          secret: "test-secret",
+          expiresAt: new Date(Date.now() + 1000),
+        },
+        { owner: account },
+      );
+    });
+
+    test("should resolve", async () => {
+      const result = await waitForTransferProperty(
+        transfer.id,
+        "status",
+        account,
+      );
+
+      expect(result.status).toBe("init");
+    });
+
+    test("should timeout", async () => {
+      const timeoutMs = 100;
+
+      const promise = waitForTransferProperty(
+        transfer.id,
+        "acceptedBy",
+        account,
+        timeoutMs,
+      );
+
+      await expect(promise).rejects.toThrow(
+        "Timeout waiting for transfer property",
+      );
+    });
   });
 });
