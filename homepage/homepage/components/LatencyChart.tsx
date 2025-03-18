@@ -75,7 +75,7 @@ export default function LatencyChart({ data }: Props) {
                 <TooltipTrigger asChild>
                   <div
                     className={cn(
-                      "h-6 w-2 rounded-md hover:opacity-50",
+                      "h-6 w-1 lg:w-2 rounded-md hover:opacity-50",
                       valueClass,
                     )}
                   />
