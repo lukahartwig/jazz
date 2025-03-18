@@ -27,7 +27,7 @@ export function PageStack({
   const index = path.length - 1;
 
   return (
-    <div className="relative mt-4 h-[40vh] overflow-y-auto">
+    <div className="relative mt-4 overflow-y-auto flex-1">
       {children && <div className="absolute inset-0 pb-20">{children}</div>}
       {node && page && (
         <Page
