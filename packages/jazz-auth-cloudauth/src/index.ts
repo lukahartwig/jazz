@@ -2,12 +2,12 @@ import { base58 } from "@scure/base";
 import { createAuthClient } from "better-auth/client";
 import { inferAdditionalFields } from "better-auth/client/plugins";
 import { AgentSecret } from "cojson";
-import { PureJSCrypto } from "cojson/dist/crypto/PureJSCrypto";
+import { PureJSCrypto } from "cojson/dist/crypto/PureJSCrypto.js";
 import {
   CryptoProvider,
   SealerSecret,
   SignerSecret,
-} from "cojson/src/crypto/crypto.js";
+} from "cojson/dist/crypto/crypto.js";
 import {
   Account,
   AuthCredentials,
