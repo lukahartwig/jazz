@@ -18,7 +18,7 @@ npx create-jazz-app@latest reactions-app --example reactions
 
 Go to the new project directory.
 ```bash
-cd reactions
+cd reactions-app
 ```
 
 Run the dev server.

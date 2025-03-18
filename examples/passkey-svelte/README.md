@@ -26,7 +26,7 @@ npx create-jazz-app@latest passkey-svelte-app --example passkey-svelte
 
 Go to the new project directory.
 ```bash
-cd passkey-svelte
+cd passkey-svelte-app
 ```
 
 Run the dev server.

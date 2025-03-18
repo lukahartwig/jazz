@@ -33,7 +33,7 @@ npx create-jazz-app@latest form-app --example form
 
 Go to the new project directory.
 ```bash
-cd form
+cd form-app
 ```
 
 Run the dev server.

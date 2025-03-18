@@ -17,7 +17,7 @@ npx create-jazz-app@latest passphrase-app --example passphrase
 
 Go to the new project directory.
 ```bash
-cd passphrase
+cd passphrase-app
 ```
 
 Run the dev server.

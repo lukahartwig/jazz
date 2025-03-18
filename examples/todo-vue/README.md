@@ -16,7 +16,7 @@ npx create-jazz-app@latest todo-vue-app --example todo-vue
 
 Go to the new project directory.
 ```bash
-cd todo-vue
+cd todo-vue-app
 ```
 
 Run the dev server.

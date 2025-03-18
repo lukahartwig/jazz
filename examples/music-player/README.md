@@ -18,7 +18,7 @@ npx create-jazz-app@latest music-player-app --example music-player
 
 Go to the new project directory.
 ```bash
-cd music-player
+cd music-player-app
 ```
 
 Run the dev server.

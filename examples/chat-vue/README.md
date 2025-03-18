@@ -16,7 +16,7 @@ npx create-jazz-app@latest chat-vue-app --example chat-vue
 
 Go to the new project directory.
 ```bash
-cd chat-vue
+cd chat-vue-app
 ```
 
 Run the dev server.

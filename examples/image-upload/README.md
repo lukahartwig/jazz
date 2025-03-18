@@ -20,7 +20,7 @@ npx create-jazz-app@latest image-upload-app --example image-upload
 
 Go to the new project directory.
 ```bash
-cd image-upload
+cd image-upload-app
 ```
 
 Run the dev server.

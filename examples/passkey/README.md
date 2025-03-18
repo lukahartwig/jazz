@@ -20,7 +20,7 @@ npx create-jazz-app@latest passkey-app --example passkey
 
 Go to the new project directory.
 ```bash
-cd passkey
+cd passkey-app
 ```
 
 Run the dev server.

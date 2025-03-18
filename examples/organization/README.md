@@ -21,7 +21,7 @@ npx create-jazz-app@latest organization-app --example organization
 
 Go to the new project directory.
 ```bash
-cd organization
+cd organization-app
 ```
 
 Run the dev server.

@@ -17,7 +17,7 @@ npx create-jazz-app@latest counter-app --example counter
 ```
 2. Navigate to the new project and start the development server.
 ```bash
-cd counter
+cd counter-app
 npm run dev
 ```
 

@@ -18,7 +18,7 @@ npx create-jazz-app@latest todo-app --example todo
 
 Go to the new project directory.
 ```bash
-cd todo
+cd todo-app
 ```
 
 Run the dev server.

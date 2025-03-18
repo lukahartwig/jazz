@@ -20,7 +20,7 @@ npx create-jazz-app@latest clerk-app --example clerk
 
 Go to the new project directory.
 ```bash
-cd clerk
+cd clerk-app
 ```
 
 Run the dev server.

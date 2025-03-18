@@ -18,7 +18,7 @@ npx create-jazz-app@latest version-history-app --example version-history
 
 Go to the new project directory.
 ```bash
-cd version-history
+cd version-history-app
 ```
 
 Run the dev server.

@@ -18,7 +18,7 @@ npx create-jazz-app@latest chat-app --example chat
 
 Go to the new project directory.
 ```bash
-cd chat
+cd chat-app
 ```
 
 Run the dev server.
