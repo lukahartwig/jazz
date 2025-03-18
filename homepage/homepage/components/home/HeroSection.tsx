@@ -46,23 +46,24 @@ export function HeroSection() {
   return (
     <div className="container grid items-center gap-x-8 gap-y-12 my-12 md:my-16 lg:my-24 lg:gap-x-10 lg:grid-cols-3">
       <div className="flex flex-col justify-center gap-5 lg:col-span-2 lg:gap-8">
-        <Kicker>Toolkit for cloud-synced local state</Kicker>
+        <Kicker>Toolkit for backendless apps</Kicker>
         <H1>
           <span className="inline-block">Whip up an app.</span>
         </H1>
 
         <Prose size="lg" className="text-pretty max-w-2xl dark:text-stone-200">
           <p>
-            Instead of writing backends and managing databases, Jazz lets you
-            subscribe to your data in the frontend, so you end up with local state that
-            you mutate like JSON. Any changes are instantly synced to the cloud.
+            Jazz gives you data without needing a database — plus auth, permissions, files and multiplayer without needing a backend.
+          </p>
+          <p>
+            Do everything right from the frontend and ship better apps, faster.
           </p>
           <p>
             Open source. Self-host or use{" "}
             <Link className="text-reset" href="/cloud">
               Jazz Cloud
             </Link>{" "}
-            for an &ldquo;it just works&rdquo; DX.
+            for instant shareable magic.
           </p>
         </Prose>
 
