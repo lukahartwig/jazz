@@ -1,5 +1,5 @@
-import { CoID, JsonValue, LocalNode, RawCoValue } from "cojson";
 import clsx from "clsx";
+import { CoID, JsonValue, LocalNode, RawCoValue } from "cojson";
 import React, { useEffect, useState } from "react";
 import { LinkIcon } from "../link-icon.js";
 import { Button } from "./button.js";
