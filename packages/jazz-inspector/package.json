@@ -9,8 +9,8 @@
     "src"
   ],
   "scripts": {
-    "dev": "vite build --watch",
-    "build": "rm -rf ./dist && tsc --sourceMap --outDir dist",
+    "dev": "vite build --watch && tsc --sourceMap --declaration --outDir dist",
+    "build": "rm -rf ./dist && tsc --sourceMap --declaration --outDir dist",
     "format-and-lint": "biome check .",
     "format-and-lint:fix": "biome check . --write",
     "preview": "vite preview"
