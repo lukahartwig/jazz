@@ -9,7 +9,7 @@
     "src"
   ],
   "scripts": {
-    "dev": "vite build --watch",
+    "dev": "rm -rf ./dist && tsc --emitDeclarationOnly --watch & vite build --watch",
     "build": "rm -rf ./dist && tsc --sourceMap --declaration --outDir dist",
     "format-and-lint": "biome check .",
     "format-and-lint:fix": "biome check . --write",
