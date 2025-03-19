@@ -1,3 +1,5 @@
+import { Icon } from "@/viewer/icon.tsx";
+import { Select } from "@/viewer/select.tsx";
 import clsx from "clsx";
 import {
   AgentSecret,
@@ -223,8 +225,10 @@ function AccountSwitcher({
   localNode: LocalNode | null;
 }) {
   return (
-    <div className="relative flex items-center gap-1">
-      <select
+    <div className="relative flex items-stretch gap-1">
+      <Select
+        label="Account to inspect"
+        className="label:sr-only max-w-96"
         value={currentAccount?.id || "add-account"}
         onChange={(e) => {
           if (e.target.value === "add-account") {
@@ -234,7 +238,6 @@ function AccountSwitcher({
             setCurrentAccount(account || null);
           }
         }}
-        className="p-2 px-4 bg-gray-100/50 border border-indigo-500/10 backdrop-blur-sm rounded-md text-indigo-700 appearance-none"
       >
         {accounts.map((account) => (
           <option key={account.id} value={account.id}>
@@ -246,15 +249,16 @@ function AccountSwitcher({
           </option>
         ))}
         <option value="add-account">Add account</option>
-      </select>
+      </Select>
       {currentAccount && (
-        <button
+        <Button
+          variant="secondary"
           onClick={deleteCurrentAccount}
-          className="p-3 rounded hover:bg-gray-200 transition-colors"
-          title="Delete Account"
+          className="rounded-md p-2 ml-1"
+          aria-label="Remove account"
         >
-          <Trash2 size={16} className="text-gray-500" />
-        </button>
+          <Icon name="delete" className="text-gray-500" />
+        </Button>
       )}
     </div>
   );

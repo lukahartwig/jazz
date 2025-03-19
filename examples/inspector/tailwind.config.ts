@@ -1,4 +1,5 @@
 import type { Config } from "tailwindcss";
+import plugin from "tailwindcss/plugin";
 
 const stonePalette = {
   50: "oklch(0.988281 0.002 75)",
@@ -61,6 +62,7 @@ const config: Config = {
       },
     },
   },
+  plugins: [plugin(({ addVariant }) => addVariant("label", "& :is(label)"))],
 };
 
 export default config;
