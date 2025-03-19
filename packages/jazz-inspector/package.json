@@ -21,7 +21,8 @@
     "@twind/preset-tailwind": "^1.1.4",
     "cojson": "workspace:*",
     "jazz-react-core": "workspace:*",
-    "jazz-tools": "workspace:*"
+    "jazz-tools": "workspace:*",
+    "lucide-react": "^0.274.0"
   },
   "peerDependencies": {
     "react": "^17.0.0 || ^18.0.0 || ^19.0.0"
