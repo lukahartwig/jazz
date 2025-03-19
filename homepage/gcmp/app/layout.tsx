@@ -41,7 +41,7 @@ const commitMono = localFont({
   display: "swap",
 });
 
-const metaTags = {
+export const metaTags = {
   title: "garden computing",
   description:
     "Computers are magic. So why do we put up with so much complexity? We believe just a few new ideas can make all the difference.",
@@ -71,6 +71,7 @@ export const metadata: Metadata = {
     ],
   },
   alternates: {
+    canonical: metaTags.url,
     types: {
       "application/rss+xml": `${
         process.env.VERCEL_URL
