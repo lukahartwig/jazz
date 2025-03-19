@@ -120,8 +120,8 @@ export default function CoJsonViewerApp() {
   }
 
   return (
-    <div className="w-full h-screen bg-white p-4 overflow-hidden flex flex-col text-stone-700 dark:text-stone-400">
-      <header className="flex items-center mb-4 gap-4">
+    <div className="w-full h-screen bg-white overflow-hidden flex flex-col text-stone-700 dark:text-stone-400">
+      <header className="flex items-center gap-4 p-3">
         <Breadcrumbs path={path} onBreadcrumbClick={goToIndex} />
         <div className="flex-1">
           <form onSubmit={handleCoValueIdSubmit}>
@@ -161,9 +161,7 @@ export default function CoJsonViewerApp() {
             className={clsx(
               "flex flex-col justify-center items-center gap-2 h-full w-full mb-20 ",
               "transition-all duration-150",
-              path.length > 0
-                ? "opacity-0 -translate-y-2 scale-95"
-                : "opacity-100",
+              path.length > 0 ? "opacity-0" : "opacity-100",
             )}
           >
             <fieldset className="flex flex-col gap-2 text-sm">

@@ -15,7 +15,7 @@ type PageProps = {
   onNavigate: (newPages: PageInfo[]) => void;
   onHeaderClick?: () => void;
   isTopLevel?: boolean;
-  style: React.CSSProperties;
+  style?: React.CSSProperties;
   className?: string;
 };
 
@@ -55,9 +55,7 @@ export function Page({
   return (
     <div
       style={style}
-      className={
-        className + " absolute z-10 inset-0 w-full h-full bg-clip-padding"
-      }
+      className={className + "absolute z-10 inset-0 w-full h-full px-3"}
     >
       {!isTopLevel && (
         <div
@@ -71,7 +69,7 @@ export function Page({
       )}
       <div className="flex justify-between items-center mb-4">
         <div className="flex items-center gap-3">
-          <h2 className="text-2xl font-bold flex flex-col items-start gap-1">
+          <h2 className="text-lg font-medium flex flex-col items-start gap-1 text-stone-900 dark:text-white">
             <span>
               {name}
               {typeof snapshot === "object" && "name" in snapshot ? (

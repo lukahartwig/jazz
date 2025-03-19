@@ -12,11 +12,9 @@ import {
 // Is there a chance we can pass the actual CoValue here?
 export function ValueRenderer({
   json,
-  compact,
   onCoIDClick,
 }: {
   json: JsonValue | undefined;
-  compact?: boolean;
   onCoIDClick?: (childNode: CoID<RawCoValue>) => void;
 }) {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -94,36 +92,22 @@ export function ValueRenderer({
         title={JSON.stringify(json, null, 2)}
         className="inline-block max-w-64"
       >
-        {Array.isArray(json) && (
-          <>
-            Array <span className="text-gray-500">({json.length})</span>
-          </>
-        )}
-        {compact ? (
-          <span>
-            Object{" "}
-            <span className="text-gray-500">({Object.keys(json).length})</span>
-            <pre className="mt-1 text-sm whitespace-pre-wrap">
-              {isExpanded
-                ? JSON.stringify(json, null, 2)
-                : JSON.stringify(json, null, 2)
-                    .split("\n")
-                    .slice(0, 3)
-                    .join("\n") + (Object.keys(json).length > 2 ? "\n..." : "")}
-            </pre>
-            <Button
-              variant="plain"
-              onClick={() => setIsExpanded(!isExpanded)}
-              className="text-sm text-gray-500 hover:text-gray-700"
-            >
-              {isExpanded ? "Show less" : "Show more"}
-            </Button>
-          </span>
-        ) : (
-          <pre className="whitespace-pre-wrap">
-            {JSON.stringify(json, null, 2)}
-          </pre>
-        )}
+        <span className="text-gray-600">
+          {Array.isArray(json) ? <>Array ({json.length})</> : <>Object</>}
+        </span>
+        <pre className="mt-1.5 text-sm whitespace-pre-wrap">
+          {isExpanded
+            ? JSON.stringify(json, null, 2)
+            : JSON.stringify(json, null, 2).split("\n").slice(0, 3).join("\n") +
+              (Object.keys(json).length > 2 ? "\n..." : "")}
+        </pre>
+        <Button
+          variant="plain"
+          onClick={() => setIsExpanded(!isExpanded)}
+          className="mt-1.5 text-sm text-gray-600 hover:text-gray-700"
+        >
+          {isExpanded ? "Show less" : "Show more"}
+        </Button>
       </span>
     );
   }

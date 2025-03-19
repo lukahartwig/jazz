@@ -27,8 +27,8 @@ export function PageStack({
   const index = path.length - 1;
 
   return (
-    <div className="relative mt-4 overflow-y-auto flex-1  text-stone-700 dark:text-stone-400">
-      {children && <div className="absolute inset-0 pb-20">{children}</div>}
+    <div className="relative px-3 overflow-y-auto flex-1  text-stone-700 dark:text-stone-400">
+      {children}
       {node && page && (
         <Page
           coId={page.coId}
@@ -37,14 +37,6 @@ export function PageStack({
           onHeaderClick={goBack}
           onNavigate={addPages}
           isTopLevel={index === path.length - 1}
-          className="transition-transform transition-opacity duration-300 ease-out"
-          style={{
-            transform: `translateZ(${(index - path.length + 1) * 200}px) scale(${
-              1 - (path.length - index - 1) * 0.05
-            }) translateY(${-(index - path.length + 1) * -4}%)`,
-            opacity: 1 - (path.length - index - 1) * 0.05,
-            zIndex: index,
-          }}
         />
       )}
     </div>

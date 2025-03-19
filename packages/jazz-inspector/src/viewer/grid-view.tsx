@@ -54,7 +54,6 @@ export function GridView({
                 onCoIDClick={(coId) => {
                   onNavigate([{ coId, name: key }]);
                 }}
-                compact
               />
             )}
           </div>
