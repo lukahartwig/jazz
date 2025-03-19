@@ -278,30 +278,34 @@ function AddAccountForm({
   return (
     <form
       onSubmit={handleSubmit}
-      className="flex flex-col gap-2 max-w-md mx-auto h-full justify-center"
+      className="flex flex-col gap-3 max-w-md mx-auto h-full justify-center"
     >
-      <h2 className="text-2xl font-medium text-gray-900 mb-3">
-        Add an Account to Inspect
+      <h2 className="text-2xl font-medium text-gray-900 dark:text-white">
+        Add an account to inspect
       </h2>
-      <input
-        className="border py-2 px-3 rounded-md"
-        placeholder="Account ID"
+      <p className="leading-relaxed mb-5">
+        Use the{" "}
+        <code className="whitespace-nowrap text-stone-900 dark:text-white font-semibold">
+          jazz-logged-in-secret
+        </code>{" "}
+        local storage key from within your Jazz app for your account
+        credentials.
+      </p>
+      <Input
+        label="Account ID"
         value={id}
+        placeholder="co_z1234567890abcdef123456789"
         onChange={(e) => setId(e.target.value)}
       />
-      <input
+      <Input
+        label="Account secret"
         type="password"
-        className="border py-2 px-3 rounded-md"
-        placeholder="Account Secret"
         value={secret}
         onChange={(e) => setSecret(e.target.value)}
       />
-      <button
-        type="submit"
-        className="bg-indigo-500 text-white px-4 py-2 rounded-md"
-      >
-        Add Account
-      </button>
+      <Button className="mt-3" type="submit">
+        Add account
+      </Button>
     </form>
   );
 }
