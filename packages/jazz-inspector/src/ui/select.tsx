@@ -1,6 +1,6 @@
 import { clsx } from "clsx";
 import { useId } from "react";
-import { Icon } from "./icon";
+import { Icon } from "./icon.js";
 
 export function Select(
   props: React.SelectHTMLAttributes<HTMLSelectElement> & { label: string },

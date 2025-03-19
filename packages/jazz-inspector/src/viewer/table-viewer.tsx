@@ -2,7 +2,7 @@ import { CoID, LocalNode, RawCoValue } from "cojson";
 import type { JsonObject } from "cojson";
 import { useMemo, useState } from "react";
 import { LinkIcon } from "../link-icon.js";
-import { Button } from "./button.js";
+import { Button } from "../ui/button.js";
 import { PageInfo } from "./types.js";
 import { useResolvedCoValues } from "./use-resolve-covalue.js";
 import { ValueRenderer } from "./value-renderer.js";

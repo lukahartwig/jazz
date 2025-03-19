@@ -1,5 +1,5 @@
 import React from "react";
-import { Button } from "./button.js";
+import { Button } from "../ui/button.js";
 import { PageInfo } from "./types.js";
 
 interface BreadcrumbsProps {

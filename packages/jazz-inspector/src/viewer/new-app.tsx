@@ -1,9 +1,9 @@
 import { CoID, RawCoValue } from "cojson";
 import { useAccount } from "jazz-react-core";
 import React, { useState } from "react";
+import { Button } from "../ui/button.js";
+import { Input } from "../ui/input.js";
 import { Breadcrumbs } from "./breadcrumbs.js";
-import { Button } from "./button.js";
-import { Input } from "./input.js";
 import { PageStack } from "./page-stack.js";
 import { usePagePath } from "./use-page-path.js";
 

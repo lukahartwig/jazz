@@ -9,7 +9,7 @@ import { base64URLtoBytes } from "cojson";
 import { BinaryStreamItem, BinaryStreamStart, CoStreamItem } from "cojson";
 import type { JsonObject, JsonValue } from "cojson";
 import { useEffect, useState } from "react";
-import { Button } from "./button.js";
+import { Button } from "../ui/button.js";
 import { PageInfo } from "./types.js";
 import { AccountOrGroupPreview } from "./value-renderer.js";
 

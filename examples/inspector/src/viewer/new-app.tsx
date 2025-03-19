@@ -1,5 +1,3 @@
-import { Icon } from "@/viewer/icon.tsx";
-import { Select } from "@/viewer/select.tsx";
 import clsx from "clsx";
 import {
   AgentSecret,
@@ -11,8 +9,14 @@ import {
 } from "cojson";
 import { createWebSocketPeer } from "cojson-transport-ws";
 import { WasmCrypto } from "cojson/crypto/WasmCrypto";
-import { Breadcrumbs, Button, Input, PageStack } from "jazz-inspector";
-import { Trash2 } from "lucide-react";
+import {
+  Breadcrumbs,
+  Button,
+  Icon,
+  Input,
+  PageStack,
+  Select,
+} from "jazz-inspector";
 import React, { useState, useEffect } from "react";
 import { usePagePath } from "./use-page-path";
 import { resolveCoValue, useResolvedCoValue } from "./use-resolve-covalue";
