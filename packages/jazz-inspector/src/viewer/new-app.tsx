@@ -74,7 +74,7 @@ export function JazzInspector({ position = "right" }: { position?: Position }) {
     <div className="fixed h-[calc(100%-12rem)] flex flex-col bottom-0 left-0 w-full bg-white border-t border-gray-200 dark:border-stone-900 dark:bg-stone-925">
       <div className="flex items-center gap-4 px-3 my-3">
         <Breadcrumbs path={path} onBreadcrumbClick={goToIndex} />
-        <form onSubmit={handleCoValueIdSubmit} className="w-[21rem]">
+        <form onSubmit={handleCoValueIdSubmit} className="min-w-64 max-w-96">
           {path.length !== 0 && (
             <Input
               label="CoValue ID"
