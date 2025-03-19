@@ -22,8 +22,13 @@ export const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
       </Button>
       {path.map((page, index) => {
         return (
-          <>
-            <span className="text-stone-400 dark:text-stone-600 px-0.5">/</span>
+          <React.Fragment key={page.coId}>
+            <span
+              aria-hidden
+              className="text-stone-400 dark:text-stone-600 px-0.5"
+            >
+              /
+            </span>
             <Button
               variant="plain"
               className="text-blue px-1"
@@ -31,7 +36,7 @@ export const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
             >
               {index === 0 ? page.name || "Root" : page.name}
             </Button>
-          </>
+          </React.Fragment>
         );
       })}
     </div>
