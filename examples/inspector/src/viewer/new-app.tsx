@@ -9,7 +9,7 @@ import {
 } from "cojson";
 import { createWebSocketPeer } from "cojson-transport-ws";
 import { WasmCrypto } from "cojson/crypto/WasmCrypto";
-import { Breadcrumbs, PageStack } from "jazz-inspector";
+import { Breadcrumbs, Button, Input, PageStack } from "jazz-inspector";
 import { Trash2 } from "lucide-react";
 import React, { useState, useEffect } from "react";
 import { usePagePath } from "./use-page-path";
@@ -120,15 +120,24 @@ export default function CoJsonViewerApp() {
   }
 
   return (
-    <div className="w-full h-screen bg-white overflow-hidden flex flex-col text-stone-700 dark:text-stone-400">
+    <div
+      className={clsx(
+        // layout
+        "h-screen overflow-hidden flex flex-col",
+        " text-stone-700 bg-white",
+        "dark:text-stone-300 dark:bg-stone-950",
+      )}
+    >
       <header className="flex items-center gap-4 p-3">
         <Breadcrumbs path={path} onBreadcrumbClick={goToIndex} />
         <div className="flex-1">
           <form onSubmit={handleCoValueIdSubmit}>
             {path.length !== 0 && (
-              <input
-                className="border p-2 rounded-lg min-w-[21rem] font-mono"
+              <Input
+                className="min-w-[21rem] font-mono"
                 placeholder="co_z1234567890abcdef123456789"
+                label="CoValue ID"
+                hideLabel
                 value={coValueId}
                 onChange={(e) =>
                   setCoValueId(e.target.value as CoID<RawCoValue>)
@@ -164,34 +173,34 @@ export default function CoJsonViewerApp() {
               path.length > 0 ? "opacity-0" : "opacity-100",
             )}
           >
-            <fieldset className="flex flex-col gap-2 text-sm">
-              <h2 className="text-3xl font-medium text-gray-950 text-center mb-4">
+            <fieldset className="flex flex-col gap-2">
+              <h2 className="text-lg text-center font-medium mb-4 text-stone-900 dark:text-white">
                 Jazz CoValue Inspector
               </h2>
-              <input
-                className="border p-4 rounded-lg min-w-[21rem] font-mono"
+              <Input
+                label="CoValue ID"
+                className="min-w-[21rem] font-mono"
+                hideLabel
                 placeholder="co_z1234567890abcdef123456789"
                 value={coValueId}
                 onChange={(e) =>
                   setCoValueId(e.target.value as CoID<RawCoValue>)
                 }
               />
-              <button
-                type="submit"
-                className="bg-indigo-500 hover:bg-indigo-500/80 text-white px-4 py-2 rounded-md"
-              >
-                Inspect
-              </button>
-              <hr />
-              <button
-                type="button"
-                className="border inline-block px-2 py-1.5 text-black rounded"
+              <Button type="submit" variant="primary">
+                Inspect CoValue
+              </Button>
+
+              <p className="text-center">or</p>
+
+              <Button
+                variant="secondary"
                 onClick={() => {
                   setPage(currentAccount.id);
                 }}
               >
-                Inspect My Account
-              </button>
+                Inspect my account
+              </Button>
             </fieldset>
           </form>
         )}
