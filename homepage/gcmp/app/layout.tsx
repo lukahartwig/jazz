@@ -70,6 +70,15 @@ export const metadata: Metadata = {
       },
     ],
   },
+  alternates: {
+    types: {
+      "application/rss+xml": `${
+        process.env.VERCEL_URL
+          ? `https://${process.env.VERCEL_URL}`
+          : "http://localhost:3000"
+      }/api/rss`,
+    },
+  },
 };
 
 export default function RootLayout({
