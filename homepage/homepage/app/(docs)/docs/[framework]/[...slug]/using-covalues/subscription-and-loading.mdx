@@ -27,16 +27,68 @@ const unsubscribe = Task.subscribe(taskId, { resolve: {} }, (updatedTask) => {
   console.log("New status:", updatedTask.status);
 });
 
-// 🔑 Always clean up when you're done to prevent memory leaks
+// Clean up when you're done
 unsubscribe();
 
-// For example, in a React component:
-// useEffect(() => {
-//   const unsubscribe = Task.subscribe(taskId, { resolve: {} }, onTaskUpdated);
-//   return () => unsubscribe(); // Clean up on unmount
-// }, [taskId]);
 ```
 </CodeGroup>
+
+## Framework Integration
+
+The subscription patterns covered here work seamlessly with all [CoValue types](/docs/using-covalues/comaps) in your application.
+
+<ContentByFramework framework="vanilla">
+If you're using React in your project, check out our [React hooks](/docs/react/using-covalues/subscription-and-loading#framework-integration) which provide a more streamlined experience with automatic subscription management.
+</ContentByFramework>
+
+<ContentByFramework framework="react">
+Jazz provides a `useCoState` hook that provides a convenient way to subscribe to CoValues and handle loading states:
+
+<CodeGroup>
+```tsx
+function GardenPlanner({ projectId }: { projectId: ID<Project> }) {
+  // Subscribe to a project and its tasks
+  const project = useCoState(Project, projectId, {
+    resolve: {
+      tasks: true
+    }
+  });
+
+  // Handle loading state
+  if (project === undefined) {
+    return <div>Loading garden project...</div>;
+  }
+  
+  // Handle not found or not accessible
+  if (project === null) {
+    return <div>Project not found or not accessible</div>;
+  }
+
+  return (
+    <div>
+      <h1>{project.name}</h1>
+      <TaskList tasks={project.tasks} />
+    </div>
+  );
+}
+
+function TaskList({ tasks }: { tasks: Task[] }) {
+  return (
+    <ul>
+      {tasks.map(task => (
+        <li key={task.id}>
+          <span>{task.title}</span>
+          <span>{task.status}</span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+```
+</CodeGroup>
+
+The `useCoState` hook handles subscribing when the component mounts and unsubscribing when it unmounts, making it easy to keep your UI in sync with the underlying data.
+</ContentByFramework>
 
 ## Loading States and Permission Checking
 
@@ -303,63 +355,6 @@ function processProject(project: FullyLoadedProject) {
 </CodeGroup>
 
 Using the `Resolved` type helps catch errors at compile time rather than runtime, ensuring that your components and functions receive data with the proper resolution depth. This is especially useful for larger applications where data is passed between many components.
-
-## Framework Integration
-
-The subscription patterns covered here work seamlessly with all [CoValue types](/docs/using-covalues/comaps) in your application.
-
-<ContentByFramework framework="vanilla">
-If you're using React in your project, check out our [React hooks](/docs/react/using-covalues/subscription-and-loading#framework-integration) which provide a more streamlined experience with automatic subscription management.
-</ContentByFramework>
-
-<ContentByFramework framework="react">
-Jazz provides a `useCoState` hook that provides a convenient way to subscribe to CoValues and handle loading states:
-
-<CodeGroup>
-```tsx
-function GardenPlanner({ projectId }: { projectId: ID<Project> }) {
-  // Subscribe to a project and its tasks
-  const project = useCoState(Project, projectId, {
-    resolve: {
-      tasks: true
-    }
-  });
-
-  // Handle loading state
-  if (project === undefined) {
-    return <div>Loading garden project...</div>;
-  }
-  
-  // Handle not found or not accessible
-  if (project === null) {
-    return <div>Project not found or not accessible</div>;
-  }
-
-  return (
-    <div>
-      <h1>{project.name}</h1>
-      <TaskList tasks={project.tasks} />
-    </div>
-  );
-}
-
-function TaskList({ tasks }: { tasks: Task[] }) {
-  return (
-    <ul>
-      {tasks.map(task => (
-        <li key={task.id}>
-          <span>{task.title}</span>
-          <span>{task.status}</span>
-        </li>
-      ))}
-    </ul>
-  );
-}
-```
-</CodeGroup>
-
-The `useCoState` hook handles subscribing when the component mounts and unsubscribing when it unmounts, making it easy to keep your UI in sync with the underlying data.
-</ContentByFramework>
 
 ## Ensuring Data is Loaded
 
