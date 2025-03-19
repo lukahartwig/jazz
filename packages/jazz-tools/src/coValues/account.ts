@@ -341,7 +341,7 @@ export class Account extends CoValueBase implements CoValue {
     creationProps; // To avoid unused parameter warning
   }
 
-  onAuthChange(isAuthenticated: boolean) {
+  onSignUp(isAuthenticated: boolean) {
     isAuthenticated; // To avoid unused parameter warning
   }
 

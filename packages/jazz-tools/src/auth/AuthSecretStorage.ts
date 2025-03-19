@@ -117,7 +117,7 @@ export class AuthSecretStorage {
 
       const currentAccount = activeAccountContext.maybeGet();
       if (currentAccount && authStateChanged) {
-        await currentAccount.onAuthChange(this.isAuthenticated);
+        await currentAccount.onSignUp(this.isAuthenticated);
       }
     }
   }
