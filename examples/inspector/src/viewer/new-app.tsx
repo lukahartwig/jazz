@@ -128,7 +128,6 @@ export default function CoJsonViewerApp() {
   return (
     <div
       className={clsx(
-        // layout
         "h-screen overflow-hidden flex flex-col",
         " text-stone-700 bg-white",
         "dark:text-stone-300 dark:bg-stone-950",
@@ -167,47 +166,39 @@ export default function CoJsonViewerApp() {
         goBack={goBack}
         addPages={addPages}
       >
-        {!currentAccount ? (
-          <AddAccountForm addAccount={addAccount} />
-        ) : (
+        {!currentAccount && <AddAccountForm addAccount={addAccount} />}
+
+        {currentAccount && path.length <= 0 && (
           <form
             onSubmit={handleCoValueIdSubmit}
             aria-hidden={path.length !== 0}
-            className={clsx(
-              "flex flex-col justify-center items-center gap-2 h-full w-full mb-20 ",
-              "transition-all duration-150",
-              path.length > 0 ? "opacity-0" : "opacity-100",
-            )}
+            className="flex flex-col relative -top-6 justify-center gap-2 h-full w-full max-w-sm mx-auto"
           >
-            <fieldset className="flex flex-col gap-2">
-              <h2 className="text-lg text-center font-medium mb-4 text-stone-900 dark:text-white">
-                Jazz CoValue Inspector
-              </h2>
-              <Input
-                label="CoValue ID"
-                className="min-w-[21rem] font-mono"
-                hideLabel
-                placeholder="co_z1234567890abcdef123456789"
-                value={coValueId}
-                onChange={(e) =>
-                  setCoValueId(e.target.value as CoID<RawCoValue>)
-                }
-              />
-              <Button type="submit" variant="primary">
-                Inspect CoValue
-              </Button>
+            <h1 className="text-lg text-center font-medium mb-4 text-stone-900 dark:text-white">
+              Jazz CoValue Inspector
+            </h1>
+            <Input
+              label="CoValue ID"
+              className="font-mono"
+              hideLabel
+              placeholder="co_z1234567890abcdef123456789"
+              value={coValueId}
+              onChange={(e) => setCoValueId(e.target.value as CoID<RawCoValue>)}
+            />
+            <Button type="submit" variant="primary">
+              Inspect CoValue
+            </Button>
 
-              <p className="text-center">or</p>
+            <p className="text-center">or</p>
 
-              <Button
-                variant="secondary"
-                onClick={() => {
-                  setPage(currentAccount.id);
-                }}
-              >
-                Inspect my account
-              </Button>
-            </fieldset>
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setPage(currentAccount.id);
+              }}
+            >
+              Inspect my account
+            </Button>
           </form>
         )}
       </PageStack>
