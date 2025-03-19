@@ -52,13 +52,13 @@ export function TableView({
 
   return (
     <div>
-      <table className="min-w-full border-spacing-0 border-collapse">
+      <table className="min-w-full text-sm border-spacing-0 border-collapse">
         <thead className="sticky top-0 border-b border-gray-200">
           <tr>
             {["", ...keys].map((key) => (
               <th
                 key={key}
-                className="p-3 bg-gray-50  dark:bg-gray-925 text-left text-xs font-medium text-gray-500 rounded"
+                className="p-3 bg-gray-50 dark:bg-gray-925 text-left font-medium rounded"
               >
                 {key}
               </th>
@@ -84,10 +84,7 @@ export function TableView({
                 </Button>
               </td>
               {keys.map((key) => (
-                <td
-                  key={key}
-                  className="p-4 whitespace-nowrap text-sm text-gray-500"
-                >
+                <td key={key} className="p-4 whitespace-nowrap">
                   <ValueRenderer
                     json={(item.snapshot as JsonObject)[key]}
                     onCoIDClick={(coId) => {

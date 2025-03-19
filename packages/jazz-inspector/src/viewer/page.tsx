@@ -82,15 +82,15 @@ export function Page({
               ) : null}
             </span>
           </h2>
-          <span className="text-xs text-gray-700 font-medium py-0.5 px-1 -ml-0.5 rounded bg-gray-700/5 inline-block font-mono">
+          <span className="text-sm text-gray-700 font-medium py-0.5 px-1 -ml-0.5 rounded bg-gray-700/5 inline-block font-mono">
             {type && <TypeIcon type={type} extendedType={extendedType} />}
           </span>
-          <span className="text-xs text-gray-700 font-medium py-0.5 px-1 -ml-0.5 rounded bg-gray-700/5 inline-block font-mono">
+          <span className="text-sm text-gray-700 font-medium py-0.5 px-1 -ml-0.5 rounded bg-gray-700/5 inline-block font-mono">
             {coId}
           </span>
         </div>
       </div>
-      <div className="overflow-auto max-h-[calc(100%-4rem)]">
+      <div className="overflow-auto">
         {type === "costream" ? (
           <CoStreamView
             data={snapshot}
@@ -104,7 +104,7 @@ export function Page({
           <TableView data={snapshot} node={node} onNavigate={onNavigate} />
         )}
         {extendedType !== "account" && extendedType !== "group" && (
-          <div className="text-xs text-gray-500 mt-4">
+          <div className="text-sm text-gray-500 mt-4">
             Owned by{" "}
             <AccountOrGroupPreview
               coId={value.group.id}

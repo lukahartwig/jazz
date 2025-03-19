@@ -88,20 +88,17 @@ export function ValueRenderer({
     );
   }
 
-  if (Array.isArray(json)) {
-    return (
-      <span title={JSON.stringify(json)}>
-        Array <span className="text-gray-500">({json.length})</span>
-      </span>
-    );
-  }
-
   if (typeof json === "object") {
     return (
       <span
         title={JSON.stringify(json, null, 2)}
         className="inline-block max-w-64"
       >
+        {Array.isArray(json) && (
+          <>
+            Array <span className="text-gray-500">({json.length})</span>
+          </>
+        )}
         {compact ? (
           <span>
             Object{" "}
@@ -117,7 +114,7 @@ export function ValueRenderer({
             <Button
               variant="plain"
               onClick={() => setIsExpanded(!isExpanded)}
-              className="text-xs text-gray-500 hover:text-gray-700"
+              className="text-sm text-gray-500 hover:text-gray-700"
             >
               {isExpanded ? "Show less" : "Show more"}
             </Button>
@@ -214,7 +211,7 @@ export const CoMapPreview = ({
           ))}
       </div>
       {Object.entries(snapshot).length > limit && (
-        <div className="text-left text-xs text-gray-500 mt-2">
+        <div className="text-left text-sm text-gray-500 mt-2">
           {Object.entries(snapshot).length - limit} more
         </div>
       )}

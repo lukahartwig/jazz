@@ -120,8 +120,8 @@ export default function CoJsonViewerApp() {
   }
 
   return (
-    <div className="w-full h-screen bg-white p-4 overflow-hidden flex flex-col">
-      <div className="flex items-center mb-4 gap-4">
+    <div className="w-full h-screen bg-white p-4 overflow-hidden flex flex-col text-stone-700 dark:text-stone-400">
+      <header className="flex items-center mb-4 gap-4">
         <Breadcrumbs path={path} onBreadcrumbClick={goToIndex} />
         <div className="flex-1">
           <form onSubmit={handleCoValueIdSubmit}>
@@ -144,7 +144,7 @@ export default function CoJsonViewerApp() {
           deleteCurrentAccount={deleteCurrentAccount}
           localNode={localNode}
         />
-      </div>
+      </header>
 
       <PageStack
         path={path}
