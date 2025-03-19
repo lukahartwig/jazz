@@ -1,5 +1,5 @@
 import { CoValueSchema } from "../coMap/schema.js";
-import { SelfReference } from "./self.js";
+import { LazySchema } from "./lazy.js";
 
 export const OptionalSymbol = "isOptional" as const;
 
@@ -17,8 +17,10 @@ export function optional<T extends { optional: () => any }>(
   return value.optional();
 }
 
-export function isOptional<T extends CoValueSchema | SelfReference>(
+export function isOptional<T extends CoValueSchema>(
   value: T,
 ): value is T & { isOptional: true } {
   return value.isOptional;
 }
+
+export type Optional<T extends CoValueSchema> = ReturnType<T["optional"]>;

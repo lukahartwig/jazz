@@ -5,8 +5,8 @@ import type { Group } from "../../coValues/group.js";
 import { RegisteredSchemas } from "../../coValues/registeredSchemas.js";
 import { AnonymousJazzAgent, ID } from "../../internal.js";
 import { coValuesCache } from "../../lib/cache.js";
+import { LazySchema, isLazySchema } from "../coValue/lazy.js";
 import { isOptional } from "../coValue/optional.js";
-import { SelfReference, isSelfReference } from "../coValue/self.js";
 import { Loaded, ResolveQuery, ResolveQueryStrict } from "../coValue/types.js";
 import { CoValueResolutionNode, ensureCoValueLoaded } from "../subscribe.js";
 import {
@@ -23,11 +23,11 @@ type Relations<D extends CoValueSchema> = D extends AnyCoMapSchema
   ? {
       [K in keyof D["shape"]]: D["shape"][K] extends AnyCoMapSchema
         ? D["shape"][K]
-        : D["shape"][K] extends SelfReference
-          ? D
+        : D["shape"][K] extends LazySchema<infer T extends CoValueSchema>
+          ? T
           : never;
     }
-  : never;
+  : "never";
 
 type RelationsKeys<D extends CoValueSchema> = keyof Relations<D> &
   (string | number);
@@ -42,10 +42,11 @@ type PropertyType<
   K extends CoMapSchemaKey<D>,
 > = CoMapInit<D>[K];
 
-export type CoMap<
+export type LoadedCoMapJazzProps<
   D extends AnyCoMapSchema,
   R extends ResolveQuery<D> = true,
 > = {
+  $jazzState: "loaded";
   $jazz: CoMapJazzApi<D, R>;
 };
 
@@ -54,7 +55,7 @@ export class CoMapJazzApi<
   R extends ResolveQuery<D> = true,
 > {
   raw: RawCoMap;
-  schema: D;
+  schema: CoMapSchemaClass<D["shape"], D["record"], D["isOptional"]>;
   id: ID<D>;
   _resolutionNode: CoValueResolutionNode<D, R> | undefined;
   refs: ChildMap<D> = new Map();
@@ -66,14 +67,18 @@ export class CoMapJazzApi<
     raw: RawCoMap,
     resolutionNode?: CoValueResolutionNode<D, R>,
   ) {
-    this.schema = schema;
+    this.schema = schema as CoMapSchemaClass<
+      D["shape"],
+      D["record"],
+      D["isOptional"]
+    >;
     this.raw = raw;
     this.lastUpdateTx = raw.totalProcessedTransactions;
     this.id = raw.id as unknown as ID<D>;
     this._resolutionNode = resolutionNode;
   }
 
-  _setInstance(instance: CoMap<D, R>) {
+  _setInstance(instance: LoadedCoMapJazzProps<D, R>) {
     this._instance = instance as unknown as Loaded<D, R>;
   }
 
@@ -106,7 +111,6 @@ export class CoMapJazzApi<
       } else {
         if (!isCoValue(value)) {
           // To support inline CoMap creation on set
-          // @ts-expect-error AnyCoMapSchema does not provide the create method to avoid type recursion issues
           value = getSchemaFromDescriptor(this.schema, key).create(
             value,
             this.owner,
@@ -203,7 +207,7 @@ export function createCoMapFromRaw<
 ) {
   const instance = Object.create({
     $jazz: new CoMapJazzApi(schema, raw, resolutionNode),
-  }) as CoMap<D, R>;
+  }) as LoadedCoMapJazzProps<D, R>;
   instance.$jazz._setInstance(instance);
 
   const fields = new Set(schema.keys());
@@ -353,7 +357,6 @@ function createCoMapFromInit<D extends AnyCoMapSchema>(
           if ("$jazz" in initValue) {
             instance = initValue as Loaded<CoValueSchema>;
           } else {
-            // @ts-expect-error AnyCoMapSchema does not provide the create method to avoid type recursion issues
             instance = getSchemaFromDescriptor(schema, key).create(
               initValue,
               owner,
@@ -388,8 +391,8 @@ function getSchemaFromDescriptor<
   const descriptor = schema.get(key);
 
   if (descriptor && isRelationRef(descriptor)) {
-    if (isSelfReference(descriptor)) {
-      return schema;
+    if (isLazySchema<any>(descriptor)) {
+      return descriptor.lazySchema();
     } else {
       return descriptor;
     }
@@ -399,11 +402,13 @@ function getSchemaFromDescriptor<
 }
 
 export function isRelationRef(
-  descriptor: AnyCoMapSchema | ZodTypeAny | SelfReference,
-): descriptor is AnyCoMapSchema | SelfReference {
-  return descriptor instanceof CoMapSchemaClass || isSelfReference(descriptor);
+  descriptor: AnyCoMapSchema | ZodTypeAny | LazySchema<any>,
+): descriptor is AnyCoMapSchema | LazySchema<any> {
+  return descriptor instanceof CoMapSchemaClass || isLazySchema(descriptor);
 }
 
-export function isCoValue(value: unknown): value is CoMap<any, any> {
+export function isCoValue(
+  value: unknown,
+): value is LoadedCoMapJazzProps<any, any> {
   return typeof value === "object" && value !== null && "$jazz" in value;
 }

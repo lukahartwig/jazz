@@ -1,6 +1,18 @@
 import { beforeEach, describe, expect, expectTypeOf, it } from "vitest";
 import { createJazzTestAccount } from "../testing.js";
-import { CoMapInit } from "./coMap/schema.js";
+import {
+  CoMapInit,
+  CoMapSchema,
+  CoMapSchemaClass,
+  RefProps,
+  ResolveQueryForCoMapInit,
+  UnwrapRecordReference,
+  UnwrapReference,
+} from "./coMap/schema.js";
+import { LazySchema } from "./coValue/lazy.js";
+import { Optional } from "./coValue/optional.js";
+import { flatten } from "./coValue/typeUtils.js";
+import { MaybeLoaded, Unloaded } from "./coValue/types.js";
 import { Loaded, co, z } from "./schema.js";
 
 beforeEach(async () => {
@@ -134,7 +146,9 @@ describe("CoMap - with zod based schema", () => {
         Loaded<typeof Person.shape.address>
       >();
 
-      expectTypeOf<typeof johnWithoutAddress.address>().toMatchTypeOf<null>();
+      expectTypeOf<typeof johnWithoutAddress.address>().toMatchTypeOf<
+        MaybeLoaded<typeof Person.shape.address>
+      >();
     });
 
     it("should be possible to reference a nested map schema to split group creation", () => {
@@ -192,10 +206,19 @@ describe("CoMap - with zod based schema", () => {
     });
 
     it("should create a CoMap with self references", () => {
-      const Person = co.map({
+      const personBaseProps = {
         name: z.string(),
         age: z.number(),
-        friend: co.self(),
+      };
+      const Person: CoMapSchemaClass<
+        typeof personBaseProps & {
+          friend: LazySchema<Optional<typeof Person>>;
+        },
+        undefined,
+        false
+      > = co.map({
+        ...personBaseProps,
+        friend: co.lazy(() => Person.optional()),
       });
 
       const john = Person.create({
@@ -212,11 +235,68 @@ describe("CoMap - with zod based schema", () => {
       expect(john.friend.name).toBe("Jane");
     });
 
-    it("should return a loaded type when a self reference is passed on create", () => {
-      const Person = co.map({
+    it("should create mutually recursive CoMaps", () => {
+      const personBaseProps = {
         name: z.string(),
         age: z.number(),
-        friend: co.self(),
+      };
+
+      const Person: CoMapSchemaClass<
+        typeof personBaseProps & {
+          friends: LazySchema<Optional<typeof PeopleByNickname>>;
+        },
+        undefined,
+        false
+      > = co.map({
+        ...personBaseProps,
+        friends: co.lazy(() => PeopleByNickname.optional()),
+      });
+
+      const PeopleByNickname = co.record(z.string(), Person);
+
+      type RQ = ResolveQueryForCoMapInit<
+        typeof Person,
+        {
+          name: string;
+          age: number;
+        }
+      >;
+
+      type L = Loaded<typeof Person, RQ>;
+
+      const joey = Person.create({
+        name: "joey",
+        age: 20,
+      });
+
+      const john = Person.create({
+        name: "John",
+        age: 30,
+        friends: {
+          joey: joey,
+          jj: { name: "jane", age: 20, friends: { joey: joey } },
+        },
+      });
+
+      expect(john.friends.jj.name).toBe("jane");
+      expect(john.friends.jj.friends.joey.name).toBe("joe");
+    });
+
+    it("should return a loaded type when a self reference is passed on create", () => {
+      const personBaseProps = {
+        name: z.string(),
+        age: z.number(),
+      };
+
+      const Person: CoMapSchemaClass<
+        typeof personBaseProps & {
+          friend: LazySchema<Optional<typeof Person>>;
+        },
+        undefined,
+        false
+      > = co.map({
+        ...personBaseProps,
+        friend: co.lazy(() => Person.optional()),
       });
 
       const john = Person.create({
@@ -230,14 +310,27 @@ describe("CoMap - with zod based schema", () => {
       });
 
       expectTypeOf<typeof john.friend.friend.name>().toEqualTypeOf<string>();
-      expectTypeOf<typeof john.friend.friend.friend>().toEqualTypeOf<null>();
+
+      expectTypeOf<typeof john.friend.friend.friend>().toEqualTypeOf<
+        MaybeLoaded<Optional<typeof Person>>
+      >();
     });
 
-    it("should not throw an error if a self reference is missing", () => {
-      const Person = co.map({
+    it("should not throw an error if an optional self reference is missing", () => {
+      const personBaseProps = {
         name: z.string(),
         age: z.number(),
-        friend: co.self(),
+      };
+
+      const Person: CoMapSchemaClass<
+        typeof personBaseProps & {
+          friend: LazySchema<Optional<typeof Person>>;
+        },
+        undefined,
+        false
+      > = co.map({
+        ...personBaseProps,
+        friend: co.lazy(() => Person.optional()),
       });
 
       const john = Person.create({
@@ -295,8 +388,12 @@ describe("CoMap - with zod based schema", () => {
     });
 
     // TODO: Does this make sense?
-    it("should accept support co.self() as a catchall", () => {
-      const Person = co.map({}).catchall(co.self());
+    it("should accept support a self reference as a catchall", () => {
+      const Person: CoMapSchemaClass<
+        {},
+        { key: z.ZodString; value: LazySchema<Optional<typeof Person>> },
+        false
+      > = co.map({}).catchall(co.lazy(() => Person.optional()));
 
       const john = Person.create({
         extra: { extra: {} },
@@ -544,10 +641,20 @@ describe("CoMap - with zod based schema", () => {
     });
 
     it("should update nested values with self references", () => {
-      const Person = co.map({
+      const personBaseProps = {
         name: z.string(),
         age: z.number(),
-        friend: co.self(),
+      };
+
+      const Person: CoMapSchemaClass<
+        typeof personBaseProps & {
+          friend: LazySchema<Optional<typeof Person>>;
+        },
+        undefined,
+        false
+      > = co.map({
+        ...personBaseProps,
+        friend: co.lazy(() => Person.optional()),
       });
 
       const john = Person.create({

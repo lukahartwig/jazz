@@ -1,8 +1,8 @@
 import { z } from "zod";
 import { CoMapRecordDef, CoMapSchemaClass } from "./coMap/schema.js";
 import { CoMapSchemaShape } from "./coMap/schema.js";
+import { lazy } from "./coValue/lazy.js";
 import { optional } from "./coValue/optional.js";
-import { self } from "./coValue/self.js";
 
 function map<S extends CoMapSchemaShape>(schema: S) {
   return new CoMapSchemaClass(schema, undefined, false);
@@ -20,10 +20,11 @@ export const co = {
   self,
   optional,
   record,
+  lazy,
 };
 
 export { z };
-export type { CoMap } from "./coMap/instance.js";
+export type { LoadedCoMapJazzProps as CoMap } from "./coMap/instance.js";
 export type { CoValueSchema } from "./coMap/schema.js";
 export type {
   ResolveQuery,

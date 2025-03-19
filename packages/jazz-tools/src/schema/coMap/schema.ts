@@ -3,8 +3,8 @@ import { TypeOf, ZodString, ZodTypeAny, z } from "zod";
 import { Account } from "../../coValues/account.js";
 import { Group } from "../../coValues/group.js";
 import { parseCoValueCreateOptions } from "../../internal.js";
+import { LazySchema } from "../coValue/lazy.js";
 import { addOptional } from "../coValue/optional.js";
-import { SelfReference, markSelfReferenceAsOptional } from "../coValue/self.js";
 import {
   IsDepthLimit,
   addQuestionMarks,
@@ -13,12 +13,13 @@ import {
 import {
   Loaded,
   LoadedCoMap,
+  MaybeLoaded,
   ResolveQuery,
   ValidateQuery,
 } from "../coValue/types.js";
-import { CoMap, createCoMap } from "./instance.js";
+import { LoadedCoMapJazzProps, createCoMap } from "./instance.js";
 
-export type CoMapField = AnyCoMapSchema | ZodTypeAny | SelfReference;
+export type CoMapField = AnyCoMapSchema | ZodTypeAny | LazySchema<any>;
 export type CoMapRecordDef = { key: ZodString; value: CoMapField };
 
 export type CoMapSchemaShape = {
@@ -40,8 +41,10 @@ export type CoValueSchema = AnyCoMapSchema;
 export type UnwrapRecordReference<S extends AnyCoMapSchema> =
   CoMapRecordFieldType<S> extends CoValueSchema
     ? CoMapRecordFieldType<S>
-    : CoMapRecordFieldType<S> extends SelfReference
-      ? CoMapSchemaToClass<S>
+    : CoMapRecordFieldType<S> extends LazySchema<infer T>
+      ? T extends CoValueSchema
+        ? T
+        : never
       : never;
 
 export type UnwrapReference<
@@ -49,29 +52,27 @@ export type UnwrapReference<
   K extends CoMapSchemaKey<S>,
 > = S["shape"][K] extends CoValueSchema
   ? S["shape"][K]
-  : S["shape"][K] extends SelfReference
-    ? CoMapSchemaToClass<S>
+  : S["shape"][K] extends LazySchema<infer T>
+    ? T
     : never;
 
-export type CoMapSchemaRelationsKeys<S extends AnyCoMapSchema> = {
-  [K in keyof S["shape"]]: S["shape"][K] extends CoValueSchema | SelfReference
+export type RefProps<S extends AnyCoMapSchema> = {
+  [K in keyof S["shape"]]: S["shape"][K] extends CoValueSchema | LazySchema<any>
     ? K
     : never;
 }[keyof S["shape"]];
 
-export type CoMapSchemaStaticPropKeys<S extends AnyCoMapSchema> = {
+export type PrimitiveProps<S extends AnyCoMapSchema> = {
   [K in keyof S["shape"]]: S["shape"][K] extends ZodTypeAny ? K : never;
 }[keyof S["shape"]];
 
 type CoMapChildSchemaInit<
-  Field extends CoMapField,
   S extends AnyCoMapSchema,
   CurrentDepth extends number[],
 > =
   | CoMapInit<S, CurrentDepth> // To accept inline init values
-  | LoadedCoMap<S, ResolveQuery<S>> // To accept Schema.create or loaded values as input
-  | addOptional<S> // Adds undefined if the schema is optional
-  | markSelfReferenceAsOptional<Field>; // Self references are always optional
+  | MaybeLoaded<S> // To accept Schema.create or loaded values as input
+  | addOptional<S>; // Adds undefined if the schema is optional
 
 export type CoMapInit<
   S extends AnyCoMapSchema,
@@ -83,22 +84,17 @@ export type CoMapInit<
         [K in keyof S["shape"]]: S["shape"][K] extends ZodTypeAny
           ? TypeOf<S["shape"][K]>
           : UnwrapReference<S, K> extends AnyCoMapSchema
-            ? CoMapChildSchemaInit<
-                S["shape"][K],
-                UnwrapReference<S, K>,
-                [0, ...CurrentDepth]
-              >
+            ? CoMapChildSchemaInit<UnwrapReference<S, K>, [0, ...CurrentDepth]>
             : never;
       }>
     > &
       (S["record"] extends undefined
-        ? unknown
+        ? {}
         : {
             [K in CoMapRecordKey<S>]: CoMapRecordFieldType<S> extends ZodTypeAny
               ? TypeOf<CoMapRecordFieldType<S>>
               : UnwrapRecordReference<S> extends AnyCoMapSchema
                 ? CoMapChildSchemaInit<
-                    CoMapRecordFieldType<S>,
                     UnwrapRecordReference<S>,
                     [0, ...CurrentDepth]
                   >
@@ -125,21 +121,21 @@ type CoMapSimpleInit<
       ? {
           [K in CoMapRecordKey<S>]: any;
         }
-      : unknown);
+      : {});
 
-type CoMapChildInitToRelationsToResolve<
+type ReolveQueryForCoMapChild<
   ChildSchema,
   I,
   CurrentDepth extends number[],
 > = ChildSchema extends AnyCoMapSchema
-  ? I extends CoMap<ChildSchema, infer R> // If the init is a CoMap, return the resolve query
+  ? I extends LoadedCoMapJazzProps<ChildSchema, infer R> // If the init is a CoMap, return the resolve query
     ? R
     : I extends CoMapSimpleInit<ChildSchema>
-      ? CoMapInitToRelationsToResolve<ChildSchema, I, CurrentDepth>
+      ? ResolveQueryForCoMapInit<ChildSchema, I, CurrentDepth>
       : never
   : never;
 
-export type CoMapInitToRelationsToResolve<
+export type ResolveQueryForCoMapInit<
   S extends AnyCoMapSchema,
   I,
   CurrentDepth extends number[] = [],
@@ -149,22 +145,20 @@ export type CoMapInitToRelationsToResolve<
     ? ValidateQuery<
         S,
         {
-          [K in keyof I &
-            CoMapSchemaRelationsKeys<S>]: CoMapChildInitToRelationsToResolve<
+          [K in keyof I & RefProps<S>]: ReolveQueryForCoMapChild<
             UnwrapReference<S, K>,
             I[K],
             [0, ...CurrentDepth]
           >;
         } & (S["record"] extends CoMapRecordDef
           ? {
-              [K in keyof I &
-                CoMapRecordKey<S>]: CoMapChildInitToRelationsToResolve<
+              [K in keyof I & CoMapRecordKey<S>]: ReolveQueryForCoMapChild<
                 UnwrapRecordReference<S>,
                 I[K],
                 [0, ...CurrentDepth]
               >;
             }
-          : unknown)
+          : {})
       >
     : true;
 
@@ -260,7 +254,7 @@ export class CoMapSchemaClass<
       | Group,
   ): Loaded<
     CoMapSchema<S, R, false>,
-    CoMapInitToRelationsToResolve<CoMapSchema<S, R>, I>,
+    ResolveQueryForCoMapInit<CoMapSchema<S, R>, I>,
     "non-nullable" // We want the loaded type to reflect the init input as we know for sure if values are available or not
   > {
     const { owner, uniqueness } = parseCoValueCreateOptions(options);

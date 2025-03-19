@@ -5,7 +5,7 @@ import { AnonymousJazzAgent, ID } from "../internal.js";
 import { createCoMapFromRaw, isRelationRef } from "./coMap/instance.js";
 import { CoValueSchema } from "./coMap/schema.js";
 import { getOwnerFromRawValue } from "./coMap/utils.js";
-import { isSelfReference } from "./coValue/self.js";
+import { isLazySchema } from "./coValue/lazy.js";
 import { Loaded, ResolveQuery, ResolveQueryStrict } from "./coValue/types.js";
 
 type SubscribeListener<D extends CoValueSchema, R extends ResolveQuery<D>> = (
@@ -248,8 +248,8 @@ export class CoValueResolutionNode<
         hasChanged = true;
         let childSchema = descriptor as CoValueSchema;
 
-        if (isSelfReference(childSchema)) {
-          childSchema = this.schema;
+        if (isLazySchema<CoValueSchema>(childSchema)) {
+          childSchema = childSchema.lazySchema();
         }
 
         this.childValues.set(key, null);

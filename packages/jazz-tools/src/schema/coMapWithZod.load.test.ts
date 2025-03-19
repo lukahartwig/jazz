@@ -11,6 +11,10 @@ import {
 import { Group } from "../exports.js";
 import { createJazzTestAccount, setupJazzTestSync } from "../testing.js";
 import { waitFor } from "../tests/utils.js";
+import { CoMapSchemaClass } from "./coMap/schema.js";
+import { LazySchema } from "./coValue/lazy.js";
+import { Optional } from "./coValue/optional.js";
+import { MaybeLoaded, Unloaded } from "./coValue/types.js";
 import { Loaded, co, z } from "./schema.js";
 import { loadCoValue, subscribeToCoValue } from "./subscribe.js";
 
@@ -60,9 +64,17 @@ describe("CoMap with Zod", () => {
 
       expect(loaded.name).toBe("John");
       expect(loaded.age).toBe(30);
-      expect(loaded.address).toBe(null);
+      expect(loaded.address).toMatchObject({
+        $jazzState: "unloaded",
+        $jazz: {
+          schema: Person.shape.address,
+          id: john.$jazz.id,
+        },
+      });
 
-      expectTypeOf(loaded.address).toEqualTypeOf<null>();
+      expectTypeOf(loaded.address).toEqualTypeOf<
+        MaybeLoaded<typeof Person.shape.address>
+      >();
     });
 
     it("should load a CoMap with nested values", async () => {
@@ -103,7 +115,7 @@ describe("CoMap with Zod", () => {
       >();
     });
 
-    it("should load a CoMap with a catchall static property", async () => {
+    it("should load a CoMap with a primitive catchall property", async () => {
       const anotherAccount = await createJazzTestAccount();
 
       const Person = co.map({}).catchall(z.string());
@@ -114,7 +126,7 @@ describe("CoMap with Zod", () => {
       const john = Person.create(
         {
           name: "John",
-          catchall: "catchall",
+          extra: "extra",
         },
         group,
       );
@@ -126,7 +138,7 @@ describe("CoMap with Zod", () => {
       assert(loaded);
 
       expect(loaded.name).toBe("John");
-      expect(loaded.catchall).toBe("catchall");
+      expect(loaded.extra).toBe("extra");
     });
 
     it("should load a CoMap with a catchall relation", async () => {
@@ -134,7 +146,7 @@ describe("CoMap with Zod", () => {
 
       const Person = co.map({}).catchall(
         co.map({
-          catchall: z.string(),
+          prop: z.string(),
         }),
       );
 
@@ -143,24 +155,24 @@ describe("CoMap with Zod", () => {
 
       const john = Person.create(
         {
-          name: {
-            catchall: "catchall",
+          extra1: {
+            prop: "prop1",
           },
-          catchall: {
-            catchall: "catchall",
+          extra2: {
+            prop: "prop2",
           },
         },
         group,
       );
 
       const loaded = await loadCoValue(Person, john.$jazz.id, {
-        resolve: { catchall: true },
+        resolve: { extra1: true },
       });
 
       assert(loaded);
 
-      expect(loaded.catchall?.catchall).toBe("catchall");
-      expect(loaded.name).toBe(null);
+      expect(loaded.extra1.prop).toBe("prop1");
+      expect("extra2" in loaded).toBe(false);
     });
 
     it("should load all the relations on co.record when using $each", async () => {
@@ -247,10 +259,20 @@ describe("CoMap with Zod", () => {
     it("should load a CoMap with self references", async () => {
       const anotherAccount = await createJazzTestAccount();
 
-      const Person = co.map({
+      const personBaseProps = {
         name: z.string(),
         age: z.number(),
-        friend: co.self(),
+      };
+
+      const Person: CoMapSchemaClass<
+        typeof personBaseProps & {
+          friend: LazySchema<Optional<typeof Person>>;
+        },
+        undefined,
+        false
+      > = co.map({
+        ...personBaseProps,
+        friend: co.lazy(() => Person.optional()),
       });
 
       const group = Group.create(anotherAccount);
@@ -1052,13 +1074,23 @@ describe("CoMap with Zod", () => {
   });
 
   it("should preserve references of unchanged nested values", async () => {
-    const Person = co.map({
+    const personBaseProps = {
       name: z.string(),
       age: z.number(),
       address: co.map({
         street: z.string(),
       }),
-      friend: co.self(),
+    };
+
+    const Person: CoMapSchemaClass<
+      typeof personBaseProps & {
+        friend: LazySchema<Optional<typeof Person>>;
+      },
+      undefined,
+      false
+    > = co.map({
+      ...personBaseProps,
+      friend: co.lazy(() => Person.optional()),
     });
 
     const john = Person.create({

@@ -3,8 +3,8 @@ import { createJazzTestAccount } from "../testing.js";
 import { CoMapJazzApi } from "./coMap/instance.js";
 import {
   CoMapInit,
-  CoMapInitToRelationsToResolve,
   CoMapSchema,
+  ResolveQueryForCoMapInit,
 } from "./coMap/schema.js";
 import { CoMap, Loaded, ResolveQuery, co, z } from "./schema.js";
 
@@ -521,7 +521,7 @@ describe("CoMap - with zod based schema", () => {
         age: z.number(),
       });
 
-      type Result = CoMapInitToRelationsToResolve<
+      type Result = ResolveQueryForCoMapInit<
         typeof Person,
         {
           name: string;
@@ -541,7 +541,7 @@ describe("CoMap - with zod based schema", () => {
         }),
       });
 
-      type Result = CoMapInitToRelationsToResolve<
+      type Result = ResolveQueryForCoMapInit<
         typeof Person,
         {
           name: string;
@@ -569,7 +569,7 @@ describe("CoMap - with zod based schema", () => {
           }),
         );
 
-      type Result = CoMapInitToRelationsToResolve<
+      type Result = ResolveQueryForCoMapInit<
         typeof Person,
         {
           address: {
@@ -590,7 +590,7 @@ describe("CoMap - with zod based schema", () => {
         friend: co.self(),
       });
 
-      type Result = CoMapInitToRelationsToResolve<
+      type Result = ResolveQueryForCoMapInit<
         typeof Person,
         {
           name: string;
