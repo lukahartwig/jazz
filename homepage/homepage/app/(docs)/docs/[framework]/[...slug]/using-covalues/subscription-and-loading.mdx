@@ -116,7 +116,7 @@ Task.subscribe(taskId, { resolve: {} }, (task) => {
 
 ### Granular Permission Handling
 
-Jazz implements granular permission checking for collections of items. If a user has access to a list but not to some of its items, those items will be filtered out rather than causing the entire list to be inaccessible:
+Jazz implements granular permission checking for collections of items. If a user has access to a list but not to some of its items, those items will be returned as `null` rather than causing the entire list to be inaccessible:
 
 <CodeGroup>
 ```tsx
