@@ -28,6 +28,7 @@ Object.keys(stonePalette).forEach((key) => {
 });
 
 export default defineConfig({
+  hash: false,
   presets: [presetAutoprefix(), presetTailwind()],
   theme: {
     extend: {
