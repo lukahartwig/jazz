@@ -24,25 +24,25 @@ export const metadata = { title: "Jazz 0.12.0 - Deeply resolved data" };
   To get started with the new resolve API, replace empty array/object parameters with structured resolve configs:
 
 <CodeGroup>
-{/* prettier-ignore */}
 ```tsx
+class UsersByUsername extends CoMap.Record(co.string) {}
+
 // Before
-const playlist = useCoState(Playlist, id, [{}]);
-const { me } = useAccount({ root: { playlists: [] } });
+const usersByUsername = useCoState(UsersByUsername, id, [{}]);
+const { me } = useAccount({ root: { friends: [] } });
 
 // After
-const playlist = useCoState(Playlist, id, { 
-  resolve: { $each: true } 
+const usersByUsername = useCoState(UsersByUsername, id, {
+  resolve: { $each: true }
 });
 const { me } = useAccount({ 
-  resolve: { root: { playlists: true } } 
+  resolve: { root: { friends: true } } 
 });
 ```
 </CodeGroup>
 
 The new API works across all loading methods:
 <CodeGroup>
-{/* prettier-ignore */}
 ```ts
 // Before
 Playlist.load(id, account, {
