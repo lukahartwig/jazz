@@ -310,29 +310,6 @@ const project = await Project.load(projectId, {
 
 The boolean `true` value is a shorthand that indicates you want to load all items in the list without specifying deeper loading for each item. When you need to load nested properties of list items, use the more explicit `$each` syntax.
 
-### Auto-loading Behavior
-
-Jazz implements automatic loading of nested references on access, even if not explicitly requested in the depth specification. This provides a more intuitive development experience:
-
-<CodeGroup>
-```ts
-// Load just the project
-const project = await Project.load(projectId, { resolve: {} });
-
-// Later, access tasks - they will be automatically loaded when needed
-if (project) {
-  const tasks = project.tasks;  // Tasks will be auto-loaded on access
-  
-  // You can access properties of auto-loaded references
-  if (tasks.length > 0) {
-    console.log(tasks[0].title);  // Title will be available
-  }
-}
-```
-</CodeGroup>
-
-While auto-loading improves the developer experience, it's still best practice to explicitly specify loading patterns for performance-critical code to avoid unnecessary loading delays.
-
 ## Type Safety with Resolved Type
 
 Jazz provides the `Resolved` type to help you define and enforce the structure of deeply loaded data in your application. This makes it easier to ensure that components receive the data they expect with proper TypeScript validation.
