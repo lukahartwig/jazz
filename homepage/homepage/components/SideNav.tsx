@@ -29,11 +29,6 @@ export function SideNav({
     <div className={clsx(className, "text-sm space-y-5 px-2")}>
       {children}
 
-      <div className="flex items-center gap-2">
-        <span className="inline-block size-2 rounded-full bg-yellow-400"></span>{" "}
-        Documentation coming soon
-      </div>
-
       {items.map(({ name, href, items }) => (
         <div key={name}>
           <SideNavHeader href={href}>{name}</SideNavHeader>
@@ -42,10 +37,6 @@ export function SideNav({
               <ul key={name}>
                 <li>
                   <SideNavItem href={href}>
-                    {done == 0 && (
-                      <span className="mr-1.5 inline-block size-2 rounded-full bg-yellow-400"></span>
-                    )}
-
                     <span
                       className={
                         done === 0 ? "text-stone-400 dark:text-stone-600" : ""
