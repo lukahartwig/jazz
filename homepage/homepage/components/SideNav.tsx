@@ -26,7 +26,7 @@ export function SideNav({
   footer?: React.ReactNode;
 }) {
   return (
-    <div className={clsx(className, "text-sm space-y-5 px-2")}>
+    <div className={clsx(className, "text-sm space-y-4 px-2")}>
       {children}
 
       {items.map(({ name, href, items }) => (
