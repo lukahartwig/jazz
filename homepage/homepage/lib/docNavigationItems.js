@@ -80,31 +80,31 @@ export const docNavigationItems = [
         href: "/docs/upgrade/0-11-0",
         done: 100,
       },
-      {
-        // upgrade guides
-        name: "0.10.0 - New authentication flow",
-        href: "/docs/upgrade/0-10-0",
-        done: 100,
-      },
-      {
-        // upgrade guides
-        name: "0.9.8 - Without me!",
-        href: "/docs/upgrade/0-9-8",
-        done: 100,
-      },
-      {
-        // upgrade guides
-        name: "0.9.2 - Local persistence on React Native",
-        href: "/docs/upgrade/react-native-local-persistence",
-        done: 100,
-        framework: "react-native",
-      },
-      {
-        // upgrade guides
-        name: "0.9.0 - Top level imports",
-        href: "/docs/upgrade/0-9-0",
-        done: 100,
-      },
+      // {
+      //   // upgrade guides
+      //   name: "0.10.0 - New authentication flow",
+      //   href: "/docs/upgrade/0-10-0",
+      //   done: 100,
+      // },
+      // {
+      //   // upgrade guides
+      //   name: "0.9.8 - Without me!",
+      //   href: "/docs/upgrade/0-9-8",
+      //   done: 100,
+      // },
+      // {
+      //   // upgrade guides
+      //   name: "0.9.2 - Local persistence on React Native",
+      //   href: "/docs/upgrade/react-native-local-persistence",
+      //   done: 100,
+      //   framework: "react-native",
+      // },
+      // {
+      //   // upgrade guides
+      //   name: "0.9.0 - Top level imports",
+      //   href: "/docs/upgrade/0-9-0",
+      //   done: 100,
+      // },
     ],
   },
   {
@@ -166,8 +166,8 @@ export const docNavigationItems = [
       },
       {
         name: "History & time travel",
-        href: "/docs/using-covalues/history-and-time-travel",
-        done: 0,
+        href: "/docs/using-covalues/history",
+        done: 80,
       },
     ],
   },
