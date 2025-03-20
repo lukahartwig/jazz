@@ -20,7 +20,7 @@ We're introducing a new resolve API for deep loading, more friendly to TypeScrip
 **Major changes:**
 
 1. Functions and hooks for loading now take the resolve query as an explicit nested `resolve` prop
-2. Shallowly loading a container-like value is now done with `true` instead of `[]` or `{}`
+2. Shallowly loading a collection is now done with `true` instead of `[]` or `{}`
 
 <CodeGroup>
 ```tsx
@@ -34,7 +34,7 @@ const { me } = useAccount({ // *add*
 ```
 </CodeGroup>
 
-3. For container-like values, resolving items deeply is now done with a special `$each` key.
+3. For collections, resolving items deeply is now done with a special `$each` key.
 
 For a `CoList`:
 
