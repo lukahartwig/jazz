@@ -58,7 +58,7 @@ function GardenPlanner({ projectId }: { projectId: ID<Project> }) {
   if (project === undefined) {
     return <div>Loading garden project...</div>;
   }
-  
+
   // Handle not found or not accessible
   if (project === null) {
     return <div>Project not found or not accessible</div>;
@@ -138,11 +138,11 @@ function TaskList({ projectId }) {
     <div>
       <h1>{project.name}</h1>
       <ul>
-        {/* 
-          If the user lacks permission to some tasks, 
+        {/*
+          If the user lacks permission to some tasks,
           those items will be null but others will be available
         */}
-        {project.tasks.map((task, index) => 
+        {project.tasks.map((task, index) =>
           task ? (
             <li key={task.id}>{task.title}</li>
           ) : (
@@ -164,18 +164,18 @@ class ListOfTasks extends CoList.Of(co.optional.ref(Task)) {}
 
 async function taskList({ projectId }) {
   const project = await Project.load(projectId, {
-    resolve: { tasks: true } 
+    resolve: { tasks: true }
   });
   const tasks = project.tasks;
 
   if (tasks === undefined) return "Loading ...";
   if (tasks === null) return "Project not found or access denied";
-  
+
   // Filter out null tasks and display as a list
   return project.tasks
     .filter(task => task !== null)
     .map(task => task.title)
-    .join(`\n - `); 
+    .join(`\n - `);
 }
 
 const result = await taskList({ projectId }); // "Seed potatoes\n - Pick berries\n - Pick apples"
@@ -223,9 +223,9 @@ if (task) {
 
 When working with related CoValues (like tasks in a project), you often need to load not just the top-level object but also its nested references. This is especially important when working with [CoMaps](/docs/using-covalues/comaps) that contain references to other CoValues or with [CoLists](/docs/using-covalues/colists) that contain multiple items. Jazz provides a flexible mechanism for specifying exactly how much of the object graph to load.
 
-### Loading Depth Specifications
+### Resolve queries
 
-Loading depth specifications let you declare exactly which references to load and how deep to go using the `resolve` property:
+Resolve queries let you declare exactly which references to load and how deep to go using the `resolve` property:
 
 <CodeGroup>
 ```ts
@@ -236,21 +236,21 @@ class Project extends CoMap {
 }
 
 class Task extends CoMap {
-  title = co.string; 
+  title = co.string;
   subtasks = co.ref(ListOfSubtasks);
   assignee = co.optional.ref(TeamMember);
 }
 
 // Load just the project, not its references
-const project = await Project.load(projectId, { 
-  resolve: {} 
+const project = await Project.load(projectId, {
+  resolve: {}
 });
 
 // Load the project and its tasks
-const projectWithTasks = await Project.load(projectId, { 
-  resolve: { 
-    tasks: true 
-  } 
+const projectWithTasks = await Project.load(projectId, {
+  resolve: {
+    tasks: true
+  }
 });
 
 // Load the project, its tasks, and their subtasks
@@ -279,7 +279,7 @@ const projectWithAssignees = await Project.load(projectId, {
 ```
 </CodeGroup>
 
-The depth specification uses the `resolve` property to define which parts of the graph you want to load, making it intuitive to express complex loading patterns.
+The resolve query defines which parts of the graph you want to load, making it intuitive to express complex loading patterns.
 
 ### Loading Lists
 
@@ -352,7 +352,7 @@ type FullyLoadedProject = Resolved<Project, {
 function processProject(project: FullyLoadedProject) {
   // Safe access to all resolved properties
   console.log(`Project ${project.name} owned by ${project.owner.name}`);
-  
+
   project.tasks.forEach(task => {
     console.log(`Task: ${task.title}, Assigned to: ${task.assignee?.name}`);
     console.log(`Subtasks: ${task.subtasks.length}`);
@@ -376,7 +376,7 @@ async function taskList({project}: {project: ProjectWithTasks}) {
   return project.tasks
     .filter(task => task !== null)
     .map(task => task.title)
-    .join(`\n - `); 
+    .join(`\n - `);
 }
 
 // For more complex resolutions
@@ -395,7 +395,7 @@ type FullyLoadedProject = Resolved<Project, {
 function processProject(project: FullyLoadedProject) {
   // Safe access to all resolved properties
   console.log(`Project ${project.name} owned by ${project.owner.name}`);
-  
+
   project.tasks.forEach(task => {
     console.log(`Task: ${task.title}, Assigned to: ${task.assignee?.name}`);
     console.log(`Subtasks: ${task.subtasks.length}`);
@@ -417,14 +417,14 @@ async function completeAllTasks(projectId: ID<Project>) {
   // Ensure the project is loaded
   const project = await Project.load(projectId, { resolve: {} });
   if (!project) return;
-  
+
   // Ensure tasks are loaded
   const loadedProject = await project.ensureLoaded({
     resolve: {
       tasks: true
     }
   });
-  
+
   // Now we can safely access and modify tasks
   loadedProject.tasks.forEach(task => {
     task.status = "completed";
@@ -435,7 +435,7 @@ async function completeAllTasks(projectId: ID<Project>) {
 
 ## Performance Considerations
 
-Loading depth is directly related to performance. Loading too much data can slow down your application, while loading too little can lead to unnecessary auto-loading delays. Finding the right balance is crucial for a responsive user experience.
+Resolution depth is directly related to performance. Loading too much data can slow down your application, while loading too little can lead to unnecessary auto-loading delays. Finding the right balance is crucial for a responsive user experience.
 
 Here are some practical guidelines:
 
@@ -503,7 +503,7 @@ const sameProject = await Project.load(projectId, { resolve: {} });
 
 ## Best Practices
 
-1. **Be explicit about loading depths**: Always specify exactly what you need
+1. **Be explicit about resolution depths**: Always specify exactly what you need
 2. **Clean up subscriptions**: Always store and call the unsubscribe function when you're done
 3. **Handle all loading states**: Check for undefined (loading), null (not found), and success states
 4. **Use framework integrations**: They handle subscription lifecycle automatically
