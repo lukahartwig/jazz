@@ -21,17 +21,7 @@ export const docNavigationItems = [
         href: "/examples",
         done: 30,
       },
-      {
-        name: "AI tools",
-        href: "/docs/ai-tools",
-        done: 100,
-      },
-      {
-        name: "Inspector",
-        href: "/docs/inspector",
-        done: 100,
-      },
-      { name: "FAQ", href: "/docs/faq", done: 100 },
+      { name: "FAQs", href: "/docs/faq", done: 100 },
     ],
   },
   {
@@ -59,6 +49,21 @@ export const docNavigationItems = [
         done: 80,
       },
     ],
+  },
+  {
+    name: "Tools",
+    items: [
+      {
+        name: "AI tools",
+        href: "/docs/ai-tools",
+        done: 100,
+      },
+      {
+        name: "Inspector",
+        href: "/docs/inspector",
+        done: 100,
+      },
+    ]
   },
   {
     name: "Upgrade guides",
