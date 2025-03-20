@@ -83,7 +83,7 @@ export const metadata = { title: "Jazz 0.12.0 - Deeply resolved data" };
       // After
       const tasksWithAssigneesAndTheirOrgs = useCoState(ListOfTasks, id, { // *add*
         resolve: { // *add*
-          $each: {
+          $each: { // *add*
             assignees: { // *add*
               $each: { org: true } // *add*
             } // *add*
