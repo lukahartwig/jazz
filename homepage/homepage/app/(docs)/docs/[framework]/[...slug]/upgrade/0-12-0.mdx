@@ -4,96 +4,91 @@ export const metadata = { title: "Jazz 0.12.0 - Deeply resolved data" };
 
 # Jazz 0.12.0 - Deeply resolved data
 
-<h2 className="not-prose text-sm text-stone-600 dark:text-stone-400 mb-5 pb-2 border-b">
-  20 March 2025
-</h2>
+Jazz 0.12.0 makes it easier and safer to load nested data. You can now specify exactly which nested data you want to load, and Jazz will check permissions and handle missing data gracefully. This helps catch errors earlier during development and makes your code more reliable.
 
-<div>
-  Jazz 0.12.0 makes it easier and safer to load nested data. You can now specify exactly which nested data you want to load, and Jazz will check permissions and handle missing data gracefully. This helps catch errors earlier during development and makes your code more reliable.
+## What's new?
 
-  <h3>What's new?</h3>
-  - New resolve API for a more type-safe deep loading
-  - A single, consistent load option for all loading methods
-  - Improved permission checks on deep loading
-  - Easier type safety with the `Resolved` type helper
-</div>
+- New resolve API for a more type-safe deep loading
+- A single, consistent load option for all loading methods
+- Improved permission checks on deep loading
+- Easier type safety with the `Resolved` type helper
 
-<h3>New Resolve API</h3>
-<div>
-  We're introducing a new resolve API for deep loading, more friendly to TypeScript, IDE autocompletion and LLMs.
+## New Resolve API
 
-  **Major changes:**
+We're introducing a new resolve API for deep loading, more friendly to TypeScript, IDE autocompletion and LLMs.
 
-  1. Functions and hooks for loading now take the resolve query as an explicit nested `resolve` prop
-  2. Shallowly loading a container-like value is now done with `true` instead of `[]` or `{}`
+**Major changes:**
 
-      <CodeGroup>
-      ```tsx
-      // Before
-      const { me } = useAccount({ root: { friends: [] } }); // *bin*
+1. Functions and hooks for loading now take the resolve query as an explicit nested `resolve` prop
+2. Shallowly loading a container-like value is now done with `true` instead of `[]` or `{}`
 
-      // After
-      const { me } = useAccount({ // *add*
-        resolve: { root: { friends: true } } // *add*
-      }); // *add*
-      ```
-      </CodeGroup>
+<CodeGroup>
+```tsx
+// Before
+const { me } = useAccount({ root: { friends: [] } }); // *bin*
 
-  3. For container-like values, resolving items deeply is now done with a special `$each` key.
+// After
+const { me } = useAccount({ // *add*
+  resolve: { root: { friends: true } } // *add*
+}); // *add*
+```
+</CodeGroup>
 
-      For a `CoList`:
+3. For container-like values, resolving items deeply is now done with a special `$each` key.
 
-      <CodeGroup>
-      ```tsx
-      class ListOfTasks extends CoList.Of(co.ref(Task)) {}
+For a `CoList`:
 
-      // Before
-      const tasks = useCoState(ListOfTasks, id, [{}]); // *bin*
+<CodeGroup>
+```tsx
+class ListOfTasks extends CoList.Of(co.ref(Task)) {}
 
-      // After
-      const tasks = useCoState(ListOfTasks, id, { resolve: { $each: true } }); // *add*
-      ```
-      </CodeGroup>
+// Before
+const tasks = useCoState(ListOfTasks, id, [{}]); // *bin*
 
-      For a `CoMap.Record`:
+// After
+const tasks = useCoState(ListOfTasks, id, { resolve: { $each: true } }); // *add*
+```
+</CodeGroup>
 
-      <CodeGroup>
-      ```tsx
-      class UsersByUsername extends CoMap.Record(co.ref(MyAppAccount)) {}
+For a `CoMap.Record`:
 
-      // Before
-      const usersByUsername = useCoState(UsersByUsername, id, [{}]); // *bin*
+<CodeGroup>
+```tsx
+class UsersByUsername extends CoMap.Record(co.ref(MyAppAccount)) {}
 
-      // After
-      const usersByUsername = useCoState(UsersByUsername, id, { // *add*
-        resolve: { $each: true } // *add*
-      }); // *add*
-      ```
-      </CodeGroup>
+// Before
+const usersByUsername = useCoState(UsersByUsername, id, [{}]); // *bin*
 
-      Nested loading &mdash; note how it's now less terse, but more readable and auto-complete friendly:
+// After
+const usersByUsername = useCoState(UsersByUsername, id, { // *add*
+  resolve: { $each: true } // *add*
+}); // *add*
+```
+</CodeGroup>
 
-      <CodeGroup>
-      ```tsx
-      // Before
-      const tasksWithAssigneesAndTheirOrgs = useCoState(ListOfTasks, id, [{ // *bin*
-        assignees: [{ org: {}}]} // *bin*
-      ]); // *bin*
+Nested loading &mdash; note how it's now less terse, but more readable and auto-complete friendly:
 
-      // After
-      const tasksWithAssigneesAndTheirOrgs = useCoState(ListOfTasks, id, { // *add*
-        resolve: { // *add*
-          $each: { // *add*
-            assignees: { // *add*
-              $each: { org: true } // *add*
-            } // *add*
-          } // *add*
-        } // *add*
-      }); // *add*
-      ```
-      </CodeGroup>
+<CodeGroup>
+```tsx
+// Before
+const tasksWithAssigneesAndTheirOrgs = useCoState(ListOfTasks, id, [{ // *bin*
+  assignees: [{ org: {}}]} // *bin*
+]); // *bin*
 
-<h3>A single, consistent load option</h3>
+// After
+const tasksWithAssigneesAndTheirOrgs = useCoState(ListOfTasks, id, { // *add*
+  resolve: { // *add*
+    $each: { // *add*
+      assignees: { // *add*
+        $each: { org: true } // *add*
+      } // *add*
+    } // *add*
+  } // *add*
+}); // *add*
+```
+</CodeGroup>
+
+## A single, consistent load option
 
 The new API works across all loading methods, and separating out the resolve query means
 other options with default values are easier to manage, for example: loading a value as a specific account instead of using the implicit current account:
@@ -112,19 +107,19 @@ Playlist.load(id, { // *add*
 }); // *add*
 ```
 </CodeGroup>
-</div>
 
-<h3>Improved permission checks on deep loading</h3>
-<div>
-  Now `useCoState` will return `null` when the current user lacks permissions to load requested data.
+## Improved permission checks on deep loading
 
-  Previously, `useCoState` would return `undefined` if the current user lacked permissions, making it hard to tell if the value is loading or if it's missing.
+Now `useCoState` will return `null` when the current user lacks permissions to load requested data.
 
-  Now `undefined` means that the value is definitely loading, and `null` means that the value is temporarily missing.
+Previously, `useCoState` would return `undefined` if the current user lacked permissions, making it hard to tell if the value is loading or if it's missing.
 
-  We also have implemented a more granular permission checking, where if an *optional* CoValue cannot be accessed, `useCoState` will return the data stripped of that CoValue.
+Now `undefined` means that the value is definitely loading, and `null` means that the value is temporarily missing.
 
-  **Note:** The state handling around loading and error states will become more detailed and easy-to-handle in future releases, so this is just a small step towards consistency.
+We also have implemented a more granular permission checking, where if an *optional* CoValue cannot be accessed, `useCoState` will return the data stripped of that CoValue.
+
+**Note:** The state handling around loading and error states will become more detailed and easy-to-handle in future releases, so this is just a small step towards consistency.
+
 <CodeGroup>
 {/* prettier-ignore */}
 ```tsx
@@ -143,15 +138,12 @@ if (value === null) return <div>Not found or access denied</div>; // *add*
 return tracks.map(track => track && <MusicTrack track={track} />);
 ```
 </CodeGroup>
-</div>
 
-<h3>The `Resolved` type helper</h3>
-<div>
-  The new `Resolved` type can be used to define what kind of deeply loaded data you expect in your parameters,
-  using the same resolve query syntax as the new loading APIs:
+## The `Resolved` type helper
 
-  <CodeGroup>
-{/* prettier-ignore */}
+The new `Resolved` type can be used to define what kind of deeply loaded data you expect in your parameters, using the same resolve query syntax as the new loading APIs:
+
+<CodeGroup>
 ```ts
 type PlaylistResolved = Resolved<Playlist, {
   tracks: { $each: true }
@@ -163,4 +155,3 @@ function TrackListComponent({ playlist }: { playlist: PlaylistResolved }) {
 }
 ```
 </CodeGroup>
-</div>
