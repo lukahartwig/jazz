@@ -118,6 +118,7 @@ Task.subscribe(taskId, { resolve: {} }, (task) => {
 
 Jazz implements granular permission checking for collections of items. If a user has access to a list but not to some of its items, those items will be returned as `null` rather than causing the entire list to be inaccessible:
 
+<ContentByFramework framework="react">
 <CodeGroup>
 ```tsx
 class ListOfTasks extends CoList.Of(co.optional.ref(Task)) {}
@@ -154,6 +155,33 @@ function TaskList({ projectId }) {
 }
 ```
 </CodeGroup>
+</ContentByFramework>
+
+<ContentByFramework framework="vanilla">
+<CodeGroup>
+```ts
+class ListOfTasks extends CoList.Of(co.optional.ref(Task)) {}
+
+async function taskList({ projectId }) {
+  const project = await Project.load(projectId, {
+    resolve: { tasks: true } 
+  });
+  const tasks = project.tasks;
+
+  if (tasks === undefined) return "Loading ...";
+  if (tasks === null) return "Project not found or access denied";
+  
+  // Filter out null tasks and display as a list
+  return project.tasks
+    .filter(task => task !== null)
+    .map(task => task.title)
+    .join(`\n - `); 
+}
+
+const result = await taskList({ projectId }); // "Seed potatoes\n - Pick berries\n - Pick apples"
+```
+</CodeGroup>
+</ContentByFramework>
 
 This approach allows for more flexible UI experiences when working with collections where the user may have mixed permission levels for different items.
 
@@ -311,6 +339,7 @@ Jazz provides the `Resolved` type to help you define and enforce the structure o
 
 The `Resolved` type is especially useful when passing data between components, as it guarantees that all necessary nested data has been loaded:
 
+<ContentByFramework framework="react">
 <CodeGroup>
 ```ts
 // Define a type that includes resolved nested data
@@ -334,6 +363,7 @@ function TaskList({ project }: { project: ProjectWithTasks }) {
 type FullyLoadedProject = Resolved<Project, {
   tasks: {
     $each: {
+      title: true,
       subtasks: true,
       assignee: true
     }
@@ -353,6 +383,50 @@ function processProject(project: FullyLoadedProject) {
 }
 ```
 </CodeGroup>
+</ContentByFramework>
+
+<ContentByFramework framework="vanilla">
+<CodeGroup>
+```ts
+// Define a type that includes resolved nested data
+type ProjectWithTasks = Resolved<Project, {
+  tasks: true
+}>;
+
+// Function that expects resolved data
+async function taskList({project}: {project: ProjectWithTasks}) {
+  // TypeScript knows tasks are loaded, so this is type-safe
+  return project.tasks
+    .filter(task => task !== null)
+    .map(task => task.title)
+    .join(`\n - `); 
+}
+
+// For more complex resolutions
+type FullyLoadedProject = Resolved<Project, {
+  tasks: {
+    $each: {
+      title: true,
+      subtasks: true,
+      assignee: true
+    }
+  },
+  owner: true
+}>;
+
+// Function that requires deeply resolved data
+function processProject(project: FullyLoadedProject) {
+  // Safe access to all resolved properties
+  console.log(`Project ${project.name} owned by ${project.owner.name}`);
+  
+  project.tasks.forEach(task => {
+    console.log(`Task: ${task.title}, Assigned to: ${task.assignee?.name}`);
+    console.log(`Subtasks: ${task.subtasks.length}`);
+  });
+}
+```
+</CodeGroup>
+</ContentByFramework>
 
 Using the `Resolved` type helps catch errors at compile time rather than runtime, ensuring that your components and functions receive data with the proper resolution depth. This is especially useful for larger applications where data is passed between many components.
 
