@@ -1,13 +1,15 @@
-# 🎷 Jazz + React Native
+# 🎷 Jazz + Expo
+
+This package provides dedicated Expo support for Jazz applications. It implements storage adapters specifically for Expo's native modules and is designed to work with the Jazz React Native Core package.
 
 Jazz requires an [Expo development build](https://docs.expo.dev/develop/development-builds/introduction/) using [Expo Prebuild](https://docs.expo.dev/workflow/prebuild/) for native code. It is **not compatible** with Expo Go. Jazz also supports the [New Architecture](https://docs.expo.dev/guides/new-architecture/).
 
 Tested with:
 
 ```json
-"expo": "~51.0.0",
-"react-native": "~0.74.5",
-"react": "^18.2.0",
+"expo": "~52.0.0",
+"react-native": "0.76.7",
+"react": "18.3.1",
 ```
 
 ## 🚀 Setup
@@ -27,12 +29,12 @@ npx expo prebuild
 ```bash
 npx expo install expo-linking expo-secure-store expo-file-system @react-native-community/netinfo @bam.tech/react-native-image-resizer
 
-  npm i -S @azure/core-asynciterator-polyfill react-native-url-polyfill readable-stream react-native-get-random-values @craftzdog/react-native-buffer @op-engineering/op-sqlite
+  npm i -S @azure/core-asynciterator-polyfill react-native-url-polyfill readable-stream react-native-get-random-values @craftzdog/react-native-buffer
 
 
 npm i -D @babel/plugin-transform-class-static-block
 
-npm i -S jazz-tools jazz-react-native jazz-react-native-media-images
+npm i -S jazz-tools jazz-expo jazz-react-native-media-images
 
 ```
 
