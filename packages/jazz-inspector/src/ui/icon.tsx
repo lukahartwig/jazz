@@ -9,6 +9,7 @@ import {
   UserIcon,
   XIcon,
 } from "lucide-react";
+import { classNames } from "../utils.js";
 
 const icons = {
   auth: UserIcon,
@@ -81,7 +82,7 @@ export function Icon({
       size={sizes[size]}
       strokeWidth={strokeWidths[size]}
       strokeLinecap="round"
-      className={className}
+      className={classNames(className)}
       {...svgProps}
     />
   );

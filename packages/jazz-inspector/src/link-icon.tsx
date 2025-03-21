@@ -1,3 +1,5 @@
+import { classNames } from "./utils.js";
+
 export function LinkIcon() {
   return (
     <svg
@@ -6,7 +8,7 @@ export function LinkIcon() {
       viewBox="0 0 24 24"
       strokeWidth={1.5}
       stroke="currentColor"
-      className="w-3 h-3"
+      className={classNames("w-3 h-3")}
     >
       <path
         strokeLinecap="round"

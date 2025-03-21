@@ -1,6 +1,6 @@
-import { clsx } from "clsx";
 import { forwardRef, useId } from "react";
 
+import { classNames } from "../utils.js";
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   // label can be hidden with a "label:sr-only" className
   label: string;
@@ -13,19 +13,19 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     const generatedId = useId();
     const id = customId || generatedId;
 
-    const inputClassName = clsx(
+    const inputClassName = classNames(
       "w-full rounded-md border px-3.5 py-2 shadow-sm",
       "font-medium text-stone-900",
       "dark:text-white dark:bg-stone-925",
     );
 
-    const containerClassName = clsx("grid gap-1", className);
+    const containerClassName = classNames("grid gap-1", className);
 
     return (
       <div className={containerClassName}>
         <label
           htmlFor={id}
-          className={clsx(
+          className={classNames(
             "text-stone-600 dark:text-stone-300",
             hideLabel && "sr-only",
           )}

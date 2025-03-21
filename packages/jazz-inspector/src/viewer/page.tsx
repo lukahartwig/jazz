@@ -8,6 +8,8 @@ import { PageInfo } from "./types.js";
 import { useResolvedCoValue } from "./use-resolve-covalue.js";
 import { AccountOrGroupPreview } from "./value-renderer.js";
 
+import { classNames } from "../utils.js";
+
 type PageProps = {
   coId: CoID<RawCoValue>;
   node: LocalNode;
@@ -59,7 +61,7 @@ export function Page({
     >
       {!isTopLevel && (
         <div
-          className="absolute left-0 right-0 top-0 h-10"
+          className={classNames("absolute left-0 right-0 top-0 h-10")}
           aria-label="Back"
           onClick={() => {
             onHeaderClick?.();
@@ -67,28 +69,40 @@ export function Page({
           aria-hidden="true"
         ></div>
       )}
-      <div className="flex justify-between items-center mb-4">
-        <div className="flex items-center gap-3">
-          <h2 className="text-lg font-medium flex flex-col items-start gap-1 text-stone-900 dark:text-white">
+      <div className={classNames("flex justify-between items-center mb-4")}>
+        <div className={classNames("flex items-center gap-3")}>
+          <h2
+            className={classNames(
+              "text-lg font-medium flex flex-col items-start gap-1 text-stone-900 dark:text-white",
+            )}
+          >
             <span>
               {name}
               {typeof snapshot === "object" && "name" in snapshot ? (
-                <span className="text-gray-600 font-medium">
+                <span className={classNames("text-gray-600 font-medium")}>
                   {" "}
                   {(snapshot as { name: string }).name}
                 </span>
               ) : null}
             </span>
           </h2>
-          <span className="text-sm text-gray-700 font-medium py-0.5 px-1 -ml-0.5 rounded bg-gray-700/5 inline-block font-mono">
+          <span
+            className={classNames(
+              "text-sm text-gray-700 font-medium py-0.5 px-1 -ml-0.5 rounded bg-gray-700/5 inline-block font-mono",
+            )}
+          >
             {type && <TypeIcon type={type} extendedType={extendedType} />}
           </span>
-          <span className="text-sm text-gray-700 font-medium py-0.5 px-1 -ml-0.5 rounded bg-gray-700/5 inline-block font-mono">
+          <span
+            className={classNames(
+              "text-sm text-gray-700 font-medium py-0.5 px-1 -ml-0.5 rounded bg-gray-700/5 inline-block font-mono",
+            )}
+          >
             {coId}
           </span>
         </div>
       </div>
-      <div className="overflow-auto">
+      <div className={classNames("overflow-auto")}>
         {type === "costream" ? (
           <CoStreamView
             data={snapshot}
@@ -102,7 +116,7 @@ export function Page({
           <TableView data={snapshot} node={node} onNavigate={onNavigate} />
         )}
         {extendedType !== "account" && extendedType !== "group" && (
-          <div className="text-sm text-gray-500 mt-4">
+          <div className={classNames("text-sm text-gray-500 mt-4")}>
             Owned by{" "}
             <AccountOrGroupPreview
               coId={value.group.id}

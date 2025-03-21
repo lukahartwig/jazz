@@ -5,6 +5,8 @@ import {
   useResolvedCoValue,
 } from "./use-resolve-covalue.js";
 
+import { classNames } from "../utils.js";
+
 export const TypeIcon = ({
   type,
   extendedType,
@@ -25,7 +27,7 @@ export const TypeIcon = ({
   const iconKey = extendedType || type;
   const icon = iconMap[iconKey as keyof typeof iconMap];
 
-  return icon ? <span className="font-mono">{icon}</span> : null;
+  return icon ? <span className={classNames("font-mono")}>{icon}</span> : null;
 };
 
 export const ResolveIcon = ({
@@ -38,10 +40,13 @@ export const ResolveIcon = ({
   const { type, extendedType, snapshot } = useResolvedCoValue(coId, node);
 
   if (snapshot === "unavailable" && !type) {
-    return <div className="text-gray-600 font-medium">Unavailable</div>;
+    return (
+      <div className={classNames("text-gray-600 font-medium")}>Unavailable</div>
+    );
   }
 
-  if (!type) return <div className="whitespace-pre w-14 font-mono"> </div>;
+  if (!type)
+    return <div className={classNames("whitespace-pre w-14 font-mono")}> </div>;
 
   return <TypeIcon type={type} extendedType={extendedType} />;
 };

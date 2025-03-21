@@ -1,6 +1,7 @@
 import { CoID, LocalNode, RawCoValue } from "cojson";
 import { Page } from "./page.js"; // Assuming you have a Page component
 
+import { classNames } from "../utils.js";
 // Define the structure of a page in the path
 interface PageInfo {
   coId: CoID<RawCoValue>;
@@ -27,7 +28,11 @@ export function PageStack({
   const index = path.length - 1;
 
   return (
-    <div className="relative px-3 overflow-y-auto flex-1  text-stone-700 dark:text-stone-400">
+    <div
+      className={classNames(
+        "relative px-3 overflow-y-auto flex-1  text-stone-700 dark:text-stone-400",
+      )}
+    >
       {children}
       {node && page && (
         <Page

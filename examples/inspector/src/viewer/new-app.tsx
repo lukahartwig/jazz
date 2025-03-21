@@ -223,6 +223,7 @@ function AccountSwitcher({
     <div className="relative flex items-stretch gap-1">
       <Select
         label="Account to inspect"
+        hideLabel
         className="label:sr-only max-w-96"
         value={currentAccount?.id || "add-account"}
         onChange={(e) => {

@@ -13,6 +13,8 @@ import { Button } from "../ui/button.js";
 import { PageInfo } from "./types.js";
 import { AccountOrGroupPreview } from "./value-renderer.js";
 
+import { classNames } from "../utils.js";
+
 // typeguard for BinaryStreamStart
 function isBinaryStreamStart(item: unknown): item is BinaryStreamStart {
   return (
@@ -162,7 +164,7 @@ const LabelContentPair = ({
   content: React.ReactNode;
 }) => {
   return (
-    <div className="flex flex-col gap-1.5">
+    <div className={classNames("flex flex-col gap-1.5")}>
       <span>{label}</span>
       <span>{content}</span>
     </div>
@@ -220,12 +222,16 @@ function RenderCoBinaryStream({
   const sizeInKB = (file.totalSize || 0) / 1024;
 
   return (
-    <div className="mt-8 flex flex-col gap-8">
-      <div className="grid grid-cols-3 gap-2 max-w-3xl">
+    <div className={classNames("mt-8 flex flex-col gap-8")}>
+      <div className={classNames("grid grid-cols-3 gap-2 max-w-3xl")}>
         <LabelContentPair
           label="Mime Type"
           content={
-            <span className="font-mono bg-gray-100 rounded px-2 py-1 text-sm dark:bg-stone-900">
+            <span
+              className={classNames(
+                "font-mono bg-gray-100 rounded px-2 py-1 text-sm dark:bg-stone-900",
+              )}
+            >
               {mimeType || "No mime type"}
             </span>
           }
@@ -254,7 +260,9 @@ function RenderCoBinaryStream({
         <LabelContentPair
           label="Preview"
           content={
-            <div className="bg-gray-50  dark:bg-gray-925 p-3 rounded">
+            <div
+              className={classNames("bg-gray-50  dark:bg-gray-925 p-3 rounded")}
+            >
               <RenderBlobImage blob={blob} />
             </div>
           }
@@ -275,10 +283,12 @@ function RenderCoStream({
   const userCoIds = streamPerUser.map((stream) => stream.split("_session")[0]);
 
   return (
-    <div className="grid grid-cols-3 gap-2">
+    <div className={classNames("grid grid-cols-3 gap-2")}>
       {userCoIds.map((id, idx) => (
         <div
-          className="p-3 rounded-lg overflow-hidden  border border-gray-200 cursor-pointer shadow-sm hover:bg-gray-100/5"
+          className={classNames(
+            "p-3 rounded-lg overflow-hidden  border border-gray-200 cursor-pointer shadow-sm hover:bg-gray-100/5",
+          )}
           key={id}
         >
           <AccountOrGroupPreview coId={id as CoID<RawCoValue>} node={node} />

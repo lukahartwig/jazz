@@ -7,6 +7,7 @@ import { PageInfo } from "./types.js";
 import { useResolvedCoValues } from "./use-resolve-covalue.js";
 import { ValueRenderer } from "./value-renderer.js";
 
+import { classNames } from "../utils.js";
 export function TableView({
   data,
   node,
@@ -52,23 +53,29 @@ export function TableView({
 
   return (
     <div>
-      <table className="min-w-full text-sm border-spacing-0 border-collapse">
-        <thead className="sticky top-0 border-b border-gray-200">
+      <table
+        className={classNames(
+          "min-w-full text-sm border-spacing-0 border-collapse",
+        )}
+      >
+        <thead className={classNames("sticky top-0 border-b border-gray-200")}>
           <tr>
             {["", ...keys].map((key) => (
               <th
                 key={key}
-                className="p-3 bg-gray-50 dark:bg-gray-925 text-left font-medium rounded"
+                className={classNames(
+                  "p-3 bg-gray-50 dark:bg-gray-925 text-left font-medium rounded",
+                )}
               >
                 {key}
               </th>
             ))}
           </tr>
         </thead>
-        <tbody className=" border-t border-gray-200">
+        <tbody className={classNames(" border-t border-gray-200")}>
           {resolvedRows.slice(0, visibleRowsCount).map((item, index) => (
             <tr key={index}>
-              <td className="p-1">
+              <td className={classNames("p-1")}>
                 <Button
                   variant="tertiary"
                   onClick={() =>
@@ -84,7 +91,7 @@ export function TableView({
                 </Button>
               </td>
               {keys.map((key) => (
-                <td key={key} className="p-4 whitespace-nowrap">
+                <td key={key} className={classNames("p-4 whitespace-nowrap")}>
                   <ValueRenderer
                     json={(item.snapshot as JsonObject)[key]}
                     onCoIDClick={(coId) => {
@@ -110,17 +117,23 @@ export function TableView({
           ))}
         </tbody>
       </table>
-      <div className="py-4 text-gray-500 flex items-center justify-between gap-2">
+      <div
+        className={classNames(
+          "py-4 text-gray-500 flex items-center justify-between gap-2",
+        )}
+      >
         <span>
           Showing {Math.min(visibleRowsCount, coIdArray.length)} of{" "}
           {coIdArray.length}
         </span>
         {hasMore && (
-          <div className="text-center">
+          <div className={classNames("text-center")}>
             <Button
               variant="plain"
               onClick={loadMore}
-              className="px-4 py-2 bg-blue text-white rounded hover:bg-blue-800"
+              className={classNames(
+                "px-4 py-2 bg-blue text-white rounded hover:bg-blue-800",
+              )}
             >
               Load more
             </Button>

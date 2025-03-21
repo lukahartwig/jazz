@@ -2,6 +2,8 @@ import React from "react";
 import { Button } from "../ui/button.js";
 import { PageInfo } from "./types.js";
 
+import { classNames } from "../utils.js";
+
 interface BreadcrumbsProps {
   path: PageInfo[];
   onBreadcrumbClick: (index: number) => void;
@@ -12,10 +14,10 @@ export const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
   onBreadcrumbClick,
 }) => {
   return (
-    <div className="relative z-20 flex-1 flex items-center">
+    <div className={classNames("relative z-20 flex-1 flex items-center")}>
       <Button
         variant="plain"
-        className="text-blue px-1"
+        className={classNames("text-blue px-1")}
         onClick={() => onBreadcrumbClick(-1)}
       >
         Home
@@ -25,13 +27,15 @@ export const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
           <React.Fragment key={page.coId}>
             <span
               aria-hidden
-              className="text-stone-400 dark:text-stone-600 px-0.5"
+              className={classNames(
+                "text-stone-400 dark:text-stone-600 px-0.5",
+              )}
             >
               /
             </span>
             <Button
               variant="plain"
-              className="text-blue px-1"
+              className={classNames("text-blue px-1")}
               onClick={() => onBreadcrumbClick(index)}
             >
               {index === 0 ? page.name || "Root" : page.name}

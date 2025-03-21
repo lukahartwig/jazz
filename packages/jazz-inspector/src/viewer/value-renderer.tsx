@@ -1,8 +1,8 @@
-import clsx from "clsx";
 import { CoID, JsonValue, LocalNode, RawCoValue } from "cojson";
 import React, { useEffect, useState } from "react";
 import { LinkIcon } from "../link-icon.js";
 import { Button } from "../ui/button.js";
+import { classNames } from "../utils.js";
 import {
   isBrowserImage,
   resolveCoValue,
@@ -20,11 +20,11 @@ export function ValueRenderer({
   const [isExpanded, setIsExpanded] = useState(false);
 
   if (typeof json === "undefined" || json === undefined) {
-    return <span className="text-gray-400">undefined</span>;
+    return <span className={classNames("text-gray-400")}>undefined</span>;
   }
 
   if (json === null) {
-    return <span className="text-gray-400">null</span>;
+    return <span className={classNames("text-gray-400")}>null</span>;
   }
 
   if (typeof json === "string" && json.startsWith("co_")) {
@@ -42,7 +42,7 @@ export function ValueRenderer({
     if (onCoIDClick) {
       return (
         <Button
-          className={linkClasses}
+          className={classNames(linkClasses)}
           onClick={() => {
             onCoIDClick?.(json as CoID<RawCoValue>);
           }}
@@ -53,27 +53,23 @@ export function ValueRenderer({
       );
     }
 
-    return <span className={linkClasses}>{content}</span>;
+    return <span className={classNames(linkClasses)}>{content}</span>;
   }
 
   if (typeof json === "string") {
     return (
-      <span className="text-green-900 font-mono">
-        {/* <span className="select-none opacity-70">{'"'}</span> */}
-        {json}
-        {/* <span className="select-none opacity-70">{'"'}</span> */}
-      </span>
+      <span className={classNames("text-green-900 font-mono")}>{json}</span>
     );
   }
 
   if (typeof json === "number") {
-    return <span className="text-purple-500">{json}</span>;
+    return <span className={classNames("text-purple-500")}>{json}</span>;
   }
 
   if (typeof json === "boolean") {
     return (
       <span
-        className={clsx(
+        className={classNames(
           json
             ? "text-green-700 bg-green-700/5"
             : "text-amber-700 bg-amber-500/5",
@@ -90,12 +86,12 @@ export function ValueRenderer({
     return (
       <span
         title={JSON.stringify(json, null, 2)}
-        className="inline-block max-w-64"
+        className={classNames("inline-block max-w-64")}
       >
-        <span className="text-gray-600">
+        <span className={classNames("text-gray-600")}>
           {Array.isArray(json) ? <>Array ({json.length})</> : <>Object</>}
         </span>
-        <pre className="mt-1.5 text-sm whitespace-pre-wrap">
+        <pre className={classNames("mt-1.5 text-sm whitespace-pre-wrap")}>
           {isExpanded
             ? JSON.stringify(json, null, 2)
             : JSON.stringify(json, null, 2).split("\n").slice(0, 3).join("\n") +
@@ -104,7 +100,9 @@ export function ValueRenderer({
         <Button
           variant="plain"
           onClick={() => setIsExpanded(!isExpanded)}
-          className="mt-1.5 text-sm text-gray-600 hover:text-gray-700"
+          className={classNames(
+            "mt-1.5 text-sm text-gray-600 hover:text-gray-700",
+          )}
         >
           {isExpanded ? "Show less" : "Show more"}
         </Button>
@@ -131,14 +129,18 @@ export const CoMapPreview = ({
 
   if (!snapshot) {
     return (
-      <div className="rounded bg-gray-100 animate-pulse whitespace-pre w-24">
+      <div
+        className={classNames(
+          "rounded bg-gray-100 animate-pulse whitespace-pre w-24",
+        )}
+      >
         {" "}
       </div>
     );
   }
 
   if (snapshot === "unavailable" && !value) {
-    return <div className="text-gray-500">Unavailable</div>;
+    return <div className={classNames("text-gray-500")}>Unavailable</div>;
   }
 
   if (extendedType === "image" && isBrowserImage(snapshot)) {
@@ -146,9 +148,11 @@ export const CoMapPreview = ({
       <div>
         <img
           src={snapshot.placeholderDataURL}
-          className="size-8 border-2 border-white drop-shadow-md my-2"
+          className={classNames(
+            "size-8 border-2 border-white drop-shadow-md my-2",
+          )}
         />
-        <span className="text-gray-500 text-sm">
+        <span className={classNames("text-gray-500 text-sm")}>
           {snapshot.originalSize[0]} x {snapshot.originalSize[1]}
         </span>
 
@@ -164,7 +168,9 @@ export const CoMapPreview = ({
     return (
       <div>
         Record{" "}
-        <span className="text-gray-500">({Object.keys(snapshot).length})</span>
+        <span className={classNames("text-gray-500")}>
+          ({Object.keys(snapshot).length})
+        </span>
       </div>
     );
   }
@@ -173,7 +179,7 @@ export const CoMapPreview = ({
     return (
       <div>
         List{" "}
-        <span className="text-gray-500">
+        <span className={classNames("text-gray-500")}>
           ({(snapshot as unknown as []).length})
         </span>
       </div>
@@ -181,13 +187,13 @@ export const CoMapPreview = ({
   }
 
   return (
-    <div className="text-sm flex flex-col gap-2 items-start">
-      <div className="grid grid-cols-[auto_1fr] gap-2">
+    <div className={classNames("text-sm flex flex-col gap-2 items-start")}>
+      <div className={classNames("grid grid-cols-[auto_1fr] gap-2")}>
         {Object.entries(snapshot)
           .slice(0, limit)
           .map(([key, value]) => (
             <React.Fragment key={key}>
-              <span className="font-medium">{key}: </span>
+              <span className={classNames("font-medium")}>{key}: </span>
               <span>
                 <ValueRenderer json={value} />
               </span>
@@ -195,7 +201,7 @@ export const CoMapPreview = ({
           ))}
       </div>
       {Object.entries(snapshot).length > limit && (
-        <div className="text-left text-sm text-gray-500 mt-2">
+        <div className={classNames("text-left text-sm text-gray-500 mt-2")}>
           {Object.entries(snapshot).length - limit} more
         </div>
       )}
@@ -245,10 +251,10 @@ export function AccountOrGroupPreview({
   const props = onClick
     ? {
         onClick: () => onClick(displayName),
-        className: "text-blue-500 cursor-pointer hover:underline",
+        className: classNames("text-blue-500 cursor-pointer hover:underline"),
       }
     : {
-        className: "text-gray-500",
+        className: classNames("text-gray-500"),
       };
 
   return <span {...props}>{displayText}</span>;

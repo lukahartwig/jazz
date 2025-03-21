@@ -1,12 +1,13 @@
 import { CoID, RawCoValue } from "cojson";
 import { useAccount } from "jazz-react-core";
 import React, { useState } from "react";
-import { tw } from "../twind.js";
 import { Button } from "../ui/button.js";
 import { Input } from "../ui/input.js";
 import { Breadcrumbs } from "./breadcrumbs.js";
 import { PageStack } from "./page-stack.js";
 import { usePagePath } from "./use-page-path.js";
+
+import { classNames } from "../utils.js";
 
 type Position =
   | "bottom right"
@@ -52,12 +53,12 @@ export function JazzInspector({ position = "right" }: { position?: Position }) {
         variant="secondary"
         size="sm"
         onClick={() => setOpen(true)}
-        className={tw(
+        className={classNames(
           `fixed w-10 h-10 bg-white shadow-sm bottom-0 right-0 m-4 p-1.5 ${positionClasses[position]}`,
         )}
       >
         <svg
-          className="w-full h-auto relative -left-px text-blue"
+          className={classNames("w-full h-auto relative -left-px text-blue")}
           xmlns="http://www.w3.org/2000/svg"
           width="119"
           height="115"
@@ -71,25 +72,25 @@ export function JazzInspector({ position = "right" }: { position?: Position }) {
             fill="currentColor"
           />
         </svg>
-        <span className="sr-only">Open Jazz Inspector</span>
+        <span className={classNames("sr-only")}>Open Jazz Inspector</span>
       </Button>
     );
   }
 
   return (
     <div
-      className={tw(
+      className={classNames(
         "fixed h-[calc(100%-12rem)] flex flex-col bottom-0 left-0 w-full bg-red-500 border-t border-gray-200 dark:border-stone-900 dark:bg-stone-925",
       )}
       id="__jazz_inspector"
     >
-      <div className={tw("flex items-center gap-4 px-3 my-3")}>
+      <div className={classNames("flex items-center gap-4 px-3 my-3")}>
         <Breadcrumbs path={path} onBreadcrumbClick={goToIndex} />
-        <form onSubmit={handleCoValueIdSubmit} className="w-96">
+        <form onSubmit={handleCoValueIdSubmit} className={classNames("w-96")}>
           {path.length !== 0 && (
             <Input
               label="CoValue ID"
-              className={tw("font-mono")}
+              className={classNames("font-mono")}
               hideLabel
               placeholder="co_z1234567890abcdef123456789"
               value={coValueId}
@@ -112,16 +113,20 @@ export function JazzInspector({ position = "right" }: { position?: Position }) {
           <form
             onSubmit={handleCoValueIdSubmit}
             aria-hidden={path.length !== 0}
-            className={tw(
+            className={classNames(
               "flex flex-col relative -top-6 justify-center gap-2 h-full w-full max-w-sm mx-auto",
             )}
           >
-            <h2 className="text-lg text-center font-medium mb-4 text-stone-900 dark:text-white">
+            <h2
+              className={classNames(
+                "text-lg text-center font-medium mb-4 text-stone-900 dark:text-white",
+              )}
+            >
               Jazz CoValue Inspector
             </h2>
             <Input
               label="CoValue ID"
-              className="min-w-[21rem] font-mono"
+              className={classNames("min-w-[21rem] font-mono")}
               hideLabel
               placeholder="co_z1234567890abcdef123456789"
               value={coValueId}
@@ -131,7 +136,7 @@ export function JazzInspector({ position = "right" }: { position?: Position }) {
               Inspect CoValue
             </Button>
 
-            <p className="text-center">or</p>
+            <p className={classNames("text-center")}>or</p>
 
             <Button
               variant="secondary"

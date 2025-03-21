@@ -1,10 +1,11 @@
 import { CoID, LocalNode, RawCoValue } from "cojson";
 import { JsonObject } from "cojson";
-import { tw } from "../twind.js";
 import { Button } from "../ui/button.js";
 import { ResolveIcon } from "./type-icon.js";
 import { PageInfo, isCoId } from "./types.js";
 import { CoMapPreview, ValueRenderer } from "./value-renderer.js";
+
+import { classNames } from "../utils.js";
 
 export function GridView({
   data,
@@ -18,12 +19,16 @@ export function GridView({
   const entries = Object.entries(data);
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+    <div
+      className={classNames(
+        "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4",
+      )}
+    >
       {entries.map(([key, child], childIndex) => (
         <Button
           variant="plain"
           key={childIndex}
-          className={tw(
+          className={classNames(
             `p-3 text-left rounded-lg overflow-hidden transition-colors ${
               isCoId(child)
                 ? "border border-gray-200 shadow-sm hover:bg-gray-100/5"
@@ -35,12 +40,20 @@ export function GridView({
             onNavigate([{ coId: child as CoID<RawCoValue>, name: key }])
           }
         >
-          <h3 className="overflow-hidden text-ellipsis whitespace-nowrap">
+          <h3
+            className={classNames(
+              "overflow-hidden text-ellipsis whitespace-nowrap",
+            )}
+          >
             {isCoId(child) ? (
-              <span className="font-medium flex justify-between">
+              <span className={classNames("font-medium flex justify-between")}>
                 {key}
 
-                <div className="py-1 px-2 text-sm bg-gray-100 rounded dark:bg-gray-900">
+                <div
+                  className={classNames(
+                    "py-1 px-2 text-sm bg-gray-100 rounded dark:bg-gray-900",
+                  )}
+                >
                   <ResolveIcon coId={child as CoID<RawCoValue>} node={node} />
                 </div>
               </span>
@@ -48,7 +61,7 @@ export function GridView({
               <span>{key}</span>
             )}
           </h3>
-          <div className="mt-2 text-sm">
+          <div className={classNames("mt-2 text-sm")}>
             {isCoId(child) ? (
               <CoMapPreview coId={child as CoID<RawCoValue>} node={node} />
             ) : (
