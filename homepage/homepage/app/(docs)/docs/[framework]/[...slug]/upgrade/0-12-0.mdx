@@ -13,7 +13,9 @@ Jazz 0.12.0 makes it easier and safer to load nested data. You can now specify e
 - Improved permission checks on deep loading
 - Easier type safety with the `Resolved` type helper
 
-## New Resolve API
+## Breaking changes
+
+### New Resolve API
 
 We're introducing a new resolve API for deep loading, more friendly to TypeScript, IDE autocompletion and LLMs.
 
@@ -88,7 +90,7 @@ const tasksWithAssigneesAndTheirOrgs = useCoState(ListOfTasks, id, { // *add*
 ```
 </CodeGroup>
 
-## A single, consistent load option
+### A single, consistent load option
 
 The new API works across all loading methods, and separating out the resolve query means
 other options with default values are easier to manage, for example: loading a value as a specific account instead of using the implicit current account:
@@ -108,7 +110,7 @@ Playlist.load(id, { // *add*
 ```
 </CodeGroup>
 
-## Improved permission checks on deep loading
+### Improved permission checks on deep loading
 
 Now `useCoState` will return `null` when the current user lacks permissions to load requested data.
 
@@ -139,7 +141,9 @@ return tracks.map(track => track && <MusicTrack track={track} />);
 ```
 </CodeGroup>
 
-## The `Resolved` type helper
+## New Features
+
+### The `Resolved` type helper
 
 The new `Resolved` type can be used to define what kind of deeply loaded data you expect in your parameters, using the same resolve query syntax as the new loading APIs:
 
