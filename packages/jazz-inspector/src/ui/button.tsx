@@ -1,5 +1,6 @@
 import { clsx } from "clsx";
 import { forwardRef } from "react";
+import { tw } from "../twind.js";
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: "primary" | "secondary" | "tertiary" | "destructive" | "plain";
@@ -41,13 +42,15 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     const classNames =
       variant === "plain"
         ? className
-        : clsx(
-            className,
-            "inline-flex items-center justify-center gap-2 rounded-lg text-center transition-colors",
-            "disabled:pointer-events-none disabled:opacity-70",
-            sizeClasses[size],
-            variantClasses[variant],
-            disabled && "opacity-50 cursor-not-allowed pointer-events-none",
+        : tw(
+            clsx(
+              className,
+              "inline-flex items-center justify-center gap-2 rounded-lg text-center transition-colors",
+              "disabled:pointer-events-none disabled:opacity-70",
+              sizeClasses[size],
+              variantClasses[variant],
+              disabled && "opacity-50 cursor-not-allowed pointer-events-none",
+            ),
           );
 
     return (

@@ -1,4 +1,4 @@
-import { install } from "@twind/core";
+import { setup } from "@twind/core";
 import config from "./twind.config";
 
-install(config);
+export const tw = setup(config);
