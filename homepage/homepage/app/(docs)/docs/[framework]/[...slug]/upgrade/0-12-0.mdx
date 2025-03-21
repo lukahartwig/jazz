@@ -25,7 +25,21 @@ We're introducing a new resolve API for deep loading, more friendly to TypeScrip
 2. Shallowly loading a collection is now done with `true` instead of `[]` or `{}`
 
 <CodeGroup>
-```tsx
+```tsx twoslash
+// @noErrors: 2451
+import { CoMap, CoList, co, Account } from "jazz-tools";
+import { useAccount } from "jazz-react";
+
+class AccountRoot extends CoMap {
+  friends = CoList.Of(co.ref(Account));
+}
+
+class AppAccount extends Account {
+  root = co.ref(AccountRoot);
+}
+
+
+// ---cut-before---
 // Before
 const { me } = useAccount({ root: { friends: [] } }); // [!code --]
 

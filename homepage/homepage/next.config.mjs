@@ -4,7 +4,10 @@ import withTocExport from "@stefanprobst/rehype-extract-toc/mdx";
 import rehypeSlug from "rehype-slug";
 import { createHighlighter } from "shiki";
 import { transformerNotationDiff, transformerRemoveLineBreak } from '@shikijs/transformers'
+import { transformerTwoslash } from "@shikijs/twoslash";
 import { SKIP, visit } from "unist-util-visit";
+import { fileURLToPath } from 'url';
+import { dirname, resolve as resolvePath } from "path";
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -40,6 +43,12 @@ const highlighterPromise = createHighlighter({
   themes: ["min-light", "tokyo-night"],
 });
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const vfsRoot = resolvePath(__dirname, "../..");
+
+console.log(vfsRoot);
+
 function highlightPlugin() {
   return async function transformer(tree) {
     const highlighter = await highlighterPromise;
@@ -47,17 +56,27 @@ function highlightPlugin() {
     visit(tree, "code", visitor);
 
     function visitor(node) {
-      const html = highlighter.codeToHtml(
-        node.value,
-        {
-          lang: node.lang,
-          themes: {
-            light: 'min-light',
-            dark: 'tokyo-night',
-          },
-          transformers: [transformerNotationDiff(), transformerRemoveLineBreak()],
-        }
-      );
+      const html = highlighter.codeToHtml(node.value, {
+        lang: node.lang,
+        meta: { __raw: node.lang + " " + node.meta },
+        themes: {
+          light: "min-light",
+          dark: "tokyo-night",
+        },
+        transformers: [
+          transformerTwoslash({
+            explicitTrigger: true,
+            twoslashOptions: {
+              vfsRoot: vfsRoot,
+              compilerOptions: {
+                baseUrl: "./packages",
+              }
+            }
+          }),
+          transformerNotationDiff(),
+          transformerRemoveLineBreak(),
+        ],
+      });
 
       node.type = "html";
       node.value = html;
