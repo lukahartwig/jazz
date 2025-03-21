@@ -58,12 +58,20 @@ export function ValueRenderer({
 
   if (typeof json === "string") {
     return (
-      <span className={classNames("text-green-900 font-mono")}>{json}</span>
+      <span
+        className={classNames("text-green-700 font-mono dark:text-green-400")}
+      >
+        {json}
+      </span>
     );
   }
 
   if (typeof json === "number") {
-    return <span className={classNames("text-purple-500")}>{json}</span>;
+    return (
+      <span className={classNames("text-purple-700 dark:text-purple-400")}>
+        {json}
+      </span>
+    );
   }
 
   if (typeof json === "boolean") {
