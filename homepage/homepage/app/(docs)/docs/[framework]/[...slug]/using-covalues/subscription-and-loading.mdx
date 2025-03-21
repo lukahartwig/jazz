@@ -122,7 +122,7 @@ This allows you to handle loading, error, and success states in your application
 
 <CodeGroup>
 ```ts
-Task.subscribe(taskId, { resolve: {} }, (task) => {
+Task.subscribe(taskId, (task) => {
   if (task === undefined) {
     console.log("Task is loading...");
   } else if (task === null) {
@@ -133,77 +133,6 @@ Task.subscribe(taskId, { resolve: {} }, (task) => {
 });
 ```
 </CodeGroup>
-
-### Granular Permission Handling
-
-Jazz implements granular permission checking for collections of items. If a user has access to a list but not to some of its items, those items will be returned as `null` rather than causing the entire list to be inaccessible:
-
-<ContentByFramework framework="react">
-<CodeGroup>
-```tsx
-class ListOfTasks extends CoList.Of(co.optional.ref(Task)) {}
-
-function TaskList({ projectId }) {
-  // Load a project and its tasks
-  const project = useCoState(Project, projectId, {
-    resolve: {
-      tasks: true
-    }
-  });
-
-  if (project === undefined) return <div>Loading...</div>;
-  if (project === null) return <div>Project not found or access denied</div>;
-
-  return (
-    <div>
-      <h1>{project.name}</h1>
-      <ul>
-        {/*
-          If the user lacks permission to some tasks,
-          those items will be null but others will be available
-        */}
-        {project.tasks.map((task, index) =>
-          task ? (
-            <li key={task.id}>{task.title}</li>
-          ) : (
-            <li key={index}>Task not accessible</li>
-          )
-        )}
-      </ul>
-    </div>
-  );
-}
-```
-</CodeGroup>
-</ContentByFramework>
-
-<ContentByFramework framework="vanilla">
-<CodeGroup>
-```ts
-class ListOfTasks extends CoList.Of(co.optional.ref(Task)) {}
-
-async function taskList({ projectId }) {
-  const project = await Project.load(projectId, {
-    resolve: { tasks: true }
-  });
-  const tasks = project.tasks;
-
-  if (tasks === undefined) return "Loading ...";
-  if (tasks === null) return "Project not found or access denied";
-
-  // Filter out null tasks and display as a list
-  return project.tasks
-    .filter(task => task !== null)
-    .map(task => task.title)
-    .join(`\n - `);
-}
-
-const result = await taskList({ projectId }); // "Seed potatoes\n - Pick berries\n - Pick apples"
-```
-</CodeGroup>
-</ContentByFramework>
-
-This approach allows for more flexible UI experiences when working with collections where the user may have mixed permission levels for different items.
 
 ## Deep Loading
 
@@ -267,34 +196,9 @@ const projectWithAssignees = await Project.load(projectId, {
 
 The resolve query defines which parts of the graph you want to load, making it intuitive to express complex loading patterns.
 
-### Loading Lists
+### Granular loading states and permissions in collections
 
-For [CoLists](/docs/using-covalues/colists), Jazz provides a simplified syntax using a boolean value:
-
-<CodeGroup>
-```ts
-// Load project with all tasks shallowly
-const project = await Project.load(projectId, {
-  resolve: {
-    tasks: true  // Simplified syntax for loading all items in a list
-  }
-});
-
-// For more complex loading patterns, use $each
-const project = await Project.load(projectId, {
-  resolve: {
-    tasks: {
-      $each: {
-        subtasks: true,
-        assignee: true
-      }
-    }
-  }
-});
-```
-</CodeGroup>
-
-The boolean `true` value is a shorthand that indicates you want to load all items in the list without specifying deeper loading for each item. When you need to load nested properties of list items, use the more explicit `$each` syntax.
+TODO
 
 ## Type Safety with Resolved Type
 
