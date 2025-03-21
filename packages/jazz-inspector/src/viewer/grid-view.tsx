@@ -1,5 +1,6 @@
 import { CoID, LocalNode, RawCoValue } from "cojson";
 import { JsonObject } from "cojson";
+import { tw } from "../twind.js";
 import { Button } from "../ui/button.js";
 import { ResolveIcon } from "./type-icon.js";
 import { PageInfo, isCoId } from "./types.js";
@@ -22,11 +23,13 @@ export function GridView({
         <Button
           variant="plain"
           key={childIndex}
-          className={`p-3 text-left rounded-lg overflow-hidden transition-colors ${
-            isCoId(child)
-              ? "border border-gray-200 shadow-sm hover:bg-gray-100/5"
-              : "bg-gray-50  dark:bg-gray-925 cursor-default"
-          }`}
+          className={tw(
+            `p-3 text-left rounded-lg overflow-hidden transition-colors ${
+              isCoId(child)
+                ? "border border-gray-200 shadow-sm hover:bg-gray-100/5"
+                : "bg-gray-50  dark:bg-gray-925 cursor-default"
+            }`,
+          )}
           onClick={() =>
             isCoId(child) &&
             onNavigate([{ coId: child as CoID<RawCoValue>, name: key }])
