@@ -14,42 +14,43 @@ import {
 } from "vitest";
 import { JazzProviderWithClerk } from "../index";
 
-// Suppress React warnings globally for all tests
-beforeAll(() => {
-  const originalConsoleError = console.error;
-  console.error = (message, ...args) => {
-    // Suppress common React testing warnings that don't affect test outcomes
-    if (
-      message?.toString().includes("act(...)") ||
-      message?.toString().includes("not wrapped in act") ||
-      message?.toString().includes("Objects are not valid as a React child") ||
-      message?.toString().includes("validateDOMNesting")
-    ) {
-      return;
-    }
-    originalConsoleError(message, ...args);
-  };
-});
+// TODO: do we have an underlying problem here?
+// // Suppress React warnings globally for all tests
+// beforeAll(() => {
+//   const originalConsoleError = console.error;
+//   console.error = (message, ...args) => {
+//     // Suppress common React testing warnings that don't affect test outcomes
+//     if (
+//       message?.toString().includes("act(...)") ||
+//       message?.toString().includes("not wrapped in act") ||
+//       message?.toString().includes("Objects are not valid as a React child") ||
+//       message?.toString().includes("validateDOMNesting")
+//     ) {
+//       return;
+//     }
+//     originalConsoleError(message, ...args);
+//   };
+// });
 
-// Suppress unhandled promise rejections that might occur during test cleanup
-beforeAll(() => {
-  const originalOnUnhandledRejection =
-    process.listeners("unhandledRejection")[0];
-  process.removeAllListeners("unhandledRejection");
-  process.on("unhandledRejection", (reason: unknown) => {
-    // Ignore React rendering errors during tests
-    if (
-      reason instanceof Error &&
-      reason.message.includes("Objects are not valid as a React child")
-    ) {
-      return;
-    }
-    // Call the original handler for other errors
-    if (originalOnUnhandledRejection) {
-      originalOnUnhandledRejection(reason, Promise.reject(reason));
-    }
-  });
-});
+// // Suppress unhandled promise rejections that might occur during test cleanup
+// beforeAll(() => {
+//   const originalOnUnhandledRejection =
+//     process.listeners("unhandledRejection")[0];
+//   process.removeAllListeners("unhandledRejection");
+//   process.on("unhandledRejection", (reason: unknown) => {
+//     // Ignore React rendering errors during tests
+//     if (
+//       reason instanceof Error &&
+//       reason.message.includes("Objects are not valid as a React child")
+//     ) {
+//       return;
+//     }
+//     // Call the original handler for other errors
+//     if (originalOnUnhandledRejection) {
+//       originalOnUnhandledRejection(reason, Promise.reject(reason));
+//     }
+//   });
+// });
 
 vi.mock("jazz-react", async (importOriginal) => {
   const { JazzTestProvider, createJazzTestAccount } = await import(
