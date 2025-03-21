@@ -147,58 +147,89 @@ Resolve queries let you declare exactly which references to load and how deep to
 class Project extends CoMap {
   name = co.string;
   tasks = co.ref(ListOfTasks);
-  owner = co.ref(TeamMember);
 }
 
 class Task extends CoMap {
   title = co.string;
-  subtasks = co.ref(ListOfSubtasks);
+  subtasks = co.ref(ListOfTasks);
   assignee = co.optional.ref(TeamMember);
 }
 
-// Load just the project, not its references
-const project = await Project.load(projectId, {
-  resolve: {}
-});
+class ListOfTasks extends CoList.Of(co.ref(Task)) {}
 
-// Load the project and its tasks
-const projectWithTasks = await Project.load(projectId, {
+// Load just the project, not its references
+const project = await Project.load(projectId);
+if (!project) { throw new Error("Project not found or not accessible"); }
+
+// string - primitive fields are always loaded
+project.name;
+// undefined | null | ListOfTasks - non-requested references might not be loaded, or inaccessible
+project.tasks;
+
+// Load the project and shallowly load its list of tasks
+const projectWithTasksShallow = await Project.load(projectId, {
   resolve: {
     tasks: true
   }
 });
+if (!projectWithTasksShallow) { throw new Error("Project or required references not found or not accessible"); }
+
+// ListOfTasks - shallowly loaded
+projectWithTasksShallow.tasks;
+// number - length of the list
+projectWithTasksShallow.tasks.length;
+// undefined | null | Task - items might not be loaded, or inaccessible
+projectWithTasksShallow.tasks[0];
+
+// Load the project and its tasks
+const projectWithTasks = await Project.load(projectId, {
+  resolve: {
+    tasks: {
+      $each: true
+    }
+  }
+});
+if (!projectWithTasks) { throw new Error("Project or required references not found or not accessible"); }
+
+// ListOfTasks - fully loaded
+projectWithTasks.tasks;
+// Task - fully loaded
+projectWithTasks.tasks[0];
+// string - primitive fields are always loaded
+projectWithTasks.tasks[0].title;
+// undefined | null | ListOfTasks - subtasks might not be loaded, or inaccessible
+projectWithTasks.tasks[0].subtasks;
 
 // Load the project, its tasks, and their subtasks
 const projectDeep = await Project.load(projectId, {
   resolve: {
     tasks: {
-      // Load the tasks list and then...
       $each: {
-        // For each task in the list, also load its subtasks
-        subtasks: true
-      }
-    }
-  }
-});
-
-// Load the project, its tasks, and task assignees
-const projectWithAssignees = await Project.load(projectId, {
-  resolve: {
-    tasks: {
-      $each: {
+        subtasks: {
+          $each: true
+        },
         assignee: true
       }
     }
   }
 });
+if (!projectDeep) { throw new Error("Project or required references not found or not accessible"); }
+
+// string - primitive fields are always loaded
+projectDeep.tasks[0].subtasks[0].title;
+// undefined | null | TeamMember - since assignee is optional:
+//   TeamMember - set and definitely loaded
+//   null - set but unavailable/inaccessible
+//   undefined - not set, or loading (in case of subscription)
+projectDeep.tasks[0].assignee;
 ```
 </CodeGroup>
 
 The resolve query defines which parts of the graph you want to load, making it intuitive to express complex loading patterns.
 
-### Granular loading states and permissions in collections
+### Loading states and permissions in collections and optional references
 
-TODO
+
 
 ## Type Safety with Resolved Type
 
@@ -211,7 +242,7 @@ The `Resolved` type is especially useful when passing data between components, a
 ```ts
 // Define a type that includes resolved nested data
 type ProjectWithTasks = Resolved<Project, {
-  tasks: true
+  tasks: { $each: true }
 }>;
 
 // Component that expects a fully resolved project
@@ -230,7 +261,6 @@ function TaskList({ project }: { project: ProjectWithTasks }) {
 type FullyLoadedProject = Resolved<Project, {
   tasks: {
     $each: {
-      title: true,
       subtasks: true,
       assignee: true
     }
