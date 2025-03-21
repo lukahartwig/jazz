@@ -1,12 +1,16 @@
 # 🎷 Jazz + React Native
 
+This package provides dedicated support for framework-less React Native applications. It implements storage adapters specifically for React Native's ecosystem (op-sqlite and MMKV) and is designed to work with the Jazz React Native Core package.
+
 Jazz requires a [React Native development build](https://reactnative.dev/docs/getting-started-without-a-framework). Jazz also supports the [New Architecture](https://reactnative.dev/architecture/landing-page).
+
+For Expo-based applications, please use the `jazz-expo` package instead.
 
 Tested with:
 
 ```json
-"react-native": ">=0.74.5",
-"react": "^18.2.0",
+"react-native": "0.76.7",
+"react": "18.3.1",
 ```
 
 ## 🚀 Setup
@@ -25,7 +29,7 @@ cd my-jazz-app
 ```bash
 npm install @react-native-community/netinfo @bam.tech/react-native-image-resizer
 
-npm i -S @azure/core-asynciterator-polyfill react-native-url-polyfill readable-stream react-native-get-random-values @craftzdog/react-native-buffer @op-engineering/op-sqlite
+npm i -S @azure/core-asynciterator-polyfill react-native-url-polyfill readable-stream react-native-get-random-values @craftzdog/react-native-buffer @op-engineering/op-sqlite react-native-mmkv
 
 npm i -D @babel/plugin-transform-class-static-block
 

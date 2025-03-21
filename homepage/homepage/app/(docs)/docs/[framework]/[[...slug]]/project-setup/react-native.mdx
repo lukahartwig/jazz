@@ -4,52 +4,91 @@ import { CodeGroup } from "@/components/forMdx";
 
 # React Native
 
-Jazz requires an [Expo development build](https://docs.expo.dev/develop/development-builds/introduction/) using [Expo Prebuild](https://docs.expo.dev/workflow/prebuild/) for native code. It is **not compatible** with Expo Go. Jazz also supports the [New Architecture](https://docs.expo.dev/guides/new-architecture/).
+Jazz supports two different React Native implementations:
+
+1. **Expo**: Using [Expo development build](https://docs.expo.dev/develop/development-builds/introduction/) with [Expo Prebuild](https://docs.expo.dev/workflow/prebuild/) for native code. It is **not compatible** with Expo Go.
+2. **Framework-less React Native**: Using the standard React Native implementation without Expo.
+
+Both implementations support the [New Architecture](https://reactnative.dev/architecture/landing-page).
 
 Tested with:
 
 <CodeGroup>
-  ```json "expo": "~51.0.0", "react-native": "~0.74.5", "react": "^18.2.0", ```
+  ```json "expo": "~52.0.0", "react-native": "0.76.7", "react": "18.3.1", ```
 </CodeGroup>
 
 ## Setup
+
+### Choose your implementation
+
+Decide whether you want to use Expo or framework-less React Native based on your project requirements.
 
 ### Create a new project
 
 (skip this step if you already have one)
 
+#### For Expo
+
 <CodeGroup>
-  ```bash npx create-expo-app -e with-router-tailwind my-jazz-app cd my-jazz-app
-  npx expo prebuild ```
+  ```bash
+  npx create-expo-app -e with-router-tailwind my-jazz-app
+  cd my-jazz-app
+  npx expo prebuild
+  ```
+</CodeGroup>
+
+#### For framework-less React Native
+
+<CodeGroup>
+  ```bash
+  npx react-native init MyJazzApp
+  cd MyJazzApp
+  ```
 </CodeGroup>
 
 ### Install dependencies
+
+#### For Expo
 
 <CodeGroup>
   ```bash
   npx expo install expo-linking expo-secure-store expo-file-system @react-native-community/netinfo @bam.tech/react-native-image-resizer
 
-npm i -S @azure/core-asynciterator-polyfill react-native-url-polyfill readable-stream react-native-get-random-values @craftzdog/react-native-buffer @op-engineering/op-sqlite
+  npm i -S @azure/core-asynciterator-polyfill react-native-url-polyfill readable-stream react-native-get-random-values @craftzdog/react-native-buffer
 
-npm i -S jazz-tools jazz-react-native jazz-react-native-media-images
+  npm i -S jazz-tools jazz-expo jazz-react-native-media-images
+  ```
+</CodeGroup>
 
-````
+#### For framework-less React Native
+
+<CodeGroup>
+  ```bash
+  npm install @react-native-community/netinfo @bam.tech/react-native-image-resizer
+
+  npm i -S @azure/core-asynciterator-polyfill react-native-url-polyfill readable-stream react-native-get-random-values @craftzdog/react-native-buffer @op-engineering/op-sqlite react-native-mmkv
+
+  npm i -S jazz-tools jazz-react-native jazz-react-native-media-images
+  ```
 </CodeGroup>
 
 > note: Hermes has added support for `atob` and `btoa` in React Native 0.74.  If you are using earlier versions, you may also need to polyfill `atob` and `btoa` in your `package.json` . Packages to try include `text-encoding` and `base-64`, and you can drop `@bacons/text-decoder`.
 
-### Fix incompatible dependencies
+### Additional Expo steps
 
 <CodeGroup>
 ```bash
 npx expo install --fix
-````
-
+```
 </CodeGroup>
 
 ### Install Pods
 
-<CodeGroup>```bash npx pod-install ```</CodeGroup>
+<CodeGroup>
+```bash 
+npx pod-install 
+```
+</CodeGroup>
 
 ### Configure Metro
 
@@ -163,7 +202,36 @@ Lastly, ensure that the `"main"` field in your `package.json` points to `index.j
 
 ## Setting up the provider
 
-Wrap your app components with the `JazzProvider:
+Wrap your app components with the appropriate JazzProvider based on your implementation:
+
+### For Expo
+
+<CodeGroup>
+      ```tsx
+      import { JazzProvider } from "jazz-expo";
+      import { MyAppAccount } from "./schema";
+
+      export function MyJazzProvider({ children }: { children: React.ReactNode }) {
+          return (
+              <JazzProvider
+                  sync={{ peer: "wss://cloud.jazz.tools/?key=you@example.com" }}
+                  AccountSchema={MyAppAccount}
+              >
+                  {children}
+              </JazzProvider>
+          );
+      }
+
+      // Register the Account schema so `useAccount` returns our custom `MyAppAccount`
+      declare module "jazz-expo" {
+          interface Register {
+              Account: MyAppAccount;
+          }
+      }
+      ```
+</CodeGroup>
+
+### For framework-less React Native
 
 <CodeGroup>
       ```tsx
@@ -188,14 +256,22 @@ Wrap your app components with the `JazzProvider:
           }
       }
       ```
-
 </CodeGroup>
 
-You can optionally pass a few custom attributes to `<JazzProvider>`:
+### Provider Options
+
+#### Expo Provider Options
 
 - `kvStore`
   - `ExpoSecureStoreAdapter` (default)
-  - example: `MMKVStore` - roll your own, using MMKV
+- `AccountSchema`
+  - `Account` (default)
+- `CryptoProvider`
+
+#### React Native Provider Options
+
+- `kvStore`
+  - `MMKVStoreAdapter` (default)
 - `AccountSchema`
   - `Account` (default)
 - `CryptoProvider`
