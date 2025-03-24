@@ -29,18 +29,13 @@ We're introducing a new resolve API for deep loading, more friendly to TypeScrip
 // @noErrors: 2451
 import { CoMap, CoList, co, Account } from "jazz-tools";
 import { useAccount } from "jazz-react";
-
-class AccountRoot extends CoMap {
-  friends = CoList.Of(co.ref(Account));
-}
-
-class AppAccount extends Account {
-  root = co.ref(AccountRoot);
-}
-
-
+class AccountRoot extends CoMap { friends = co.ref(ListOfAccounts); }
+class ListOfAccounts extends CoList.Of(co.ref(Account)) {}
+class MyAppAccount extends Account { root = co.ref(AccountRoot);}
+declare module "jazz-react" { interface Register { Account: MyAppAccount; } }
 // ---cut-before---
 // Before
+// @ts-expect-error
 const { me } = useAccount({ root: { friends: [] } }); // [!code --]
 
 // After

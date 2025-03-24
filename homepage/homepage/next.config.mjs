@@ -6,8 +6,6 @@ import { createHighlighter } from "shiki";
 import { transformerNotationDiff, transformerRemoveLineBreak } from '@shikijs/transformers'
 import { transformerTwoslash } from "@shikijs/twoslash";
 import { SKIP, visit } from "unist-util-visit";
-import { fileURLToPath } from 'url';
-import { dirname, resolve as resolvePath } from "path";
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -43,12 +41,6 @@ const highlighterPromise = createHighlighter({
   themes: ["min-light", "tokyo-night"],
 });
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-const vfsRoot = resolvePath(__dirname, "../..");
-
-console.log(vfsRoot);
-
 function highlightPlugin() {
   return async function transformer(tree) {
     const highlighter = await highlighterPromise;
@@ -56,6 +48,7 @@ function highlightPlugin() {
     visit(tree, "code", visitor);
 
     function visitor(node) {
+      let error = "";
       const html = highlighter.codeToHtml(node.value, {
         lang: node.lang,
         meta: { __raw: node.lang + " " + node.meta },
@@ -63,23 +56,24 @@ function highlightPlugin() {
           light: "min-light",
           dark: "tokyo-night",
         },
+
         transformers: [
           transformerTwoslash({
             explicitTrigger: true,
-            twoslashOptions: {
-              vfsRoot: vfsRoot,
-              compilerOptions: {
-                baseUrl: "./packages",
-              }
-            }
+            throws: process.env.NODE_ENV === "production",
+            onTwoslashError: process.env.NODE_ENV !== "production" ? (e) => {
+              console.error(e);
+              error = e;
+            } : undefined,
           }),
           transformerNotationDiff(),
-          transformerRemoveLineBreak(),
         ],
       });
 
       node.type = "html";
-      node.value = html;
+      node.value = error
+        ? `<div style="color: red;">${error}</div>` + html
+        : html;
       node.children = [];
       return SKIP;
     }
