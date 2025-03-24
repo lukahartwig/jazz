@@ -1,5 +1,6 @@
+import { ZodTypeAny } from "zod";
 import { CoValueSchema } from "../coMap/schema.js";
-import { LazySchema } from "./lazy.js";
+import { LazySchema, isLazySchema } from "./lazy.js";
 
 export const OptionalSymbol = "isOptional" as const;
 
@@ -17,10 +18,14 @@ export function optional<T extends { optional: () => any }>(
   return value.optional();
 }
 
-export function isOptional<T extends CoValueSchema>(
-  value: T,
-): value is T & { isOptional: true } {
-  return value.isOptional;
+export function isOptional<
+  T extends CoValueSchema | LazySchema<any> | ZodTypeAny,
+>(value: T): value is T & { isOptional: true } {
+  if (isLazySchema(value)) {
+    return isOptional(value.lazySchema());
+  }
+
+  return (value as CoValueSchema).isOptional;
 }
 
 export type Optional<T extends CoValueSchema> = ReturnType<T["optional"]>;

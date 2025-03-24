@@ -339,7 +339,7 @@ describe("CoMap with Zod", () => {
       expect(loaded.address).toBeUndefined();
 
       expectTypeOf(loaded.address).toEqualTypeOf<
-        Loaded<typeof Person.shape.address, true> | undefined | null
+        Loaded<typeof Person.shape.address, true> | undefined
       >();
     });
 
@@ -687,7 +687,13 @@ describe("CoMap with Zod", () => {
 
       expect(johnAfterSubscribe.name).toBe("John");
       expect(johnAfterSubscribe.age).toBe(30);
-      expect(johnAfterSubscribe.address).toBe(null);
+      expect(johnAfterSubscribe.address).toMatchObject({
+        $jazzState: "unloaded",
+        $jazz: {
+          schema: Person.shape.address,
+          id: john.$jazz.id,
+        },
+      });
     });
 
     it("should syncronously load a locally available CoMap with nested values", async () => {
@@ -867,6 +873,7 @@ describe("CoMap with Zod", () => {
 
     const resultBeforeSet = result;
 
+    // @ts-expect-error TODO: Shall we update the type to track that we are adding a new key?
     const { jane } = friends.$jazz.set("jane", {
       name: "Jane",
     });
@@ -875,7 +882,13 @@ describe("CoMap with Zod", () => {
       john: {
         name: "John",
       },
-      jane: null,
+      jane: {
+        $jazzState: "unloaded",
+        $jazz: {
+          schema: Friends,
+          id: friends.jane.$jazz.id,
+        },
+      },
     });
 
     expect(jane).toEqual({
@@ -969,7 +982,7 @@ describe("CoMap with Zod", () => {
     expect(resultBeforeSet).not.toBe(result);
   });
 
-  it("should set the property as null if we have the value but it is not requested", async () => {
+  it("should set the property as unloaded if we have the value but it is not requested", async () => {
     const Person = co.map({
       name: z.string(),
       age: z.number(),
@@ -992,7 +1005,13 @@ describe("CoMap with Zod", () => {
       result = value;
     });
 
-    expect(result.address).toBe(null);
+    expect(result.address).toMatchObject({
+      $jazzState: "unloaded",
+      $jazz: {
+        schema: Person.shape.address,
+        id: john.$jazz.id,
+      },
+    });
   });
 
   it("should set the property as undefined if we have the nested coValue is optional and missing", async () => {

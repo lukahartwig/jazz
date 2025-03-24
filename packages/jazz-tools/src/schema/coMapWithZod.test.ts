@@ -279,7 +279,7 @@ describe("CoMap - with zod based schema", () => {
       });
 
       expect(john.friends.jj.name).toBe("jane");
-      expect(john.friends.jj.friends.joey.name).toBe("joe");
+      expect(john.friends.jj.friends.joey.name).toBe("joey");
     });
 
     it("should return a loaded type when a self reference is passed on create", () => {

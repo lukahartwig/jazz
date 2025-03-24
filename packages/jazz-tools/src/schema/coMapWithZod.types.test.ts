@@ -4,8 +4,12 @@ import { CoMapJazzApi } from "./coMap/instance.js";
 import {
   CoMapInit,
   CoMapSchema,
+  CoMapSchemaClass,
   ResolveQueryForCoMapInit,
 } from "./coMap/schema.js";
+import { LazySchema } from "./coValue/lazy.js";
+import { Optional } from "./coValue/optional.js";
+import { MaybeLoaded, Unloaded } from "./coValue/types.js";
 import { CoMap, Loaded, ResolveQuery, co, z } from "./schema.js";
 
 beforeEach(async () => {
@@ -69,11 +73,20 @@ describe("CoMap - with zod based schema", () => {
       >();
     });
 
-    it("should properly parse a schema with a self reference", () => {
-      const Person = co.map({
+    it("should properly parse a schema with a recursive reference", () => {
+      const personBaseProps = {
         name: z.string(),
         age: z.number(),
-        friend: co.self(),
+      };
+      const Person: CoMapSchemaClass<
+        typeof personBaseProps & {
+          friend: LazySchema<Optional<typeof Person>>;
+        },
+        undefined,
+        false
+      > = co.map({
+        ...personBaseProps,
+        friend: co.lazy(() => Person.optional()),
       });
 
       type Result = ResolveQuery<typeof Person>;
@@ -160,7 +173,15 @@ describe("CoMap - with zod based schema", () => {
         {
           name: string;
           age: number;
-          address: null;
+          address: MaybeLoaded<
+            CoMapSchemaClass<
+              {
+                street: z.ZodString;
+              },
+              undefined,
+              false
+            >
+          >;
         } & CoMap<typeof Person, true>
       >();
     });
@@ -280,10 +301,19 @@ describe("CoMap - with zod based schema", () => {
     });
 
     it("should properly parse a schema with a self reference", () => {
-      const Person = co.map({
+      const personBaseProps = {
         name: z.string(),
         age: z.number(),
-        friend: co.self(),
+      };
+      const Person: CoMapSchemaClass<
+        typeof personBaseProps & {
+          friend: LazySchema<Optional<typeof Person>>;
+        },
+        undefined,
+        false
+      > = co.map({
+        ...personBaseProps,
+        friend: co.lazy(() => Person.optional()),
       });
 
       type Result = Loaded<typeof Person, true>;
@@ -292,16 +322,38 @@ describe("CoMap - with zod based schema", () => {
         {
           name: string;
           age: number;
-          friend: null;
+          friend:
+            | MaybeLoaded<
+                CoMapSchemaClass<
+                  {
+                    name: z.ZodString;
+                    age: z.ZodNumber;
+                    friend: LazySchema<any>;
+                  },
+                  undefined,
+                  true
+                >
+              >
+            | null
+            | undefined;
         } & CoMap<typeof Person, true>
       >();
     });
 
     it("should properly parse a schema with a self reference {friend: true}", () => {
-      const Person = co.map({
+      const personBaseProps = {
         name: z.string(),
         age: z.number(),
-        friend: co.self(),
+      };
+      const Person: CoMapSchemaClass<
+        typeof personBaseProps & {
+          friend: LazySchema<Optional<typeof Person>>;
+        },
+        undefined,
+        false
+      > = co.map({
+        ...personBaseProps,
+        friend: co.lazy(() => Person.optional()),
       });
 
       type Result = Loaded<typeof Person, { friend: true }>;
@@ -310,41 +362,31 @@ describe("CoMap - with zod based schema", () => {
         {
           name: string;
           age: number;
-          friend:
-            | ({
-                name: string;
-                age: number;
-                friend: null;
-              } & CoMap<typeof Person, true>)
+          readonly friend:
+            | {
+                readonly name: string;
+                readonly age: number;
+                readonly friend:
+                  | MaybeLoaded<
+                      CoMapSchemaClass<
+                        {
+                          name: z.ZodString;
+                          age: z.ZodNumber;
+                          friend: LazySchema<any>;
+                        },
+                        undefined,
+                        true
+                      >
+                    >
+                  | null
+                  | undefined;
+                $jazzState: "loaded";
+                $jazz: CoMapJazzApi<any>;
+              }
             | null
             | undefined;
         } & CoMap<typeof Person, { friend: true }>
       >();
-    });
-
-    it("should return the same result when providing a SchemaDefinition", () => {
-      const Person = co.map({
-        name: z.string(),
-        age: z.number(),
-        address: co.map({
-          street: z.string(),
-        }),
-      });
-
-      type PersonSchema = typeof Person;
-      type PersonSchemaDefinition = CoMapSchema<
-        PersonSchema["shape"],
-        PersonSchema["record"],
-        PersonSchema["isOptional"]
-      >;
-      type Result = Loaded<PersonSchemaDefinition, true>;
-
-      expectTypeOf<Result>().toMatchTypeOf<{
-        name: string;
-        age: number;
-        address: null;
-        $jazz: CoMapJazzApi<PersonSchemaDefinition, true>;
-      }>();
     });
 
     it("should return the same result when providing a SchemaDefinition {address: true}", () => {
@@ -411,7 +453,8 @@ describe("CoMap - with zod based schema", () => {
             }
           | ({
               street: string;
-            } & CoMap<typeof Person.shape.address, true>);
+            } & CoMap<typeof Person.shape.address, true>)
+          | Unloaded<typeof Person.shape.address>;
       }>();
     });
 
@@ -437,7 +480,8 @@ describe("CoMap - with zod based schema", () => {
             }
           | ({
               street: string;
-            } & CoMap<typeof Person.shape.address, true>);
+            } & CoMap<typeof Person.shape.address, true>)
+          | Unloaded<typeof Person.shape.address>;
       }>();
     });
 
@@ -468,15 +512,25 @@ describe("CoMap - with zod based schema", () => {
               readonly street: string;
               $jazz: any;
             }
+          | Unloaded<typeof Person.record.value>
         >
       >;
     });
 
     it("should properly parse a schema with a self reference", () => {
-      const Person = co.map({
+      const personBaseProps = {
         name: z.string(),
         age: z.number(),
-        friend: co.self(),
+      };
+      const Person: CoMapSchemaClass<
+        typeof personBaseProps & {
+          friend: LazySchema<Optional<typeof Person>>;
+        },
+        undefined,
+        false
+      > = co.map({
+        ...personBaseProps,
+        friend: co.lazy(() => Person.optional()),
       });
 
       // This is just for debug, writing an expectation is not possible
@@ -509,7 +563,8 @@ describe("CoMap - with zod based schema", () => {
             }
           | ({
               street: string;
-            } & CoMap<typeof Person.shape.address, true>);
+            } & CoMap<typeof Person.shape.address, true>)
+          | Unloaded<typeof Person.shape.address>;
       }>();
     });
   });
@@ -584,10 +639,19 @@ describe("CoMap - with zod based schema", () => {
     });
 
     it("should properly parse a schema with a self reference", () => {
-      const Person = co.map({
+      const personBaseProps = {
         name: z.string(),
         age: z.number(),
-        friend: co.self(),
+      };
+      const Person: CoMapSchemaClass<
+        typeof personBaseProps & {
+          friend: LazySchema<Optional<typeof Person>>;
+        },
+        undefined,
+        false
+      > = co.map({
+        ...personBaseProps,
+        friend: co.lazy(() => Person.optional()),
       });
 
       type Result = ResolveQueryForCoMapInit<

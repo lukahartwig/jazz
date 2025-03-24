@@ -6,6 +6,7 @@ import { createCoMapFromRaw, isRelationRef } from "./coMap/instance.js";
 import { CoValueSchema } from "./coMap/schema.js";
 import { getOwnerFromRawValue } from "./coMap/utils.js";
 import { isLazySchema } from "./coValue/lazy.js";
+import { isOptional } from "./coValue/optional.js";
 import { Loaded, ResolveQuery, ResolveQueryStrict } from "./coValue/types.js";
 
 type SubscribeListener<D extends CoValueSchema, R extends ResolveQuery<D>> = (
@@ -153,7 +154,7 @@ export class CoValueResolutionNode<
     if (value === "unavailable" || value === "unauthorized") {
       const descriptor = this.schema.get(key);
 
-      if (descriptor?.isOptional) {
+      if (descriptor && isOptional(descriptor)) {
         this.childValues.set(key, undefined);
       } else {
         this.error = value;

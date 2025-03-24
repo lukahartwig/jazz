@@ -17,7 +17,6 @@ function record<
 
 export const co = {
   map,
-  self,
   optional,
   record,
   lazy,

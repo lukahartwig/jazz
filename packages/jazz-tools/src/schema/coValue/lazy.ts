@@ -7,7 +7,9 @@ export type LazySchema<T> = {
   lazySchema: () => T;
 };
 
-export function lazy<T>(lazySchema: () => T): LazySchema<T> {
+export function lazy<T extends CoValueSchema>(
+  lazySchema: () => T,
+): LazySchema<T> {
   return {
     [LazySchemaSymbol]: true,
     lazySchema,

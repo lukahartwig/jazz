@@ -132,7 +132,7 @@ export class CoMapJazzApi<
     }
 
     return createCoMapFromRaw<D, R>(
-      this.schema,
+      this.schema as D,
       this.raw,
       refs ?? this.refs,
       this._resolutionNode,

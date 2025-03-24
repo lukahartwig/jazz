@@ -10,13 +10,7 @@ import {
   addQuestionMarks,
   flatten,
 } from "../coValue/typeUtils.js";
-import {
-  Loaded,
-  LoadedCoMap,
-  MaybeLoaded,
-  ResolveQuery,
-  ValidateQuery,
-} from "../coValue/types.js";
+import { Loaded, MaybeLoaded, ValidateQuery } from "../coValue/types.js";
 import { LoadedCoMapJazzProps, createCoMap } from "./instance.js";
 
 export type CoMapField = AnyCoMapSchema | ZodTypeAny | LazySchema<any>;
@@ -78,7 +72,7 @@ export type CoMapInit<
   S extends AnyCoMapSchema,
   CurrentDepth extends number[] = [],
 > = IsDepthLimit<CurrentDepth> extends true
-  ? {}
+  ? "TOO DEEP"
   : flatten<
       addQuestionMarks<{
         [K in keyof S["shape"]]: S["shape"][K] extends ZodTypeAny
@@ -89,7 +83,7 @@ export type CoMapInit<
       }>
     > &
       (S["record"] extends undefined
-        ? {}
+        ? unknown
         : {
             [K in CoMapRecordKey<S>]: CoMapRecordFieldType<S> extends ZodTypeAny
               ? TypeOf<CoMapRecordFieldType<S>>
