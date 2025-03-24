@@ -68,7 +68,7 @@ describe("CoMap with Zod", () => {
         $jazzState: "unloaded",
         $jazz: {
           schema: Person.shape.address,
-          id: john.$jazz.id,
+          id: john.address.$jazz.id,
         },
       });
 
@@ -172,7 +172,8 @@ describe("CoMap with Zod", () => {
       assert(loaded);
 
       expect(loaded.extra1.prop).toBe("prop1");
-      expect("extra2" in loaded).toBe(false);
+      expect("extra2" in loaded).toBe(true);
+      expect(loaded.extra2?.$jazzState).toBe("unloaded");
     });
 
     it("should load all the relations on co.record when using $each", async () => {
@@ -691,7 +692,7 @@ describe("CoMap with Zod", () => {
         $jazzState: "unloaded",
         $jazz: {
           schema: Person.shape.address,
-          id: john.$jazz.id,
+          id: john.address.$jazz.id,
         },
       });
     });
@@ -873,7 +874,6 @@ describe("CoMap with Zod", () => {
 
     const resultBeforeSet = result;
 
-    // @ts-expect-error TODO: Shall we update the type to track that we are adding a new key?
     const { jane } = friends.$jazz.set("jane", {
       name: "Jane",
     });
@@ -885,8 +885,8 @@ describe("CoMap with Zod", () => {
       jane: {
         $jazzState: "unloaded",
         $jazz: {
-          schema: Friends,
-          id: friends.jane.$jazz.id,
+          schema: Friends.record.value,
+          id: jane?.$jazz.id,
         },
       },
     });
@@ -1009,7 +1009,7 @@ describe("CoMap with Zod", () => {
       $jazzState: "unloaded",
       $jazz: {
         schema: Person.shape.address,
-        id: john.$jazz.id,
+        id: john.address.$jazz.id,
       },
     });
   });

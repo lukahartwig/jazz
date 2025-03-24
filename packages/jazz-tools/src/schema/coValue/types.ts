@@ -140,7 +140,12 @@ export type LoadedCoMapRecordProps<
   : CoMapRecordExplicitlyQueriedProps<S, R, Options, CurrentDepth> &
       (R extends { $each: infer EachQuery }
         ? CoMapRecordQueriedByEachProps<S, R, EachQuery, Options, CurrentDepth>
-        : {});
+        : {
+            // Filling the primitive record properties
+            readonly [K in CoMapRecordKey<S>]?: MaybeLoaded<
+              UnwrapRecordReference<S>
+            >;
+          });
 
 export type CoMapRecordExplicitlyQueriedProps<
   S extends CoMapSchema<any, CoMapRecordDef, boolean>,
@@ -165,7 +170,7 @@ export type CoMapRecordExplicitlyQueriedProps<
               [0, ...CurrentDepth]
             >
           | addNullable<Options, UnwrapRecordReference<S>>
-    : "TODO: CASE 5";
+    : "Not a valid reference key for the schema";
 };
 
 export type CoMapRecordQueriedByEachProps<
@@ -214,6 +219,6 @@ export type addNullable<
   T,
 > = O extends "nullable"
   ? T extends { isOptional: true }
-    ? null | undefined
+    ? undefined
     : never
   : never;

@@ -7,7 +7,12 @@ import { AnonymousJazzAgent, ID } from "../../internal.js";
 import { coValuesCache } from "../../lib/cache.js";
 import { LazySchema, isLazySchema } from "../coValue/lazy.js";
 import { isOptional } from "../coValue/optional.js";
-import { Loaded, ResolveQuery, ResolveQueryStrict } from "../coValue/types.js";
+import {
+  Loaded,
+  ResolveQuery,
+  ResolveQueryStrict,
+  Unloaded,
+} from "../coValue/types.js";
 import { CoValueResolutionNode, ensureCoValueLoaded } from "../subscribe.js";
 import {
   AnyCoMapSchema,
@@ -34,7 +39,7 @@ type RelationsKeys<D extends CoValueSchema> = keyof Relations<D> &
 
 type ChildMap<D extends AnyCoMapSchema> = Map<
   RelationsKeys<D>,
-  Loaded<any, any> | undefined | null
+  Loaded<any, any> | Unloaded<any> | undefined
 >;
 
 type PropertyType<
@@ -84,7 +89,7 @@ export class CoMapJazzApi<
 
   _fillRef<K extends RelationsKeys<D>>(
     key: K,
-    value: Loaded<any, any> | null | undefined,
+    value: Loaded<any, any> | Unloaded<any> | undefined,
   ) {
     const descriptor = this.schema.get(key);
 
@@ -229,9 +234,7 @@ export function createCoMapFromRaw<
 
   if (refs) {
     for (const [key, value] of refs.entries()) {
-      if (value !== null) {
-        instance.$jazz._fillRef(key as any, value);
-      }
+      instance.$jazz._fillRef(key as any, value);
     }
   }
 
@@ -252,7 +255,14 @@ function getValue<D extends AnyCoMapSchema>(
       if (value === undefined) {
         return undefined;
       } else {
-        return null;
+        // TODO: Add caching to keep this reference stable
+        return {
+          $jazzState: "unloaded",
+          $jazz: {
+            schema: getSchemaFromDescriptor(schema, key),
+            id: value,
+          },
+        };
       }
     } else {
       try {
@@ -335,8 +345,7 @@ function createCoMapFromInit<D extends AnyCoMapSchema>(
       const initValue = init[key] as
         | Loaded<CoValueSchema>
         | CoMapInit<any>
-        | undefined
-        | null;
+        | undefined;
 
       const descriptor = schema.get(key);
 
@@ -345,7 +354,7 @@ function createCoMapFromInit<D extends AnyCoMapSchema>(
       }
 
       if (isRelationRef(descriptor)) {
-        if (initValue === null || initValue === undefined) {
+        if (initValue === undefined) {
           if (isOptional(descriptor)) {
             rawInit[key] = undefined;
           } else {

@@ -7,7 +7,13 @@ import { CoValueSchema } from "./coMap/schema.js";
 import { getOwnerFromRawValue } from "./coMap/utils.js";
 import { isLazySchema } from "./coValue/lazy.js";
 import { isOptional } from "./coValue/optional.js";
-import { Loaded, ResolveQuery, ResolveQueryStrict } from "./coValue/types.js";
+import {
+  Loaded,
+  ResolveQuery,
+  ResolveQueryStrict,
+  Unloaded,
+} from "./coValue/types.js";
+import { getUnloadedState } from "./coValue/unloaded.js";
 
 type SubscribeListener<D extends CoValueSchema, R extends ResolveQuery<D>> = (
   value: Loaded<D, R>,
@@ -84,7 +90,7 @@ export class CoValueResolutionNode<
   R extends ResolveQuery<D>,
 > {
   childNodes = new Map<string, CoValueResolutionNode<CoValueSchema, any>>();
-  childValues = new Map<string, Loaded<any, any> | undefined | null>();
+  childValues = new Map<string, Loaded<any, any> | Unloaded<any> | undefined>();
   value: Loaded<D, R> | undefined;
   error: undefined | "unauthorized" | "unavailable";
   promise: ResolvablePromise<void> | undefined;
@@ -176,7 +182,9 @@ export class CoValueResolutionNode<
     if (!this.value) return false;
 
     for (const value of this.childValues.values()) {
-      if (value === null) return false;
+      if (value?.$jazzState === "unloaded") {
+        return false;
+      }
     }
 
     return true;
@@ -253,7 +261,7 @@ export class CoValueResolutionNode<
           childSchema = childSchema.lazySchema();
         }
 
-        this.childValues.set(key, null);
+        this.childValues.set(key, getUnloadedState(childSchema, value));
         const child = new CoValueResolutionNode(
           node,
           query,
