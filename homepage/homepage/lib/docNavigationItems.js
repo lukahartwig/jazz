@@ -34,6 +34,7 @@ export const docNavigationItems = [
           react: 100,
           vue: 100,
           "react-native": 100,
+          "react-native-expo": 100,
           svelte: 100,
         },
       },
@@ -72,6 +73,26 @@ export const docNavigationItems = [
     items: [
       {
         // upgrade guides
+        name: "0.12.0 - React Native Split",
+        href: "/docs/upgrade/0-12-0",
+        done: {
+          "react-native": 100,
+          "react-native-expo": 100,
+        },
+        framework: "react-native",
+      },
+      {
+        // upgrade guides
+        name: "0.12.0 - React Native Split",
+        href: "/docs/upgrade/0-12-0",
+        done: {
+          "react-native": 100,
+          "react-native-expo": 100,
+        },
+        framework: "react-native-expo",
+      },
+      {
+        // upgrade guides
         name: "0.12.0 - Deeply Resolved Data",
         href: "/docs/upgrade/0-12-0",
         done: 100,
@@ -101,6 +122,13 @@ export const docNavigationItems = [
       //   done: 100,
       //   framework: "react-native",
       // },
+      {
+        // upgrade guides
+        name: "0.9.2 - Local persistence on React Native Expo",
+        href: "/docs/upgrade/react-native-local-persistence",
+        done: 100,
+        framework: "react-native-expo",
+      },
       // {
       //   // upgrade guides
       //   name: "0.9.0 - Top level imports",

@@ -4,40 +4,21 @@ import { CodeGroup } from "@/components/forMdx";
 
 # React Native
 
-Jazz supports two different React Native implementations:
+This guide covers setting up Jazz with framework-less React Native applications (without Expo). If you're using Expo, please refer to the [React Native - Expo](/docs/react-native-expo/project-setup) guide instead.
 
-1. **Expo**: Using [Expo development build](https://docs.expo.dev/develop/development-builds/introduction/) with [Expo Prebuild](https://docs.expo.dev/workflow/prebuild/) for native code. It is **not compatible** with Expo Go.
-2. **Framework-less React Native**: Using the standard React Native implementation without Expo.
-
-Both implementations support the [New Architecture](https://reactnative.dev/architecture/landing-page).
+Jazz supports the [New Architecture](https://reactnative.dev/architecture/landing-page) for React Native.
 
 Tested with:
 
 <CodeGroup>
-  ```json "expo": "~52.0.0", "react-native": "0.76.7", "react": "18.3.1", ```
+  ```json "react-native": "0.76.7", "react": "18.3.1" ```
 </CodeGroup>
 
 ## Setup
 
-### Choose your implementation
-
-Decide whether you want to use Expo or framework-less React Native based on your project requirements.
-
 ### Create a new project
 
 (skip this step if you already have one)
-
-#### For Expo
-
-<CodeGroup>
-  ```bash
-  npx create-expo-app -e with-router-tailwind my-jazz-app
-  cd my-jazz-app
-  npx expo prebuild
-  ```
-</CodeGroup>
-
-#### For framework-less React Native
 
 <CodeGroup>
   ```bash
@@ -47,20 +28,6 @@ Decide whether you want to use Expo or framework-less React Native based on your
 </CodeGroup>
 
 ### Install dependencies
-
-#### For Expo
-
-<CodeGroup>
-  ```bash
-  npx expo install expo-linking expo-secure-store expo-file-system @react-native-community/netinfo @bam.tech/react-native-image-resizer
-
-  npm i -S @azure/core-asynciterator-polyfill react-native-url-polyfill readable-stream react-native-get-random-values @craftzdog/react-native-buffer
-
-  npm i -S jazz-tools jazz-expo jazz-react-native-media-images
-  ```
-</CodeGroup>
-
-#### For framework-less React Native
 
 <CodeGroup>
   ```bash
@@ -72,21 +39,13 @@ Decide whether you want to use Expo or framework-less React Native based on your
   ```
 </CodeGroup>
 
-> note: Hermes has added support for `atob` and `btoa` in React Native 0.74.  If you are using earlier versions, you may also need to polyfill `atob` and `btoa` in your `package.json` . Packages to try include `text-encoding` and `base-64`, and you can drop `@bacons/text-decoder`.
-
-### Additional Expo steps
-
-<CodeGroup>
-```bash
-npx expo install --fix
-```
-</CodeGroup>
+> note: Hermes has added support for `atob` and `btoa` in React Native 0.74. If you are using earlier versions, you may also need to polyfill `atob` and `btoa` in your `package.json`. Packages to try include `text-encoding` and `base-64`, and you can drop `@bacons/text-decoder`.
 
 ### Install Pods
 
 <CodeGroup>
-```bash 
-npx pod-install 
+```bash
+npx pod-install
 ```
 </CodeGroup>
 
@@ -202,73 +161,34 @@ Lastly, ensure that the `"main"` field in your `package.json` points to `index.j
 
 ## Setting up the provider
 
-Wrap your app components with the appropriate JazzProvider based on your implementation:
-
-### For Expo
+Wrap your app components with the JazzProvider:
 
 <CodeGroup>
-      ```tsx
-      import { JazzProvider } from "jazz-expo";
-      import { MyAppAccount } from "./schema";
+```tsx
+import { JazzProvider } from "jazz-react-native";
+import { MyAppAccount } from "./schema";
 
-      export function MyJazzProvider({ children }: { children: React.ReactNode }) {
-          return (
-              <JazzProvider
-                  sync={{ peer: "wss://cloud.jazz.tools/?key=you@example.com" }}
-                  AccountSchema={MyAppAccount}
-              >
-                  {children}
-              </JazzProvider>
-          );
-      }
+export function MyJazzProvider({ children }: { children: React.ReactNode }) {
+    return (
+        <JazzProvider
+            sync={{ peer: "wss://cloud.jazz.tools/?key=you@example.com" }}
+            AccountSchema={MyAppAccount}
+        >
+            {children}
+        </JazzProvider>
+    );
+}
 
-      // Register the Account schema so `useAccount` returns our custom `MyAppAccount`
-      declare module "jazz-expo" {
-          interface Register {
-              Account: MyAppAccount;
-          }
-      }
-      ```
-</CodeGroup>
-
-### For framework-less React Native
-
-<CodeGroup>
-      ```tsx
-      import { JazzProvider } from "jazz-react-native";
-      import { MyAppAccount } from "./schema";
-
-      export function MyJazzProvider({ children }: { children: React.ReactNode }) {
-          return (
-              <JazzProvider
-                  sync={{ peer: "wss://cloud.jazz.tools/?key=you@example.com" }}
-                  AccountSchema={MyAppAccount}
-              >
-                  {children}
-              </JazzProvider>
-          );
-      }
-
-      // Register the Account schema so `useAccount` returns our custom `MyAppAccount`
-      declare module "jazz-react-native" {
-          interface Register {
-              Account: MyAppAccount;
-          }
-      }
-      ```
+// Register the Account schema so `useAccount` returns our custom `MyAppAccount`
+declare module "jazz-react-native" {
+    interface Register {
+        Account: MyAppAccount;
+    }
+}
+```
 </CodeGroup>
 
 ### Provider Options
-
-#### Expo Provider Options
-
-- `kvStore`
-  - `ExpoSecureStoreAdapter` (default)
-- `AccountSchema`
-  - `Account` (default)
-- `CryptoProvider`
-
-#### React Native Provider Options
 
 - `kvStore`
   - `MMKVStoreAdapter` (default)
@@ -278,12 +198,52 @@ Wrap your app components with the appropriate JazzProvider based on your impleme
   - `PureJSCrypto` (default)
   - `RNQuickCrypto` - C++ accelerated crypto provider
 
+### Local Persistence
+
+Jazz for React Native includes built-in local persistence using SQLite. The framework-less React Native implementation uses:
+
+- **Database Storage**: `@op-engineering/op-sqlite` - A high-performance SQLite implementation
+- **Key-Value Storage**: `react-native-mmkv` - A fast key-value storage system
+
+Local persistence is enabled by default with no additional configuration required. Your data will automatically persist across app restarts.
+
+#### Advanced Configuration
+
+You can customize the storage options in the `JazzProvider`:
+
+<CodeGroup>
+```tsx
+import { JazzProvider, OpSQLiteAdapter, MMKVStoreAdapter } from "jazz-react-native";
+
+// Default configuration - no parameters needed
+<JazzProvider
+  sync={{ peer: "wss://cloud.jazz.tools/?key=you@example.com" }}
+  AccountSchema={MyAppAccount}
+>
+  {children}
+</JazzProvider>
+
+// Or with explicit configuration
+<JazzProvider
+  storage="sqlite" // Use default OpSQLiteAdapter
+  // Or with custom configuration
+  // storage={{
+  //   adapter: new OpSQLiteAdapter({ /* custom options */ }),
+  //   kvStore: new MMKVStoreAdapter({ /* custom options */ })
+  // }}
+  sync={{ peer: "wss://cloud.jazz.tools/?key=you@example.com" }}
+  AccountSchema={MyAppAccount}
+>
+  {children}
+</JazzProvider>
+```
+</CodeGroup>
+
 ### Choosing an auth method
 
 Refer to the Jazz + React Native demo projects for implementing authentication:
 
-- [DemoAuth Example](https://github.com/garden-co/jazz/tree/main/examples/chat-rn-expo)
-- [ClerkAuth Example](https://github.com/garden-co/jazz/tree/main/examples/chat-rn-expo-clerk)
+- [DemoAuth Example](https://github.com/garden-co/jazz/tree/main/examples/chat-rn)
 
 In the demos, you'll find details on:
 
