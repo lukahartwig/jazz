@@ -73,7 +73,7 @@ export function ClassOrInterface({
     <div className="relative not-prose">
       <div
         id={name}
-        className="peer sticky top-0 mt-4 md:top-[72px] md:pt-8 bg-white dark:bg-stone-950 z-20"
+        className="peer sticky top-0 mt-4 md:top-[61px] md:pt-8 bg-white dark:bg-stone-950 z-20"
       >
         <Link
           href={"#" + name}

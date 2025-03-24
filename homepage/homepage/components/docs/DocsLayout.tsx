@@ -40,9 +40,8 @@ export default function DocsLayout({
         <div className="container relative md:grid md:grid-cols-12 md:gap-12">
           <div
             className={clsx(
-              "py-8",
               "pr-3 md:col-span-4 lg:col-span-3",
-              "sticky align-start top-[72px] h-[calc(100vh-72px)] overflow-y-auto",
+              "sticky align-start top-[61px] h-[calc(100vh-61px)] overflow-y-auto",
               "hidden md:block",
             )}
           >
@@ -53,7 +52,7 @@ export default function DocsLayout({
             {tocItems?.length && (
               <>
                 <TableOfContents
-                  className="pl-3 py-6 shrink-0 text-sm sticky align-start top-[72px] w-[16rem] h-[calc(100vh-72px)] overflow-y-auto hidden lg:block"
+                  className="pl-3 py-6 shrink-0 text-sm sticky align-start top-[61px] w-[16rem] h-[calc(100vh-61px)] overflow-y-auto hidden lg:block"
                   items={tocItems}
                 />
               </>
