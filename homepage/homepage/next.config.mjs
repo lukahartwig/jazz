@@ -6,6 +6,8 @@ import { createHighlighter } from "shiki";
 import { transformerNotationDiff, transformerRemoveLineBreak } from '@shikijs/transformers'
 import { transformerTwoslash } from "@shikijs/twoslash";
 import { SKIP, visit } from "unist-util-visit";
+import { jazzLight } from "./jazzLight.mjs";
+import { jazzDark } from "./jazzDark.mjs";
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -38,7 +40,7 @@ const config = {
 
 const highlighterPromise = createHighlighter({
   langs: ["typescript", "bash", "tsx", "json", "svelte", "vue"],
-  themes: ["min-light", "tokyo-night"],
+  themes: [jazzLight, jazzDark],
 });
 
 function highlightPlugin() {
@@ -53,8 +55,8 @@ function highlightPlugin() {
         lang: node.lang,
         meta: { __raw: node.lang + " " + node.meta },
         themes: {
-          light: "min-light",
-          dark: "tokyo-night",
+          light: "jazz-light",
+          dark: "jazz-dark",
         },
 
         transformers: [
