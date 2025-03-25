@@ -146,9 +146,9 @@ describe("CoMap - with zod based schema", () => {
         Loaded<typeof Person.shape.address>
       >();
 
-      expectTypeOf<typeof johnWithoutAddress.address>().toMatchTypeOf<
-        MaybeLoaded<typeof Person.shape.address>
-      >();
+      expectTypeOf<
+        typeof johnWithoutAddress.address
+      >().toMatchTypeOf<undefined>();
     });
 
     it("should be possible to reference a nested map schema to split group creation", () => {
@@ -180,8 +180,6 @@ describe("CoMap - with zod based schema", () => {
           street: z.string(),
         }),
       });
-
-      type X = CoMapInit<typeof Person>;
 
       // @ts-expect-error - address is required
       expect(() => Person.create({ name: "John", age: 30 })).toThrow(

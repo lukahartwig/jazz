@@ -9,11 +9,16 @@ import { isLazySchema } from "./coValue/lazy.js";
 import { isOptional } from "./coValue/optional.js";
 import {
   Loaded,
+  MaybeLoaded,
   ResolveQuery,
   ResolveQueryStrict,
   Unloaded,
 } from "./coValue/types.js";
-import { getUnloadedState } from "./coValue/unloaded.js";
+import {
+  getUnauthorizedState,
+  getUnavailableState,
+  getUnloadedState,
+} from "./coValue/unloaded.js";
 
 type SubscribeListener<D extends CoValueSchema, R extends ResolveQuery<D>> = (
   value: Loaded<D, R>,
@@ -346,7 +351,7 @@ export function loadCoValue<D extends CoValueSchema, R extends ResolveQuery<D>>(
     loadAs?: Account | AnonymousJazzAgent;
   },
 ) {
-  return new Promise<Loaded<D, R> | undefined>((resolve) => {
+  return new Promise<MaybeLoaded<D, R>>((resolve) => {
     subscribeToCoValue<D, R>(
       schema,
       id,
@@ -354,10 +359,10 @@ export function loadCoValue<D extends CoValueSchema, R extends ResolveQuery<D>>(
         resolve: options?.resolve,
         loadAs: options?.loadAs,
         onUnavailable: () => {
-          resolve(undefined);
+          resolve(getUnavailableState(schema, id));
         },
         onUnauthorized: () => {
-          resolve(undefined);
+          resolve(getUnauthorizedState(schema, id));
         },
       },
       (value, unsubscribe) => {
@@ -385,9 +390,12 @@ export async function ensureCoValueLoaded<
     },
   );
 
-  if (!response) {
-    throw new Error("Failed to deeply load CoValue " + existing.$jazz.id);
+  if (response.$jazzState !== "loaded") {
+    throw new Error(
+      `Failed to deeply load CoValue ${existing.$jazz.id}: ${response.$jazzState}`,
+    );
   }
 
-  return response;
+  // TODO: Remove this cast
+  return response as Loaded<D, R>;
 }

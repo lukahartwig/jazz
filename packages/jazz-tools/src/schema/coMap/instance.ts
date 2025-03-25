@@ -9,10 +9,12 @@ import { LazySchema, isLazySchema } from "../coValue/lazy.js";
 import { isOptional } from "../coValue/optional.js";
 import {
   Loaded,
+  MaybeLoaded,
   ResolveQuery,
   ResolveQueryStrict,
   Unloaded,
 } from "../coValue/types.js";
+import { getUnloadedState } from "../coValue/unloaded.js";
 import { CoValueResolutionNode, ensureCoValueLoaded } from "../subscribe.js";
 import {
   AnyCoMapSchema,
@@ -224,12 +226,30 @@ export function createCoMapFromRaw<
   }
 
   for (const key of fields) {
-    Object.defineProperty(instance, key, {
-      value: getValue(raw, schema, key as CoMapSchemaKey<D>),
-      writable: false,
-      enumerable: true,
-      configurable: true,
-    });
+    const descriptor = schema.get(key);
+
+    if (descriptor && isRelationRef(descriptor)) {
+      const ref = refs?.get(key);
+
+      if (ref) {
+        instance.$jazz._fillRef(key as any, ref);
+      } else {
+        instance.$jazz._fillRef(
+          key as any,
+          getUnloadedState(
+            getSchemaFromDescriptor(schema, key),
+            raw.get(key) as ID<any>,
+          ),
+        );
+      }
+    } else {
+      Object.defineProperty(instance, key, {
+        value: getValue(raw, schema, key as CoMapSchemaKey<D>),
+        writable: false,
+        enumerable: true,
+        configurable: true,
+      });
+    }
   }
 
   if (refs) {
@@ -252,18 +272,7 @@ function getValue<D extends AnyCoMapSchema>(
     const value = raw.get(key);
 
     if (isRelationRef(descriptor)) {
-      if (value === undefined) {
-        return undefined;
-      } else {
-        // TODO: Add caching to keep this reference stable
-        return {
-          $jazzState: "unloaded",
-          $jazz: {
-            schema: getSchemaFromDescriptor(schema, key),
-            id: value,
-          },
-        };
-      }
+      return undefined;
     } else {
       try {
         // TODO: If something fails on parse, we should navigate the history and get the last valid value
@@ -330,7 +339,7 @@ function createCoMapFromInit<D extends AnyCoMapSchema>(
 
   const rawInit = {} as Record<string, JsonValue | undefined>;
 
-  const refs = new Map<string, Loaded<any, any>>();
+  const refs = new Map<string, MaybeLoaded<any>>();
 
   if (init) {
     const fields = new Set(schema.keys());
@@ -361,15 +370,15 @@ function createCoMapFromInit<D extends AnyCoMapSchema>(
             throw new Error(`Field ${key} is required`);
           }
         } else {
-          let instance: Loaded<CoValueSchema>;
+          let instance: MaybeLoaded<CoValueSchema>;
 
           if ("$jazz" in initValue) {
-            instance = initValue as Loaded<CoValueSchema>;
+            instance = initValue as MaybeLoaded<CoValueSchema>;
           } else {
             instance = getSchemaFromDescriptor(schema, key).create(
               initValue,
               owner,
-            ) as Loaded<CoValueSchema>;
+            ) as MaybeLoaded<CoValueSchema>;
           }
 
           rawInit[key] = instance.$jazz.id;

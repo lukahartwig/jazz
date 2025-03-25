@@ -205,7 +205,10 @@ export type Unloaded<D extends CoValueSchema> = {
   };
 };
 
-export type MaybeLoaded<D extends CoValueSchema> = Loaded<D> | Unloaded<D>;
+export type MaybeLoaded<
+  D extends CoValueSchema,
+  R extends ResolveQuery<D> = true,
+> = Loaded<D, R> | Unloaded<D>;
 
 export type UnwrapZodType<T, O> = T extends ZodTypeAny ? TypeOf<T> : O;
 

@@ -60,7 +60,7 @@ describe("CoMap with Zod", () => {
         resolve: true,
       });
 
-      assert(loaded);
+      assert(loaded.$jazzState === "loaded");
 
       expect(loaded.name).toBe("John");
       expect(loaded.age).toBe(30);
@@ -104,7 +104,7 @@ describe("CoMap with Zod", () => {
         resolve: { address: true },
       });
 
-      assert(loaded);
+      assert(loaded.$jazzState === "loaded");
 
       expect(loaded.name).toBe("John");
       expect(loaded.age).toBe(30);

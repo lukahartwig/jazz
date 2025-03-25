@@ -13,3 +13,26 @@ export function getUnloadedState<D extends CoValueSchema>(
     },
   };
 }
+
+export function getUnauthorizedState<D extends CoValueSchema>(
+  schema: D,
+  value: ID<D>,
+) {
+  return {
+    $jazzState: "unauthorized" as const,
+    $jazz: {
+      schema,
+      id: value,
+    },
+  };
+}
+
+export function getUnavailableState<D extends CoValueSchema>(
+  schema: D,
+  value: ID<D>,
+) {
+  return {
+    $jazzState: "unavailable" as const,
+    $jazz: { schema, id: value },
+  };
+}
