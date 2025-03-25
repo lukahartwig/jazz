@@ -11,7 +11,7 @@ import {
 import { Group } from "../exports.js";
 import { createJazzTestAccount, setupJazzTestSync } from "../testing.js";
 import { waitFor } from "../tests/utils.js";
-import { CoMapSchemaClass } from "./coMap/schema.js";
+import { CoMapClassToSchema, CoMapSchemaClass } from "./coMap/schema.js";
 import { LazySchema } from "./coValue/lazy.js";
 import { Optional } from "./coValue/optional.js";
 import { MaybeLoaded, Unloaded } from "./coValue/types.js";
@@ -135,6 +135,12 @@ describe("CoMap with Zod", () => {
         resolve: { address: true },
       });
 
+      type PersonSchema = CoMapClassToSchema<typeof Person>;
+
+      expectTypeOf(loaded).toEqualTypeOf<
+        MaybeLoaded<PersonSchema, { address: true }>
+      >();
+
       expectTypeOf(loaded).toEqualTypeOf<
         MaybeLoaded<typeof Person, { address: true }>
       >();
@@ -143,6 +149,10 @@ describe("CoMap with Zod", () => {
 
       expect(loaded.name).toBe("John");
       expect(loaded.extra).toBe("extra");
+
+      expectTypeOf(loaded).toEqualTypeOf<
+        Loaded<typeof Person, { address: true }>
+      >();
     });
 
     it("should load a CoMap with a catchall relation", async () => {

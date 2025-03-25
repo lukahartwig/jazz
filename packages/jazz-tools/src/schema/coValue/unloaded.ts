@@ -1,5 +1,12 @@
-import { ID } from "../../internal.js";
-import { CoValueSchema } from "../coMap/schema.js";
+import { CoValueSchema, CoValueSchemaToClass } from "../coMap/schema.js";
+import { ID, Unloaded, UnloadedJazzAPI } from "./types.js";
+
+function getUnloadedJazzAPI<D extends CoValueSchema>(schema: D, value: ID<D>) {
+  return {
+    schema: schema as CoValueSchemaToClass<D>,
+    id: value,
+  } as UnloadedJazzAPI<D>;
+}
 
 export function getUnloadedState<D extends CoValueSchema>(
   schema: D,
@@ -7,11 +14,8 @@ export function getUnloadedState<D extends CoValueSchema>(
 ) {
   return {
     $jazzState: "unloaded" as const,
-    $jazz: {
-      schema,
-      id: value,
-    },
-  };
+    $jazz: getUnloadedJazzAPI(schema, value),
+  } satisfies Unloaded<D>;
 }
 
 export function getUnauthorizedState<D extends CoValueSchema>(
@@ -20,11 +24,8 @@ export function getUnauthorizedState<D extends CoValueSchema>(
 ) {
   return {
     $jazzState: "unauthorized" as const,
-    $jazz: {
-      schema,
-      id: value,
-    },
-  };
+    $jazz: getUnloadedJazzAPI(schema, value),
+  } satisfies Unloaded<D>;
 }
 
 export function getUnavailableState<D extends CoValueSchema>(
@@ -33,6 +34,6 @@ export function getUnavailableState<D extends CoValueSchema>(
 ) {
   return {
     $jazzState: "unavailable" as const,
-    $jazz: { schema, id: value },
-  };
+    $jazz: getUnloadedJazzAPI(schema, value),
+  } satisfies Unloaded<D>;
 }

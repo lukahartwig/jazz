@@ -2,14 +2,18 @@ import { beforeEach, describe, expect, expectTypeOf, it } from "vitest";
 import { createJazzTestAccount } from "../testing.js";
 import { CoMapJazzApi } from "./coMap/instance.js";
 import {
+  AnyCoMapSchema,
+  AnyCoMapSchemaClass,
+  CoMapClassToSchema,
   CoMapInit,
   CoMapSchema,
   CoMapSchemaClass,
+  CoMapSchemaToClass,
   ResolveQueryForCoMapInit,
 } from "./coMap/schema.js";
 import { LazySchema } from "./coValue/lazy.js";
 import { Optional } from "./coValue/optional.js";
-import { MaybeLoaded, Unloaded } from "./coValue/types.js";
+import { MaybeLoaded, Unloaded, UnloadedJazzAPI } from "./coValue/types.js";
 import { CoMap, Loaded, ResolveQuery, co, z } from "./schema.js";
 
 beforeEach(async () => {
@@ -17,6 +21,13 @@ beforeEach(async () => {
     isCurrentActiveAccount: true,
   });
 });
+
+type LoadedCoMap<
+  D extends AnyCoMapSchema,
+  R extends ResolveQuery<D>,
+> = R extends ResolveQuery<CoMapSchemaToClass<D>>
+  ? CoMap<CoMapSchemaToClass<D>, R>
+  : never;
 
 describe("CoMap - with zod based schema", () => {
   describe("ResolveQuery", () => {
@@ -154,7 +165,7 @@ describe("CoMap - with zod based schema", () => {
         {
           name: string;
           age: number;
-        } & CoMap<typeof Person, true>
+        } & CoMap<CoMapClassToSchema<typeof Person>, true>
       >();
     });
 
@@ -182,7 +193,7 @@ describe("CoMap - with zod based schema", () => {
               false
             >
           >;
-        } & CoMap<typeof Person, true>
+        } & CoMap<CoMapClassToSchema<typeof Person>, true>
       >();
     });
 
@@ -203,8 +214,8 @@ describe("CoMap - with zod based schema", () => {
           age: number;
           address: {
             street: string;
-          } & CoMap<typeof Person.shape.address, true>;
-        } & CoMap<typeof Person, { address: true }>
+          } & CoMap<CoMapClassToSchema<typeof Person.shape.address>, true>;
+        } & CoMap<CoMapClassToSchema<typeof Person>, { address: true }>
       >();
     });
 
@@ -228,10 +239,9 @@ describe("CoMap - with zod based schema", () => {
           address:
             | ({
                 street: string;
-              } & CoMap<typeof Person.shape.address, true>)
-            | null
+              } & CoMap<CoMapClassToSchema<typeof Person.shape.address>, true>)
             | undefined;
-        } & CoMap<typeof Person, { address: true }>
+        } & CoMap<CoMapClassToSchema<typeof Person>, { address: true }>
       >();
     });
 
@@ -334,9 +344,8 @@ describe("CoMap - with zod based schema", () => {
                   true
                 >
               >
-            | null
             | undefined;
-        } & CoMap<typeof Person, true>
+        } & CoMap<CoMapClassToSchema<typeof Person>, true>
       >();
     });
 
@@ -378,14 +387,12 @@ describe("CoMap - with zod based schema", () => {
                         true
                       >
                     >
-                  | null
                   | undefined;
                 $jazzState: "loaded";
                 $jazz: CoMapJazzApi<any>;
               }
-            | null
             | undefined;
-        } & CoMap<typeof Person, { friend: true }>
+        } & CoMap<CoMapClassToSchema<typeof Person>, { friend: true }>
       >();
     });
 
@@ -695,5 +702,37 @@ describe("CoMap - with zod based schema", () => {
           }
       >();
     });
+  });
+});
+
+describe("CoMapSchema", () => {
+  it("sanity check", () => {
+    expectTypeOf<ResolveQuery<AnyCoMapSchemaClass>>().toEqualTypeOf<
+      ResolveQuery<AnyCoMapSchema>
+    >();
+
+    expectTypeOf<CoMapSchemaClass<any, any, any>>().toMatchTypeOf<
+      CoMapSchema<any, any>
+    >();
+
+    expectTypeOf<Loaded<AnyCoMapSchema, any>>().toEqualTypeOf<
+      Loaded<AnyCoMapSchemaClass, any>
+    >();
+
+    expectTypeOf<UnloadedJazzAPI<AnyCoMapSchema>>().toEqualTypeOf<
+      UnloadedJazzAPI<AnyCoMapSchemaClass>
+    >();
+
+    expectTypeOf<Unloaded<AnyCoMapSchema>>().toEqualTypeOf<
+      Unloaded<AnyCoMapSchemaClass>
+    >();
+
+    type A = Unloaded<AnyCoMapSchema>;
+    type B = Unloaded<AnyCoMapSchemaClass>;
+
+    type X = A extends B ? true : false;
+    type Y = B extends A ? true : false;
+
+    expectTypeOf<X & Y>().toEqualTypeOf<true>();
   });
 });

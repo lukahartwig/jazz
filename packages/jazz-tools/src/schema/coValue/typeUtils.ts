@@ -13,7 +13,9 @@ export type addQuestionMarks<T extends object, _O = any> = {
 } & { [k in keyof T]?: unknown };
 
 export type identity<T> = T;
-export type flatten<T> = identity<{ [k in keyof T]: T[k] }>;
+export type flatten<T> = T extends string
+  ? T
+  : identity<{ [k in keyof T]: T[k] }>;
 
 type DEPTH_LIMIT = 5;
 

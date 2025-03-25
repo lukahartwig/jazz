@@ -1,13 +1,16 @@
+import type { CojsonInternalTypes } from "cojson";
 import { TypeOf, ZodTypeAny } from "zod";
-import { CoValue, ID } from "../../internal.js";
+import { IDMarker } from "../../internal.js";
 import { LoadedCoMapJazzProps } from "../coMap/instance.js";
 import {
   AnyCoMapSchema,
+  CoMapClassToSchema,
   CoMapRecordDef,
   CoMapRecordKey,
   CoMapSchema,
-  CoMapSchemaToClass,
+  CoValueClassToSchema,
   CoValueSchema,
+  CoValueSchemaToClass,
   PrimitiveProps,
   RefProps,
   UnwrapRecordReference,
@@ -46,10 +49,8 @@ export type ResolveQuery<
                       [0, ...CurrentDepth]
                     >;
                   }
-                : "Record reference is not a valid CoValueSchema" & {
-                    given: UnwrapRecordReference<S>;
-                  }
-              : {})
+                : unknown
+              : unknown)
           >
         : true);
 
@@ -67,7 +68,7 @@ export type Loaded<
 > = R extends never
   ? never
   : S extends AnyCoMapSchema
-    ? LoadedCoMap<CoMapSchemaToClass<S>, R, Options, CurrentDepth>
+    ? LoadedCoMap<CoMapClassToSchema<S>, R, Options, CurrentDepth>
     : never;
 
 export type LoadedCoMap<
@@ -77,7 +78,7 @@ export type LoadedCoMap<
   CurrentDepth extends number[] = [],
 > = flatten<
   IsDepthLimit<CurrentDepth> extends true
-    ? "TOO DEEP"
+    ? "You've reached the maximum depth of relations"
     : (S extends AnyCoMapSchema
         ? LoadedCoMapExplicitProps<S, R, Options, CurrentDepth> &
             (S extends CoMapSchema<any, CoMapRecordDef, boolean>
@@ -123,8 +124,8 @@ export type LoadedCoMapExplicitRefProps<
               key: K;
               expected: ResolveQuery<ChildSchema>;
             }
-      : "TODO: CASE 3"
-    : "TODO: CASE 4";
+      : "Invalid CoValue schema type"
+    : "Invalid field value";
 };
 
 export type LoadedCoMapRecordProps<
@@ -197,13 +198,15 @@ export type CoMapRecordQueriedByEachProps<
       : "Invalid $each query";
 };
 
-export type Unloaded<D extends CoValueSchema> = {
+export type UnloadedJazzAPI<D extends CoValueSchema> = flatten<{
+  schema: CoValueSchemaToClass<D>;
+  id: ID<D>;
+}>;
+
+export type Unloaded<D extends CoValueSchema> = flatten<{
   $jazzState: "unloaded" | "unauthorized" | "unavailable";
-  $jazz: {
-    schema: D;
-    id: ID<D>;
-  };
-};
+  $jazz: UnloadedJazzAPI<D>;
+}>;
 
 export type MaybeLoaded<
   D extends CoValueSchema,
@@ -225,3 +228,13 @@ export type addNullable<
     ? undefined
     : never
   : never;
+
+export type ID<D extends CoValueSchema> = CojsonInternalTypes.RawCoID &
+  IDMarker<
+    D extends AnyCoMapSchema
+      ? {
+          shape: D["shape"];
+          record: D["record"];
+        }
+      : never
+  >;

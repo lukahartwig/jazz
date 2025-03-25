@@ -156,11 +156,11 @@ export type ResolveQueryForCoMapInit<
       >
     : true;
 
-export interface CoMapSchema<
+export type CoMapSchema<
   S extends CoMapSchemaShape,
   R extends CoMapRecordDef | undefined = CoMapRecordDef | undefined,
   O extends boolean = boolean,
-> {
+> = {
   shape: S;
   record: R;
   isOptional: O;
@@ -171,17 +171,30 @@ export interface CoMapSchema<
     type: T,
   ): CoMapSchema<S, { key: ZodString; value: T }, O>;
   keys(): (keyof S & string)[];
-}
+};
 
-export type CoMapSchemaToClass<D extends AnyCoMapSchema> =
-  D extends AnyCoMapSchema
-    ? D
-    : CoMapSchema<D["shape"], D["record"], D["isOptional"]>;
+export type CoValueClassToSchema<D extends CoValueSchema> =
+  D extends AnyCoMapSchema ? CoMapClassToSchema<D> : never;
+
+export type CoMapClassToSchema<D extends AnyCoMapSchema> = D extends {
+  $isSchemaClass: true;
+}
+  ? CoMapSchema<D["shape"], D["record"], D["isOptional"]>
+  : D;
+
+export type CoValueSchemaToClass<D extends CoValueSchema> =
+  D extends AnyCoMapSchema ? CoMapSchemaToClass<D> : never;
+
+export type CoMapSchemaToClass<D extends AnyCoMapSchema> = D extends {
+  $isSchemaClass: true;
+}
+  ? D
+  : CoMapSchemaClass<D["shape"], D["record"], D["isOptional"]>;
 
 export type AnyCoMapSchemaClass =
-  | CoMapSchemaClass<any, undefined, true>
-  | CoMapSchemaClass<any, CoMapRecordDef, false>
-  | CoMapSchemaClass<any, undefined | CoMapRecordDef, true>;
+  | CoMapSchemaClass<any, undefined, boolean>
+  | CoMapSchemaClass<any, CoMapRecordDef, boolean>
+  | CoMapSchemaClass<any, undefined | CoMapRecordDef, boolean>;
 
 export type AnyCoMapSchema =
   | CoMapSchema<any, undefined>
@@ -199,13 +212,15 @@ export class CoMapSchemaClass<
   record: R;
   isOptional: O;
 
+  declare $isSchemaClass: true;
+
   constructor(schema: S, record: R, isOptional: O) {
     this.shape = schema;
     this.record = record;
     this.isOptional = isOptional;
   }
 
-  optional() {
+  optional(): CoMapSchemaClass<S, R, true> {
     return new CoMapSchemaClass(this.shape, this.record, true);
   }
 

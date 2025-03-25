@@ -1,13 +1,14 @@
 import { CoValueUniqueness, JsonValue, RawAccount, RawCoMap } from "cojson";
-import { ZodType, ZodTypeAny } from "zod";
+import { ZodTypeAny } from "zod";
 import type { Account } from "../../coValues/account.js";
 import type { Group } from "../../coValues/group.js";
 import { RegisteredSchemas } from "../../coValues/registeredSchemas.js";
-import { AnonymousJazzAgent, ID } from "../../internal.js";
+import { AnonymousJazzAgent } from "../../internal.js";
 import { coValuesCache } from "../../lib/cache.js";
 import { LazySchema, isLazySchema } from "../coValue/lazy.js";
 import { isOptional } from "../coValue/optional.js";
 import {
+  ID,
   Loaded,
   MaybeLoaded,
   ResolveQuery,
@@ -18,10 +19,12 @@ import { getUnloadedState } from "../coValue/unloaded.js";
 import { CoValueResolutionNode, ensureCoValueLoaded } from "../subscribe.js";
 import {
   AnyCoMapSchema,
+  CoMapClassToSchema,
   CoMapInit,
   CoMapSchema,
   CoMapSchemaClass,
   CoMapSchemaKey,
+  CoMapSchemaToClass,
   CoValueSchema,
 } from "./schema.js";
 import { getOwnerFromRawValue } from "./utils.js";
@@ -62,7 +65,7 @@ export class CoMapJazzApi<
   R extends ResolveQuery<D> = true,
 > {
   raw: RawCoMap;
-  schema: CoMapSchemaClass<D["shape"], D["record"], D["isOptional"]>;
+  schema: D;
   id: ID<D>;
   _resolutionNode: CoValueResolutionNode<D, R> | undefined;
   refs: ChildMap<D> = new Map();
@@ -74,11 +77,7 @@ export class CoMapJazzApi<
     raw: RawCoMap,
     resolutionNode?: CoValueResolutionNode<D, R>,
   ) {
-    this.schema = schema as CoMapSchemaClass<
-      D["shape"],
-      D["record"],
-      D["isOptional"]
-    >;
+    this.schema = schema;
     this.raw = raw;
     this.lastUpdateTx = raw.totalProcessedTransactions;
     this.id = raw.id as unknown as ID<D>;
