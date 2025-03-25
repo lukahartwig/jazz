@@ -77,7 +77,6 @@ export function InboxPage() {
 
     const iframe = createCredentiallessIframe(url.toString());
     document.body.appendChild(iframe);
-    // @ts-expect-error - TODO: fix this
     iframeRef.current = iframe;
   };
 
