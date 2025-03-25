@@ -6,8 +6,8 @@ import { createHighlighter } from "shiki";
 import { transformerNotationDiff, transformerRemoveLineBreak } from '@shikijs/transformers'
 import { transformerTwoslash } from "@shikijs/twoslash";
 import { SKIP, visit } from "unist-util-visit";
-import { jazzLight } from "./jazzLight.mjs";
-import { jazzDark } from "./jazzDark.mjs";
+import { jazzLight } from "./themes/jazzLight.mjs";
+import { jazzDark } from "./themes/jazzDark.mjs";
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
