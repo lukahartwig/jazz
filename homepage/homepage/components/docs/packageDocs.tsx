@@ -17,6 +17,7 @@ import {
   PropCategory,
   PropDecl,
 } from "./tags";
+import { Fragment } from "react";
 
 export async function PackageDocs({
   package: packageName,
@@ -203,10 +204,10 @@ function renderSummary(commentSummary: CommentDisplayPart[] | undefined) {
     part.kind === "text" ? (
       <span key={idx}>
         {part.text.split("\n").map((line, i, lines) => (
-          <>
+          <Fragment key={i}>
             {line}
             {i !== lines.length - 1 && <br />}
-          </>
+          </Fragment>
         ))}
       </span>
     ) : part.kind === "inline-tag" ? (
