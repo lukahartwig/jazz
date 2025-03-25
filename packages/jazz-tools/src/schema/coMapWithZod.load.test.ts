@@ -73,7 +73,7 @@ describe("CoMap with Zod", () => {
       });
 
       expectTypeOf(loaded.address).toEqualTypeOf<
-        MaybeLoaded<typeof Person.shape.address>
+        Unloaded<typeof Person.shape.address>
       >();
     });
 
@@ -135,7 +135,11 @@ describe("CoMap with Zod", () => {
         resolve: { address: true },
       });
 
-      assert(loaded);
+      expectTypeOf(loaded).toEqualTypeOf<
+        MaybeLoaded<typeof Person, { address: true }>
+      >();
+
+      assert(loaded.$jazzState === "loaded");
 
       expect(loaded.name).toBe("John");
       expect(loaded.extra).toBe("extra");
@@ -169,7 +173,7 @@ describe("CoMap with Zod", () => {
         resolve: { extra1: true },
       });
 
-      assert(loaded);
+      assert(loaded.$jazzState === "loaded");
 
       expect(loaded.extra1.prop).toBe("prop1");
       expect("extra2" in loaded).toBe(true);
@@ -205,7 +209,11 @@ describe("CoMap with Zod", () => {
         resolve: { $each: true },
       });
 
-      assert(loaded);
+      assert(loaded.$jazzState === "loaded");
+
+      expectTypeOf(loaded.joe).toEqualTypeOf<
+        Loaded<typeof Friends.record.value, true> | undefined
+      >();
 
       expect(loaded.joe?.name).toBe("joe");
       expect(loaded.bob?.name).toBe("bob");
@@ -249,7 +257,13 @@ describe("CoMap with Zod", () => {
         resolve: { $each: { address: true } },
       });
 
-      assert(loaded);
+      assert(loaded.$jazzState === "loaded");
+
+      const values = Object.values(loaded);
+
+      expectTypeOf(values).toEqualTypeOf<
+        Loaded<typeof Friends.record.value, { address: true }>[]
+      >();
 
       expect(loaded.joe?.name).toBe("joe");
       expect(loaded.joe?.address.street).toBe("123 Main St");
@@ -295,7 +309,7 @@ describe("CoMap with Zod", () => {
         resolve: { friend: true },
       });
 
-      assert(loaded);
+      assert(loaded.$jazzState === "loaded");
 
       expect(loaded.name).toBe("John");
       expect(loaded.age).toBe(30);
@@ -333,7 +347,7 @@ describe("CoMap with Zod", () => {
         resolve: { address: true },
       });
 
-      assert(loaded);
+      assert(loaded.$jazzState === "loaded");
 
       expect(loaded.name).toBe("John");
       expect(loaded.age).toBe(30);
@@ -344,7 +358,7 @@ describe("CoMap with Zod", () => {
       >();
     });
 
-    it("should return undefined if the value is not available", async () => {
+    it("should return unloaded if the value is not available", async () => {
       const Person = co.map({
         name: z.string(),
         age: z.number(),
@@ -363,10 +377,10 @@ describe("CoMap with Zod", () => {
         resolve: { address: true },
       });
 
-      expect(loaded).toBeUndefined();
+      expect(loaded.$jazzState).toBe("unavailable");
     });
 
-    it("should return undefined if one of the nested values is not available", async () => {
+    it("should return unloaded if one of the nested values is not available", async () => {
       const anotherAccount = await createJazzTestAccount();
       const Person = co.map({
         name: z.string(),
@@ -396,10 +410,10 @@ describe("CoMap with Zod", () => {
         resolve: { address: true },
       });
 
-      expect(loaded).toBeUndefined();
+      expect(loaded.$jazzState).toBe("unavailable");
     });
 
-    it("should return a partial value if one of the optional nested values is not available", async () => {
+    it("should return unloaded if one of the optional nested values is not available", async () => {
       const anotherAccount = await createJazzTestAccount();
       const Person = co.map({
         name: z.string(),
@@ -431,14 +445,10 @@ describe("CoMap with Zod", () => {
         resolve: { address: true },
       });
 
-      expect(loaded).toEqual({
-        name: "John",
-        age: 30,
-        address: undefined,
-      });
+      expect(loaded.$jazzState).toBe("unavailable");
     });
 
-    it("should return undefined if the value is not accessible", async () => {
+    it("should return unloaded if the value is not accessible", async () => {
       const anotherAccount = await createJazzTestAccount();
 
       const Person = co.map({
@@ -464,10 +474,10 @@ describe("CoMap with Zod", () => {
         resolve: { address: true },
       });
 
-      expect(loaded).toBeUndefined();
+      expect(loaded.$jazzState).toBe("unavailable");
     });
 
-    it("should return undefined if one of the nested values is not accessible", async () => {
+    it("should return unloaded if one of the nested values is not accessible", async () => {
       const anotherAccount = await createJazzTestAccount();
       const Person = co.map({
         name: z.string(),
@@ -498,10 +508,10 @@ describe("CoMap with Zod", () => {
         resolve: { address: true },
       });
 
-      expect(loaded).toBeUndefined();
+      expect(loaded.$jazzState).toBe("unavailable");
     });
 
-    it("should return a partial value if one of the optional nested values is not accessible", async () => {
+    it("should return unloaded if one of the optional nested values is not accessible", async () => {
       const anotherAccount = await createJazzTestAccount();
       const Person = co.map({
         name: z.string(),
@@ -534,11 +544,7 @@ describe("CoMap with Zod", () => {
         resolve: { address: true },
       });
 
-      expect(loaded).toEqual({
-        name: "John",
-        age: 30,
-        address: undefined,
-      });
+      expect(loaded.$jazzState).toBe("unavailable");
     });
   });
 
@@ -570,7 +576,7 @@ describe("CoMap with Zod", () => {
         resolve: true,
       });
 
-      assert(loaded);
+      assert(loaded.$jazzState === "loaded");
 
       const { address } = await loaded.$jazz.ensureLoaded({
         resolve: { address: true },
@@ -612,7 +618,7 @@ describe("CoMap with Zod", () => {
         resolve: true,
       });
 
-      assert(loaded);
+      assert(loaded.$jazzState === "loaded");
 
       await expect(
         loaded.$jazz.ensureLoaded({
@@ -652,7 +658,7 @@ describe("CoMap with Zod", () => {
         resolve: true,
       });
 
-      assert(loaded);
+      assert(loaded.$jazzState === "loaded");
 
       await expect(
         loaded.$jazz.ensureLoaded({

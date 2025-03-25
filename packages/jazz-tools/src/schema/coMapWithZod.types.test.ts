@@ -173,7 +173,7 @@ describe("CoMap - with zod based schema", () => {
         {
           name: string;
           age: number;
-          address: MaybeLoaded<
+          address: Unloaded<
             CoMapSchemaClass<
               {
                 street: z.ZodString;
