@@ -63,10 +63,12 @@ export const docNavigationItems = [
         href: "/docs/inspector",
         done: 100,
       },
-    ]
+    ],
   },
   {
     name: "Upgrade guides",
+    collapse: true,
+    prefix: "/docs/upgrade",
     items: [
       {
         // upgrade guides

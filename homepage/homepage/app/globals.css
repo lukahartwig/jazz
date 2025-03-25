@@ -10,6 +10,15 @@
   :focus-visible {
     @apply ring-2 ring-blue/75 dark:ring-blue-400/75;
   }
+
+  details > summary {
+    @apply cursor-pointer;
+
+    &.list-none::-webkit-details-marker,
+    &.list-none::marker {
+      display: none;
+    }
+  }
 }
 
 @layer components {
