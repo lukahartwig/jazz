@@ -15,13 +15,10 @@ import { useState } from "react";
 /**
  * @category Auth Providers
  */
-export function useCloudAuth(
-  baseUrl: string,
-  keyserver: string,
-): {
+export function useCloudAuth(baseUrl: string): {
   readonly state: "signedIn" | "anonymous";
-  readonly logIn: (session: Pick<Session, "user">) => Promise<void>;
-  readonly signIn: (session: Pick<Session, "user">) => Promise<void>;
+  readonly logIn: () => Promise<void>;
+  readonly signIn: () => Promise<void>;
   readonly authClient: AuthClient;
 } {
   const context = useJazzContext();
@@ -33,12 +30,7 @@ export function useCloudAuth(
   }
 
   const authMethod = useMemo(() => {
-    return new CloudAuth(
-      context.authenticate,
-      authSecretStorage,
-      authClient,
-      keyserver,
-    );
+    return new CloudAuth(context.authenticate, authSecretStorage, authClient);
   }, []);
 
   const isAuthenticated = useIsAuthenticated();
@@ -60,10 +52,9 @@ export function useCloudAuth(
 export const CloudAuthBasicUI = (props: {
   appName: string;
   baseUrl: string;
-  keyserver: string;
   children?: React.ReactNode;
 }) => {
-  const auth = useCloudAuth(props.baseUrl, props.keyserver);
+  const auth = useCloudAuth(props.baseUrl);
 
   const [name, setName] = useState<string>("");
   const [email, setEmail] = useState<string>("");
@@ -117,13 +108,10 @@ export const CloudAuthBasicUI = (props: {
                 email,
                 password,
                 name,
-                accountID: "",
-                accountSecret: "",
               },
               {
                 onSuccess: async () => {
-                  const session = (await authClient.getSession()).data;
-                  if (session) await signIn(session);
+                  await signIn();
                 },
               },
             );
@@ -135,8 +123,7 @@ export const CloudAuthBasicUI = (props: {
               },
               {
                 onSuccess: async () => {
-                  const session = (await authClient.getSession()).data;
-                  if (session) await logIn(session);
+                  await logIn();
                 },
               },
             );

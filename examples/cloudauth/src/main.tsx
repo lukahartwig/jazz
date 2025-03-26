@@ -16,7 +16,6 @@ function JazzAndAuth({ children }: { children: React.ReactNode }) {
       <CloudAuthBasicUI
         appName="Jazz Minimal CloudAuth Example"
         baseUrl="http://localhost:3000"
-        keyserver="http://localhost:6189"
       >
         {children}
       </CloudAuthBasicUI>
