@@ -2,7 +2,12 @@
 
 import { act, cleanup, render, waitFor } from "@testing-library/react";
 import { JazzClerkAuth, type MinimalClerkClient } from "jazz-auth-clerk";
-import { AuthSecretStorage, InMemoryKVStore, KvStoreContext } from "jazz-tools";
+import {
+  AuthSecretStorage,
+  AuthenticateAccountFunction,
+  InMemoryKVStore,
+  KvStoreContext,
+} from "jazz-tools";
 import {
   afterEach,
   beforeAll,
@@ -16,41 +21,41 @@ import { JazzProviderWithClerk } from "../index";
 
 // TODO: do we have an underlying problem here?
 // // Suppress React warnings globally for all tests
-// beforeAll(() => {
-//   const originalConsoleError = console.error;
-//   console.error = (message, ...args) => {
-//     // Suppress common React testing warnings that don't affect test outcomes
-//     if (
-//       message?.toString().includes("act(...)") ||
-//       message?.toString().includes("not wrapped in act") ||
-//       message?.toString().includes("Objects are not valid as a React child") ||
-//       message?.toString().includes("validateDOMNesting")
-//     ) {
-//       return;
-//     }
-//     originalConsoleError(message, ...args);
-//   };
-// });
+beforeAll(() => {
+  const originalConsoleError = console.error;
+  console.error = (message, ...args) => {
+    // Suppress common React testing warnings that don't affect test outcomes
+    if (
+      message?.toString().includes("act(...)") ||
+      message?.toString().includes("not wrapped in act") ||
+      message?.toString().includes("Objects are not valid as a React child") ||
+      message?.toString().includes("validateDOMNesting")
+    ) {
+      return;
+    }
+    originalConsoleError(message, ...args);
+  };
+});
 
-// // Suppress unhandled promise rejections that might occur during test cleanup
-// beforeAll(() => {
-//   const originalOnUnhandledRejection =
-//     process.listeners("unhandledRejection")[0];
-//   process.removeAllListeners("unhandledRejection");
-//   process.on("unhandledRejection", (reason: unknown) => {
-//     // Ignore React rendering errors during tests
-//     if (
-//       reason instanceof Error &&
-//       reason.message.includes("Objects are not valid as a React child")
-//     ) {
-//       return;
-//     }
-//     // Call the original handler for other errors
-//     if (originalOnUnhandledRejection) {
-//       originalOnUnhandledRejection(reason, Promise.reject(reason));
-//     }
-//   });
-// });
+// Suppress unhandled promise rejections that might occur during test cleanup
+beforeAll(() => {
+  const originalOnUnhandledRejection =
+    process.listeners("unhandledRejection")[0];
+  process.removeAllListeners("unhandledRejection");
+  process.on("unhandledRejection", (reason: unknown) => {
+    // Ignore React rendering errors during tests
+    if (
+      reason instanceof Error &&
+      reason.message.includes("Objects are not valid as a React child")
+    ) {
+      return;
+    }
+    // Call the original handler for other errors
+    if (originalOnUnhandledRejection) {
+      originalOnUnhandledRejection(reason, Promise.reject(reason));
+    }
+  });
+});
 
 vi.mock("jazz-react", async (importOriginal) => {
   const { JazzTestProvider, createJazzTestAccount } = await import(
@@ -78,10 +83,30 @@ vi.mock("jazz-react", async (importOriginal) => {
 process.env.NODE_ENV = "test";
 
 vi.mock("jazz-auth-clerk", () => {
+  // Create a proper mock class
+  class JazzClerkAuthMock {
+    authenticate: AuthenticateAccountFunction;
+    authSecretStorage: AuthSecretStorage;
+
+    constructor(
+      authenticate: AuthenticateAccountFunction,
+      authSecretStorage: AuthSecretStorage,
+    ) {
+      this.authenticate = authenticate;
+      this.authSecretStorage = authSecretStorage;
+    }
+
+    // Add instance methods
+    onClerkUserChange = vi.fn();
+    signIn = vi.fn();
+    logIn = vi.fn();
+
+    // Add static method
+    static loadClerkAuthData = vi.fn().mockResolvedValue(undefined);
+  }
+
   return {
-    JazzClerkAuth: {
-      loadClerkAuthData: vi.fn().mockResolvedValue(undefined),
-    },
+    JazzClerkAuth: JazzClerkAuthMock,
     // Mock to ensure we check for clerk credentials correctly
     isClerkCredentials: vi.fn().mockImplementation((data) => {
       return data && typeof data === "object";
