@@ -20,7 +20,7 @@ export function InboxPage() {
   const [id] = useState(getIdParam);
   const { me } = useAccount();
   const [pingPong, setPingPong] = useState<PingPong | null>(null);
-  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const iframeRef = useRef<HTMLIFrameElement>();
 
   useEffect(() => {
     let unsubscribe = () => {};
@@ -77,7 +77,6 @@ export function InboxPage() {
 
     const iframe = createCredentiallessIframe(url.toString());
     document.body.appendChild(iframe);
-    // @ts-expect-error - iframeRef
     iframeRef.current = iframe;
   };
 
