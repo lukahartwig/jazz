@@ -24,6 +24,7 @@ export {
   BinaryCoStream,
   CoFeed,
   CoStream,
+  type CoFeedEntry,
   FileStream,
 } from "./coValues/coFeed.js";
 export { CoList } from "./coValues/coList.js";

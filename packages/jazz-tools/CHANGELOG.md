@@ -1,5 +1,15 @@
 # jazz-tools
 
+## 0.11.7
+
+### Patch Changes
+
+- a140f55: Bugfix: Trigger a single update when loading a locally available list of items
+- 2b0d1b0: Export CoFeedEntry type
+- Updated dependencies [2b94bc8]
+- Updated dependencies [2957362]
+  - cojson@0.11.7
+
 ## 0.11.6
 
 ### Patch Changes

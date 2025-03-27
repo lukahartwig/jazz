@@ -1,5 +1,17 @@
 # jazz-example-inspector
 
+## 0.0.116
+
+### Patch Changes
+
+- 2c3761c: fix: CoFeed and FileStream are showing as CoStream
+- Updated dependencies [2c3761c]
+- Updated dependencies [2b94bc8]
+- Updated dependencies [2957362]
+  - jazz-inspector@0.11.7
+  - cojson@0.11.7
+  - cojson-transport-ws@0.11.7
+
 ## 0.0.115
 
 ### Patch Changes

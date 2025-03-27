@@ -1,5 +1,20 @@
 # jazz-react
 
+## 0.11.7
+
+### Patch Changes
+
+- 4019918: Re-export createImage from jazz-browser-media-images
+- Updated dependencies [a140f55]
+- Updated dependencies [2b94bc8]
+- Updated dependencies [2957362]
+- Updated dependencies [2b0d1b0]
+  - jazz-react-core@0.11.7
+  - jazz-tools@0.11.7
+  - cojson@0.11.7
+  - jazz-browser@0.11.7
+  - jazz-browser-media-images@0.11.7
+
 ## 0.11.6
 
 ### Patch Changes

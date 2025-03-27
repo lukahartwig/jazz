@@ -212,7 +212,7 @@ export class Group extends CoValueBase implements CoValue {
   }
 
   getParentGroups(): Array<Group> {
-    return this._raw.getParentGroups().map(({ group }) => Group.fromRaw(group));
+    return this._raw.getParentGroups().map((group) => Group.fromRaw(group));
   }
 
   extend(

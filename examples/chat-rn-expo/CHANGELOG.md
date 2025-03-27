@@ -1,5 +1,14 @@
 # chat-rn-expo
 
+## 1.0.84
+
+### Patch Changes
+
+- Updated dependencies [a140f55]
+- Updated dependencies [2b0d1b0]
+  - jazz-tools@0.11.7
+  - jazz-react-native@0.11.7
+
 ## 1.0.83
 
 ### Patch Changes

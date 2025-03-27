@@ -1,5 +1,12 @@
 # cojson
 
+## 0.11.7
+
+### Patch Changes
+
+- 2b94bc8: Performance: optimize Group.roleOf getter and made the transactions validation incremental for CoMap and CoFeed
+- 2957362: Throw an error when the user tries to load an invalid or undefined id
+
 ## 0.11.6
 
 ### Patch Changes

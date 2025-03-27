@@ -17,9 +17,9 @@ import {
   PageStack,
   Select,
 } from "jazz-inspector";
+import { resolveCoValue, useResolvedCoValue } from "jazz-inspector";
 import React, { useState, useEffect } from "react";
 import { usePagePath } from "./use-page-path";
-import { resolveCoValue, useResolvedCoValue } from "./use-resolve-covalue";
 
 interface Account {
   id: CoID<RawAccount>;

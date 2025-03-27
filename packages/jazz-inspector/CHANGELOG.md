@@ -1,5 +1,18 @@
 # jazz-inspector
 
+## 0.11.7
+
+### Patch Changes
+
+- 2c3761c: fix: CoFeed and FileStream are showing as CoStream
+- Updated dependencies [a140f55]
+- Updated dependencies [2b94bc8]
+- Updated dependencies [2957362]
+- Updated dependencies [2b0d1b0]
+  - jazz-react-core@0.11.7
+  - jazz-tools@0.11.7
+  - cojson@0.11.7
+
 ## 0.11.6
 
 ### Patch Changes
