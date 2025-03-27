@@ -18,9 +18,14 @@
       "types": "./src/crypto/index.ts",
       "default": "./dist/crypto/index.js"
     },
+    "./dist/testing": {
+      "react-native": "./dist/testing.js",
+      "types": "./src/testing.tsx",
+      "default": "./dist/testing.js"
+    },
     "./testing": {
       "react-native": "./dist/testing.js",
-      "types": "./src/testing.ts",
+      "types": "./src/testing.tsx",
       "default": "./dist/testing.js"
     }
   },
