@@ -1,25 +1,10 @@
-import {
-  CheckIcon,
-  ChevronDown,
-  ChevronRight,
-  ClipboardIcon,
-  LinkIcon,
-  type LucideIcon,
-  TrashIcon,
-  UserIcon,
-  XIcon,
-} from "lucide-react";
 import { classNames } from "../utils.js";
+import { ChevronDownIcon } from "./icons/chevron-down-icon.js";
+import { DeleteIcon } from "./icons/delete-icon.js";
 
 const icons = {
-  auth: UserIcon,
-  check: CheckIcon,
-  chevronRight: ChevronRight,
-  chevronDown: ChevronDown,
-  close: XIcon,
-  copy: ClipboardIcon,
-  delete: TrashIcon,
-  link: LinkIcon,
+  chevronDown: ChevronDownIcon,
+  delete: DeleteIcon,
 };
 
 // copied from tailwind line height https://tailwindcss.com/docs/font-size
@@ -59,17 +44,15 @@ const strokeWidths = {
 
 export function Icon({
   name,
-  icon,
   size = "md",
   className,
   ...svgProps
 }: {
   name?: string;
-  icon?: LucideIcon;
   size?: keyof typeof sizes;
   className?: string;
 } & React.SVGProps<SVGSVGElement>) {
-  if (!icon && (!name || !icons.hasOwnProperty(name))) {
+  if (!name || !icons.hasOwnProperty(name)) {
     throw new Error(`Icon not found: ${name}`);
   }
 
