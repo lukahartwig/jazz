@@ -21,6 +21,11 @@
       "react-native": "./dist/auth/clerk/index.js",
       "types": "./dist/auth/clerk/index.d.ts",
       "default": "./dist/auth/clerk/index.js"
+    },
+    "./testing": {
+      "react-native": "./dist/testing.js",
+      "types": "./dist/testing.d.ts",
+      "default": "./dist/testing.js"
     }
   },
   "license": "MIT",
