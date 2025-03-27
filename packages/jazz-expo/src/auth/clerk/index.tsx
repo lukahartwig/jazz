@@ -1,11 +1,11 @@
 import { JazzClerkAuth, type MinimalClerkClient } from "jazz-auth-clerk";
+import { useEffect, useMemo } from "react";
 import {
   JazzProvider,
   JazzProviderProps,
   useAuthSecretStorage,
   useJazzContext,
-} from "jazz-expo";
-import { useEffect, useMemo } from "react";
+} from "../../index.js";
 
 function useJazzClerkAuth(clerk: MinimalClerkClient) {
   const context = useJazzContext();
