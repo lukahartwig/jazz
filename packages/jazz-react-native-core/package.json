@@ -6,26 +6,26 @@
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "react-native": "./dist/index.js",
-  "types": "src/index.ts",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "react-native": "./dist/index.js",
-      "types": "./src/index.ts",
+      "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
     "./crypto": {
       "react-native": "./dist/crypto/index.js",
-      "types": "./src/crypto/index.ts",
+      "types": "./dist/crypto/index.d.ts",
       "default": "./dist/crypto/index.js"
     },
     "./dist/testing": {
       "react-native": "./dist/testing.js",
-      "types": "./src/testing.tsx",
+      "types": "./dist/testing.d.ts",
       "default": "./dist/testing.js"
     },
     "./testing": {
       "react-native": "./dist/testing.js",
-      "types": "./src/testing.tsx",
+      "types": "./dist/testing.d.ts",
       "default": "./dist/testing.js"
     }
   },
