@@ -1,10 +1,10 @@
-import { MagicLinkAuthOptions } from "jazz-tools";
 import {
-  useCreateMagicLinkAuthAsProvider as useCreateMagicLinkAuthAsProviderCore,
   useCreateMagicLinkAuthAsConsumer as useCreateMagicLinkAuthAsConsumerCore,
+  useCreateMagicLinkAuthAsProvider as useCreateMagicLinkAuthAsProviderCore,
   useHandleMagicLinkAuthAsConsumer as useHandleMagicLinkAuthAsConsumerCore,
   useHandleMagicLinkAuthAsProvider as useHandleMagicLinkAuthAsProviderCore,
 } from "jazz-react-core";
+import { MagicLinkAuthOptions } from "jazz-tools";
 
 export function useCreateMagicLinkAuthAsProvider(
   options?: Partial<{ autoConfirmLogIn: boolean } & MagicLinkAuthOptions>,
