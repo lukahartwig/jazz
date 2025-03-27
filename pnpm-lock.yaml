@@ -1090,8 +1090,6 @@ importers:
         specifier: ^6.0.11
         version: 6.0.11(@types/node@22.10.2)(jiti@2.4.2)(lightningcss@1.29.1)(terser@5.37.0)(yaml@2.6.1)
 
-  examples/onboarding: {}
-
   examples/organization:
     dependencies:
       jazz-react:
@@ -1791,7 +1789,7 @@ importers:
   packages/hash-slash:
     devDependencies:
       '@types/react':
-        specifier: ~18.3.12
+        specifier: ^18.3.12
         version: 18.3.12
       react:
         specifier: 18.3.1
