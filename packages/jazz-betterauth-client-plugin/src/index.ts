@@ -1,5 +1,5 @@
 import type { BetterAuthClientPlugin } from "better-auth";
-import type { jazzPlugin } from "./index.js";
+import type { jazzPlugin } from "jazz-betterauth-server-plugin";
 
 type JazzPlugin = typeof jazzPlugin;
 

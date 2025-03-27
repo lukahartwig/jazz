@@ -9,7 +9,7 @@
     "cojson": "workspace:*",
     "jazz-browser": "workspace:*",
     "jazz-tools": "workspace:*",
-    "jazz-betterauth-plugin": "workspace:*"
+    "jazz-betterauth-client-plugin": "workspace:*"
   },
   "scripts": {
     "format-and-lint": "biome check .",

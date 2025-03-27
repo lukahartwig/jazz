@@ -1,6 +1,6 @@
 import { createAuthClient } from "better-auth/client";
 import { inferAdditionalFields } from "better-auth/client/plugins";
-import { jazzClientPlugin } from "jazz-betterauth-plugin";
+import { jazzClientPlugin } from "jazz-betterauth-client-plugin";
 import {
   Account,
   AuthCredentials,

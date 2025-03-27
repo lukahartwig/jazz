@@ -1,4 +1,5 @@
 import * as crypto from "node:crypto";
+import * as phc from "@phc/format";
 import * as argon2 from "argon2";
 
 /**
@@ -87,10 +88,11 @@ export const passwordEncrypt = async (
   encoding: BufferEncoding = "hex",
 ): Promise<[string, string]> => {
   const salt = crypto.randomBytes(16);
-  return [
-    encryptString(plaintext, await argon2.hash(password, { salt }), encoding),
-    salt.toString(encoding),
-  ];
+  const passwordHash = await argon2.hash(password, { salt });
+  const hash =
+    phc.deserialize(passwordHash).hash ??
+    Uint8Array.from(Buffer.from(passwordHash)).slice(0, 32);
+  return [encryptString(plaintext, hash, encoding), salt.toString(encoding)];
 };
 
 /**
@@ -107,9 +109,11 @@ export const passwordDecrypt = async (
   salt: string,
   encoding: BufferEncoding = "hex",
 ) => {
-  return decryptString(
-    ciphertext,
-    await argon2.hash(password, { salt: Buffer.from(salt, encoding) }),
-    encoding,
-  );
+  const passwordHash = await argon2.hash(password, {
+    salt: Buffer.from(salt, encoding),
+  });
+  const hash =
+    phc.deserialize(passwordHash).hash ??
+    Uint8Array.from(Buffer.from(passwordHash)).slice(0, 32);
+  return decryptString(ciphertext, hash, encoding);
 };

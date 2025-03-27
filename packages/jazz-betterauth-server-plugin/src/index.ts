@@ -76,7 +76,7 @@ export const jazzPlugin = (publicKey: string) => {
             undefined,
             Buffer.from(ctx.body.secret),
             publicKey,
-            Buffer.from(ctx.body.signedSecret),
+            Buffer.from(ctx.body.signedSecret, "hex"),
           );
           if (verified) {
             const oldSecret = symmetricSecret;
@@ -270,5 +270,4 @@ export const jazzPlugin = (publicKey: string) => {
   } satisfies BetterAuthPlugin;
 };
 
-export * from "./client.js";
 export * from "./types.js";
