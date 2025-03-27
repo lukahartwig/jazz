@@ -2510,10 +2510,10 @@ importers:
         specifier: ^22.5.1
         version: 22.10.2
       '@types/react':
-        specifier: ~18.3.12
+        specifier: ^18.2.19
         version: 18.3.12
       '@types/react-dom':
-        specifier: ^18.3.1
+        specifier: ^18.2.7
         version: 18.3.1
       '@vitejs/plugin-react-swc':
         specifier: ^3.3.2
