@@ -368,6 +368,45 @@ export function subscribeToExistingCoValue<V extends CoValue, Depth>(
   );
 }
 
+export function waitForCoValueCondition<V extends CoValue, Depth>(
+  existing: V,
+  depth: Depth & DepthsIn<V>,
+  conditionFn: (value: DeeplyLoaded<V, Depth>) => boolean,
+  timeoutMs = 15000,
+): Promise<DeeplyLoaded<V, Depth>> {
+  return new Promise((resolve, reject) => {
+    let aborted = false;
+    let unsubscribe = () => {};
+
+    const abort = () => {
+      aborted = true;
+      unsubscribe();
+      clearTimeout(timeout);
+    };
+
+    subscribeToCoValue(
+      existing.constructor as CoValueClass<V>,
+      existing.id,
+      existing._loadedAs,
+      depth,
+      (value, unsubscribeParam) => {
+        unsubscribe = unsubscribeParam;
+        if (aborted) return;
+
+        if (conditionFn(value)) {
+          abort();
+          resolve(value);
+        }
+      },
+    );
+
+    const timeout = setTimeout(() => {
+      abort();
+      reject(new Error("Timeout waiting for CoValue condition"));
+    }, timeoutMs);
+  });
+}
+
 export function isAccountInstance(instance: unknown): instance is Account {
   if (typeof instance !== "object" || instance === null) {
     return false;
