@@ -73,23 +73,9 @@ export const docNavigationItems = [
     items: [
       {
         // upgrade guides
-        name: "0.12.0 - React Native Split",
-        href: "/docs/upgrade/0-12-0",
-        done: {
-          "react-native": 100,
-          "react-native-expo": 100,
-        },
-        framework: "react-native",
-      },
-      {
-        // upgrade guides
-        name: "0.12.0 - React Native Split",
-        href: "/docs/upgrade/0-12-0",
-        done: {
-          "react-native": 100,
-          "react-native-expo": 100,
-        },
-        framework: "react-native-expo",
+        name: "0.13.0 - React Native Split",
+        href: "/docs/upgrade/0-13-0",
+        done: 100,
       },
       {
         // upgrade guides
