@@ -13,6 +13,7 @@ import { Button } from "../ui/button.js";
 import { PageInfo } from "./types.js";
 import { AccountOrGroupPreview } from "./value-renderer.js";
 
+import { Badge } from "@/badge";
 import { classNames } from "../utils.js";
 
 // typeguard for BinaryStreamStart
@@ -226,15 +227,7 @@ function RenderCoBinaryStream({
       <div className={classNames("grid grid-cols-3 gap-2 max-w-3xl")}>
         <LabelContentPair
           label="Mime Type"
-          content={
-            <span
-              className={classNames(
-                "font-mono bg-gray-100 rounded px-2 py-1 text-sm dark:bg-stone-900",
-              )}
-            >
-              {mimeType || "No mime type"}
-            </span>
-          }
+          content={<Badge>{mimeType || "No mime type"}</Badge>}
         />
         <LabelContentPair
           label="Size"

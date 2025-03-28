@@ -8,6 +8,8 @@ import { PageInfo } from "./types.js";
 import { useResolvedCoValues } from "./use-resolve-covalue.js";
 import { ValueRenderer } from "./value-renderer.js";
 
+import { Text } from "../ui/text.js";
+
 export function TableView({
   data,
   node,
@@ -118,14 +120,12 @@ export function TableView({
         </tbody>
       </table>
       <div
-        className={classNames(
-          "py-4 text-gray-500 flex items-center justify-between gap-2",
-        )}
+        className={classNames("py-4 flex items-center justify-between gap-2")}
       >
-        <span>
+        <Text muted>
           Showing {Math.min(visibleRowsCount, coIdArray.length)} of{" "}
           {coIdArray.length}
-        </span>
+        </Text>
         {hasMore && (
           <div className={classNames("text-center")}>
             <Button

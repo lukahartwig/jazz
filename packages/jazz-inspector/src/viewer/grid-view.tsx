@@ -5,6 +5,8 @@ import { ResolveIcon } from "./type-icon.js";
 import { PageInfo, isCoId } from "./types.js";
 import { CoMapPreview, ValueRenderer } from "./value-renderer.js";
 
+import { Badge } from "@/badge";
+import { Text } from "../ui/text.js";
 import { classNames } from "../utils.js";
 
 export function GridView({
@@ -42,23 +44,19 @@ export function GridView({
         >
           <h3
             className={classNames(
-              "overflow-hidden text-ellipsis whitespace-nowrap",
+              "flex justify-between overflow-hidden text-ellipsis whitespace-nowrap",
             )}
           >
             {isCoId(child) ? (
-              <span className={classNames("font-medium flex justify-between")}>
-                {key}
+              <>
+                <Text strong>{key}</Text>
 
-                <div
-                  className={classNames(
-                    "py-1 px-2 text-sm bg-gray-100 rounded dark:bg-gray-900",
-                  )}
-                >
+                <Badge>
                   <ResolveIcon coId={child as CoID<RawCoValue>} node={node} />
-                </div>
-              </span>
+                </Badge>
+              </>
             ) : (
-              <span>{key}</span>
+              <Text strong>{key}</Text>
             )}
           </h3>
           <div className={classNames("mt-2 text-sm")}>

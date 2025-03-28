@@ -2,6 +2,7 @@ import { CoID, JsonValue, LocalNode, RawCoValue } from "cojson";
 import React, { useEffect, useState } from "react";
 import { Button } from "../ui/button.js";
 import { Icon } from "../ui/icon.js";
+import { Text } from "../ui/text.js";
 import { classNames } from "../utils.js";
 import {
   isBrowserImage,
@@ -160,14 +161,9 @@ export const CoMapPreview = ({
             "size-8 border-2 border-white drop-shadow-md my-2",
           )}
         />
-        <span className={classNames("text-gray-500 text-sm")}>
+        <Text inline small muted>
           {snapshot.originalSize[0]} x {snapshot.originalSize[1]}
-        </span>
-
-        {/* <CoMapPreview coId={value[]} node={node} /> */}
-        {/* <ProgressiveImg image={value}>
-                    {({ src }) => <img src={src} className={clsx("w-full")} />}
-                </ProgressiveImg> */}
+        </Text>
       </div>
     );
   }
@@ -201,17 +197,17 @@ export const CoMapPreview = ({
           .slice(0, limit)
           .map(([key, value]) => (
             <React.Fragment key={key}>
-              <span className={classNames("font-medium")}>{key}: </span>
-              <span>
+              <Text strong>{key}: </Text>
+              <Text inline>
                 <ValueRenderer json={value} />
-              </span>
+              </Text>
             </React.Fragment>
           ))}
       </div>
       {Object.entries(snapshot).length > limit && (
-        <div className={classNames("text-left text-sm text-gray-500 mt-2")}>
+        <Text muted small className={classNames("text-left mt-2")}>
           {Object.entries(snapshot).length - limit} more
-        </div>
+        </Text>
       )}
     </div>
   );

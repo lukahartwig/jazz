@@ -7,6 +7,7 @@ import { Breadcrumbs } from "./breadcrumbs.js";
 import { PageStack } from "./page-stack.js";
 import { usePagePath } from "./use-page-path.js";
 
+import { Heading } from "@/ui/heading";
 import { classNames } from "../utils.js";
 
 type Position =
@@ -51,7 +52,6 @@ export function JazzInspector({ position = "right" }: { position?: Position }) {
       <Button
         id="__jazz_inspector"
         variant="secondary"
-        size="sm"
         onClick={() => setOpen(true)}
         className={classNames(
           `fixed w-10 h-10 bg-white shadow-sm bottom-0 right-0 m-4 p-1.5 ${positionClasses[position]}`,
@@ -117,13 +117,7 @@ export function JazzInspector({ position = "right" }: { position?: Position }) {
               "flex flex-col relative -top-6 justify-center gap-2 h-full w-full max-w-sm mx-auto",
             )}
           >
-            <h2
-              className={classNames(
-                "text-lg text-center font-medium mb-4 text-stone-900 dark:text-white",
-              )}
-            >
-              Jazz CoValue Inspector
-            </h2>
+            <Heading>Jazz CoValue Inspector</Heading>
             <Input
               label="CoValue ID"
               className={classNames("min-w-[21rem] font-mono")}

@@ -1,5 +1,8 @@
+import { Badge } from "@/badge";
+import { Heading } from "@/ui/heading";
 import { CoID, LocalNode, RawCoStream, RawCoValue } from "cojson";
 import { useMemo } from "react";
+import { Text } from "../ui/text.js";
 import { classNames } from "../utils.js";
 import { CoStreamView } from "./co-stream-view.js";
 import { GridView } from "./grid-view.js";
@@ -68,10 +71,8 @@ export function Page({
       )}
       <div className={classNames("flex justify-between items-center mb-4")}>
         <div className={classNames("flex items-center gap-3")}>
-          <h2
-            className={classNames(
-              "text-lg font-medium flex flex-col items-start gap-1 text-stone-900 dark:text-white",
-            )}
+          <Heading
+            className={classNames("flex flex-col items-start gap-1 mb-4")}
           >
             <span>
               {name}
@@ -82,21 +83,11 @@ export function Page({
                 </span>
               ) : null}
             </span>
-          </h2>
-          <span
-            className={classNames(
-              "text-sm text-gray-700 font-medium py-0.5 px-1 -ml-0.5 rounded bg-gray-700/5 inline-block font-mono",
-            )}
-          >
+          </Heading>
+          <Badge>
             {type && <TypeIcon type={type} extendedType={extendedType} />}
-          </span>
-          <span
-            className={classNames(
-              "text-sm text-gray-700 font-medium py-0.5 px-1 -ml-0.5 rounded bg-gray-700/5 inline-block font-mono",
-            )}
-          >
-            {coId}
-          </span>
+          </Badge>
+          <Badge>{coId}</Badge>
         </div>
       </div>
       <div className={classNames("overflow-auto")}>
@@ -113,7 +104,7 @@ export function Page({
           <TableView data={snapshot} node={node} onNavigate={onNavigate} />
         )}
         {extendedType !== "account" && extendedType !== "group" && (
-          <div className={classNames("text-sm text-gray-500 mt-4")}>
+          <Text muted className={classNames("mt-4")}>
             Owned by{" "}
             <AccountOrGroupPreview
               coId={value.group.id}
@@ -123,7 +114,7 @@ export function Page({
                 onNavigate([{ coId: value.group.id, name: "owner" }]);
               }}
             />
-          </div>
+          </Text>
         )}
       </div>
     </div>
