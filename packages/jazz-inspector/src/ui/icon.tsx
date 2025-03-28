@@ -1,10 +1,12 @@
 import { classNames } from "../utils.js";
 import { ChevronDownIcon } from "./icons/chevron-down-icon.js";
 import { DeleteIcon } from "./icons/delete-icon.js";
+import { LinkIcon } from "./icons/link-icon.js";
 
 const icons = {
   chevronDown: ChevronDownIcon,
   delete: DeleteIcon,
+  link: LinkIcon,
 };
 
 // copied from tailwind line height https://tailwindcss.com/docs/font-size
@@ -48,7 +50,7 @@ export function Icon({
   className,
   ...svgProps
 }: {
-  name?: string;
+  name?: keyof typeof icons;
   size?: keyof typeof sizes;
   className?: string;
 } & React.SVGProps<SVGSVGElement>) {
