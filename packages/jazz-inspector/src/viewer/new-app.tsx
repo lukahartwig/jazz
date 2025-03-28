@@ -1,4 +1,5 @@
 import { CoID, RawCoValue } from "cojson";
+import { styled } from "goober";
 import { useAccount } from "jazz-react-core";
 import React, { useState } from "react";
 import { Button } from "../ui/button.js";
@@ -7,9 +8,55 @@ import { Breadcrumbs } from "./breadcrumbs.js";
 import { PageStack } from "./page-stack.js";
 import { usePagePath } from "./use-page-path.js";
 
+import { GlobalStyles } from "../ui/global-styles.js";
 import { Heading } from "../ui/heading.js";
-import { classNames } from "../utils.js";
 import { InspectorButton, type Position } from "./inpsector-button.js";
+
+const InspectorContainer = styled("div")`
+  position: fixed;
+  height: calc(100% - 12rem);
+  display: flex;
+  flex-direction: column;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background-color: white;
+  border-top: 1px solid var(--j-border-color);
+  color: var(--j-text-color);
+  
+  @media (prefers-color-scheme: dark) {
+    background-color: var(--j-background);
+  }
+`;
+
+const HeaderContainer = styled("div")`
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0 0.75rem;
+  margin: 0.75rem 0;
+`;
+
+const Form = styled("form")`
+  width: 24rem;
+`;
+
+const InitialForm = styled("form")`
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  top: -1.5rem;
+  justify-content: center;
+  gap: 0.5rem;
+  height: 100%;
+  width: 100%;
+  max-width: 24rem;
+  margin: 0 auto;
+`;
+
+const OrText = styled("p")`
+  text-align: center;
+`;
 
 export function JazzInspector({ position = "right" }: { position?: Position }) {
   const [open, setOpen] = useState(false);
@@ -36,30 +83,25 @@ export function JazzInspector({ position = "right" }: { position?: Position }) {
   }
 
   return (
-    <div
-      className={classNames(
-        "fixed h-[calc(100%-12rem)] flex flex-col bottom-0 left-0 w-full bg-white border-t border-gray-200 dark:border-stone-900 dark:bg-stone-925",
-      )}
-      id="__jazz_inspector"
-    >
-      <div className={classNames("flex items-center gap-4 px-3 my-3")}>
+    <InspectorContainer as={GlobalStyles} id="__jazz_inspector">
+      <HeaderContainer>
         <Breadcrumbs path={path} onBreadcrumbClick={goToIndex} />
-        <form onSubmit={handleCoValueIdSubmit} className={classNames("w-96")}>
+        <Form onSubmit={handleCoValueIdSubmit}>
           {path.length !== 0 && (
             <Input
               label="CoValue ID"
-              className={classNames("font-mono")}
+              style={{ fontFamily: "monospace" }}
               hideLabel
               placeholder="co_z1234567890abcdef123456789"
               value={coValueId}
               onChange={(e) => setCoValueId(e.target.value as CoID<RawCoValue>)}
             />
           )}
-        </form>
+        </Form>
         <Button variant="plain" type="button" onClick={() => setOpen(false)}>
           Close
         </Button>
-      </div>
+      </HeaderContainer>
 
       <PageStack
         path={path}
@@ -68,17 +110,14 @@ export function JazzInspector({ position = "right" }: { position?: Position }) {
         addPages={addPages}
       >
         {path.length <= 0 && (
-          <form
+          <InitialForm
             onSubmit={handleCoValueIdSubmit}
             aria-hidden={path.length !== 0}
-            className={classNames(
-              "flex flex-col relative -top-6 justify-center gap-2 h-full w-full max-w-sm mx-auto",
-            )}
           >
             <Heading>Jazz CoValue Inspector</Heading>
             <Input
               label="CoValue ID"
-              className={classNames("min-w-[21rem] font-mono")}
+              style={{ minWidth: "21rem", fontFamily: "monospace" }}
               hideLabel
               placeholder="co_z1234567890abcdef123456789"
               value={coValueId}
@@ -88,7 +127,7 @@ export function JazzInspector({ position = "right" }: { position?: Position }) {
               Inspect CoValue
             </Button>
 
-            <p className={classNames("text-center")}>or</p>
+            <OrText>or</OrText>
 
             <Button
               variant="secondary"
@@ -99,9 +138,9 @@ export function JazzInspector({ position = "right" }: { position?: Position }) {
             >
               Inspect my account
             </Button>
-          </form>
+          </InitialForm>
         )}
       </PageStack>
-    </div>
+    </InspectorContainer>
   );
 }

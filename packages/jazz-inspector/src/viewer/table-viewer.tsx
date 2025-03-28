@@ -1,9 +1,8 @@
 import { CoID, LocalNode, RawCoValue } from "cojson";
 import type { JsonObject } from "cojson";
+import { styled } from "goober";
 import { useMemo, useState } from "react";
 import { Button } from "../ui/button.js";
-import { Icon } from "../ui/icon.js";
-import { classNames } from "../utils.js";
 import { PageInfo } from "./types.js";
 import { useResolvedCoValues } from "./use-resolve-covalue.js";
 import { ValueRenderer } from "./value-renderer.js";
@@ -17,6 +16,18 @@ import {
   TableRow,
 } from "../ui/table.js";
 import { Text } from "../ui/text.js";
+
+const TableContainer = styled("div")`
+  margin-top: 2rem;
+`;
+
+const PaginationContainer = styled("div")`
+  padding: 1rem 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+`;
 
 export function TableView({
   data,
@@ -62,11 +73,11 @@ export function TableView({
   };
 
   return (
-    <div>
+    <TableContainer>
       <Table>
         <TableHead>
           <TableRow>
-            {["", ...keys].map((key) => (
+            {[...keys, "Action"].map((key) => (
               <TableHeader key={key}>{key}</TableHeader>
             ))}
           </TableRow>
@@ -74,21 +85,6 @@ export function TableView({
         <TableBody>
           {resolvedRows.slice(0, visibleRowsCount).map((item, index) => (
             <TableRow key={index}>
-              <TableCell>
-                <Button
-                  variant="link"
-                  onClick={() =>
-                    onNavigate([
-                      {
-                        coId: item.value!.id,
-                        name: index.toString(),
-                      },
-                    ])
-                  }
-                >
-                  <Icon name="link" />
-                </Button>
-              </TableCell>
               {keys.map((key) => (
                 <TableCell key={key}>
                   <ValueRenderer
@@ -112,14 +108,28 @@ export function TableView({
                   />
                 </TableCell>
               ))}
+
+              <TableCell>
+                <Button
+                  variant="secondary"
+                  onClick={() =>
+                    onNavigate([
+                      {
+                        coId: item.value!.id,
+                        name: index.toString(),
+                      },
+                    ])
+                  }
+                >
+                  View
+                </Button>
+              </TableCell>
             </TableRow>
           ))}
         </TableBody>
       </Table>
-      <div
-        className={classNames("py-4 flex items-center justify-between gap-2")}
-      >
-        <Text muted>
+      <PaginationContainer>
+        <Text muted small>
           Showing {Math.min(visibleRowsCount, coIdArray.length)} of{" "}
           {coIdArray.length}
         </Text>
@@ -128,7 +138,7 @@ export function TableView({
             Load more
           </Button>
         )}
-      </div>
-    </div>
+      </PaginationContainer>
+    </TableContainer>
   );
 }

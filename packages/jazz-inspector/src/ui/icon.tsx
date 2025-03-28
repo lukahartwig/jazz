@@ -1,4 +1,3 @@
-import { classNames } from "../utils.js";
 import { ChevronDownIcon } from "./icons/chevron-down-icon.js";
 import { DeleteIcon } from "./icons/delete-icon.js";
 import { LinkIcon } from "./icons/link-icon.js";
@@ -52,7 +51,6 @@ export function Icon({
 }: {
   name?: string;
   size?: keyof typeof sizes;
-  className?: string;
 } & React.SVGProps<SVGSVGElement>) {
   if (!name || !icons.hasOwnProperty(name)) {
     throw new Error(`Icon not found: ${name}`);
@@ -67,7 +65,6 @@ export function Icon({
       size={sizes[size]}
       strokeWidth={strokeWidths[size]}
       strokeLinecap="round"
-      className={classNames(className)}
       {...svgProps}
     />
   );

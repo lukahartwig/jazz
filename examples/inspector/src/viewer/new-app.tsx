@@ -12,6 +12,7 @@ import { WasmCrypto } from "cojson/crypto/WasmCrypto";
 import {
   Breadcrumbs,
   Button,
+  GlobalStyles,
   Icon,
   Input,
   PageStack,
@@ -126,7 +127,7 @@ export default function CoJsonViewerApp() {
   }
 
   return (
-    <div
+    <GlobalStyles
       className={clsx(
         "h-screen overflow-hidden flex flex-col",
         " text-stone-700 bg-white",
@@ -202,7 +203,7 @@ export default function CoJsonViewerApp() {
           </form>
         )}
       </PageStack>
-    </div>
+    </GlobalStyles>
   );
 }
 

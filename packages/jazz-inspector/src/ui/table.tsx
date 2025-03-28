@@ -1,29 +1,49 @@
-import { classNames } from "@/utils";
+import { styled } from "goober";
+
+const StyledTable = styled("table")`
+  width: 100%;
+`;
+
+const StyledThead = styled("thead")`
+  text-align: left;
+  border-bottom: 1px solid var(--j-border-color);
+  background-color: var(--j-neutral-100);
+
+  @media (prefers-color-scheme: dark) {
+    background-color: var(--j-neutral-925);
+  }
+`;
+
+const StyledTbody = styled("tbody")`
+  tr {
+    border-bottom: 1px solid var(--j-border-color);
+
+    &:last-child {
+      border-bottom: none;
+    }
+  }
+`;
+
+const StyledTh = styled("th")`
+  font-weight: 500;
+  padding: 0.5rem 0.75rem;
+  color: var(--j-text-color-strong);
+`;
+
+const StyledTd = styled("td")`
+  padding: 0.5rem 0.75rem;
+`;
 
 export function Table({ children }: React.PropsWithChildren<{}>) {
-  return <table className={classNames("w-full")}>{children}</table>;
+  return <StyledTable>{children}</StyledTable>;
 }
 
 export function TableHead({ children }: React.PropsWithChildren<{}>) {
-  return (
-    <thead
-      className={classNames(
-        "text-left border-b border-gray-300 bg-stone-100 dark:bg-stone-925 dark:border-stone-800",
-      )}
-    >
-      {children}
-    </thead>
-  );
+  return <StyledThead>{children}</StyledThead>;
 }
 
 export function TableBody({ children }: React.PropsWithChildren<{}>) {
-  return (
-    <tbody
-      className={classNames("divide-y divide-gray-200 dark:divide-gray-900")}
-    >
-      {children}
-    </tbody>
-  );
+  return <StyledTbody>{children}</StyledTbody>;
 }
 
 export function TableRow({ children }: React.PropsWithChildren<{}>) {
@@ -31,17 +51,9 @@ export function TableRow({ children }: React.PropsWithChildren<{}>) {
 }
 
 export function TableHeader({ children }: React.PropsWithChildren<{}>) {
-  return (
-    <th
-      className={classNames(
-        "font-medium text-stone-900 dark:text-white py-2 px-3",
-      )}
-    >
-      {children}
-    </th>
-  );
+  return <StyledTh>{children}</StyledTh>;
 }
 
 export function TableCell({ children }: React.PropsWithChildren<{}>) {
-  return <td className={classNames("py-2 px-3")}>{children}</td>;
+  return <StyledTd>{children}</StyledTd>;
 }

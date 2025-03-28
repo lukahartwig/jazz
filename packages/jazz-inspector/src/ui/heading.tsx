@@ -1,17 +1,15 @@
-import { classNames } from "../utils.js";
+import { styled } from "goober";
+
+const StyledHeading = styled("h1")<{ className?: string }>`
+  font-size: 1.125rem;
+  text-align: center;
+  font-weight: 500;
+  color: var(--j-text-color-strong);
+`;
 
 export function Heading({
   children,
   className,
 }: React.PropsWithChildren<{ className?: string }>) {
-  return (
-    <h1
-      className={classNames(
-        "text-lg text-center font-medium text-stone-900 dark:text-white",
-        className,
-      )}
-    >
-      {children}
-    </h1>
-  );
+  return <StyledHeading className={className}>{children}</StyledHeading>;
 }

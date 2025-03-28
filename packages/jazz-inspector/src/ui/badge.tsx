@@ -1,18 +1,24 @@
-import { classNames } from "../utils.js";
+import { styled } from "goober";
+
+const StyledBadge = styled("span")<{ className?: string }>`
+  font-size: 0.875rem;
+  font-weight: 500;
+  padding: 0.125rem 0.25rem;
+  margin-left: -0.125rem;
+  border-radius: var(--j-radius-sm);
+  background-color: var(--j-neutral-200);
+  display: inline-block;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  color: var(--j-text-color-strong);
+
+  @media (prefers-color-scheme: dark) {
+    background-color: var(--j-neutral-900);
+  }
+`;
 
 export function Badge({
   children,
   className,
 }: React.PropsWithChildren<{ className?: string }>) {
-  return (
-    <span
-      className={classNames(
-        "text-sm text-gray-700 font-medium py-0.5 px-1 -ml-0.5 rounded bg-gray-100 inline-block font-mono",
-        "dark:bg-gray-900 dark:text-gray-300",
-        className,
-      )}
-    >
-      {children}
-    </span>
-  );
+  return <StyledBadge className={className}>{children}</StyledBadge>;
 }
