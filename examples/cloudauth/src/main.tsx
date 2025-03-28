@@ -1,9 +1,9 @@
 import { JazzProvider } from "jazz-react";
-import { CloudAuthBasicUI } from "jazz-react-auth-cloudauth";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App";
 import { apiKey } from "./apiKey.ts";
+import { CloudAuthBasicEmailUI } from "./components/CloudAuthBasicEmailUI.tsx";
 
 function JazzAndAuth({ children }: { children: React.ReactNode }) {
   return (
@@ -13,12 +13,9 @@ function JazzAndAuth({ children }: { children: React.ReactNode }) {
         when: "signedUp",
       }}
     >
-      <CloudAuthBasicUI
-        appName="Jazz Minimal CloudAuth Example"
-        baseUrl="http://localhost:3000"
-      >
+      <CloudAuthBasicEmailUI baseUrl="http://localhost:3000">
         {children}
-      </CloudAuthBasicUI>
+      </CloudAuthBasicEmailUI>
     </JazzProvider>
   );
 }

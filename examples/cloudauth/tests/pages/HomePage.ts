@@ -4,10 +4,16 @@ export class HomePage {
   constructor(public page: Page) {}
 
   usernameInput = this.page.getByRole("textbox", {
-    name: "Username (for registration)",
+    name: "Profile name",
   });
-  emailInput = this.page.getByRole("textbox", { name: "Email" });
-  passwordInput = this.page.getByRole("textbox", { name: "Password" });
+  emailInput = this.page.getByRole("textbox", { name: "Email address" });
+  passwordInput = this.page.getByRole("textbox", {
+    name: "Password",
+    exact: true,
+  });
+  confirmPasswordInput = this.page.getByRole("textbox", {
+    name: "Confirm password",
+  });
   signUpButton = this.page.getByRole("button", { name: "Sign up" });
   signInButton = this.page.getByRole("button", { name: "Sign in" });
   logoutButton = this.page.getByRole("button", {
@@ -18,6 +24,7 @@ export class HomePage {
     await this.usernameInput.fill(name);
     await this.emailInput.fill(email);
     await this.passwordInput.fill(password);
+    await this.confirmPasswordInput.fill(password);
     await this.signUpButton.click();
   }
 
@@ -33,9 +40,6 @@ export class HomePage {
 
   async expectLoggedIn(name: string | undefined = undefined) {
     await expect(this.logoutButton).toBeVisible();
-    await expect(
-      this.page.getByRole("heading", { name: "You're logged in" }),
-    ).toBeVisible();
     if (name) {
       await expect(this.page.getByText(`Welcome back, ${name}`)).toBeVisible();
     }
