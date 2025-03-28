@@ -130,7 +130,7 @@ export class CoPlainText extends String implements CoValue {
     this: CoValueClass<T>,
     id: ID<T>,
     options?: { loadAs?: Account | AnonymousJazzAgent },
-  ): Promise<T | undefined> {
+  ): Promise<T | null> {
     return loadCoValueWithoutMe(this, id, options);
   }
 

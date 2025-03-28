@@ -1,6 +1,6 @@
 import { cojsonInternals } from "cojson";
 import { WasmCrypto } from "cojson/crypto/WasmCrypto";
-import { describe, expect, expectTypeOf, test, vi } from "vitest";
+import { assert, describe, expect, expectTypeOf, test, vi } from "vitest";
 import {
   Account,
   CoFeed,
@@ -87,10 +87,10 @@ describe("Deep loading with depth arg", async () => {
 
   test("load without resolve", async () => {
     const map1 = await TestMap.load(map.id, { loadAs: meOnSecondPeer });
-    expectTypeOf(map1).toEqualTypeOf<TestMap | undefined>();
-    if (map1 === undefined) {
-      throw new Error("map1 is undefined");
-    }
+    expectTypeOf(map1).toEqualTypeOf<TestMap | null>();
+
+    assert(map1, "map1 is null");
+
     expect(map1.list).toBe(null);
   });
 
@@ -103,11 +103,9 @@ describe("Deep loading with depth arg", async () => {
       | (TestMap & {
           list: TestList;
         })
-      | undefined
+      | null
     >();
-    if (map2 === undefined) {
-      throw new Error("map2 is undefined");
-    }
+    assert(map2, "map2 is null");
     expect(map2.list).toBeTruthy();
     expect(map2.list[0]).toBe(null);
   });
@@ -121,11 +119,9 @@ describe("Deep loading with depth arg", async () => {
       | (TestMap & {
           list: TestList & InnerMap[];
         })
-      | undefined
+      | null
     >();
-    if (map3 === undefined) {
-      throw new Error("map3 is undefined");
-    }
+    assert(map3, "map3 is null");
     expect(map3.list[0]).toBeTruthy();
     expect(map3.list[0]?.stream).toBe(null);
   });
@@ -139,8 +135,9 @@ describe("Deep loading with depth arg", async () => {
       | (TestMap & {
           optionalRef: InnermostMap | undefined;
         })
-      | undefined
+      | null
     >();
+    assert(map3a, "map3a is null");
     expect(map3a).toBeTruthy();
   });
 
@@ -153,11 +150,9 @@ describe("Deep loading with depth arg", async () => {
       | (TestMap & {
           list: TestList & (InnerMap & { stream: TestStream })[];
         })
-      | undefined
+      | null
     >();
-    if (map4 === undefined) {
-      throw new Error("map4 is undefined");
-    }
+    assert(map4, "map4 is null");
     expect(map4.list[0]?.stream).toBeTruthy();
     expect(map4.list[0]?.stream?.[me.id]).toBeTruthy();
     expect(map4.list[0]?.stream?.byMe?.value).toBe(null);
@@ -185,11 +180,9 @@ describe("Deep loading with depth arg", async () => {
               };
             })[];
         })
-      | undefined;
+      | null;
     expectTypeOf(map5).toEqualTypeOf<ExpectedMap5>();
-    if (map5 === undefined) {
-      throw new Error("map5 is undefined");
-    }
+    assert(map5, "map5 is null");
 
     expect(map5.list[0]?.stream?.[me.id]?.value).toBeTruthy();
     expect(map5.list[0]?.stream?.byMe?.value).toBeTruthy();
@@ -321,11 +314,9 @@ test("Deep loading a record-like coMap", async () => {
           list: TestList & InnerMap[];
         };
       })
-    | undefined
+    | null
   >();
-  if (recordLoaded === undefined) {
-    throw new Error("recordLoaded is undefined");
-  }
+  assert(recordLoaded, "recordLoaded is null");
   expect(recordLoaded.key1?.list).not.toBe(null);
   expect(recordLoaded.key1?.list).toBeTruthy();
   expect(recordLoaded.key2?.list).not.toBe(null);
@@ -405,7 +396,7 @@ describe("Deep loading with unauthorized account", async () => {
 
     const mapOnAlice = await TestMap.load(map.id, { loadAs: alice });
 
-    expect(mapOnAlice).toBe(undefined);
+    expect(mapOnAlice).toBe(null);
   });
 
   test("unaccessible list", async () => {
@@ -419,7 +410,7 @@ describe("Deep loading with unauthorized account", async () => {
       loadAs: alice,
     });
 
-    expect(mapWithListOnAlice).toBe(undefined);
+    expect(mapWithListOnAlice).toBe(null);
   });
 
   test("unaccessible list element", async () => {
@@ -445,7 +436,7 @@ describe("Deep loading with unauthorized account", async () => {
       loadAs: alice,
     });
 
-    expect(mapOnAlice).toBe(undefined);
+    expect(mapOnAlice).toBe(null);
   });
 
   test("unaccessible optional element", async () => {
@@ -461,10 +452,36 @@ describe("Deep loading with unauthorized account", async () => {
       loadAs: alice,
       resolve: { optionalRef: true } as const,
     });
-    expect(mapOnAlice).toBe(undefined);
+    expect(mapOnAlice).toBe(null);
 
     expect(mapOnAlice?.optionalRef).toBe(undefined);
     expect(mapOnAlice?.optionalRef?.value).toBe(undefined);
+  });
+
+  test("unaccessible optional element via autoload", async () => {
+    const map = TestMap.create(
+      {
+        list: TestList.create([], group),
+        optionalRef: InnermostMap.create({ value: "hello" }, onlyBob),
+      },
+      group,
+    );
+
+    const mapOnAlice = await TestMap.load(map.id, {
+      loadAs: alice,
+      resolve: { list: true } as const,
+    });
+
+    assert(mapOnAlice, "Alice isn't able to load the map");
+
+    const result = await new Promise((resolve) => {
+      const unsub = mapOnAlice.subscribe((value) => {
+        resolve(value.optionalRef);
+        unsub();
+      });
+    });
+
+    expect(result).toBe(null);
   });
 
   test("unaccessible stream", async () => {
@@ -490,7 +507,7 @@ describe("Deep loading with unauthorized account", async () => {
       loadAs: alice,
     });
 
-    expect(mapOnAlice).toBe(undefined);
+    expect(mapOnAlice).toBe(null);
   });
 
   test("unaccessible stream element", async () => {
@@ -519,7 +536,7 @@ describe("Deep loading with unauthorized account", async () => {
       loadAs: alice,
     });
 
-    expect(mapOnAlice).toBe(undefined);
+    expect(mapOnAlice).toBe(null);
   });
 });
 

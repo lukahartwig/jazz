@@ -216,7 +216,7 @@ export class Group extends CoValueBase implements CoValue {
   }
 
   getParentGroups(): Array<Group> {
-    return this._raw.getParentGroups().map(({ group }) => Group.fromRaw(group));
+    return this._raw.getParentGroups().map((group) => Group.fromRaw(group));
   }
 
   extend(
@@ -237,7 +237,7 @@ export class Group extends CoValueBase implements CoValue {
     this: CoValueClass<G>,
     id: ID<G>,
     options?: { resolve?: RefsToResolveStrict<G, R>; loadAs?: Account },
-  ): Promise<Resolved<G, R> | undefined> {
+  ): Promise<Resolved<G, R> | null> {
     return loadCoValueWithoutMe(this, id, options);
   }
 

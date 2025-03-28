@@ -38,7 +38,10 @@ import {
 
 export const logoutHandler = ref<() => void>();
 
-export function useJazzContext() {
+export function useJazzContext(): Ref<
+  JazzContextType<RegisteredAccount>,
+  JazzContextType<RegisteredAccount>
+> {
   const context =
     inject<Ref<JazzContextType<RegisteredAccount>>>(JazzContextSymbol);
   if (!context?.value) {
@@ -55,112 +58,118 @@ export function useAuthSecretStorage() {
   return context;
 }
 
-export function createUseAccountComposables<Acc extends Account>() {
-  function useAccount(): {
-    me: ComputedRef<Acc>;
-    logOut: () => void;
-  };
-  function useAccount<const R extends RefsToResolve<Acc>>(options?: {
-    resolve?: RefsToResolveStrict<Acc, R>;
-  }): {
-    me: ComputedRef<Resolved<Acc, R> | undefined | null>;
-    logOut: () => void;
-  };
-  function useAccount<const R extends RefsToResolve<Acc>>(options?: {
-    resolve?: RefsToResolveStrict<Acc, R>;
-  }): {
-    me: ComputedRef<Acc | Resolved<Acc, R> | undefined | null>;
-    logOut: () => void;
-  } {
-    const context = useJazzContext();
+export function useAccount(): {
+  me: ComputedRef<RegisteredAccount>;
+  logOut: () => void;
+};
+export function useAccount<
+  const R extends RefsToResolve<RegisteredAccount>,
+>(options?: {
+  resolve?: RefsToResolveStrict<RegisteredAccount, R>;
+}): {
+  me: ComputedRef<Resolved<RegisteredAccount, R> | undefined | null>;
+  logOut: () => void;
+};
+export function useAccount<
+  const R extends RefsToResolve<RegisteredAccount>,
+>(options?: {
+  resolve?: RefsToResolveStrict<RegisteredAccount, R>;
+}): {
+  me: ComputedRef<
+    RegisteredAccount | Resolved<RegisteredAccount, R> | undefined | null
+  >;
+  logOut: () => void;
+} {
+  const context = useJazzContext();
 
-    if (!context.value) {
-      throw new Error("useAccount must be used within a JazzProvider");
-    }
-
-    if (!("me" in context.value)) {
-      throw new Error(
-        "useAccount can't be used in a JazzProvider with auth === 'guest' - consider using useAccountOrGuest()",
-      );
-    }
-
-    const contextMe = context.value.me as Acc;
-
-    const me = useCoState<Acc, R>(
-      contextMe.constructor as CoValueClass<Acc>,
-      contextMe.id,
-      options,
-    );
-
-    return {
-      me: computed(() => {
-        const value =
-          options?.resolve === undefined
-            ? me.value || toRaw((context.value as JazzAuthContext<Acc>).me)
-            : me.value;
-
-        return value ? toRaw(value) : value;
-      }),
-      logOut: context.value.logOut,
-    };
+  if (!context.value) {
+    throw new Error("useAccount must be used within a JazzProvider");
   }
 
-  function useAccountOrGuest(): {
-    me: ComputedRef<Acc | AnonymousJazzAgent>;
-  };
-  function useAccountOrGuest<const R extends RefsToResolve<Acc>>(options?: {
-    resolve?: RefsToResolveStrict<Acc, R>;
-  }): {
-    me: ComputedRef<Resolved<Acc, R> | undefined | null | AnonymousJazzAgent>;
-  };
-  function useAccountOrGuest<const R extends RefsToResolve<Acc>>(options?: {
-    resolve?: RefsToResolveStrict<Acc, R>;
-  }): {
-    me: ComputedRef<
-      Acc | Resolved<Acc, R> | undefined | null | AnonymousJazzAgent
-    >;
-  } {
-    const context = useJazzContext();
-
-    if (!context.value) {
-      throw new Error("useAccountOrGuest must be used within a JazzProvider");
-    }
-
-    const contextMe = computed(() =>
-      "me" in context.value ? (context.value.me as Acc) : undefined,
+  if (!("me" in context.value)) {
+    throw new Error(
+      "useAccount can't be used in a JazzProvider with auth === 'guest' - consider using useAccountOrGuest()",
     );
-
-    const me = useCoState<Acc, R>(
-      contextMe.value?.constructor as CoValueClass<Acc>,
-      contextMe.value?.id,
-      options,
-    );
-
-    if ("me" in context.value) {
-      return {
-        me: computed(() =>
-          options?.resolve === undefined
-            ? me.value || toRaw((context.value as JazzAuthContext<Acc>).me)
-            : me.value,
-        ),
-      };
-    } else {
-      return {
-        me: computed(() => toRaw((context.value as JazzGuestContext).guest)),
-      };
-    }
   }
+
+  const contextMe = context.value.me as RegisteredAccount;
+
+  const me = useCoState<RegisteredAccount, R>(
+    contextMe.constructor as CoValueClass<RegisteredAccount>,
+    contextMe.id,
+    options,
+  );
 
   return {
-    useAccount,
-    useAccountOrGuest,
+    me: computed(() => {
+      const value =
+        options?.resolve === undefined
+          ? me.value ||
+            toRaw((context.value as JazzAuthContext<RegisteredAccount>).me)
+          : me.value;
+
+      return value ? toRaw(value) : value;
+    }),
+    logOut: context.value.logOut,
   };
 }
 
-const { useAccount, useAccountOrGuest } =
-  createUseAccountComposables<RegisteredAccount>();
+export function useAccountOrGuest(): {
+  me: ComputedRef<RegisteredAccount | AnonymousJazzAgent>;
+};
+export function useAccountOrGuest<
+  const R extends RefsToResolve<RegisteredAccount>,
+>(options?: {
+  resolve?: RefsToResolveStrict<RegisteredAccount, R>;
+}): {
+  me: ComputedRef<
+    Resolved<RegisteredAccount, R> | undefined | null | AnonymousJazzAgent
+  >;
+};
+export function useAccountOrGuest<
+  const R extends RefsToResolve<RegisteredAccount>,
+>(options?: {
+  resolve?: RefsToResolveStrict<RegisteredAccount, R>;
+}): {
+  me: ComputedRef<
+    | RegisteredAccount
+    | Resolved<RegisteredAccount, R>
+    | undefined
+    | null
+    | AnonymousJazzAgent
+  >;
+} {
+  const context = useJazzContext();
 
-export { useAccount, useAccountOrGuest };
+  if (!context.value) {
+    throw new Error("useAccountOrGuest must be used within a JazzProvider");
+  }
+
+  const contextMe = computed(() =>
+    "me" in context.value ? (context.value.me as RegisteredAccount) : undefined,
+  );
+
+  const me = useCoState<RegisteredAccount, R>(
+    contextMe.value?.constructor as CoValueClass<RegisteredAccount>,
+    contextMe.value?.id,
+    options,
+  );
+
+  if ("me" in context.value) {
+    return {
+      me: computed(() =>
+        options?.resolve === undefined
+          ? me.value ||
+            toRaw((context.value as JazzAuthContext<RegisteredAccount>).me)
+          : me.value,
+      ),
+    };
+  } else {
+    return {
+      me: computed(() => toRaw((context.value as JazzGuestContext).guest)),
+    };
+  }
+}
 
 export function useCoState<V extends CoValue, const R extends RefsToResolve<V>>(
   Schema: CoValueClass<V>,

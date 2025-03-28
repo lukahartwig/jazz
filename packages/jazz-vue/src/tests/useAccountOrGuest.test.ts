@@ -2,10 +2,7 @@
 
 import { Account, CoMap, co } from "jazz-tools";
 import { describe, expect, it } from "vitest";
-import {
-  createUseAccountComposables,
-  useAccountOrGuest,
-} from "../composables.js";
+import { useAccountOrGuest } from "../composables.js";
 import { createJazzTestAccount, createJazzTestGuest } from "../testing.js";
 import { withJazzTestSetup } from "./testUtils.js";
 
@@ -46,7 +43,6 @@ describe("useAccountOrGuest", () => {
     }
 
     const account = await createJazzTestAccount({ AccountSchema });
-    const { useAccountOrGuest } = createUseAccountComposables<AccountSchema>();
 
     const [result] = withJazzTestSetup(
       () =>

@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 
 import { cojsonInternals } from "cojson";
-import { CoMap, CoValue, Group, ID, co } from "jazz-tools";
+import { CoList, CoMap, CoValue, Group, ID, co } from "jazz-tools";
 import { beforeEach, describe, expect, expectTypeOf, it } from "vitest";
 import { useCoState } from "../index.js";
 import { createJazzTestAccount, setupJazzTestSync } from "../testing.js";
@@ -360,5 +360,41 @@ describe("useCoState", () => {
     rerender({ id: undefined });
 
     expect(result.current?.value).toBeUndefined();
+  });
+
+  it("should only render twice when loading a list of values", async () => {
+    class TestMap extends CoMap {
+      value = co.string;
+    }
+
+    class TestList extends CoList.Of(co.ref(TestMap)) {}
+
+    const account = await createJazzTestAccount({
+      isCurrentActiveAccount: true,
+    });
+
+    const list = TestList.create([
+      TestMap.create({ value: "1" }),
+      TestMap.create({ value: "2" }),
+      TestMap.create({ value: "3" }),
+      TestMap.create({ value: "4" }),
+      TestMap.create({ value: "5" }),
+    ]);
+
+    let renderCount = 0;
+
+    renderHook(
+      () => {
+        renderCount++;
+        useCoState(TestList, list.id, { resolve: { $each: true } });
+      },
+      {
+        account,
+      },
+    );
+
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
+    expect(renderCount).toBe(2);
   });
 });

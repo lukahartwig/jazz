@@ -430,7 +430,7 @@ export class CoList<Item = any> extends Array<Item> implements CoValue {
       resolve?: RefsToResolveStrict<L, R>;
       loadAs?: Account | AnonymousJazzAgent;
     },
-  ): Promise<Resolved<L, R> | undefined> {
+  ): Promise<Resolved<L, R> | null> {
     return loadCoValueWithoutMe(this, id, options);
   }
 

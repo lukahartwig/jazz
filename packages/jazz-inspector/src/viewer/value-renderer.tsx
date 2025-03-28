@@ -1,6 +1,8 @@
 import { CoID, JsonValue, LocalNode, RawCoValue } from "cojson";
 import React, { useEffect, useState } from "react";
-import { LinkIcon } from "../link-icon.js";
+import { Button } from "../ui/button.js";
+import { Icon } from "../ui/icon.js";
+import { classNames } from "../utils.js";
 import {
   isBrowserImage,
   resolveCoValue,
@@ -10,78 +12,80 @@ import {
 // Is there a chance we can pass the actual CoValue here?
 export function ValueRenderer({
   json,
-  compact,
   onCoIDClick,
 }: {
   json: JsonValue | undefined;
-  compact?: boolean;
   onCoIDClick?: (childNode: CoID<RawCoValue>) => void;
 }) {
+  const [isExpanded, setIsExpanded] = useState(false);
+
   if (typeof json === "undefined" || json === undefined) {
-    return <span style={{ color: "#9CA3AF" }}>undefined</span>;
+    return <span className={classNames("text-gray-400")}>undefined</span>;
   }
 
   if (json === null) {
-    return <span style={{ color: "#9CA3AF" }}>null</span>;
+    return <span className={classNames("text-gray-400")}>null</span>;
   }
 
   if (typeof json === "string" && json.startsWith("co_")) {
-    const linkStyle = onCoIDClick
-      ? {
-          color: "#3B82F6",
-          cursor: "pointer",
-          display: "inline-flex",
-          gap: "0.25rem",
-          alignItems: "center",
-        }
-      : {
-          display: "inline-flex",
-          gap: "0.25rem",
-          alignItems: "center",
-        };
+    const linkClasses = onCoIDClick
+      ? "text-blue cursor-pointer inline-flex gap-1 items-center dark:text-blue-400"
+      : "inline-flex gap-1 items-center";
 
-    return (
-      <span
-        style={linkStyle}
-        onClick={() => {
-          onCoIDClick?.(json as CoID<RawCoValue>);
-        }}
-      >
+    const content = (
+      <>
         {json}
-        {onCoIDClick && <LinkIcon />}
-      </span>
+        {onCoIDClick && <Icon name="link" />}
+      </>
     );
+
+    if (onCoIDClick) {
+      return (
+        <Button
+          className={classNames(linkClasses)}
+          onClick={() => {
+            onCoIDClick?.(json as CoID<RawCoValue>);
+          }}
+          variant="plain"
+        >
+          {content}
+        </Button>
+      );
+    }
+
+    return <span className={classNames(linkClasses)}>{content}</span>;
   }
 
   if (typeof json === "string") {
     return (
-      <span style={{ color: "#064E3B", fontFamily: "monospace" }}>{json}</span>
+      <span
+        className={classNames("text-green-700 font-mono dark:text-green-400")}
+      >
+        {json}
+      </span>
     );
   }
 
   if (typeof json === "number") {
-    return <span style={{ color: "#A855F7" }}>{json}</span>;
+    return (
+      <span className={classNames("text-purple-700 dark:text-purple-400")}>
+        {json}
+      </span>
+    );
   }
 
   if (typeof json === "boolean") {
-    const booleanStyle = {
-      color: json ? "#15803D" : "#B45309",
-      backgroundColor: json
-        ? "rgba(34, 197, 94, 0.05)"
-        : "rgba(245, 158, 11, 0.05)",
-      fontFamily: "monospace",
-      display: "inline-block",
-      padding: "0.125rem 0.25rem",
-      borderRadius: "0.25rem",
-    };
-
-    return <span style={booleanStyle}>{json.toString()}</span>;
-  }
-
-  if (Array.isArray(json)) {
     return (
-      <span title={JSON.stringify(json)}>
-        Array <span style={{ color: "#6B7280" }}>({json.length})</span>
+      <span
+        className={classNames(
+          json
+            ? "text-green-700 bg-green-700/5"
+            : "text-amber-700 bg-amber-500/5",
+          "font-mono",
+          "inline-block px-1 py-0.5 rounded",
+        )}
+      >
+        {json.toString()}
       </span>
     );
   }
@@ -90,24 +94,26 @@ export function ValueRenderer({
     return (
       <span
         title={JSON.stringify(json, null, 2)}
-        style={{
-          display: "inline-block",
-          maxWidth: "16rem",
-          overflow: "hidden",
-          textOverflow: "ellipsis",
-          whiteSpace: "nowrap",
-        }}
+        className={classNames("inline-block max-w-64")}
       >
-        {compact ? (
-          <span>
-            Object{" "}
-            <span style={{ color: "#6B7280" }}>
-              ({Object.keys(json).length})
-            </span>
-          </span>
-        ) : (
-          JSON.stringify(json, null, 2)
-        )}
+        <span className={classNames("text-gray-600")}>
+          {Array.isArray(json) ? <>Array ({json.length})</> : <>Object</>}
+        </span>
+        <pre className={classNames("mt-1.5 text-sm whitespace-pre-wrap")}>
+          {isExpanded
+            ? JSON.stringify(json, null, 2)
+            : JSON.stringify(json, null, 2).split("\n").slice(0, 3).join("\n") +
+              (Object.keys(json).length > 2 ? "\n..." : "")}
+        </pre>
+        <Button
+          variant="plain"
+          onClick={() => setIsExpanded(!isExpanded)}
+          className={classNames(
+            "mt-1.5 text-sm text-gray-600 hover:text-gray-700",
+          )}
+        >
+          {isExpanded ? "Show less" : "Show more"}
+        </Button>
       </span>
     );
   }
@@ -132,13 +138,9 @@ export const CoMapPreview = ({
   if (!snapshot) {
     return (
       <div
-        style={{
-          borderRadius: "0.25rem",
-          backgroundColor: "#F3F4F6",
-          animation: "pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
-          whiteSpace: "pre",
-          width: "6rem",
-        }}
+        className={classNames(
+          "rounded bg-gray-100 animate-pulse whitespace-pre w-24",
+        )}
       >
         {" "}
       </div>
@@ -146,7 +148,7 @@ export const CoMapPreview = ({
   }
 
   if (snapshot === "unavailable" && !value) {
-    return <div style={{ color: "#6B7280" }}>Unavailable</div>;
+    return <div className={classNames("text-gray-500")}>Unavailable</div>;
   }
 
   if (extendedType === "image" && isBrowserImage(snapshot)) {
@@ -154,18 +156,18 @@ export const CoMapPreview = ({
       <div>
         <img
           src={snapshot.placeholderDataURL}
-          style={{
-            width: "2rem",
-            height: "2rem",
-            border: "2px solid white",
-            boxShadow:
-              "0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)",
-            margin: "0.5rem 0",
-          }}
+          className={classNames(
+            "size-8 border-2 border-white drop-shadow-md my-2",
+          )}
         />
-        <span style={{ color: "#6B7280", fontSize: "0.875rem" }}>
+        <span className={classNames("text-gray-500 text-sm")}>
           {snapshot.originalSize[0]} x {snapshot.originalSize[1]}
         </span>
+
+        {/* <CoMapPreview coId={value[]} node={node} /> */}
+        {/* <ProgressiveImg image={value}>
+                    {({ src }) => <img src={src} className={clsx("w-full")} />}
+                </ProgressiveImg> */}
       </div>
     );
   }
@@ -174,7 +176,7 @@ export const CoMapPreview = ({
     return (
       <div>
         Record{" "}
-        <span style={{ color: "#6B7280" }}>
+        <span className={classNames("text-gray-500")}>
           ({Object.keys(snapshot).length})
         </span>
       </div>
@@ -185,7 +187,7 @@ export const CoMapPreview = ({
     return (
       <div>
         List{" "}
-        <span style={{ color: "#6B7280" }}>
+        <span className={classNames("text-gray-500")}>
           ({(snapshot as unknown as []).length})
         </span>
       </div>
@@ -193,19 +195,13 @@ export const CoMapPreview = ({
   }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "auto 1fr",
-          gap: "0.5rem",
-        }}
-      >
+    <div className={classNames("text-sm flex flex-col gap-2 items-start")}>
+      <div className={classNames("grid grid-cols-[auto_1fr] gap-2")}>
         {Object.entries(snapshot)
           .slice(0, limit)
           .map(([key, value]) => (
             <React.Fragment key={key}>
-              <span style={{ fontWeight: "bold" }}>{key}: </span>
+              <span className={classNames("font-medium")}>{key}: </span>
               <span>
                 <ValueRenderer json={value} />
               </span>
@@ -213,9 +209,7 @@ export const CoMapPreview = ({
           ))}
       </div>
       {Object.entries(snapshot).length > limit && (
-        <div
-          style={{ textAlign: "left", fontSize: "0.875rem", color: "#6B7280" }}
-        >
+        <div className={classNames("text-left text-sm text-gray-500 mt-2")}>
           {Object.entries(snapshot).length - limit} more
         </div>
       )}
@@ -265,14 +259,10 @@ export function AccountOrGroupPreview({
   const props = onClick
     ? {
         onClick: () => onClick(displayName),
-        style: {
-          color: "#3B82F6",
-          cursor: "pointer",
-          textDecoration: "underline",
-        },
+        className: classNames("text-blue-500 cursor-pointer hover:underline"),
       }
     : {
-        style: { color: "#6B7280" },
+        className: classNames("text-gray-500"),
       };
 
   return <span {...props}>{displayText}</span>;

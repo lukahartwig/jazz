@@ -169,7 +169,7 @@ export function loadCoValueWithoutMe<
     resolve?: RefsToResolveStrict<V, R>;
     loadAs?: Account | AnonymousJazzAgent;
   },
-): Promise<Resolved<V, R> | undefined> {
+): Promise<Resolved<V, R> | null> {
   return loadCoValue(cls, id, {
     ...options,
     loadAs: options?.loadAs ?? activeAccountContext.get(),
@@ -186,7 +186,7 @@ export function loadCoValue<
     resolve?: RefsToResolveStrict<V, R>;
     loadAs: Account | AnonymousJazzAgent;
   },
-): Promise<Resolved<V, R> | undefined> {
+): Promise<Resolved<V, R> | null> {
   return new Promise((resolve) => {
     subscribeToCoValue<V, R>(
       cls,
@@ -195,10 +195,10 @@ export function loadCoValue<
         resolve: options.resolve,
         loadAs: options.loadAs,
         onUnavailable: () => {
-          resolve(undefined);
+          resolve(null);
         },
         onUnauthorized: () => {
-          resolve(undefined);
+          resolve(null);
         },
       },
       (value, unsubscribe) => {
@@ -336,10 +336,13 @@ export function subscribeToCoValue<
     }
 
     if (unsubscribed) return;
+
     const subscription = new SubscriptionScope(
       value,
       cls as CoValueClass<V> & CoValueFromRaw<V>,
       (update, subscription) => {
+        if (subscription.syncResolution) return;
+
         if (!ref.hasReadAccess()) {
           options.onUnauthorized?.();
           return;
@@ -348,6 +351,7 @@ export function subscribeToCoValue<
         let result;
 
         try {
+          subscription.syncResolution = true;
           result = fulfillsDepth(options.resolve, update);
         } catch (e) {
           console.error(
@@ -357,6 +361,8 @@ export function subscribeToCoValue<
           );
           options.onUnavailable?.();
           return;
+        } finally {
+          subscription.syncResolution = false;
         }
 
         if (result === "unauthorized") {

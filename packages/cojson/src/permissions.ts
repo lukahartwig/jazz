@@ -21,6 +21,7 @@ import {
 import { parseJSON } from "./jsonStringify.js";
 import { JsonValue } from "./jsonValue.js";
 import { logger } from "./logger.js";
+import { CoValueKnownState } from "./sync.js";
 import { accountOrAgentIDfromSessionID } from "./typeUtils/accountOrAgentIDfromSessionID.js";
 import { expectGroup } from "./typeUtils/expectGroup.js";
 
@@ -61,6 +62,7 @@ function logPermissionError(
 
 export function determineValidTransactions(
   coValue: CoValueCore,
+  knownTransactions?: CoValueKnownState["sessions"],
 ): { txID: TransactionID; tx: Transaction }[] {
   if (coValue.header.ruleset.type === "group") {
     const initialAdmin = coValue.header.ruleset.initialAdmin;
@@ -88,8 +90,13 @@ export function determineValidTransactions(
 
     for (const [sessionID, sessionLog] of coValue.sessionLogs.entries()) {
       const transactor = accountOrAgentIDfromSessionID(sessionID);
+      const knownTransactionsForSession = knownTransactions?.[sessionID] ?? -1;
 
       sessionLog.transactions.forEach((tx, txIndex) => {
+        if (knownTransactionsForSession >= txIndex) {
+          return;
+        }
+
         const groupAtTime = groupContent.atTime(tx.madeAt);
         const effectiveTransactor = agentInAccountOrMemberInGroup(
           transactor,
@@ -101,7 +108,7 @@ export function determineValidTransactions(
         }
 
         const transactorRoleAtTxTime =
-          groupAtTime.roleOfInternal(effectiveTransactor)?.role;
+          groupAtTime.roleOfInternal(effectiveTransactor);
 
         if (
           transactorRoleAtTxTime !== "admin" &&
@@ -120,7 +127,13 @@ export function determineValidTransactions(
     const validTransactions: ValidTransactionsResult[] = [];
 
     for (const [sessionID, sessionLog] of coValue.sessionLogs.entries()) {
+      const knownTransactionsForSession = knownTransactions?.[sessionID] ?? -1;
+
       sessionLog.transactions.forEach((tx, txIndex) => {
+        if (knownTransactionsForSession >= txIndex) {
+          return;
+        }
+
         validTransactions.push({ txID: { sessionID, txIndex }, tx });
       });
     }

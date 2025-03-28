@@ -12,4 +12,11 @@ export const products = [
     url: "https://invoiceradar.com",
     description: "Automatically gather invoices from mail and cloud providers.",
   },
+  {
+    name: "Hend",
+    description:
+      "Learn languages naturally with interesting, compelling content tailored just for you.",
+    url: "https://hendapp.com",
+    imageUrl: "/hend.png",
+  },
 ];

@@ -15,7 +15,7 @@ describe("useInboxSender", () => {
     const account = await createJazzTestAccount();
     const inboxReceiver = await createJazzTestAccount();
 
-    linkAccounts(account, inboxReceiver);
+    await linkAccounts(account, inboxReceiver);
 
     const { result } = renderHook(
       () => experimental_useInboxSender<TestMap, TestMap>(inboxReceiver.id),

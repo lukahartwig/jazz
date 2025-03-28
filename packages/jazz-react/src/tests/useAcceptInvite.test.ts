@@ -15,7 +15,7 @@ describe("useAcceptInvite", () => {
     const account = await createJazzTestAccount();
     const inviteSender = await createJazzTestAccount();
 
-    linkAccounts(account, inviteSender);
+    await linkAccounts(account, inviteSender);
 
     let acceptedId: ID<TestMap> | undefined;
 

@@ -229,7 +229,7 @@ export class Account extends CoValueBase implements CoValue {
     valueID: ID<V>,
     inviteSecret: InviteSecret,
     coValueClass: CoValueClass<V>,
-  ): Promise<Resolved<V, true> | undefined> {
+  ): Promise<Resolved<V, true> | null> {
     if (!this.isLocalNodeOwner) {
       throw new Error("Only a controlled account can accept invites");
     }
@@ -358,7 +358,7 @@ export class Account extends CoValueBase implements CoValue {
       resolve?: RefsToResolveStrict<A, R>;
       loadAs?: Account | AnonymousJazzAgent;
     },
-  ): Promise<Resolved<A, R> | undefined> {
+  ): Promise<Resolved<A, R> | null> {
     return loadCoValueWithoutMe(this, id, options);
   }
 

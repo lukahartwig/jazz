@@ -12,6 +12,7 @@ export class ImageDefinition extends CoMap {
 
   highestResAvailable(options?: {
     maxWidth?: number;
+    targetWidth?: number;
   }): { res: `${number}x${number}`; stream: FileStream } | undefined {
     if (!subscriptionsScopes.get(this)) {
       console.warn(
@@ -19,33 +20,39 @@ export class ImageDefinition extends CoMap {
       );
     }
 
-    const resolutions = Object.keys(this).filter(
-      (key) =>
-        key.match(/^\d+x\d+$/) &&
-        (options?.maxWidth === undefined ||
-          Number(key.split("x")[0]) <= options.maxWidth),
+    const resolutions = Object.keys(this).filter((key) =>
+      key.match(/^\d+x\d+$/),
     ) as `${number}x${number}`[];
 
-    resolutions.sort((a, b) => {
+    let maxWidth = options?.maxWidth;
+
+    if (options?.targetWidth) {
+      const targetWidth = options.targetWidth;
+      const widths = resolutions.map((res) => Number(res.split("x")[0]));
+
+      maxWidth = Math.min(...widths.filter((w) => w >= targetWidth));
+    }
+
+    const validResolutions = resolutions.filter(
+      (key) => maxWidth === undefined || Number(key.split("x")[0]) <= maxWidth,
+    ) as `${number}x${number}`[];
+
+    // Sort the resolutions by width, smallest to largest
+    validResolutions.sort((a, b) => {
       const aWidth = Number(a.split("x")[0]);
       const bWidth = Number(b.split("x")[0]);
-      return aWidth - bWidth;
+      return aWidth - bWidth; // Sort smallest to largest
     });
 
     let highestAvailableResolution: `${number}x${number}` | undefined;
 
-    for (const resolution of resolutions) {
+    for (const resolution of validResolutions) {
       if (this[resolution] && this[resolution]?.getChunks()) {
         highestAvailableResolution = resolution;
-      } else {
-        return (
-          highestAvailableResolution && {
-            res: highestAvailableResolution,
-            stream: this[highestAvailableResolution]!,
-          }
-        );
       }
     }
+
+    // Return the highest complete resolution if we found one
     return (
       highestAvailableResolution && {
         res: highestAvailableResolution,

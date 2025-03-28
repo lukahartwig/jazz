@@ -335,7 +335,7 @@ export class CoFeed<Item = any> extends CoValueBase implements CoValue {
       resolve?: RefsToResolveStrict<F, R>;
       loadAs?: Account | AnonymousJazzAgent;
     },
-  ): Promise<Resolved<F, R> | undefined> {
+  ): Promise<Resolved<F, R> | null> {
     return loadCoValueWithoutMe(this, id, options);
   }
 
@@ -898,7 +898,7 @@ export class FileStream extends CoValueBase implements CoValue {
     this: CoValueClass<C>,
     id: ID<C>,
     options?: { loadAs?: Account | AnonymousJazzAgent },
-  ): Promise<Resolved<C, true> | undefined> {
+  ): Promise<Resolved<C, true> | null> {
     return loadCoValueWithoutMe(this, id, options);
   }
 

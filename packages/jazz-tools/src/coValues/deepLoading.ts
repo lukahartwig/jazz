@@ -219,7 +219,7 @@ export type Clean<T> = UnCo<NonNullable<T>>;
 
 export type RefsToResolve<
   V,
-  DepthLimit extends number = 5,
+  DepthLimit extends number = 10,
   CurrentDepth extends number[] = [],
 > =
   | boolean
@@ -281,14 +281,14 @@ export type RefsToResolveStrict<T, V> = V extends RefsToResolve<T>
 export type Resolved<T, R extends RefsToResolve<T> | undefined> = DeeplyLoaded<
   T,
   R,
-  5,
+  10,
   []
 >;
 
 export type DeeplyLoaded<
   V,
   Depth,
-  DepthLimit extends number = 5,
+  DepthLimit extends number = 10,
   CurrentDepth extends number[] = [],
 > = DepthLimit extends CurrentDepth["length"]
   ? V

@@ -1,5 +1,99 @@
 # jazz-browser
 
+## 0.12.1
+
+### Patch Changes
+
+- Updated dependencies [5a00fe0]
+  - cojson@0.12.1
+  - cojson-storage-rn-sqlite@0.12.1
+  - cojson-transport-ws@0.12.1
+  - jazz-react-core@0.12.1
+  - jazz-tools@0.12.1
+  - jazz-react-native-media-images@0.12.1
+
+## 0.12.0
+
+### Patch Changes
+
+- Updated dependencies [01523dc]
+- Updated dependencies [4ea87dc]
+- Updated dependencies [1e6da19]
+- Updated dependencies [01523dc]
+- Updated dependencies [b6c6a0a]
+  - jazz-tools@0.12.0
+  - cojson@0.12.0
+  - jazz-react-core@0.12.0
+  - jazz-react-native-media-images@0.12.0
+  - cojson-storage-rn-sqlite@0.12.0
+  - cojson-transport-ws@0.12.0
+
+## 0.11.8
+
+### Patch Changes
+
+- Updated dependencies [6c86c4f]
+- Updated dependencies [9d0c9dc]
+  - cojson@0.11.8
+  - cojson-storage-rn-sqlite@0.11.8
+  - cojson-transport-ws@0.11.8
+  - jazz-react-core@0.11.8
+  - jazz-tools@0.11.8
+  - jazz-react-native-media-images@0.11.8
+
+## 0.11.7
+
+### Patch Changes
+
+- Updated dependencies [a140f55]
+- Updated dependencies [2b94bc8]
+- Updated dependencies [2957362]
+- Updated dependencies [2b0d1b0]
+  - jazz-react-core@0.11.7
+  - jazz-tools@0.11.7
+  - cojson@0.11.7
+  - jazz-react-native-media-images@0.11.7
+  - cojson-storage-rn-sqlite@0.11.7
+  - cojson-transport-ws@0.11.7
+
+## 0.11.6
+
+### Patch Changes
+
+- e7c85b7: Add targetWidth to highestResAvailable to add a way to fetch the next size up
+- Updated dependencies [e7c85b7]
+- Updated dependencies [8ed144e]
+  - jazz-tools@0.11.6
+  - cojson@0.11.6
+  - jazz-react-core@0.11.6
+  - cojson-storage-rn-sqlite@0.11.6
+  - cojson-transport-ws@0.11.6
+
+## 0.11.5
+
+### Patch Changes
+
+- Updated dependencies [60f5b3f]
+  - cojson@0.11.5
+  - cojson-storage-rn-sqlite@0.11.5
+  - cojson-transport-ws@0.11.5
+  - jazz-react-core@0.11.5
+  - jazz-tools@0.11.5
+
+## 0.11.4
+
+### Patch Changes
+
+- Updated dependencies [57a3dbe]
+- Updated dependencies [a717754]
+- Updated dependencies [a91f343]
+- Updated dependencies [7f036c1]
+  - jazz-tools@0.11.4
+  - cojson@0.11.4
+  - jazz-react-core@0.11.4
+  - cojson-storage-rn-sqlite@0.11.4
+  - cojson-transport-ws@0.11.4
+
 ## 0.11.3
 
 ### Patch Changes

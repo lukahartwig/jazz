@@ -1,5 +1,80 @@
 # jazz-example-chat
 
+## 0.0.169
+
+### Patch Changes
+
+- jazz-inspector@0.12.1
+- jazz-react@0.12.1
+- jazz-tools@0.12.1
+
+## 0.0.168
+
+### Patch Changes
+
+- Updated dependencies [01523dc]
+- Updated dependencies [4ea87dc]
+- Updated dependencies [1e6da19]
+- Updated dependencies [b6c6a0a]
+- Updated dependencies [9a56bb3]
+  - jazz-tools@0.12.0
+  - jazz-inspector@0.12.0
+  - jazz-react@0.12.0
+
+## 0.0.167
+
+### Patch Changes
+
+- Updated dependencies [71b9390]
+  - jazz-inspector@0.11.8
+  - jazz-react@0.11.8
+  - jazz-tools@0.11.8
+
+## 0.0.166
+
+### Patch Changes
+
+- Updated dependencies [2c3761c]
+- Updated dependencies [a140f55]
+- Updated dependencies [4019918]
+- Updated dependencies [2b0d1b0]
+  - jazz-inspector@0.11.7
+  - jazz-tools@0.11.7
+  - jazz-react@0.11.7
+
+## 0.0.165
+
+### Patch Changes
+
+- Updated dependencies [e7c85b7]
+- Updated dependencies [09f0a98]
+- Updated dependencies [11da4d1]
+- Updated dependencies [8ed144e]
+  - jazz-react@0.11.6
+  - jazz-tools@0.11.6
+  - jazz-inspector@0.11.6
+  - jazz-browser-media-images@0.11.6
+
+## 0.0.164
+
+### Patch Changes
+
+- jazz-react@0.11.5
+- jazz-tools@0.11.5
+- jazz-browser-media-images@0.11.5
+
+## 0.0.163
+
+### Patch Changes
+
+- 2074e45: In the chat app example, show a "Message not readable" placeholder, if messages from a chat list are not readable by the user.
+- Updated dependencies [57a3dbe]
+- Updated dependencies [a717754]
+- Updated dependencies [a91f343]
+  - jazz-tools@0.11.4
+  - jazz-browser-media-images@0.11.4
+  - jazz-react@0.11.4
+
 ## 0.0.162
 
 ### Patch Changes

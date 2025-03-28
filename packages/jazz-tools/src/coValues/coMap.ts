@@ -444,7 +444,7 @@ export class CoMap extends CoValueBase implements CoValue {
       resolve?: RefsToResolveStrict<M, R>;
       loadAs?: Account | AnonymousJazzAgent;
     },
-  ): Promise<Resolved<M, R> | undefined> {
+  ): Promise<Resolved<M, R> | null> {
     return loadCoValueWithoutMe(this, id, options);
   }
 

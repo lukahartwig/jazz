@@ -2,7 +2,7 @@ import ImageBlobReduce from "image-blob-reduce";
 import { Account, FileStream, Group, ImageDefinition } from "jazz-tools";
 import Pica from "pica";
 
-const pica = new Pica();
+let pica: Pica.Pica | undefined;
 
 /** @category Image creation */
 export async function createImage(
@@ -12,6 +12,11 @@ export async function createImage(
     maxSize?: 256 | 1024 | 2048;
   },
 ): Promise<ImageDefinition> {
+  // Inizialize Pica here to not have module side effects
+  if (!pica) {
+    pica = new Pica();
+  }
+
   const owner = options?.owner;
 
   let originalWidth!: number;
@@ -40,7 +45,8 @@ export async function createImage(
     },
     owner,
   );
-  setTimeout(async () => {
+
+  const fillImageResolutions = async () => {
     const max256 = await Reducer.toBlob(imageBlobOrFile, { max: 256 });
 
     if (originalWidth > 256 || originalHeight > 256) {
@@ -55,7 +61,6 @@ export async function createImage(
 
       const binaryStream = await FileStream.createFromBlob(max256, owner);
 
-      console.log(`${width}x${height}`);
       imageDefinition[`${width}x${height}`] = binaryStream;
     }
 
@@ -112,7 +117,9 @@ export async function createImage(
 
     imageDefinition[`${originalWidth}x${originalHeight}`] =
       originalBinaryStream;
-  }, 0);
+  };
+
+  await fillImageResolutions();
 
   return imageDefinition;
 }

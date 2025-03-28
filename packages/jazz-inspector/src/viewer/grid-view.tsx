@@ -1,8 +1,11 @@
 import { CoID, LocalNode, RawCoValue } from "cojson";
 import { JsonObject } from "cojson";
+import { Button } from "../ui/button.js";
 import { ResolveIcon } from "./type-icon.js";
 import { PageInfo, isCoId } from "./types.js";
 import { CoMapPreview, ValueRenderer } from "./value-renderer.js";
+
+import { classNames } from "../utils.js";
 
 export function GridView({
   data,
@@ -17,64 +20,39 @@ export function GridView({
 
   return (
     <div
-      style={{
-        display: "grid",
-        gridTemplateColumns: "1fr",
-        gap: "1rem",
-        padding: "0.5rem",
-      }}
+      className={classNames(
+        "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4",
+      )}
     >
       {entries.map(([key, child], childIndex) => (
-        <div
+        <Button
+          variant="plain"
           key={childIndex}
-          style={{
-            padding: "0.75rem",
-            borderRadius: "0.5rem",
-            overflow: "hidden",
-            transition: "background-color 0.2s",
-            ...(isCoId(child)
-              ? {
-                  backgroundColor: "white",
-                  border: "1px solid #e5e7eb",
-                  cursor: "pointer",
-                  boxShadow: "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
-                  ":hover": {
-                    backgroundColor: "rgba(243, 244, 246, 0.05)",
-                  },
-                }
-              : {
-                  backgroundColor: "rgb(249, 250, 251)",
-                }),
-          }}
+          className={classNames(
+            `p-3 text-left rounded-lg overflow-hidden transition-colors ${
+              isCoId(child)
+                ? "border border-gray-200 shadow-sm hover:bg-gray-100/5"
+                : "bg-gray-50  dark:bg-gray-925 cursor-default"
+            }`,
+          )}
           onClick={() =>
             isCoId(child) &&
             onNavigate([{ coId: child as CoID<RawCoValue>, name: key }])
           }
         >
           <h3
-            style={{
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
-            }}
+            className={classNames(
+              "overflow-hidden text-ellipsis whitespace-nowrap",
+            )}
           >
             {isCoId(child) ? (
-              <span
-                style={{
-                  fontWeight: 500,
-                  display: "flex",
-                  justifyContent: "space-between",
-                }}
-              >
+              <span className={classNames("font-medium flex justify-between")}>
                 {key}
 
                 <div
-                  style={{
-                    padding: "0.25rem 0.5rem",
-                    fontSize: "0.75rem",
-                    backgroundColor: "rgb(243, 244, 246)",
-                    borderRadius: "0.25rem",
-                  }}
+                  className={classNames(
+                    "py-1 px-2 text-sm bg-gray-100 rounded dark:bg-gray-900",
+                  )}
                 >
                   <ResolveIcon coId={child as CoID<RawCoValue>} node={node} />
                 </div>
@@ -83,7 +61,7 @@ export function GridView({
               <span>{key}</span>
             )}
           </h3>
-          <div style={{ marginTop: "0.5rem", fontSize: "0.875rem" }}>
+          <div className={classNames("mt-2 text-sm")}>
             {isCoId(child) ? (
               <CoMapPreview coId={child as CoID<RawCoValue>} node={node} />
             ) : (
@@ -92,11 +70,10 @@ export function GridView({
                 onCoIDClick={(coId) => {
                   onNavigate([{ coId, name: key }]);
                 }}
-                compact
               />
             )}
           </div>
-        </div>
+        </Button>
       ))}
     </div>
   );

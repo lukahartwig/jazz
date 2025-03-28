@@ -1,6 +1,7 @@
 import { clsx } from "clsx";
 import { Card } from "gcmp-design-system/src/app/components/atoms/Card";
 import { H2 } from "gcmp-design-system/src/app/components/atoms/Headings";
+import { Kicker } from "gcmp-design-system/src/app/components/atoms/Kicker";
 import { GappedGrid } from "gcmp-design-system/src/app/components/molecules/GappedGrid";
 import CodeStepAction from "./CodeStepAction.mdx";
 import CodeStepCloud from "./CodeStepCloud.mdx";
@@ -79,16 +80,16 @@ export function HowJazzWorksSection() {
   return (
     <div className="grid gap-8">
       <div className="grid gap-3">
-        <p className="uppercase text-blue tracking-widest text-sm font-medium dark:text-stone-400">
-          State with built-in collaboration
-        </p>
+        <Kicker>How it works</Kicker>
 
         <H2>Build entire apps using only client-side code</H2>
       </div>
       <GappedGrid>
         <Step
           step={1}
-          description={"Describe your app’s state with CoValues (\"collaborative values\"), your new cloud-synced building blocks."}
+          description={
+            'Describe your app’s state with CoValues ("collaborative values"), your new cloud-synced building blocks.'
+          }
         >
           <Code fileName="schema.ts">
             <CodeStepSchema />

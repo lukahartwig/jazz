@@ -113,7 +113,7 @@ function SharedCoMapWithChildren(props: {
   const extendParentGroup = async () => {
     if (!coMap || !coMap.child) return;
 
-    let node: SharedCoMap | undefined = coMap;
+    let node: SharedCoMap | null = coMap;
 
     while (node?._refs.child?.id) {
       const parentGroup = node._owner as Group;

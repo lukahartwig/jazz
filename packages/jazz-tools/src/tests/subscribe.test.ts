@@ -1,4 +1,12 @@
-import { beforeEach, describe, expect, it, onTestFinished, vi } from "vitest";
+import {
+  assert,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  onTestFinished,
+  vi,
+} from "vitest";
 import {
   Account,
   CoFeed,
@@ -15,7 +23,7 @@ import {
   createCoValueObservable,
   subscribeToCoValue,
 } from "../internal.js";
-import { setupJazzTestSync } from "../testing.js";
+import { createJazzTestAccount, setupJazzTestSync } from "../testing.js";
 import { setupAccount, waitFor } from "./utils.js";
 
 class ChatRoom extends CoMap {
@@ -364,6 +372,50 @@ describe("subscribeToCoValue", () => {
     expect(lastValue.messages).toBe(initialValue.messages);
     expect(lastValue.messages[0]).toBe(initialValue.messages[0]);
     expect(lastValue.messages[1]).toBe(initialValue.messages[1]);
+  });
+
+  it("should emit only once when loading a list of values", async () => {
+    class TestMap extends CoMap {
+      value = co.string;
+    }
+
+    class TestList extends CoList.Of(co.ref(TestMap)) {}
+
+    const account = await createJazzTestAccount({
+      isCurrentActiveAccount: true,
+    });
+
+    const list = TestList.create([
+      TestMap.create({ value: "1" }),
+      TestMap.create({ value: "2" }),
+      TestMap.create({ value: "3" }),
+      TestMap.create({ value: "4" }),
+      TestMap.create({ value: "5" }),
+    ]);
+
+    const updateFn = vi.fn();
+
+    const unsubscribe = subscribeToCoValue(
+      TestList,
+      list.id,
+      {
+        loadAs: account,
+        resolve: {
+          $each: true,
+        },
+      },
+      updateFn,
+    );
+
+    onTestFinished(unsubscribe);
+
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
+    assert(list);
+
+    expect(list[0]?.value).toBe("1");
+
+    expect(updateFn).toHaveBeenCalledTimes(1);
   });
 });
 

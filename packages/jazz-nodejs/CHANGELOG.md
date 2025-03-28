@@ -1,5 +1,80 @@
 # jazz-autosub
 
+## 0.12.1
+
+### Patch Changes
+
+- Updated dependencies [5a00fe0]
+  - cojson@0.12.1
+  - cojson-transport-ws@0.12.1
+  - jazz-tools@0.12.1
+
+## 0.12.0
+
+### Patch Changes
+
+- Updated dependencies [01523dc]
+- Updated dependencies [4ea87dc]
+- Updated dependencies [1e6da19]
+- Updated dependencies [01523dc]
+- Updated dependencies [b6c6a0a]
+  - jazz-tools@0.12.0
+  - cojson@0.12.0
+  - cojson-transport-ws@0.12.0
+
+## 0.11.8
+
+### Patch Changes
+
+- Updated dependencies [6c86c4f]
+- Updated dependencies [9d0c9dc]
+  - cojson@0.11.8
+  - cojson-transport-ws@0.11.8
+  - jazz-tools@0.11.8
+
+## 0.11.7
+
+### Patch Changes
+
+- Updated dependencies [a140f55]
+- Updated dependencies [2b94bc8]
+- Updated dependencies [2957362]
+- Updated dependencies [2b0d1b0]
+  - jazz-tools@0.11.7
+  - cojson@0.11.7
+  - cojson-transport-ws@0.11.7
+
+## 0.11.6
+
+### Patch Changes
+
+- Updated dependencies [e7c85b7]
+- Updated dependencies [8ed144e]
+  - jazz-tools@0.11.6
+  - cojson@0.11.6
+  - cojson-transport-ws@0.11.6
+
+## 0.11.5
+
+### Patch Changes
+
+- Updated dependencies [60f5b3f]
+  - cojson@0.11.5
+  - cojson-transport-ws@0.11.5
+  - jazz-tools@0.11.5
+
+## 0.11.4
+
+### Patch Changes
+
+- Updated dependencies [57a3dbe]
+- Updated dependencies [a717754]
+- Updated dependencies [a91f343]
+- Updated dependencies [7f036c1]
+  - jazz-tools@0.11.4
+  - cojson@0.11.4
+  - cojson-transport-ws@0.11.4
+
 ## 0.11.3
 
 ### Patch Changes

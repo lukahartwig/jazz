@@ -1,5 +1,65 @@
 # jazz-browser-media-images
 
+## 0.12.1
+
+### Patch Changes
+
+- jazz-browser@0.12.1
+- jazz-tools@0.12.1
+
+## 0.12.0
+
+### Patch Changes
+
+- Updated dependencies [01523dc]
+- Updated dependencies [4ea87dc]
+- Updated dependencies [1e6da19]
+- Updated dependencies [b6c6a0a]
+  - jazz-tools@0.12.0
+  - jazz-browser@0.12.0
+
+## 0.11.8
+
+### Patch Changes
+
+- jazz-browser@0.11.8
+- jazz-tools@0.11.8
+
+## 0.11.7
+
+### Patch Changes
+
+- Updated dependencies [a140f55]
+- Updated dependencies [2b0d1b0]
+  - jazz-tools@0.11.7
+  - jazz-browser@0.11.7
+
+## 0.11.6
+
+### Patch Changes
+
+- 8ed144e: Resolve the promise when the resolutions are processed and mark the package as side-effect free
+- Updated dependencies [e7c85b7]
+  - jazz-tools@0.11.6
+  - jazz-browser@0.11.6
+
+## 0.11.5
+
+### Patch Changes
+
+- jazz-browser@0.11.5
+- jazz-tools@0.11.5
+
+## 0.11.4
+
+### Patch Changes
+
+- Updated dependencies [57a3dbe]
+- Updated dependencies [a717754]
+- Updated dependencies [a91f343]
+  - jazz-tools@0.11.4
+  - jazz-browser@0.11.4
+
 ## 0.11.3
 
 ### Patch Changes

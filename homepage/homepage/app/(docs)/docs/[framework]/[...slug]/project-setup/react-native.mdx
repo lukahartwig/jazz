@@ -286,7 +286,7 @@ To display images, use the `ProgressiveImg` component from `jazz-react-native`. 
   import { Image } from "react-native";
 
   // Inside your render function:
-  <ProgressiveImg image={someCovalue.image} maxWidth={1024}>
+  <ProgressiveImg image={someCovalue.image} targetWidth={1024}>
     {({ src, res, originalSize }) => (
       <Image
         source={{ uri: src }}
@@ -305,7 +305,7 @@ To display images, use the `ProgressiveImg` component from `jazz-react-native`. 
 The `ProgressiveImg` component:
 - Automatically handles different image formats
 - Provides progressive loading with placeholder images
-- Supports different resolutions based on the `maxWidth` prop
+- Supports different resolutions based on the `targetWidth` prop
 - Works seamlessly with React Native's `Image` component
 
 For a complete implementation example, see the [Chat Example](https://github.com/garden-co/jazz/blob/main/examples/chat-rn-clerk/app/chat/[chatId].tsx).

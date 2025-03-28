@@ -15,3 +15,4 @@ export { createInviteLink, parseInviteLink } from "jazz-browser";
 
 export * from "./auth/auth.js";
 export * from "./media.js";
+export { createImage } from "jazz-browser-media-images";

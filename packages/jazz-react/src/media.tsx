@@ -5,9 +5,11 @@ import React, { useEffect, useState } from "react";
 export function useProgressiveImg({
   image,
   maxWidth,
+  targetWidth,
 }: {
   image: ImageDefinition | null | undefined;
   maxWidth?: number;
+  targetWidth?: number;
 }) {
   const [current, setCurrent] = useState<
     { src?: string; res?: `${number}x${number}` | "placeholder" } | undefined
@@ -17,7 +19,7 @@ export function useProgressiveImg({
     let lastHighestRes: string | undefined;
     if (!image) return;
     const unsub = image.subscribe({}, (update) => {
-      const highestRes = update?.highestResAvailable({ maxWidth });
+      const highestRes = update?.highestResAvailable({ maxWidth, targetWidth });
       if (highestRes) {
         if (highestRes.res !== lastHighestRes) {
           lastHighestRes = highestRes.res;
@@ -53,6 +55,7 @@ export function ProgressiveImg({
   children,
   image,
   maxWidth,
+  targetWidth,
 }: {
   children: (result: {
     src: string | undefined;
@@ -61,7 +64,8 @@ export function ProgressiveImg({
   }) => React.ReactNode;
   image: ImageDefinition | null | undefined;
   maxWidth?: number;
+  targetWidth?: number;
 }) {
-  const result = useProgressiveImg({ image, maxWidth });
+  const result = useProgressiveImg({ image, maxWidth, targetWidth });
   return result && children(result);
 }

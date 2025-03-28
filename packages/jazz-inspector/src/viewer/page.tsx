@@ -1,5 +1,6 @@
 import { CoID, LocalNode, RawCoStream, RawCoValue } from "cojson";
-import { useEffect, useState } from "react";
+import { useMemo } from "react";
+import { classNames } from "../utils.js";
 import { CoStreamView } from "./co-stream-view.js";
 import { GridView } from "./grid-view.js";
 import { TableView } from "./table-viewer.js";
@@ -15,7 +16,8 @@ type PageProps = {
   onNavigate: (newPages: PageInfo[]) => void;
   onHeaderClick?: () => void;
   isTopLevel?: boolean;
-  style: React.CSSProperties;
+  style?: React.CSSProperties;
+  className?: string;
 };
 
 export function Page({
@@ -25,22 +27,21 @@ export function Page({
   onNavigate,
   onHeaderClick,
   style,
+  className = "",
   isTopLevel,
 }: PageProps) {
   const { value, snapshot, type, extendedType } = useResolvedCoValue(
     coId,
     node,
   );
-  const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
 
-  const supportsTableView = type === "colist" || extendedType === "record";
-
-  // Automatically switch to table view if the page is a CoMap record
-  useEffect(() => {
-    if (supportsTableView) {
-      setViewMode("table");
+  const viewMode = useMemo(() => {
+    if (type === "colist" || extendedType === "record") {
+      return "table";
+    } else {
+      return "grid";
     }
-  }, [supportsTableView]);
+  }, [type, extendedType]);
 
   if (snapshot === "unavailable") {
     return <div style={style}>Data unavailable</div>;
@@ -52,31 +53,12 @@ export function Page({
 
   return (
     <div
-      style={{
-        position: "absolute",
-        zIndex: 1,
-        inset: 0,
-        backgroundColor: "white",
-        borderWidth: "1px",
-        borderColor: "rgba(0, 0, 0, 0.05)",
-        borderRadius: "0.75rem",
-        boxShadow:
-          "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
-        padding: "1.5rem",
-        width: "100%",
-        height: "100%",
-        backgroundClip: "padding-box",
-      }}
+      style={style}
+      className={className + "absolute z-10 inset-0 w-full h-full px-3"}
     >
       {!isTopLevel && (
         <div
-          style={{
-            position: "absolute",
-            left: 0,
-            right: 0,
-            top: 0,
-            height: "2.5rem",
-          }}
+          className={classNames("absolute left-0 right-0 top-0 h-10")}
           aria-label="Back"
           onClick={() => {
             onHeaderClick?.();
@@ -84,72 +66,40 @@ export function Page({
           aria-hidden="true"
         ></div>
       )}
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: "1rem",
-        }}
-      >
-        <div
-          style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}
-        >
+      <div className={classNames("flex justify-between items-center mb-4")}>
+        <div className={classNames("flex items-center gap-3")}>
           <h2
-            style={{
-              fontSize: "1.5rem",
-              fontWeight: "700",
-              display: "flex",
-              alignItems: "flex-start",
-              flexDirection: "column",
-              gap: "0.25rem",
-            }}
+            className={classNames(
+              "text-lg font-medium flex flex-col items-start gap-1 text-stone-900 dark:text-white",
+            )}
           >
             <span>
               {name}
               {typeof snapshot === "object" && "name" in snapshot ? (
-                <span style={{ color: "rgb(75, 85, 99)", fontWeight: "500" }}>
+                <span className={classNames("text-gray-600 font-medium")}>
                   {" "}
                   {(snapshot as { name: string }).name}
                 </span>
               ) : null}
             </span>
           </h2>
-          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-            <span
-              style={{
-                fontSize: "0.75rem",
-                color: "rgb(55, 65, 81)",
-                fontWeight: "500",
-                padding: "0.125rem 0.25rem",
-                marginLeft: "-0.125rem",
-                borderRadius: "0.25rem",
-                backgroundColor: "rgba(55, 65, 81, 0.05)",
-                display: "inline-block",
-                fontFamily: "monospace",
-              }}
-            >
-              {type && <TypeIcon type={type} extendedType={extendedType} />}
-            </span>
-            <span
-              style={{
-                fontSize: "0.75rem",
-                color: "rgb(55, 65, 81)",
-                fontWeight: "500",
-                padding: "0.125rem 0.25rem",
-                marginLeft: "-0.125rem",
-                borderRadius: "0.25rem",
-                backgroundColor: "rgba(55, 65, 81, 0.05)",
-                display: "inline-block",
-                fontFamily: "monospace",
-              }}
-            >
-              {coId}
-            </span>
-          </div>
+          <span
+            className={classNames(
+              "text-sm text-gray-700 font-medium py-0.5 px-1 -ml-0.5 rounded bg-gray-700/5 inline-block font-mono",
+            )}
+          >
+            {type && <TypeIcon type={type} extendedType={extendedType} />}
+          </span>
+          <span
+            className={classNames(
+              "text-sm text-gray-700 font-medium py-0.5 px-1 -ml-0.5 rounded bg-gray-700/5 inline-block font-mono",
+            )}
+          >
+            {coId}
+          </span>
         </div>
       </div>
-      <div style={{ overflow: "auto", maxHeight: "calc(100% - 4rem)" }}>
+      <div className={classNames("overflow-auto")}>
         {type === "costream" ? (
           <CoStreamView
             data={snapshot}
@@ -163,13 +113,7 @@ export function Page({
           <TableView data={snapshot} node={node} onNavigate={onNavigate} />
         )}
         {extendedType !== "account" && extendedType !== "group" && (
-          <div
-            style={{
-              fontSize: "0.75rem",
-              color: "rgb(107, 114, 128)",
-              marginTop: "1rem",
-            }}
-          >
+          <div className={classNames("text-sm text-gray-500 mt-4")}>
             Owned by{" "}
             <AccountOrGroupPreview
               coId={value.group.id}

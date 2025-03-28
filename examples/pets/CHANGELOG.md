@@ -1,5 +1,70 @@
 # jazz-example-pets
 
+## 0.0.186
+
+### Patch Changes
+
+- jazz-react@0.12.1
+- jazz-tools@0.12.1
+
+## 0.0.185
+
+### Patch Changes
+
+- Updated dependencies [01523dc]
+- Updated dependencies [4ea87dc]
+- Updated dependencies [1e6da19]
+- Updated dependencies [b6c6a0a]
+  - jazz-tools@0.12.0
+  - jazz-react@0.12.0
+
+## 0.0.184
+
+### Patch Changes
+
+- jazz-react@0.11.8
+- jazz-tools@0.11.8
+
+## 0.0.183
+
+### Patch Changes
+
+- Updated dependencies [a140f55]
+- Updated dependencies [4019918]
+- Updated dependencies [2b0d1b0]
+  - jazz-tools@0.11.7
+  - jazz-react@0.11.7
+
+## 0.0.182
+
+### Patch Changes
+
+- 1bfa9bb: Removed when="singedUp" from examples apps' Jazz providers. This is a really niche use-case option and can lead to broken-feeling experiences when anonymous users try to load something.
+- Updated dependencies [e7c85b7]
+- Updated dependencies [8ed144e]
+  - jazz-react@0.11.6
+  - jazz-tools@0.11.6
+  - jazz-browser-media-images@0.11.6
+
+## 0.0.181
+
+### Patch Changes
+
+- jazz-react@0.11.5
+- jazz-tools@0.11.5
+- jazz-browser-media-images@0.11.5
+
+## 0.0.180
+
+### Patch Changes
+
+- Updated dependencies [57a3dbe]
+- Updated dependencies [a717754]
+- Updated dependencies [a91f343]
+  - jazz-tools@0.11.4
+  - jazz-browser-media-images@0.11.4
+  - jazz-react@0.11.4
+
 ## 0.0.179
 
 ### Patch Changes

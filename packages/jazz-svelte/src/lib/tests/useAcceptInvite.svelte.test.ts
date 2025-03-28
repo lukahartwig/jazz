@@ -33,7 +33,7 @@ describe("useAcceptInvite", () => {
     const account = await createJazzTestAccount();
     const inviteSender = await createJazzTestAccount();
 
-    linkAccounts(account, inviteSender);
+    await linkAccounts(account, inviteSender);
 
     const invitelink = createInviteLink(
       TestMap.create(

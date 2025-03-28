@@ -80,13 +80,35 @@ export class RawCoStreamView<
   }
 
   /** @internal */
+  protected compareStreamItems(
+    a: CoStreamItem<Item>,
+    b: CoStreamItem<Item>,
+  ): number {
+    return (
+      a.madeAt - b.madeAt ||
+      (a.tx.sessionID === b.tx.sessionID
+        ? 0
+        : a.tx.sessionID < b.tx.sessionID
+          ? -1
+          : 1) ||
+      a.tx.txIndex - b.tx.txIndex
+    );
+  }
+
+  /** @internal */
   protected processNewTransactions() {
     const changeEntries = new Set<CoStreamItem<Item>[]>();
 
-    for (const { txID, madeAt, changes } of this.core.getValidTransactions({
+    const newValidTransactions = this.core.getValidTransactions({
       ignorePrivateTransactions: false,
       knownTransactions: this.knownTransactions,
-    })) {
+    });
+
+    if (newValidTransactions.length === 0) {
+      return;
+    }
+
+    for (const { txID, madeAt, changes } of newValidTransactions) {
       for (const changeUntyped of changes) {
         const change = changeUntyped as Item;
         let entries = this.items[txID.sessionID];
@@ -104,12 +126,7 @@ export class RawCoStreamView<
     }
 
     for (const entries of changeEntries) {
-      entries.sort(
-        (a, b) =>
-          a.madeAt - b.madeAt ||
-          (a.tx.sessionID < b.tx.sessionID ? -1 : 1) ||
-          a.tx.txIndex - b.tx.txIndex,
-      );
+      entries.sort(this.compareStreamItems);
     }
   }
 

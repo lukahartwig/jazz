@@ -1,5 +1,65 @@
 # file-share-svelte
 
+## 0.0.52
+
+### Patch Changes
+
+- jazz-svelte@0.12.1
+- jazz-tools@0.12.1
+
+## 0.0.51
+
+### Patch Changes
+
+- Updated dependencies [01523dc]
+- Updated dependencies [4ea87dc]
+- Updated dependencies [1e6da19]
+- Updated dependencies [b6c6a0a]
+  - jazz-tools@0.12.0
+  - jazz-svelte@0.12.0
+
+## 0.0.50
+
+### Patch Changes
+
+- jazz-svelte@0.11.8
+- jazz-tools@0.11.8
+
+## 0.0.49
+
+### Patch Changes
+
+- Updated dependencies [a140f55]
+- Updated dependencies [2b0d1b0]
+  - jazz-tools@0.11.7
+  - jazz-svelte@0.11.7
+
+## 0.0.48
+
+### Patch Changes
+
+- 1bfa9bb: Removed when="singedUp" from examples apps' Jazz providers. This is a really niche use-case option and can lead to broken-feeling experiences when anonymous users try to load something.
+- Updated dependencies [e7c85b7]
+  - jazz-tools@0.11.6
+  - jazz-svelte@0.11.6
+
+## 0.0.47
+
+### Patch Changes
+
+- jazz-svelte@0.11.5
+- jazz-tools@0.11.5
+
+## 0.0.46
+
+### Patch Changes
+
+- Updated dependencies [57a3dbe]
+- Updated dependencies [a717754]
+- Updated dependencies [a91f343]
+  - jazz-tools@0.11.4
+  - jazz-svelte@0.11.4
+
 ## 0.0.45
 
 ### Patch Changes
