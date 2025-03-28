@@ -52,7 +52,8 @@ export function LocalFirstFeaturesSection() {
         slogan={
           <>
             <p>
-              With cloud-synced local state, your data is kept on-device, and synced whenever possible.
+              With cloud-synced local state, your data is kept on-device, and
+              synced whenever possible.
             </p>
           </>
         }

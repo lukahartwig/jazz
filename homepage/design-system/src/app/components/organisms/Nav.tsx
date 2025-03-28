@@ -13,12 +13,13 @@ import { usePathname } from "next/navigation";
 import { ComponentType, ReactNode, useEffect, useState } from "react";
 import { isActive } from "../../utils/nav";
 import { Icon } from "../atoms/Icon";
+import type { IconName } from "../atoms/Icon";
 import { BreadCrumb } from "../molecules/Breadcrumb";
 import { SocialLinks, SocialLinksProps } from "./SocialLinks";
 
 type NavItemProps = {
   href: string;
-  icon?: string;
+  icon?: IconName;
   title: string;
   firstOnRight?: boolean;
   newTab?: boolean;
