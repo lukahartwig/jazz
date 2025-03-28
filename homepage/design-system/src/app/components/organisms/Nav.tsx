@@ -39,7 +39,7 @@ type NavProps = {
 export type NavSection = {
   name: string;
   content: ReactNode;
-  icon: string;
+  icon: IconName;
 };
 
 function NavItem({
@@ -135,7 +135,11 @@ export function MobileNav({
   sections,
   themeToggle: ThemeToggle,
 }: NavProps) {
-  const primarySection = {
+  const primarySection: {
+    name: string;
+    icon: IconName;
+    content: ReactNode;
+  } = {
     name: "Menu",
     icon: "menu",
     content: (
@@ -255,7 +259,7 @@ export function MobileNav({
                   onClick={() => toggle(section.name)}
                   key={section.name}
                 >
-                  <Icon name={section.icon} size="xs" />
+                  {section.icon && <Icon name={section.icon} size="xs" />}
                   {section.name}
                 </button>
               ),

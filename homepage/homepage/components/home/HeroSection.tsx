@@ -1,13 +1,19 @@
 import CreateJazzApp from "@/components/home/CreateJazzApp.mdx";
 import { H1 } from "gcmp-design-system/src/app/components/atoms/Headings";
-import { Icon } from "gcmp-design-system/src/app/components/atoms/Icon";
+import {
+  Icon,
+  type IconName,
+} from "gcmp-design-system/src/app/components/atoms/Icon";
 import { Kicker } from "gcmp-design-system/src/app/components/atoms/Kicker";
 import { CopyButton } from "gcmp-design-system/src/app/components/molecules/CodeGroup";
 import { Prose } from "gcmp-design-system/src/app/components/molecules/Prose";
 import { SectionHeader } from "gcmp-design-system/src/app/components/molecules/SectionHeader";
 import Link from "next/link";
 
-const features = [
+const features: Array<{
+  title: string;
+  icon: IconName;
+}> = [
   {
     title: "Instant updates",
     icon: "instant",
