@@ -155,7 +155,7 @@ export class MagicLinkAuth {
     targetHandler: "consumer" | "provider",
   ) {
     const { transferId, inviteSecret } = parseMagicLinkAuthUrl(
-      this.options.consumerHandlerPath,
+      this.options[`${targetHandler}HandlerPath`],
       url,
     );
 

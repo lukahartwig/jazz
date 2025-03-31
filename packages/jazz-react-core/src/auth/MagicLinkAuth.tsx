@@ -7,6 +7,8 @@ import {
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAuthSecretStorage, useJazzContext } from "../hooks.js";
 
+const DEFAULT_EXPIRE_IN_MS = 15 * 60 * 1000;
+
 export function useCreateMagicLinkAuthAsProvider(
   origin: string,
   {
@@ -43,7 +45,7 @@ export function useCreateMagicLinkAuthAsProvider(
 
   const createLink = useCallback(
     async (expireInMs?: number) => {
-      expireInMs = expireInMs ?? 15 * 60 * 1000;
+      expireInMs = expireInMs ?? DEFAULT_EXPIRE_IN_MS;
 
       let transfer = await magicLinkAuth.createTransferAsProvider(
         new Date(Date.now() + expireInMs),
@@ -114,7 +116,10 @@ export function useCreateMagicLinkAuthAsProvider(
 
 export function useCreateMagicLinkAuthAsConsumer(
   origin: string,
-  options: Partial<MagicLinkAuthOptions> = {},
+  {
+    handlerTimeout = DEFAULT_EXPIRE_IN_MS,
+    ...options
+  }: Partial<{ handlerTimeout: number } & MagicLinkAuthOptions> = {},
 ) {
   const context = useJazzContext();
   const authSecretStorage = useAuthSecretStorage();
@@ -128,6 +133,7 @@ export function useCreateMagicLinkAuthAsConsumer(
       context.authenticate,
       authSecretStorage,
       origin,
+      options,
     );
   }, [origin, options]);
 
@@ -141,8 +147,11 @@ export function useCreateMagicLinkAuthAsConsumer(
         // Wait for the provider to set the transfer secret
         setStatus("waitingForProvider");
 
-        transfer = await waitForCoValueCondition(transfer, {}, (t) =>
-          Boolean(t.secret),
+        transfer = await waitForCoValueCondition(
+          transfer,
+          {},
+          (t) => Boolean(t.secret),
+          handlerTimeout,
         );
         if (!transfer.secret) throw new Error("Transfer secret not set");
 
@@ -170,7 +179,7 @@ export function useHandleMagicLinkAuthAsConsumer(
   origin: string,
   url: string,
   {
-    confirmLogInTimeout = 15 * 60 * 1000,
+    confirmLogInTimeout = DEFAULT_EXPIRE_IN_MS,
     onLoggedIn,
     ...options
   }: Partial<
