@@ -19,12 +19,10 @@ import { getUnloadedState } from "../coValue/unloaded.js";
 import { CoValueResolutionNode, ensureCoValueLoaded } from "../subscribe.js";
 import {
   AnyCoMapSchema,
-  CoMapClassToSchema,
   CoMapInit,
   CoMapSchema,
   CoMapSchemaClass,
   CoMapSchemaKey,
-  CoMapSchemaToClass,
   CoValueSchema,
 } from "./schema.js";
 import { getOwnerFromRawValue } from "./utils.js";
@@ -184,6 +182,27 @@ export class CoMapJazzApi<
   get owner(): Account | Group {
     return getOwnerFromRawValue(this.raw);
   }
+
+  values() {
+    type KeysOf<T> = Exclude<keyof T, "$jazz" | "$jazzState"> & string;
+
+    type ValuesOf<T> = T[KeysOf<T>];
+
+    return Object.values(this._instance) as ValuesOf<Loaded<D, R>>[];
+  }
+
+  entries() {
+    type KeysOf<T> = Exclude<keyof T, "$jazz" | "$jazzState"> & string;
+    type EntriesOf<T> = [KeysOf<T>, T[KeysOf<T>]];
+
+    return Object.entries(this._instance) as EntriesOf<Loaded<D, R>>[];
+  }
+
+  keys() {
+    type KeysOf<T> = Exclude<keyof T, "$jazz" | "$jazzState"> & string;
+
+    return Object.keys(this._instance) as KeysOf<Loaded<D, R>>[];
+  }
 }
 
 export function createCoMap<D extends AnyCoMapSchema>(
@@ -213,6 +232,7 @@ export function createCoMapFromRaw<
 ) {
   const instance = Object.create({
     $jazz: new CoMapJazzApi(schema, raw, resolutionNode),
+    $jazzState: "loaded",
   }) as LoadedCoMapJazzProps<D, R>;
   instance.$jazz._setInstance(instance);
 
@@ -233,13 +253,17 @@ export function createCoMapFromRaw<
       if (ref) {
         instance.$jazz._fillRef(key as any, ref);
       } else {
-        instance.$jazz._fillRef(
-          key as any,
-          getUnloadedState(
-            getSchemaFromDescriptor(schema, key),
-            raw.get(key) as ID<any>,
-          ),
-        );
+        const value = raw.get(key);
+
+        if (value) {
+          instance.$jazz._fillRef(
+            key as any,
+            getUnloadedState(
+              getSchemaFromDescriptor(schema, key),
+              raw.get(key) as ID<any>,
+            ),
+          );
+        }
       }
     } else {
       Object.defineProperty(instance, key, {

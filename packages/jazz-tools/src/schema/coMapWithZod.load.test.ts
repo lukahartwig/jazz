@@ -31,6 +31,9 @@ beforeEach(() => {
   cojsonInternals.CO_VALUE_LOADING_CONFIG.TIMEOUT = 1;
 });
 
+// TODO: Test $each + errors
+// TODO: Test validation errors
+// TODO: Split type tests vs runtime tests
 describe("CoMap with Zod", () => {
   describe("load", () => {
     it("should load a CoMap without nested values", async () => {
@@ -269,11 +272,22 @@ describe("CoMap with Zod", () => {
 
       assert(loaded.$jazzState === "loaded");
 
-      const values = Object.values(loaded);
+      const values = loaded.$jazz.values();
+      const entries = loaded.$jazz.entries();
+      const keys = loaded.$jazz.keys();
 
       expectTypeOf(values).toEqualTypeOf<
         Loaded<typeof Friends.record.value, { address: true }>[]
       >();
+
+      for (const [key, value] of entries) {
+        expectTypeOf(key).toEqualTypeOf<string>();
+        expectTypeOf(value).toEqualTypeOf<
+          Loaded<typeof Friends.record.value, { address: true }>
+        >();
+      }
+
+      expectTypeOf(keys).toEqualTypeOf<string[]>();
 
       expect(loaded.joe?.name).toBe("joe");
       expect(loaded.joe?.address.street).toBe("123 Main St");
@@ -484,7 +498,7 @@ describe("CoMap with Zod", () => {
         resolve: { address: true },
       });
 
-      expect(loaded.$jazzState).toBe("unavailable");
+      expect(loaded.$jazzState).toBe("unauthorized");
     });
 
     it("should return unloaded if one of the nested values is not accessible", async () => {
@@ -518,10 +532,10 @@ describe("CoMap with Zod", () => {
         resolve: { address: true },
       });
 
-      expect(loaded.$jazzState).toBe("unavailable");
+      expect(loaded.$jazzState).toBe("unauthorized");
     });
 
-    it("should return unloaded if one of the optional nested values is not accessible", async () => {
+    it("should return unauthorized if one of the optional nested values is not accessible", async () => {
       const anotherAccount = await createJazzTestAccount();
       const Person = co.map({
         name: z.string(),
@@ -554,7 +568,7 @@ describe("CoMap with Zod", () => {
         resolve: { address: true },
       });
 
-      expect(loaded.$jazzState).toBe("unavailable");
+      expect(loaded.$jazzState).toBe("unauthorized");
     });
   });
 

@@ -2,16 +2,11 @@ import { beforeEach, describe, expect, expectTypeOf, it } from "vitest";
 import { createJazzTestAccount } from "../testing.js";
 import {
   CoMapInit,
-  CoMapSchema,
   CoMapSchemaClass,
-  RefProps,
   ResolveQueryForCoMapInit,
-  UnwrapRecordReference,
-  UnwrapReference,
 } from "./coMap/schema.js";
 import { LazySchema } from "./coValue/lazy.js";
 import { Optional } from "./coValue/optional.js";
-import { flatten } from "./coValue/typeUtils.js";
 import { MaybeLoaded, Unloaded } from "./coValue/types.js";
 import { Loaded, co, z } from "./schema.js";
 
@@ -309,9 +304,9 @@ describe("CoMap - with zod based schema", () => {
 
       expectTypeOf<typeof john.friend.friend.name>().toEqualTypeOf<string>();
 
-      expectTypeOf<typeof john.friend.friend.friend>().toEqualTypeOf<
-        MaybeLoaded<Optional<typeof Person>>
-      >();
+      expectTypeOf<
+        typeof john.friend.friend.friend
+      >().toEqualTypeOf<undefined>();
     });
 
     it("should not throw an error if an optional self reference is missing", () => {
@@ -385,7 +380,6 @@ describe("CoMap - with zod based schema", () => {
       expect(friends.joe.name).toBe("joe");
     });
 
-    // TODO: Does this make sense?
     it("should accept support a self reference as a catchall", () => {
       const Person: CoMapSchemaClass<
         {},
@@ -689,6 +683,87 @@ describe("CoMap - with zod based schema", () => {
       const myCoMap = MyCoMap.create({ name: "John", age: 30 });
 
       expect(myCoMap.$jazz.updated()).toBe(myCoMap);
+    });
+  });
+
+  describe("record methods", () => {
+    it("should return correct values with $jazz.values()", () => {
+      const Friends = co.record(
+        z.string(),
+        co.map({
+          name: z.string(),
+        }),
+      );
+
+      const friends = Friends.create({
+        joe: { name: "joe" },
+        bob: { name: "bob" },
+      });
+
+      const values = friends.$jazz.values();
+
+      expect(values).toEqual([{ name: "joe" }, { name: "bob" }]);
+
+      expectTypeOf(friends.joe).toEqualTypeOf<
+        Loaded<typeof Friends.record.value>
+      >();
+    });
+
+    it("should return correct entries with $jazz.entries()", () => {
+      const Friends = co.record(
+        z.string(),
+        co.map({
+          name: z.string(),
+        }),
+      );
+
+      const friends = Friends.create({
+        joe: { name: "joe" },
+        bob: { name: "bob" },
+      });
+
+      const entries = friends.$jazz.entries();
+
+      expect(entries).toEqual([
+        ["joe", { name: "joe" }],
+        ["bob", { name: "bob" }],
+      ]);
+
+      for (const [key, value] of entries) {
+        expectTypeOf(key).toEqualTypeOf<string>();
+
+        // TODO: Can we make this MaybeLoaded and remove the undefined case?
+        expectTypeOf(value).toEqualTypeOf<
+          Unloaded<typeof Friends.record.value> | undefined
+        >();
+      }
+
+      expectTypeOf(friends.joe).toEqualTypeOf<
+        Loaded<typeof Friends.record.value>
+      >();
+
+      expectTypeOf(friends.x).toEqualTypeOf<
+        Unloaded<typeof Friends.record.value> | undefined
+      >();
+    });
+
+    it("should return correct keys with $jazz.keys()", () => {
+      const Friends = co.record(
+        z.string().max(3),
+        co.map({
+          name: z.string(),
+        }),
+      );
+
+      const friends = Friends.create({
+        joe: { name: "joe" },
+        bob: { name: "bob" },
+      });
+
+      const keys = friends.$jazz.keys();
+      expectTypeOf(keys).toEqualTypeOf<Array<string>>();
+
+      expect(keys).toEqual(["joe", "bob"]);
     });
   });
 });

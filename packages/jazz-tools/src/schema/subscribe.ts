@@ -6,7 +6,6 @@ import { createCoMapFromRaw, isRelationRef } from "./coMap/instance.js";
 import { CoValueSchema } from "./coMap/schema.js";
 import { getOwnerFromRawValue } from "./coMap/utils.js";
 import { isLazySchema } from "./coValue/lazy.js";
-import { isOptional } from "./coValue/optional.js";
 import {
   ID,
   Loaded,
@@ -164,15 +163,9 @@ export class CoValueResolutionNode<
     value: Loaded<any, any> | "unavailable" | "unauthorized",
   ) => {
     if (value === "unavailable" || value === "unauthorized") {
-      const descriptor = this.schema.get(key);
-
-      if (descriptor && isOptional(descriptor)) {
-        this.childValues.set(key, undefined);
-      } else {
-        this.error = value;
-        this.listener?.(value);
-        return;
-      }
+      this.error = value;
+      this.listener?.(value);
+      return;
     } else {
       this.childValues.set(key, value);
     }

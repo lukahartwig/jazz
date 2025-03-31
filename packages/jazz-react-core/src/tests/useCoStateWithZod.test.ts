@@ -1,8 +1,8 @@
 // @vitest-environment happy-dom
 
 import { cojsonInternals } from "cojson";
-import { CoValue, Group, ID, SchemaV2 } from "jazz-tools";
-import { beforeEach, describe, expect, expectTypeOf, it } from "vitest";
+import { Group, SchemaV2 } from "jazz-tools";
+import { beforeEach, describe, expect, it } from "vitest";
 import { createJazzTestAccount, setupJazzTestSync } from "../testing.js";
 import { useCoStateWithZod } from "../useCoStateWithZod.js";
 import { act, renderHook, waitFor } from "./testUtils.js";
@@ -112,7 +112,7 @@ describe("useCoStateWithZod", () => {
     expect(result.current?.nested.value).toBe("456");
   });
 
-  it.only("should return null if the coValue is not found", async () => {
+  it("should return null if the coValue is not found", async () => {
     const TestMap = co.map({
       value: z.string(),
     });

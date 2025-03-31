@@ -113,7 +113,11 @@ export type LoadedCoMapExplicitRefProps<
   readonly [K in RefProps<S>]: UnwrapReference<S, K> extends infer ChildSchema
     ? ChildSchema extends AnyCoMapSchema
       ? isQueryLeafNode<R> extends true
-        ? MaybeLoaded<ChildSchema> | addNullable<Options, ChildSchema>
+        ? Options extends "non-nullable"
+          ? ChildSchema extends { isOptional: true }
+            ? undefined
+            : Unloaded<ChildSchema>
+          : Unloaded<ChildSchema> | addNullable<Options, ChildSchema>
         : R[K] extends ResolveQuery<ChildSchema>
           ?
               | Loaded<ChildSchema, R[K], Options, [0, ...CurrentDepth]>
@@ -143,7 +147,7 @@ export type LoadedCoMapRecordProps<
         ? CoMapRecordQueriedByEachProps<S, R, EachQuery, Options, CurrentDepth>
         : {
             // Filling the primitive record properties
-            readonly [K in CoMapRecordKey<S>]?: MaybeLoaded<
+            readonly [K in CoMapRecordKey<S>]?: Unloaded<
               UnwrapRecordReference<S>
             >;
           });
@@ -161,7 +165,7 @@ export type CoMapRecordExplicitlyQueriedProps<
   >]: R[K] extends ResolveQuery<UnwrapRecordReference<S>>
     ? isQueryLeafNode<R> extends true
       ?
-          | MaybeLoaded<UnwrapRecordReference<S>>
+          | Loaded<UnwrapRecordReference<S>>
           | addNullable<Options, UnwrapRecordReference<S>>
       :
           | Loaded<
@@ -184,7 +188,7 @@ export type CoMapRecordQueriedByEachProps<
   // Either fill the record relations or set them as null
   readonly [K in CoMapRecordKey<S>]: isQueryLeafNode<R> extends true
     ?
-        | MaybeLoaded<UnwrapRecordReference<S>>
+        | Loaded<UnwrapRecordReference<S>>
         | addNullable<Options, UnwrapRecordReference<S>>
     : EachQuery extends ResolveQuery<UnwrapRecordReference<S>>
       ?
@@ -194,7 +198,7 @@ export type CoMapRecordQueriedByEachProps<
               Options,
               [0, ...CurrentDepth]
             >
-          | addNullable<Options, { isOptional: true }>
+          | addNullable<Options, UnwrapRecordReference<S>>
       : "Invalid $each query";
 };
 

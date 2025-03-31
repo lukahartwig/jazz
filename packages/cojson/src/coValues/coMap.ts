@@ -144,7 +144,7 @@ export class RawCoMapView<
       this.latest[key] = entries[entries.length - 1];
     }
 
-    this.totalProcessedTransactions += nextValidTransactions.length;
+    this.totalProcessedTransactions += newValidTransactions.length;
   }
 
   isTimeTravelEntity() {

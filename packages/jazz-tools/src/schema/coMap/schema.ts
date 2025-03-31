@@ -166,10 +166,6 @@ export type CoMapSchema<
   isOptional: O;
 
   get(key: CoMapSchemaKey<CoMapSchema<S, R>>): CoMapField | undefined;
-  optional(): CoMapSchema<S, R, true>;
-  catchall<T extends CoMapField>(
-    type: T,
-  ): CoMapSchema<S, { key: ZodString; value: T }, O>;
   keys(): (keyof S & string)[];
 };
 
@@ -270,3 +266,5 @@ export class CoMapSchemaClass<
     return createCoMap(this as any, init as any, owner, uniqueness) as any;
   }
 }
+
+// TODO: add type tests for co.record

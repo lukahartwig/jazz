@@ -30,3 +30,4 @@ export type {
   ResolveQueryStrict,
   Loaded,
 } from "./coValue/types.js";
+export type { ID } from "./coValue/types.js";
