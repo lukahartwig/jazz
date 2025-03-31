@@ -13,7 +13,9 @@ export function useCreateMagicLinkAuthAsProvider(
 }
 
 export function useCreateMagicLinkAuthAsConsumer(
-  options?: Partial<MagicLinkAuthOptions>,
+  options?: Partial<
+    { handlerTimeout: number; onLoggedIn: () => void } & MagicLinkAuthOptions
+  >,
 ) {
   return useCreateMagicLinkAuthAsConsumerCore(window.location.origin, options);
 }

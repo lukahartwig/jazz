@@ -1,6 +1,5 @@
 import {
   AccountRole,
-  ControlledAgent,
   CryptoProvider,
   InviteSecret,
   LocalNode,
@@ -9,15 +8,8 @@ import {
   cojsonInternals,
 } from "cojson";
 import { Account } from "../coValues/account.js";
-import { CoMap, Group, createInviteLink } from "../exports.js";
-import {
-  CoValue,
-  CoValueClass,
-  ID,
-  co,
-  subscribeToCoValue,
-  waitForCoValueCondition,
-} from "../internal.js";
+import { CoMap, Group } from "../exports.js";
+import { ID, co } from "../internal.js";
 import { AuthenticateAccountFunction } from "../types.js";
 import { AuthSecretStorage } from "./AuthSecretStorage.js";
 
@@ -44,7 +36,7 @@ const defaultOptions: MagicLinkAuthOptions = {
  * ```ts
  * import { MagicLinkAuth } from "jazz-tools";
  *
- * const auth = new MagicLinkAuth(crypto, jazzContext.authenticate, new AuthSecretStorage(), window.location.origin);
+ * const auth = new MagicLinkAuth(crypto, jazzContext.authenticate, new AuthSecretStorage(), window.location.origin, options);
  * ```
  *
  * @category Auth Providers
@@ -170,6 +162,8 @@ export class MagicLinkAuth {
       MagicLinkAuthTransfer,
     );
     if (!transfer) throw new Error("Failed to accept invite");
+
+    transfer.acceptedBy = account;
 
     return transfer;
   }

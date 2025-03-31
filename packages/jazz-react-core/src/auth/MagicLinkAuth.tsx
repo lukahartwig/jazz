@@ -118,13 +118,20 @@ export function useCreateMagicLinkAuthAsConsumer(
   origin: string,
   {
     handlerTimeout = DEFAULT_EXPIRE_IN_MS,
+    onLoggedIn,
     ...options
-  }: Partial<{ handlerTimeout: number } & MagicLinkAuthOptions> = {},
+  }: Partial<
+    { handlerTimeout: number; onLoggedIn: () => void } & MagicLinkAuthOptions
+  > = {},
 ) {
   const context = useJazzContext();
   const authSecretStorage = useAuthSecretStorage();
   const [status, setStatus] = useState<
-    "idle" | "waitingForProvider" | "authorized" | "error"
+    | "idle"
+    | "waitingForProvider"
+    | "waitingForConfirmLogIn"
+    | "authorized"
+    | "error"
   >("idle");
 
   const magicLinkAuth = useMemo(() => {
@@ -144,9 +151,17 @@ export function useCreateMagicLinkAuthAsConsumer(
 
     async function handleFlow() {
       try {
-        // Wait for the provider to set the transfer secret
+        // Wait for the provider to accept the transfer
         setStatus("waitingForProvider");
+        transfer = await waitForCoValueCondition(
+          transfer,
+          {},
+          (t) => Boolean(t.acceptedBy),
+          handlerTimeout,
+        );
+        setStatus("waitingForConfirmLogIn");
 
+        // Wait for provider to confirm and reveal the secret
         transfer = await waitForCoValueCondition(
           transfer,
           {},
@@ -158,6 +173,7 @@ export function useCreateMagicLinkAuthAsConsumer(
         // Log in using the transfer secret
         await magicLinkAuth.logInViaTransfer(transfer);
         setStatus("authorized");
+        onLoggedIn?.();
       } catch (error) {
         console.error("Magic Link Auth error", error);
         setStatus("error");
@@ -194,8 +210,8 @@ export function useHandleMagicLinkAuthAsConsumer(
   const hasRunRef = useRef(false);
 
   const [status, setStatus] = useState<
-    "init" | "waitingForProvider" | "authorized" | "error"
-  >("init");
+    "idle" | "waitingForProvider" | "authorized" | "error"
+  >("idle");
 
   const magicLinkAuth = useMemo(() => {
     return new MagicLinkAuth(
@@ -214,7 +230,6 @@ export function useHandleMagicLinkAuthAsConsumer(
     async function handleFlow() {
       try {
         let transfer = await magicLinkAuth.acceptTransferUrl(url, "consumer");
-        transfer.acceptedBy = transfer._loadedAs as Account;
 
         setStatus("waitingForProvider");
         transfer = await waitForCoValueCondition(
@@ -255,8 +270,13 @@ export function useHandleMagicLinkAuthAsProvider(
   const hasRunRef = useRef(false);
 
   const [status, setStatus] = useState<
-    "init" | "waitingForConfirmLogIn" | "authorized" | "expired" | "error"
-  >("init");
+    | "idle"
+    | "waitingForConfirmLogIn"
+    | "confirmedLogIn"
+    | "authorized"
+    | "expired"
+    | "error"
+  >("idle");
   const [confirmLogIn, setConfirmLogIn] = useState<null | (() => void)>(null);
   const magicLinkAuth = useMemo(() => {
     return new MagicLinkAuth(
@@ -282,8 +302,9 @@ export function useHandleMagicLinkAuthAsProvider(
           await new Promise<void>((resolve) => setConfirmLogIn(() => resolve));
           setConfirmLogIn(null);
         }
+        setStatus("confirmedLogIn");
 
-        // Check if the transfer has expired
+        // Check whether the transfer has expired
         if (transfer.expiresAt && transfer.expiresAt < new Date()) {
           setStatus("expired");
           return;
