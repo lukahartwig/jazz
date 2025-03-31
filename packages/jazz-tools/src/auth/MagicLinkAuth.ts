@@ -95,45 +95,13 @@ export class MagicLinkAuth {
   }
 
   public async createTransferAsConsumer() {
-    const temporaryAgent = createTemporaryAgent(this.crypto);
+    const temporaryAgent = await createTemporaryAgent(this.crypto);
     const group = Group.create({ owner: temporaryAgent });
 
     const transfer = MagicLinkAuthTransfer.create(
       { status: "pending" },
       { owner: group },
     );
-
-    return transfer;
-  }
-
-  public async loadTransferAsConsumer(
-    transferId: ID<MagicLinkAuthTransfer>,
-    inviteSecret: InviteSecret,
-  ) {
-    const temporaryAgent = createTemporaryAgent(this.crypto);
-
-    const transfer = await temporaryAgent.acceptInvite(
-      transferId,
-      inviteSecret,
-      MagicLinkAuthTransfer,
-    );
-    if (!transfer) throw new Error("Failed to accept invite");
-
-    transfer.acceptedBy = temporaryAgent;
-
-    return transfer;
-  }
-
-  public async loadTransferAsProvider(
-    transferId: ID<MagicLinkAuthTransfer>,
-    inviteSecret: InviteSecret,
-  ) {
-    const transfer = await Account.getMe().acceptInvite(
-      transferId,
-      inviteSecret,
-      MagicLinkAuthTransfer,
-    );
-    if (!transfer) throw new Error("Failed to accept invite");
 
     return transfer;
   }
@@ -157,6 +125,9 @@ export class MagicLinkAuth {
     const secret = transfer.secret;
     if (!secret) throw new Error("Transfer secret not set");
     transfer.status = "authorized";
+    await transfer.waitForSync();
+
+    (transfer._loadedAs as Account)._raw.core.node.gracefulShutdown();
 
     const secretSeed = base64URLtoBytes(secret);
     const accountSecret = this.crypto.agentSecretFromSecretSeed(secretSeed);
@@ -190,7 +161,7 @@ export class MagicLinkAuth {
 
     const account =
       targetHandler === "consumer"
-        ? createTemporaryAgent(this.crypto)
+        ? await createTemporaryAgent(this.crypto)
         : Account.getMe();
 
     const transfer = await account.acceptInvite(
@@ -202,28 +173,22 @@ export class MagicLinkAuth {
 
     return transfer;
   }
-
-  public async handleTransferAsConsumer(transfer: MagicLinkAuthTransfer) {
-    const temporaryAgent = createTemporaryAgent(this.crypto);
-    transfer.acceptedBy = temporaryAgent;
-    return transfer;
-  }
 }
 
-function createTemporaryAgent(crypto: CryptoProvider) {
-  return Account.getMe();
-
-  // TODO: Error: "Only a controlled account can accept invites" on link handlers when using the below code
-
-  const temporaryAgentSecret = crypto.newRandomAgentSecret();
-
-  const temporaryNode = new LocalNode(
-    new ControlledAgent(temporaryAgentSecret, crypto),
-    crypto.newRandomSessionID(crypto.getAgentID(temporaryAgentSecret)),
-    crypto,
+async function createTemporaryAgent(crypto: CryptoProvider) {
+  const [localPeer, magicLinkAuthPeer] = cojsonInternals.connectedPeers(
+    "local",
+    "magicLinkAuth",
+    { peer1role: "server", peer2role: "client" },
   );
+  Account.getMe()._raw.core.node.syncManager.addPeer(magicLinkAuthPeer);
 
-  return Account.fromRaw(temporaryNode.createAccount(temporaryAgentSecret));
+  const { node } = await LocalNode.withNewlyCreatedAccount({
+    creationProps: { name: "Sandbox account" },
+    peersToLoadFrom: [localPeer],
+    crypto,
+  });
+  return Account.fromNode(node);
 }
 
 function parseMagicLinkAuthUrl(basePath: string, url: string) {
