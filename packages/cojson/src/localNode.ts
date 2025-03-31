@@ -277,6 +277,7 @@ export class LocalNode {
       });
     }
 
+    // TODO: What if the loading fails because in the previous loadCoValueCore call the Peer with the covalue was skipped?
     return entry.getCoValue();
   }
 
@@ -288,6 +289,14 @@ export class LocalNode {
    * @category 3. Low-level
    */
   async load<T extends RawCoValue>(id: CoID<T>): Promise<T | "unavailable"> {
+    if (!id) {
+      throw new Error("Trying to load CoValue with undefined id");
+    }
+
+    if (!id.startsWith("co_z")) {
+      throw new Error(`Trying to load CoValue with invalid id ${id}`);
+    }
+
     const core = await this.loadCoValueCore(id);
 
     if (core === "unavailable") {

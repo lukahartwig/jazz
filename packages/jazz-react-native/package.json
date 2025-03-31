@@ -1,6 +1,6 @@
 {
   "name": "jazz-react-native",
-  "version": "0.11.5",
+  "version": "0.12.1",
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
@@ -31,6 +31,7 @@
     "cojson-transport-ws": "workspace:*",
     "jazz-react-core": "workspace:*",
     "jazz-tools": "workspace:*",
+    "jazz-react-native-media-images": "workspace:*",
     "react-native-nitro-modules": "0.21.0",
     "react-native-quick-crypto": "1.0.0-beta.12"
   },

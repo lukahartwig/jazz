@@ -1,5 +1,70 @@
 # jazz-react
 
+## 0.12.1
+
+### Patch Changes
+
+- Updated dependencies [5a00fe0]
+  - cojson@0.12.1
+  - jazz-browser@0.12.1
+  - jazz-react-core@0.12.1
+  - jazz-tools@0.12.1
+  - jazz-browser-media-images@0.12.1
+
+## 0.12.0
+
+### Patch Changes
+
+- Updated dependencies [01523dc]
+- Updated dependencies [4ea87dc]
+- Updated dependencies [1e6da19]
+- Updated dependencies [01523dc]
+- Updated dependencies [b6c6a0a]
+  - jazz-tools@0.12.0
+  - cojson@0.12.0
+  - jazz-browser@0.12.0
+  - jazz-browser-media-images@0.12.0
+  - jazz-react-core@0.12.0
+
+## 0.11.8
+
+### Patch Changes
+
+- Updated dependencies [6c86c4f]
+- Updated dependencies [9d0c9dc]
+  - cojson@0.11.8
+  - jazz-browser@0.11.8
+  - jazz-react-core@0.11.8
+  - jazz-tools@0.11.8
+  - jazz-browser-media-images@0.11.8
+
+## 0.11.7
+
+### Patch Changes
+
+- 4019918: Re-export createImage from jazz-browser-media-images
+- Updated dependencies [a140f55]
+- Updated dependencies [2b94bc8]
+- Updated dependencies [2957362]
+- Updated dependencies [2b0d1b0]
+  - jazz-react-core@0.11.7
+  - jazz-tools@0.11.7
+  - cojson@0.11.7
+  - jazz-browser@0.11.7
+  - jazz-browser-media-images@0.11.7
+
+## 0.11.6
+
+### Patch Changes
+
+- e7c85b7: Add targetWidth to highestResAvailable to add a way to fetch the next size up
+- Updated dependencies [e7c85b7]
+- Updated dependencies [8ed144e]
+  - jazz-tools@0.11.6
+  - cojson@0.11.6
+  - jazz-browser@0.11.6
+  - jazz-react-core@0.11.6
+
 ## 0.11.5
 
 ### Patch Changes

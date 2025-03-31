@@ -80,7 +80,7 @@ export function JazzInspector({ position = "right" }: { position?: Position }) {
   return (
     <div
       className={classNames(
-        "fixed h-[calc(100%-12rem)] flex flex-col bottom-0 left-0 w-full bg-red-500 border-t border-gray-200 dark:border-stone-900 dark:bg-stone-925",
+        "fixed h-[calc(100%-12rem)] flex flex-col bottom-0 left-0 w-full bg-white border-t border-gray-200 dark:border-stone-900 dark:bg-stone-925",
       )}
       id="__jazz_inspector"
     >

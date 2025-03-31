@@ -25,7 +25,7 @@ function isBinaryStreamStart(item: unknown): item is BinaryStreamStart {
   );
 }
 
-function detectCoStreamType(value: RawCoStream | RawBinaryCoStream) {
+export function detectCoStreamType(value: RawCoStream | RawBinaryCoStream) {
   const firstKey = Object.keys(value.items)[0];
   if (!firstKey)
     return {

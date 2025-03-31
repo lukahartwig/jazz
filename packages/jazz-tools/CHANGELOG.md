@@ -1,5 +1,53 @@
 # jazz-tools
 
+## 0.12.1
+
+### Patch Changes
+
+- Updated dependencies [5a00fe0]
+  - cojson@0.12.1
+
+## 0.12.0
+
+### Minor Changes
+
+- 01523dc: Check CoValue access permissions when loading
+- 4ea87dc: Implement new API for deep loading
+- 1e6da19: The .load function now returns `null` on error
+
+### Patch Changes
+
+- b6c6a0a: Make the linkAccounts test utility wait for the accounts coValues to be synced
+- Updated dependencies [01523dc]
+- Updated dependencies [01523dc]
+  - cojson@0.12.0
+
+## 0.11.8
+
+### Patch Changes
+
+- Updated dependencies [6c86c4f]
+- Updated dependencies [9d0c9dc]
+  - cojson@0.11.8
+
+## 0.11.7
+
+### Patch Changes
+
+- a140f55: Bugfix: Trigger a single update when loading a locally available list of items
+- 2b0d1b0: Export CoFeedEntry type
+- Updated dependencies [2b94bc8]
+- Updated dependencies [2957362]
+  - cojson@0.11.7
+
+## 0.11.6
+
+### Patch Changes
+
+- e7c85b7: Add targetWidth to highestResAvailable to add a way to fetch the next size up
+- Updated dependencies [8ed144e]
+  - cojson@0.11.6
+
 ## 0.11.5
 
 ### Patch Changes

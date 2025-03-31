@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { expectMap } from "../coValue.js";
-import type { CoValueHeader } from "../coValueCore.js";
+import type { CoValueHeader, TryAddTransactionsError } from "../coValueCore.js";
 import type { RawAccountID } from "../coValues/account.js";
 import { type MapOpPayload, RawCoMap } from "../coValues/coMap.js";
 import type { RawGroup } from "../coValues/group.js";
@@ -9,7 +9,7 @@ import { stableStringify } from "../jsonStringify.js";
 import { LocalNode } from "../localNode.js";
 import { getPriorityFromHeader } from "../priority.js";
 import { connectedPeers, newQueuePair } from "../streamUtils.js";
-import type { SyncMessage } from "../sync.js";
+import type { LoadMessage, SyncMessage } from "../sync.js";
 import {
   blockMessageTypeOnOutgoingPeer,
   connectNodeToSyncServer,
@@ -2055,3 +2055,106 @@ function groupStateEx(group: RawGroup) {
     id: group.core.id,
   };
 }
+
+describe("LocalNode.load", () => {
+  test("should throw error when trying to load with undefined ID", async () => {
+    const { node } = await createConnectedTestNode();
+
+    // @ts-expect-error Testing with undefined ID
+    await expect(node.load(undefined)).rejects.toThrow(
+      "Trying to load CoValue with undefined id",
+    );
+  });
+
+  test("should throw error when trying to load with invalid ID format", async () => {
+    const { node } = await createConnectedTestNode();
+
+    // @ts-expect-error Testing with invalid ID format
+    await expect(node.load("invalid_id")).rejects.toThrow(
+      "Trying to load CoValue with invalid id invalid_id",
+    );
+  });
+});
+
+describe("SyncManager.handleSyncMessage", () => {
+  test("should ignore messages with undefined ID", async () => {
+    const { node: client } = await createConnectedTestNode();
+    const peer = client.syncManager.getPeers()[0]!;
+
+    // Create an invalid message with undefined ID
+    const invalidMessage = {
+      action: "load",
+      id: undefined,
+      header: false,
+      sessions: {},
+    } as unknown as LoadMessage;
+
+    await client.syncManager.handleSyncMessage(invalidMessage, peer);
+
+    // Verify that no state changes occurred
+    expect(peer.knownStates.has(invalidMessage.id)).toBe(false);
+    expect(peer.optimisticKnownStates.has(invalidMessage.id)).toBe(false);
+  });
+
+  test("should ignore messages with invalid ID format", async () => {
+    const { node: client } = await createConnectedTestNode();
+    const peer = client.syncManager.getPeers()[0]!;
+
+    // Create an invalid message with wrong ID format
+    const invalidMessage = {
+      action: "load",
+      id: "invalid_id",
+      header: false,
+      sessions: {},
+    } as unknown as LoadMessage;
+
+    await client.syncManager.handleSyncMessage(invalidMessage, peer);
+
+    // Verify that no state changes occurred
+    expect(peer.knownStates.has(invalidMessage.id)).toBe(false);
+    expect(peer.optimisticKnownStates.has(invalidMessage.id)).toBe(false);
+  });
+
+  test("should ignore messages for errored coValues", async () => {
+    const { node: client } = await createConnectedTestNode();
+    const peer = client.syncManager.getPeers()[0]!;
+
+    // Add a coValue to the errored set
+    const erroredId = "co_z123" as const;
+    peer.erroredCoValues.set(
+      erroredId,
+      new Error("Test error") as unknown as TryAddTransactionsError,
+    );
+
+    const message = {
+      action: "load" as const,
+      id: erroredId,
+      header: false,
+      sessions: {},
+    } satisfies LoadMessage;
+
+    await client.syncManager.handleSyncMessage(message, peer);
+
+    // Verify that no state changes occurred
+    expect(peer.knownStates.has(message.id)).toBe(false);
+    expect(peer.optimisticKnownStates.has(message.id)).toBe(false);
+  });
+
+  test("should process valid messages", async () => {
+    const { node: client } = await createConnectedTestNode();
+    const group = client.createGroup();
+    const peer = client.syncManager.getPeers()[0]!;
+
+    const validMessage = {
+      action: "load" as const,
+      id: group.id,
+      header: false,
+      sessions: {},
+    };
+
+    await client.syncManager.handleSyncMessage(validMessage, peer);
+
+    // Verify that the message was processed
+    expect(peer.knownStates.has(group.id)).toBe(true);
+  });
+});

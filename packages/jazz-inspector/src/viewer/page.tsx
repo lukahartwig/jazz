@@ -1,5 +1,6 @@
 import { CoID, LocalNode, RawCoStream, RawCoValue } from "cojson";
-import { useEffect, useState } from "react";
+import { useMemo } from "react";
+import { classNames } from "../utils.js";
 import { CoStreamView } from "./co-stream-view.js";
 import { GridView } from "./grid-view.js";
 import { TableView } from "./table-viewer.js";
@@ -7,8 +8,6 @@ import { TypeIcon } from "./type-icon.js";
 import { PageInfo } from "./types.js";
 import { useResolvedCoValue } from "./use-resolve-covalue.js";
 import { AccountOrGroupPreview } from "./value-renderer.js";
-
-import { classNames } from "../utils.js";
 
 type PageProps = {
   coId: CoID<RawCoValue>;
@@ -35,16 +34,14 @@ export function Page({
     coId,
     node,
   );
-  const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
 
-  const supportsTableView = type === "colist" || extendedType === "record";
-
-  // Automatically switch to table view if the page is a CoMap record
-  useEffect(() => {
-    if (supportsTableView) {
-      setViewMode("table");
+  const viewMode = useMemo(() => {
+    if (type === "colist" || extendedType === "record") {
+      return "table";
+    } else {
+      return "grid";
     }
-  }, [supportsTableView]);
+  }, [type, extendedType]);
 
   if (snapshot === "unavailable") {
     return <div style={style}>Data unavailable</div>;

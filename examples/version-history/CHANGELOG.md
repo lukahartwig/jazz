@@ -1,5 +1,59 @@
 # version-history
 
+## 0.0.63
+
+### Patch Changes
+
+- jazz-inspector@0.12.1
+- jazz-react@0.12.1
+- jazz-tools@0.12.1
+
+## 0.0.62
+
+### Patch Changes
+
+- Updated dependencies [01523dc]
+- Updated dependencies [4ea87dc]
+- Updated dependencies [1e6da19]
+- Updated dependencies [b6c6a0a]
+- Updated dependencies [9a56bb3]
+  - jazz-tools@0.12.0
+  - jazz-inspector@0.12.0
+  - jazz-react@0.12.0
+
+## 0.0.61
+
+### Patch Changes
+
+- Updated dependencies [71b9390]
+  - jazz-inspector@0.11.8
+  - jazz-react@0.11.8
+  - jazz-tools@0.11.8
+
+## 0.0.60
+
+### Patch Changes
+
+- Updated dependencies [2c3761c]
+- Updated dependencies [a140f55]
+- Updated dependencies [4019918]
+- Updated dependencies [2b0d1b0]
+  - jazz-inspector@0.11.7
+  - jazz-tools@0.11.7
+  - jazz-react@0.11.7
+
+## 0.0.59
+
+### Patch Changes
+
+- 1bfa9bb: Removed when="singedUp" from examples apps' Jazz providers. This is a really niche use-case option and can lead to broken-feeling experiences when anonymous users try to load something.
+- Updated dependencies [e7c85b7]
+- Updated dependencies [09f0a98]
+- Updated dependencies [11da4d1]
+  - jazz-react@0.11.6
+  - jazz-tools@0.11.6
+  - jazz-inspector@0.11.6
+
 ## 0.0.58
 
 ### Patch Changes

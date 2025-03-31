@@ -10,4 +10,9 @@ export { Input } from "./ui/input.js";
 export { Select } from "./ui/select.js";
 export { Icon } from "./ui/icon.js";
 
+export {
+  resolveCoValue,
+  useResolvedCoValue,
+} from "./viewer/use-resolve-covalue.js";
+
 export type { PageInfo } from "./viewer/types.js";

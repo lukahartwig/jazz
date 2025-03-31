@@ -64,9 +64,6 @@ importers:
       hash-slash:
         specifier: workspace:*
         version: link:../../packages/hash-slash
-      jazz-browser-media-images:
-        specifier: workspace:*
-        version: link:../../packages/jazz-browser-media-images
       jazz-inspector:
         specifier: workspace:*
         version: link:../../packages/jazz-inspector
@@ -447,7 +444,7 @@ importers:
         specifier: workspace:*
         version: link:../../packages/jazz-react
       jazz-react-auth-clerk:
-        specifier: workspace:0.11.5
+        specifier: workspace:0.12.1
         version: link:../../packages/jazz-react-auth-clerk
       jazz-tools:
         specifier: workspace:*
@@ -611,9 +608,6 @@ importers:
       hash-slash:
         specifier: workspace:*
         version: link:../../packages/hash-slash
-      jazz-browser-media-images:
-        specifier: workspace:*
-        version: link:../../packages/jazz-browser-media-images
       jazz-react:
         specifier: workspace:*
         version: link:../../packages/jazz-react
@@ -669,9 +663,6 @@ importers:
 
   examples/image-upload:
     dependencies:
-      jazz-browser-media-images:
-        specifier: workspace:*
-        version: link:../../packages/jazz-browser-media-images
       jazz-react:
         specifier: workspace:*
         version: link:../../packages/jazz-react
@@ -697,9 +688,18 @@ importers:
       '@vitejs/plugin-react':
         specifier: ^4.3.3
         version: 4.3.4(vite@6.0.11(@types/node@22.10.2)(jiti@2.4.2)(lightningcss@1.29.1)(terser@5.37.0)(yaml@2.6.1))
+      autoprefixer:
+        specifier: ^10.4.20
+        version: 10.4.20(postcss@8.5.3)
       globals:
         specifier: ^15.11.0
         version: 15.14.0
+      postcss:
+        specifier: ^8.4.27
+        version: 8.5.3
+      tailwindcss:
+        specifier: ^3.4.17
+        version: 3.4.17(ts-node@10.9.2(@swc/core@1.10.1(@swc/helpers@0.5.15))(@types/node@22.10.2)(typescript@5.6.3))
       typescript:
         specifier: ~5.6.2
         version: 5.6.3
@@ -713,10 +713,10 @@ importers:
         specifier: ^2.0.0
         version: 2.1.1
       cojson:
-        specifier: workspace:0.11.5
+        specifier: workspace:0.12.1
         version: link:../../packages/cojson
       cojson-transport-ws:
-        specifier: workspace:0.11.5
+        specifier: workspace:0.12.1
         version: link:../../packages/cojson-transport-ws
       hash-slash:
         specifier: workspace:0.2.2
@@ -826,6 +826,61 @@ importers:
         specifier: ^6.0.11
         version: 6.0.11(@types/node@22.10.2)(jiti@2.4.2)(lightningcss@1.29.1)(terser@5.37.0)(yaml@2.6.1)
 
+  examples/multi-cursors:
+    dependencies:
+      '@react-spring/web':
+        specifier: ^9.7.5
+        version: 9.7.5(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      jazz-react:
+        specifier: workspace:*
+        version: link:../../packages/jazz-react
+      jazz-tools:
+        specifier: workspace:*
+        version: link:../../packages/jazz-tools
+      react:
+        specifier: 18.3.1
+        version: 18.3.1
+      react-dom:
+        specifier: 18.3.1
+        version: 18.3.1(react@18.3.1)
+    devDependencies:
+      '@biomejs/biome':
+        specifier: 1.9.4
+        version: 1.9.4
+      '@types/react':
+        specifier: ^18.3.12
+        version: 18.3.18
+      '@types/react-dom':
+        specifier: ^18.3.1
+        version: 18.3.5(@types/react@18.3.18)
+      '@vitejs/plugin-react':
+        specifier: ^4.3.3
+        version: 4.3.4(vite@6.0.11(@types/node@22.10.2)(jiti@2.4.2)(lightningcss@1.29.1)(terser@5.37.0)(yaml@2.6.1))
+      autoprefixer:
+        specifier: ^10.4.20
+        version: 10.4.20(postcss@8.5.3)
+      globals:
+        specifier: ^15.11.0
+        version: 15.14.0
+      is-ci:
+        specifier: ^3.0.1
+        version: 3.0.1
+      postcss:
+        specifier: ^8.4.27
+        version: 8.5.3
+      tailwindcss:
+        specifier: ^3.4.17
+        version: 3.4.17(ts-node@10.9.2(@swc/core@1.10.1(@swc/helpers@0.5.15))(@types/node@22.10.2)(typescript@5.6.3))
+      typescript:
+        specifier: ~5.6.2
+        version: 5.6.3
+      vite:
+        specifier: ^6.0.11
+        version: 6.0.11(@types/node@22.10.2)(jiti@2.4.2)(lightningcss@1.29.1)(terser@5.37.0)(yaml@2.6.1)
+      vitest:
+        specifier: 3.0.5
+        version: 3.0.5(@types/node@22.10.2)(@vitest/browser@3.0.5)(@vitest/ui@3.0.5)(happy-dom@16.8.1)(jiti@2.4.2)(jsdom@25.0.1)(lightningcss@1.29.1)(msw@2.7.0(@types/node@22.10.2)(typescript@5.6.3))(terser@5.37.0)(yaml@2.6.1)
+
   examples/multiauth:
     dependencies:
       '@clerk/clerk-react':
@@ -899,10 +954,10 @@ importers:
         specifier: workspace:*
         version: link:../../packages/jazz-inspector
       jazz-react:
-        specifier: workspace:0.11.5
+        specifier: workspace:0.12.1
         version: link:../../packages/jazz-react
       jazz-tools:
-        specifier: workspace:0.11.5
+        specifier: workspace:0.12.1
         version: link:../../packages/jazz-tools
       lucide-react:
         specifier: ^0.274.0
@@ -1141,10 +1196,10 @@ importers:
   examples/password-manager:
     dependencies:
       jazz-react:
-        specifier: workspace:0.11.5
+        specifier: workspace:0.12.1
         version: link:../../packages/jazz-react
       jazz-tools:
-        specifier: workspace:0.11.5
+        specifier: workspace:0.12.1
         version: link:../../packages/jazz-tools
       react:
         specifier: 18.3.1
@@ -1204,14 +1259,11 @@ importers:
       clsx:
         specifier: ^2.0.0
         version: 2.1.1
-      jazz-browser-media-images:
-        specifier: workspace:0.11.5
-        version: link:../../packages/jazz-browser-media-images
       jazz-react:
-        specifier: workspace:0.11.5
+        specifier: workspace:0.12.1
         version: link:../../packages/jazz-react
       jazz-tools:
-        specifier: workspace:0.11.5
+        specifier: workspace:0.12.1
         version: link:../../packages/jazz-tools
       lucide-react:
         specifier: ^0.274.0
@@ -1266,7 +1318,7 @@ importers:
         specifier: ^3.0.1
         version: 3.0.1
       jazz-run:
-        specifier: workspace:0.11.5
+        specifier: workspace:0.12.1
         version: link:../../packages/jazz-run
       postcss:
         specifier: ^8.4.27
@@ -1289,9 +1341,6 @@ importers:
       hash-slash:
         specifier: workspace:*
         version: link:../../packages/hash-slash
-      jazz-browser-media-images:
-        specifier: workspace:*
-        version: link:../../packages/jazz-browser-media-images
       jazz-react:
         specifier: workspace:*
         version: link:../../packages/jazz-react
@@ -1345,10 +1394,10 @@ importers:
         specifier: ^2.0.0
         version: 2.1.1
       jazz-react:
-        specifier: workspace:0.11.5
+        specifier: workspace:0.12.1
         version: link:../../packages/jazz-react
       jazz-tools:
-        specifier: workspace:0.11.5
+        specifier: workspace:0.12.1
         version: link:../../packages/jazz-tools
       lucide-react:
         specifier: ^0.274.0
@@ -1528,7 +1577,7 @@ importers:
         specifier: ^1.4.0
         version: 1.6.1
       '@opentelemetry/api':
-        specifier: ^1.0.0
+        specifier: ^1.9.0
         version: 1.9.0
       '@scure/base':
         specifier: 1.2.1
@@ -1544,8 +1593,8 @@ importers:
         version: 4.1.2
     devDependencies:
       '@opentelemetry/sdk-metrics':
-        specifier: ^1.29.0
-        version: 1.30.0(@opentelemetry/api@1.9.0)
+        specifier: ^2.0.0
+        version: 2.0.0(@opentelemetry/api@1.9.0)
       typescript:
         specifier: ~5.6.2
         version: 5.6.3
@@ -1610,7 +1659,7 @@ importers:
         specifier: ^11.7.0
         version: 11.7.0
       cojson:
-        specifier: workspace:0.11.5
+        specifier: workspace:0.12.1
         version: link:../cojson
       cojson-storage:
         specifier: workspace:*
@@ -1687,13 +1736,13 @@ importers:
   packages/jazz-auth-clerk:
     dependencies:
       cojson:
-        specifier: workspace:0.11.5
+        specifier: workspace:0.12.1
         version: link:../cojson
       jazz-browser:
-        specifier: workspace:0.11.5
+        specifier: workspace:0.12.1
         version: link:../jazz-browser
       jazz-tools:
-        specifier: workspace:0.11.5
+        specifier: workspace:0.12.1
         version: link:../jazz-tools
     devDependencies:
       typescript:
@@ -1731,10 +1780,10 @@ importers:
         specifier: ^4.1.0
         version: 4.1.0
       jazz-browser:
-        specifier: workspace:0.11.5
+        specifier: workspace:0.12.1
         version: link:../jazz-browser
       jazz-tools:
-        specifier: workspace:0.11.5
+        specifier: workspace:0.12.1
         version: link:../jazz-tools
       pica:
         specifier: ^9.0.1
@@ -1758,6 +1807,9 @@ importers:
       '@twind/preset-tailwind':
         specifier: ^1.1.4
         version: 1.1.4(@twind/core@1.1.3(typescript@5.6.3))(typescript@5.6.3)
+      clsx:
+        specifier: ^2.0.0
+        version: 2.1.1
       cojson:
         specifier: workspace:*
         version: link:../cojson
@@ -1767,9 +1819,6 @@ importers:
       jazz-tools:
         specifier: workspace:*
         version: link:../jazz-tools
-      lucide-react:
-        specifier: ^0.274.0
-        version: 0.274.0(react@18.3.1)
       react:
         specifier: 18.3.1
         version: 18.3.1
@@ -1818,16 +1867,19 @@ importers:
         specifier: ^1.3.0
         version: 1.5.0
       cojson:
-        specifier: workspace:0.11.5
+        specifier: workspace:0.12.1
         version: link:../cojson
       jazz-browser:
-        specifier: workspace:0.11.5
+        specifier: workspace:0.12.1
         version: link:../jazz-browser
+      jazz-browser-media-images:
+        specifier: workspace:0.12.1
+        version: link:../jazz-browser-media-images
       jazz-react-core:
-        specifier: workspace:*
+        specifier: workspace:0.12.1
         version: link:../jazz-react-core
       jazz-tools:
-        specifier: workspace:0.11.5
+        specifier: workspace:0.12.1
         version: link:../jazz-tools
     devDependencies:
       '@testing-library/dom':
@@ -1934,6 +1986,9 @@ importers:
       jazz-react-core:
         specifier: workspace:*
         version: link:../jazz-react-core
+      jazz-react-native-media-images:
+        specifier: workspace:*
+        version: link:../jazz-react-native-media-images
       jazz-tools:
         specifier: workspace:*
         version: link:../jazz-tools
@@ -2016,19 +2071,19 @@ importers:
         specifier: ^0.25.5
         version: 0.25.8(effect@3.11.9)
       cojson:
-        specifier: workspace:0.11.5
+        specifier: workspace:0.12.1
         version: link:../cojson
       cojson-storage-sqlite:
-        specifier: workspace:0.11.5
+        specifier: workspace:0.12.1
         version: link:../cojson-storage-sqlite
       cojson-transport-ws:
-        specifier: workspace:0.11.5
+        specifier: workspace:0.12.1
         version: link:../cojson-transport-ws
       effect:
         specifier: ^3.6.5
         version: 3.11.9
       jazz-tools:
-        specifier: workspace:0.11.5
+        specifier: workspace:0.12.1
         version: link:../jazz-tools
       ws:
         specifier: ^8.14.2
@@ -2245,12 +2300,18 @@ importers:
       cojson-storage-indexeddb:
         specifier: workspace:*
         version: link:../../packages/cojson-storage-indexeddb
+      cojson-storage-sqlite:
+        specifier: workspace:*
+        version: link:../../packages/cojson-storage-sqlite
       cojson-transport-ws:
         specifier: workspace:*
         version: link:../../packages/cojson-transport-ws
       jazz-browser:
         specifier: workspace:*
         version: link:../../packages/jazz-browser
+      jazz-browser-media-images:
+        specifier: workspace:*
+        version: link:../../packages/jazz-browser-media-images
       jazz-tools:
         specifier: workspace:*
         version: link:../../packages/jazz-tools
@@ -4259,26 +4320,26 @@ packages:
     resolution: {integrity: sha512-3giAOQvZiH5F9bMlMiv8+GSPMeqg0dbaeo58/0SlA9sxSqZhnUtxzX9/2FzyhS9sWQf5S0GJE0AKBrFqjpeYcg==}
     engines: {node: '>=8.0.0'}
 
-  '@opentelemetry/core@1.30.0':
-    resolution: {integrity: sha512-Q/3u/K73KUjTCnFUP97ZY+pBjQ1kPEgjOfXj/bJl8zW7GbXdkw6cwuyZk6ZTXkVgCBsYRYUzx4fvYK1jxdb9MA==}
-    engines: {node: '>=14'}
+  '@opentelemetry/core@2.0.0':
+    resolution: {integrity: sha512-SLX36allrcnVaPYG3R78F/UZZsBsvbc7lMCLx37LyH5MJ1KAAZ2E3mW9OAD3zGz0G8q/BtoS5VUrjzDydhD6LQ==}
+    engines: {node: ^18.19.0 || >=20.6.0}
     peerDependencies:
       '@opentelemetry/api': '>=1.0.0 <1.10.0'
 
-  '@opentelemetry/resources@1.30.0':
-    resolution: {integrity: sha512-5mGMjL0Uld/99t7/pcd7CuVtJbkARckLVuiOX84nO8RtLtIz0/J6EOHM2TGvPZ6F4K+XjUq13gMx14w80SVCQg==}
-    engines: {node: '>=14'}
-    peerDependencies:
-      '@opentelemetry/api': '>=1.0.0 <1.10.0'
-
-  '@opentelemetry/sdk-metrics@1.30.0':
-    resolution: {integrity: sha512-5kcj6APyRMvv6dEIP5plz2qfJAD4OMipBRT11u/pa1a68rHKI2Ln+iXVkAGKgx8o7CXbD7FdPypTUY88ZQgP4Q==}
-    engines: {node: '>=14'}
+  '@opentelemetry/resources@2.0.0':
+    resolution: {integrity: sha512-rnZr6dML2z4IARI4zPGQV4arDikF/9OXZQzrC01dLmn0CZxU5U5OLd/m1T7YkGRj5UitjeoCtg/zorlgMQcdTg==}
+    engines: {node: ^18.19.0 || >=20.6.0}
     peerDependencies:
       '@opentelemetry/api': '>=1.3.0 <1.10.0'
 
-  '@opentelemetry/semantic-conventions@1.28.0':
-    resolution: {integrity: sha512-lp4qAiMTD4sNWW4DbKLBkfiMZ4jbAboJIGOQr5DvciMRI494OapieI9qiODpOt0XBr1LjIDy1xAGAnVs5supTA==}
+  '@opentelemetry/sdk-metrics@2.0.0':
+    resolution: {integrity: sha512-Bvy8QDjO05umd0+j+gDeWcTaVa1/R2lDj/eOvjzpm8VQj1K1vVZJuyjThpV5/lSHyYW2JaHF2IQ7Z8twJFAhjA==}
+    engines: {node: ^18.19.0 || >=20.6.0}
+    peerDependencies:
+      '@opentelemetry/api': '>=1.9.0 <1.10.0'
+
+  '@opentelemetry/semantic-conventions@1.30.0':
+    resolution: {integrity: sha512-4VlGgo32k2EQ2wcCY3vEU28A0O13aOtHz3Xt2/2U5FAh9EfhD6t6DqL5Z6yAnRCntbTFDU4YfbpyzSlHNWycPw==}
     engines: {node: '>=14'}
 
   '@parcel/watcher-android-arm64@2.5.0':
@@ -4884,6 +4945,33 @@ packages:
 
   '@react-navigation/routers@7.1.2':
     resolution: {integrity: sha512-emdEjpVDK8zbiu2GChC8oYIAub9i/OpNuQJekVsbyFCBz4/TzaBzms38Q53YaNhdIFNmiYLfHv/Y1Ub7KYfm3w==}
+
+  '@react-spring/animated@9.7.5':
+    resolution: {integrity: sha512-Tqrwz7pIlsSDITzxoLS3n/v/YCUHQdOIKtOJf4yL6kYVSDTSmVK1LI1Q3M/uu2Sx4X3pIWF3xLUhlsA6SPNTNg==}
+    peerDependencies:
+      react: 18.3.1
+
+  '@react-spring/core@9.7.5':
+    resolution: {integrity: sha512-rmEqcxRcu7dWh7MnCcMXLvrf6/SDlSokLaLTxiPlAYi11nN3B5oiCUAblO72o+9z/87j2uzxa2Inm8UbLjXA+w==}
+    peerDependencies:
+      react: 18.3.1
+
+  '@react-spring/rafz@9.7.5':
+    resolution: {integrity: sha512-5ZenDQMC48wjUzPAm1EtwQ5Ot3bLIAwwqP2w2owG5KoNdNHpEJV263nGhCeKKmuA3vG2zLLOdu3or6kuDjA6Aw==}
+
+  '@react-spring/shared@9.7.5':
+    resolution: {integrity: sha512-wdtoJrhUeeyD/PP/zo+np2s1Z820Ohr/BbuVYv+3dVLW7WctoiN7std8rISoYoHpUXtbkpesSKuPIw/6U1w1Pw==}
+    peerDependencies:
+      react: 18.3.1
+
+  '@react-spring/types@9.7.5':
+    resolution: {integrity: sha512-HVj7LrZ4ReHWBimBvu2SKND3cDVUPWKLqRTmWe/fNY6o1owGOX0cAHbdPDTMelgBlVbrTKrre6lFkhqGZErK/g==}
+
+  '@react-spring/web@9.7.5':
+    resolution: {integrity: sha512-lmvqGwpe+CSttsWNZVr+Dg62adtKhauGwLyGE/RRyZ8AAMLgb9x3NDMA5RMElXo+IMyTkPp7nxTB8ZQlmhb6JQ==}
+    peerDependencies:
+      react: 18.3.1
+      react-dom: 18.3.1
 
   '@remix-run/node@2.15.1':
     resolution: {integrity: sha512-23xWN3/yOohNUr27KS7hEcDMbtufMkniXfXkcLx8Dz2wUVNfJYGpICjeV48Ue/INtpiUCCzOYwkL9VRjIMEJbA==}
@@ -14442,24 +14530,24 @@ snapshots:
 
   '@opentelemetry/api@1.9.0': {}
 
-  '@opentelemetry/core@1.30.0(@opentelemetry/api@1.9.0)':
+  '@opentelemetry/core@2.0.0(@opentelemetry/api@1.9.0)':
     dependencies:
       '@opentelemetry/api': 1.9.0
-      '@opentelemetry/semantic-conventions': 1.28.0
+      '@opentelemetry/semantic-conventions': 1.30.0
 
-  '@opentelemetry/resources@1.30.0(@opentelemetry/api@1.9.0)':
+  '@opentelemetry/resources@2.0.0(@opentelemetry/api@1.9.0)':
     dependencies:
       '@opentelemetry/api': 1.9.0
-      '@opentelemetry/core': 1.30.0(@opentelemetry/api@1.9.0)
-      '@opentelemetry/semantic-conventions': 1.28.0
+      '@opentelemetry/core': 2.0.0(@opentelemetry/api@1.9.0)
+      '@opentelemetry/semantic-conventions': 1.30.0
 
-  '@opentelemetry/sdk-metrics@1.30.0(@opentelemetry/api@1.9.0)':
+  '@opentelemetry/sdk-metrics@2.0.0(@opentelemetry/api@1.9.0)':
     dependencies:
       '@opentelemetry/api': 1.9.0
-      '@opentelemetry/core': 1.30.0(@opentelemetry/api@1.9.0)
-      '@opentelemetry/resources': 1.30.0(@opentelemetry/api@1.9.0)
+      '@opentelemetry/core': 2.0.0(@opentelemetry/api@1.9.0)
+      '@opentelemetry/resources': 2.0.0(@opentelemetry/api@1.9.0)
 
-  '@opentelemetry/semantic-conventions@1.28.0': {}
+  '@opentelemetry/semantic-conventions@1.30.0': {}
 
   '@parcel/watcher-android-arm64@2.5.0':
     optional: true
@@ -15133,6 +15221,38 @@ snapshots:
   '@react-navigation/routers@7.1.2':
     dependencies:
       nanoid: 3.3.8
+
+  '@react-spring/animated@9.7.5(react@18.3.1)':
+    dependencies:
+      '@react-spring/shared': 9.7.5(react@18.3.1)
+      '@react-spring/types': 9.7.5
+      react: 18.3.1
+
+  '@react-spring/core@9.7.5(react@18.3.1)':
+    dependencies:
+      '@react-spring/animated': 9.7.5(react@18.3.1)
+      '@react-spring/shared': 9.7.5(react@18.3.1)
+      '@react-spring/types': 9.7.5
+      react: 18.3.1
+
+  '@react-spring/rafz@9.7.5': {}
+
+  '@react-spring/shared@9.7.5(react@18.3.1)':
+    dependencies:
+      '@react-spring/rafz': 9.7.5
+      '@react-spring/types': 9.7.5
+      react: 18.3.1
+
+  '@react-spring/types@9.7.5': {}
+
+  '@react-spring/web@9.7.5(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+    dependencies:
+      '@react-spring/animated': 9.7.5(react@18.3.1)
+      '@react-spring/core': 9.7.5(react@18.3.1)
+      '@react-spring/shared': 9.7.5(react@18.3.1)
+      '@react-spring/types': 9.7.5
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
 
   '@remix-run/node@2.15.1(typescript@5.6.3)':
     dependencies:

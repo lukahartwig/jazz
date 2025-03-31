@@ -1,5 +1,61 @@
 # jazz-example-inspector
 
+## 0.0.119
+
+### Patch Changes
+
+- Updated dependencies [5a00fe0]
+  - cojson@0.12.1
+  - cojson-transport-ws@0.12.1
+  - jazz-inspector@0.12.1
+
+## 0.0.118
+
+### Patch Changes
+
+- Updated dependencies [01523dc]
+- Updated dependencies [01523dc]
+- Updated dependencies [9a56bb3]
+  - cojson@0.12.0
+  - jazz-inspector@0.12.0
+  - cojson-transport-ws@0.12.0
+
+## 0.0.117
+
+### Patch Changes
+
+- Updated dependencies [71b9390]
+- Updated dependencies [6c86c4f]
+- Updated dependencies [9d0c9dc]
+  - jazz-inspector@0.11.8
+  - cojson@0.11.8
+  - cojson-transport-ws@0.11.8
+
+## 0.0.116
+
+### Patch Changes
+
+- 2c3761c: fix: CoFeed and FileStream are showing as CoStream
+- Updated dependencies [2c3761c]
+- Updated dependencies [2b94bc8]
+- Updated dependencies [2957362]
+  - jazz-inspector@0.11.7
+  - cojson@0.11.7
+  - cojson-transport-ws@0.11.7
+
+## 0.0.115
+
+### Patch Changes
+
+- 09f0a98: UI and JSON display improvements
+- 11da4d1: isolate class name hashing on inspector
+- Updated dependencies [09f0a98]
+- Updated dependencies [11da4d1]
+- Updated dependencies [8ed144e]
+  - jazz-inspector@0.11.6
+  - cojson@0.11.6
+  - cojson-transport-ws@0.11.6
+
 ## 0.0.114
 
 ### Patch Changes

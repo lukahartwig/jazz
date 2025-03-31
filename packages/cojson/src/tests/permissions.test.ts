@@ -2277,30 +2277,16 @@ test("Member roles are inherited by child groups (except invites)", () => {
   parentGroup.addMember(writerInvite, "writerInvite");
   parentGroup.addMember(readerInvite, "readerInvite");
 
-  expect(group.roleOfInternal(admin.id)).toEqual({
-    role: "admin",
-    via: undefined,
-  });
+  expect(group.roleOfInternal(admin.id)).toEqual("admin");
 
-  expect(group.roleOfInternal(writer.id)).toEqual({
-    role: "writer",
-    via: parentGroup.id,
-  });
   expect(group.roleOf(writer.id)).toEqual("writer");
 
-  expect(group.roleOfInternal(reader.id)).toEqual({
-    role: "reader",
-    via: parentGroup.id,
-  });
   expect(group.roleOf(reader.id)).toEqual("reader");
 
-  expect(group.roleOfInternal(adminInvite.id)).toEqual(undefined);
   expect(group.roleOf(adminInvite.id)).toEqual(undefined);
 
-  expect(group.roleOfInternal(writerInvite.id)).toEqual(undefined);
   expect(group.roleOf(writerInvite.id)).toEqual(undefined);
 
-  expect(group.roleOfInternal(readerInvite.id)).toEqual(undefined);
   expect(group.roleOf(readerInvite.id)).toEqual(undefined);
 });
 
@@ -2324,30 +2310,16 @@ test("Member roles are inherited by grand-children groups (except invites)", () 
   grandParentGroup.addMember(writerInvite, "writerInvite");
   grandParentGroup.addMember(readerInvite, "readerInvite");
 
-  expect(group.roleOfInternal(admin.id)).toEqual({
-    role: "admin",
-    via: undefined,
-  });
+  expect(group.roleOfInternal(admin.id)).toEqual("admin");
 
-  expect(group.roleOfInternal(writer.id)).toEqual({
-    role: "writer",
-    via: parentGroup.id,
-  });
   expect(group.roleOf(writer.id)).toEqual("writer");
 
-  expect(group.roleOfInternal(reader.id)).toEqual({
-    role: "reader",
-    via: parentGroup.id,
-  });
   expect(group.roleOf(reader.id)).toEqual("reader");
 
-  expect(group.roleOfInternal(adminInvite.id)).toEqual(undefined);
   expect(group.roleOf(adminInvite.id)).toEqual(undefined);
 
-  expect(group.roleOfInternal(writerInvite.id)).toEqual(undefined);
   expect(group.roleOf(writerInvite.id)).toEqual(undefined);
 
-  expect(group.roleOfInternal(readerInvite.id)).toEqual(undefined);
   expect(group.roleOf(readerInvite.id)).toEqual(undefined);
 });
 

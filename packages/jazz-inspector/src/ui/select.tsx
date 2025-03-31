@@ -8,7 +8,7 @@ export function Select(
     hideLabel?: boolean;
   },
 ) {
-  const { label, hideLabel, id: customId, className } = props;
+  const { label, hideLabel, id: customId, className, ...selectProps } = props;
   const generatedId = useId();
   const id = customId || generatedId;
 
@@ -34,7 +34,7 @@ export function Select(
       </label>
 
       <div className={classNames("relative flex items-center")}>
-        <select {...props} id={id} className={selectClassName}>
+        <select {...selectProps} id={id} className={selectClassName}>
           {props.children}
         </select>
 

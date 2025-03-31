@@ -18,10 +18,11 @@ export const TypeIcon = ({
     record: "{} Record",
     image: "🖼️ Image",
     comap: "{} CoMap",
-    costream: "≋ CoStream",
+    costream: "≋ CoFeed",
     colist: "☰ CoList",
     account: "👤 Account",
     group: "👥 Group",
+    file: "📃 FileStream",
   };
 
   const iconKey = extendedType || type;

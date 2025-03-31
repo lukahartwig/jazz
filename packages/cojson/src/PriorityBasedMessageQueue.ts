@@ -33,10 +33,70 @@ type Tuple<T, N extends number, A extends unknown[] = []> = A extends {
 }
   ? A
   : Tuple<T, N, [...A, T]>;
-type QueueTuple = Tuple<QueueEntry[], 8>;
+
+type QueueTuple = Tuple<LinkedList<QueueEntry>, 8>;
+
+type LinkedListNode<T> = {
+  value: T;
+  next: LinkedListNode<T> | undefined;
+};
+
+/**
+ * Using a linked list to make the shift operation O(1) instead of O(n)
+ * as our queues can grow very large when the system is under pressure.
+ */
+export class LinkedList<T> {
+  head: LinkedListNode<T> | undefined = undefined;
+  tail: LinkedListNode<T> | undefined = undefined;
+  length = 0;
+
+  push(value: T) {
+    const node = { value, next: undefined };
+
+    if (this.head === undefined) {
+      this.head = node;
+      this.tail = node;
+    } else if (this.tail) {
+      this.tail.next = node;
+      this.tail = node;
+    } else {
+      throw new Error("LinkedList is corrupted");
+    }
+
+    this.length++;
+  }
+
+  shift() {
+    if (!this.head) {
+      return undefined;
+    }
+
+    const node = this.head;
+    const value = node.value;
+    this.head = node.next;
+    node.next = undefined;
+
+    if (this.head === undefined) {
+      this.tail = undefined;
+    }
+
+    this.length--;
+
+    return value;
+  }
+}
 
 export class PriorityBasedMessageQueue {
-  private queues: QueueTuple = [[], [], [], [], [], [], [], []];
+  private queues: QueueTuple = [
+    new LinkedList<QueueEntry>(),
+    new LinkedList<QueueEntry>(),
+    new LinkedList<QueueEntry>(),
+    new LinkedList<QueueEntry>(),
+    new LinkedList<QueueEntry>(),
+    new LinkedList<QueueEntry>(),
+    new LinkedList<QueueEntry>(),
+    new LinkedList<QueueEntry>(),
+  ];
   queueSizeCounter = metrics
     .getMeter("cojson")
     .createUpDownCounter("jazz.messagequeue.size", {
