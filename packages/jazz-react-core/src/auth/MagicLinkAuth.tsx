@@ -1,9 +1,10 @@
 import {
+  Account,
   MagicLinkAuth,
   MagicLinkAuthOptions,
   waitForCoValueCondition,
 } from "jazz-tools";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAuthSecretStorage, useJazzContext } from "../hooks.js";
 
 export function useCreateMagicLinkAuthAsProvider(
@@ -19,8 +20,10 @@ export function useCreateMagicLinkAuthAsProvider(
     | "idle"
     | "waitingForConsumer"
     | "waitingForConfirmLogIn"
+    | "confirmedLogIn"
     | "authorized"
     | "expired"
+    | "error"
   >("idle");
   const [confirmLogIn, setConfirmLogIn] = useState<null | (() => void)>(null);
 
@@ -70,6 +73,7 @@ export function useCreateMagicLinkAuthAsProvider(
             );
             setConfirmLogIn(null);
           }
+          setStatus("confirmedLogIn");
 
           // Check if the transfer has expired
           if (transfer.expiresAt && transfer.expiresAt < new Date()) {
@@ -89,6 +93,7 @@ export function useCreateMagicLinkAuthAsProvider(
           setStatus("authorized");
         } catch (error) {
           console.error("Magic Link Auth error", error);
+          setStatus("error");
           setConfirmLogIn(null);
         }
       }
@@ -165,12 +170,19 @@ export function useHandleMagicLinkAuthAsConsumer(
   origin: string,
   url: string,
   {
+    confirmLogInTimeout = 15 * 60 * 1000,
     onLoggedIn,
     ...options
-  }: Partial<{ onLoggedIn: () => void } & MagicLinkAuthOptions> = {},
+  }: Partial<
+    {
+      confirmLogInTimeout: number;
+      onLoggedIn: () => void;
+    } & MagicLinkAuthOptions
+  > = {},
 ) {
   const context = useJazzContext();
   const authSecretStorage = useAuthSecretStorage();
+  const hasRunRef = useRef(false);
 
   const [status, setStatus] = useState<
     "init" | "waitingForProvider" | "authorized" | "error"
@@ -187,19 +199,23 @@ export function useHandleMagicLinkAuthAsConsumer(
   }, [origin, options]);
 
   useEffect(() => {
+    if (hasRunRef.current) return;
+    hasRunRef.current = true;
+
     async function handleFlow() {
       try {
-        // Read URL and load transfer
         let transfer = await magicLinkAuth.acceptTransferUrl(url, "consumer");
-        transfer = await magicLinkAuth.handleTransferAsConsumer(transfer);
+        transfer.acceptedBy = transfer._loadedAs as Account;
 
-        // Wait for the provider to set the transfer secret
-        transfer = await waitForCoValueCondition(transfer, {}, (t) =>
-          Boolean(t.secret),
+        setStatus("waitingForProvider");
+        transfer = await waitForCoValueCondition(
+          transfer,
+          {},
+          (t) => Boolean(t.secret),
+          confirmLogInTimeout,
         );
         if (!transfer.secret) throw new Error("Transfer secret not set");
 
-        // Log in using the transfer secret
         setStatus("authorized");
         await magicLinkAuth.logInViaTransfer(transfer);
         onLoggedIn?.();
@@ -227,6 +243,7 @@ export function useHandleMagicLinkAuthAsProvider(
 ) {
   const context = useJazzContext();
   const authSecretStorage = useAuthSecretStorage();
+  const hasRunRef = useRef(false);
 
   const [status, setStatus] = useState<
     "init" | "waitingForConfirmLogIn" | "authorized" | "expired" | "error"
@@ -243,6 +260,9 @@ export function useHandleMagicLinkAuthAsProvider(
   }, [origin, options]);
 
   useEffect(() => {
+    if (hasRunRef.current) return;
+    hasRunRef.current = true;
+
     async function handleFlow() {
       try {
         const transfer = await magicLinkAuth.acceptTransferUrl(url, "provider");
