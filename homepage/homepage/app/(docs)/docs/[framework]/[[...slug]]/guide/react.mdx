@@ -50,11 +50,11 @@ Collaborative Values (CoValues), build a UI and subscribe to changes, set permis
     import ReactDOM from "react-dom/client"; 
     import App from "./App.tsx"; 
     import "./index.css"; 
-    import { JazzProvider } from "jazz-react";  // [!code focus]
+    import { JazzProvider } from "jazz-react";  // [!code ++]
 
     ReactDOM.createRoot(document.getElementById("root")!).render( 
         <React.StrictMode> 
-            <JazzProvider // [!code focus:6]
+            <JazzProvider // [!code ++:6]
                 // replace `you@example.com` with your email as a temporary API key
                 sync={{ peer: "wss://cloud.jazz.tools/?key=you@example.com" }}
             >
@@ -170,7 +170,7 @@ import { IssueComponent } from "./components/Issue.tsx";
 function App() {
     const [issue, setIssue] = useState<Issue>();
 
-    const createIssue = () => { // [!code focus:11]
+    const createIssue = () => { // [!code ++:11]
         const newIssue = Issue.create(
             {
                 title: "Buy terrarium",
@@ -237,14 +237,14 @@ Let's modify `src/App.tsx`:
 import { useState } from "react"; 
 import { Issue } from "./schema"; 
 import { IssueComponent } from "./components/Issue.tsx"; 
-import { useCoState } from "jazz-react"; // [!code focus]
-import { ID } from "jazz-tools" // [!code focus]
+import { useCoState } from "jazz-react"; // [!code ++]
+import { ID } from "jazz-tools" // [!code ++]
 
 function App() { 
     const [issue, setIssue] = useState<Issue>(); // [!code --]
-    const [issueID, setIssueID] = useState<ID<Issue>>(); // [!code focus]
+    const [issueID, setIssueID] = useState<ID<Issue>>(); // [!code ++]
     
-    const issue = useCoState(Issue, issueID); // [!code focus]
+    const issue = useCoState(Issue, issueID); // [!code ++]
     
     const createIssue = () => {
         const newIssue = Issue.create(
@@ -279,7 +279,7 @@ import { Issue } from "../schema";
 export function IssueComponent({ issue }: { issue: Issue }) { 
     return ( 
         <div className="grid grid-cols-6 text-sm border-r border-b [&>*]:p-2 [&>*]:border-l [&>*]:border-t"> 
-            <input type="text" // [!code focus:22]
+            <input type="text" // [!code ++:22]
                 value={issue.title}
                 onChange={(event) => { issue.title = event.target.value }}/>
             <textarea className="col-span-3"
@@ -388,7 +388,7 @@ import { useCoState } from "jazz-react";
 import { ID } from "jazz-tools" 
 
 function App() { 
-    const [issueID, setIssueID] = useState<ID<Issue> | undefined>( // [!code focus:3]
+    const [issueID, setIssueID] = useState<ID<Issue> | undefined>( // [!code ++:3]
         (window.location.search?.replace("?issue=", "") || undefined) as ID<Issue> | undefined,
     );
     
@@ -404,7 +404,7 @@ function App() {
             }, 
         ); 
         setIssueID(newIssue.id); 
-        window.history.pushState({}, "", `?issue=${newIssue.id}`); // [!code focus]
+        window.history.pushState({}, "", `?issue=${newIssue.id}`); // [!code ++]
     }; 
     
     if (issue) { 
@@ -443,11 +443,11 @@ All we have to do is create a new group to own each new issue and add "everyone"
 import { useState } from "react"; 
 import { Issue } from "./schema"; 
 import { IssueComponent } from "./components/Issue.tsx"; 
-import { useAccount, useCoState } from "jazz-react"; // [!code focus:2]
+import { useAccount, useCoState } from "jazz-react"; // [!code ++:2]
 import { ID, Group } from "jazz-tools"
 
 function App() { 
-    const { me } = useAccount(); // [!code focus]
+    const { me } = useAccount(); // [!code ++]
     const [issueID, setIssueID] = useState<ID<Issue> | undefined>(
         (window.location.search?.replace("?issue=", "") || undefined) as ID<Issue> | undefined,
     ); 
@@ -455,7 +455,7 @@ function App() {
     const issue = useCoState(Issue, issueID); 
     
     const createIssue = () => { 
-        const group = Group.create(); // [!code focus:2]
+        const group = Group.create(); // [!code ++:2]
         group.addMember("everyone", "writer");
         
         const newIssue = Issue.create( 
@@ -465,7 +465,7 @@ function App() {
                 estimate: 5, 
                 status: "backlog", 
             }, 
-            { owner: group }, // [!code focus]
+            { owner: group }, // [!code ++]
         ); 
         setIssueID(newIssue.id); 
         window.history.pushState({}, "", `?issue=${newIssue.id}`); 
@@ -509,7 +509,7 @@ Add the following to `src/schema.ts`:
 
 <CodeGroup>
 ```ts
-import { CoMap, CoList, co } from "jazz-tools"; // [!code focus]
+import { CoMap, CoList, co } from "jazz-tools"; // [!code ++]
 
 export class Issue extends CoMap { 
     title = co.string; 
@@ -518,7 +518,7 @@ export class Issue extends CoMap {
     status? = co.optional.literal("backlog", "in progress", "done"); 
 } 
 
-export class ListOfIssues extends CoList.Of(co.ref(Issue)) {} // [!code focus:6]
+export class ListOfIssues extends CoList.Of(co.ref(Issue)) {} // [!code ++:6]
 
 export class Project extends CoMap {
     name = co.string;
@@ -535,18 +535,18 @@ First, we'll change `App.tsx` to create and render `Project`s instead of `Issue`
 {/* prettier-ignore */}
 ```tsx
 import { useState } from "react"; 
-import { Project, ListOfIssues } from "./schema"; // [!code focus:3]
+import { Project, ListOfIssues } from "./schema"; // [!code ++:3]
 import { ProjectComponent } from "./components/Project.tsx";
 import { ID, Group } from "jazz-tools"
 
 function App() { 
-    const [projectID, setProjectID] = useState<ID<Project> | undefined>( // [!code focus:3]
+    const [projectID, setProjectID] = useState<ID<Project> | undefined>( // [!code ++:3]
         (window.location.search?.replace("?project=", "") || undefined) as ID<Project> | undefined
     );
     
     const issue = useCoState(Issue, issueID); // [!code --]
     
-    const createProject = () => { // [!code focus:14]
+    const createProject = () => { // [!code ++:14]
         const group = Group.create();
         group.addMember("everyone", "writer");
 
@@ -561,7 +561,7 @@ function App() {
         window.history.pushState({}, "", `?project=${newProject.id}`);
     };
     
-    if (projectID) { // [!code focus:4]
+    if (projectID) { // [!code ++:4]
         return <ProjectComponent projectID={projectID} />;
     } else {
         return <button onClick={createProject}>Create Project</button>;
@@ -750,18 +750,18 @@ import { ID } from "jazz-tools";
 import { Project, Issue } from "../schema"; 
 import { IssueComponent } from "./Issue.tsx"; 
 import { useCoState } from "jazz-react"; 
-import { createInviteLink } from "jazz-react"; // [!code focus]
+import { createInviteLink } from "jazz-react"; // [!code ++]
 
 
 export function ProjectComponent({ projectID }: { projectID: ID<Project> }) {
     const project = useCoState(Project, projectID, { resolve: { issues:  { $each: true } } }); 
 
-    const { me } = useAccount(); // [!code focus]
+    const { me } = useAccount(); // [!code ++]
 
-    const invite = (role: "reader" | "writer") => { // [!code focus]
-        const link = createInviteLink(project, role, { valueHint: "project" }); // [!code focus]
-        navigator.clipboard.writeText(link); // [!code focus]
-    }; // [!code focus]
+    const invite = (role: "reader" | "writer") => { // [!code ++]
+        const link = createInviteLink(project, role, { valueHint: "project" }); // [!code ++]
+        navigator.clipboard.writeText(link); // [!code ++]
+    }; // [!code ++]
 
     const createAndAddIssue = () => {
         project?.issues.push(Issue.create({ 
@@ -775,7 +775,7 @@ export function ProjectComponent({ projectID }: { projectID: ID<Project> }) {
     return project ? (
         <div>
             <h1>{project.name}</h1>
-            {me.canAdmin(project) && ( // [!code focus:6]
+            {me.canAdmin(project) && ( // [!code ++:6]
                 <>
                     <button onClick={() => invite("reader")}>Invite Guest</button>
                     <button onClick={() => invite("writer")}>Invite Member</button>

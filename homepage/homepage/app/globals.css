@@ -24,6 +24,7 @@
 pre.shiki {
   height: 100%;
   padding: 0.65em 0;
+  background-color: transparent !important;
 }
 
 .twoslash-popup-code pre.shiki {
@@ -76,10 +77,6 @@ html.dark .shiki span {
 html.dark {
   --twoslash-popup-bg: #1b1a1a;
   --twoslash-border-color: #2f2e2e;
-}
-
-.shiki .line.focused {
-  @apply bg-stone-100 dark:bg-stone-900;
 }
 
 @import "@shikijs/twoslash/style-rich.css";

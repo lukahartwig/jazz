@@ -1,8 +1,5 @@
 import createMDX from "@next/mdx";
-import {
-  transformerNotationDiff,
-  transformerNotationFocus,
-} from "@shikijs/transformers";
+import { transformerNotationDiff } from "@shikijs/transformers";
 import { transformerTwoslash } from "@shikijs/twoslash";
 import withToc from "@stefanprobst/rehype-extract-toc";
 import withTocExport from "@stefanprobst/rehype-extract-toc/mdx";
@@ -75,7 +72,6 @@ function highlightPlugin() {
                 : undefined,
           }),
           transformerNotationDiff(),
-          transformerNotationFocus(),
         ],
       });
 

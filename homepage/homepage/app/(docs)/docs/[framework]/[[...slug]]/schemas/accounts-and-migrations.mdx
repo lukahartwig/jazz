@@ -86,7 +86,7 @@ If you want to extend the `profile` to contain additional fields (such as an ava
 import { Account, Profile, ImageDefinition } from "jazz-tools";
 
 export class MyAppAccount extends Account {
-  profile = co.ref(MyAppProfile); // [!code focus]
+  profile = co.ref(MyAppProfile); // [!code ++]
   root = co.ref(MyAppRoot);
 }
 
@@ -95,7 +95,7 @@ export class MyAppRoot extends CoMap {
   myContacts = co.ref(ListOfAccounts);
 }
 
-export class MyAppProfile extends Profile { // [!code focus:4]
+export class MyAppProfile extends Profile { // [!code ++:4]
   name = co.string; // compatible with default Profile schema
   avatar = co.optional.ref(ImageDefinition);
 }
@@ -214,13 +214,13 @@ export class MyAppAccount extends Account {
       } 
 
       // We need to load the root field to check for the myContacts field
-      const { root } = await this.ensureLoaded({ // [!code focus:3]
+      const { root } = await this.ensureLoaded({ // [!code ++:3]
         root: {},
       });
 
       // we specifically need to check for undefined,
       // because myBookmarks might simply be not loaded (`null`) yet
-      if (root.myBookmarks === undefined) { // [!code focus:3]
+      if (root.myBookmarks === undefined) { // [!code ++:3]
         root.myBookmarks = ListOfBookmarks.create([], Group.create());
       }
     }
