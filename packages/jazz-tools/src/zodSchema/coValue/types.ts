@@ -68,7 +68,12 @@ export type Loaded<
 > = R extends never
   ? never
   : S extends AnyCoMapSchema
-    ? LoadedCoMap<CoMapClassToSchema<S>, R, Options, CurrentDepth>
+    ? LoadedCoMap<
+        CoMapSchema<S["shape"], S["record"], false>,
+        R,
+        Options,
+        CurrentDepth
+      >
     : never;
 
 export type LoadedCoMap<

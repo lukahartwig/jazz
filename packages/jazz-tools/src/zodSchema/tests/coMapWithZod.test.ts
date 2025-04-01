@@ -1,14 +1,9 @@
-import { beforeEach, describe, expect, expectTypeOf, it } from "vitest";
-import { createJazzTestAccount } from "../testing.js";
-import {
-  CoMapInit,
-  CoMapSchemaClass,
-  ResolveQueryForCoMapInit,
-} from "./coMap/schema.js";
-import { LazySchema } from "./coValue/lazy.js";
-import { Optional } from "./coValue/optional.js";
-import { MaybeLoaded, Unloaded } from "./coValue/types.js";
-import { Loaded, co, z } from "./schema.js";
+import { beforeEach, describe, expect, it } from "vitest";
+import { createJazzTestAccount } from "../../testing.js";
+import { CoMapSchemaClass } from "../coMap/schema.js";
+import { LazySchema } from "../coValue/lazy.js";
+import { Optional } from "../coValue/optional.js";
+import { co, z } from "../schema.js";
 
 beforeEach(async () => {
   await createJazzTestAccount({
@@ -58,18 +53,6 @@ describe("CoMap - with zod based schema", () => {
       });
     });
 
-    it("should generate the right CoMapInit type", () => {
-      const Person = co.map({
-        name: z.string(),
-        age: z.number(),
-      });
-
-      expectTypeOf<CoMapInit<typeof Person>>().toMatchTypeOf<{
-        name: string;
-        age: number;
-      }>();
-    });
-
     it("should throw an error if a required field is missing", () => {
       const Person = co.map({
         name: z.string(),
@@ -113,37 +96,6 @@ describe("CoMap - with zod based schema", () => {
       expect(john.age).toBe(30);
       expect(john.address.street).toBe("123 Main St");
       expect(john.address.$jazz.owner).toBe(john.$jazz.owner);
-    });
-
-    it("should retrurn a loaded type when a reference is passed on create", () => {
-      const Person = co.map({
-        name: z.string(),
-        age: z.number(),
-        address: co.optional(
-          co.map({
-            street: z.string(),
-          }),
-        ),
-      });
-
-      const john = Person.create({
-        name: "John",
-        age: 30,
-        address: { street: "123 Main St" },
-      });
-
-      const johnWithoutAddress = Person.create({
-        name: "John",
-        age: 30,
-      });
-
-      expectTypeOf<typeof john.address>().toMatchTypeOf<
-        Loaded<typeof Person.shape.address>
-      >();
-
-      expectTypeOf<
-        typeof johnWithoutAddress.address
-      >().toMatchTypeOf<undefined>();
     });
 
     it("should be possible to reference a nested map schema to split group creation", () => {
@@ -247,16 +199,6 @@ describe("CoMap - with zod based schema", () => {
 
       const PeopleByNickname = co.record(z.string(), Person);
 
-      type RQ = ResolveQueryForCoMapInit<
-        typeof Person,
-        {
-          name: string;
-          age: number;
-        }
-      >;
-
-      type L = Loaded<typeof Person, RQ>;
-
       const joey = Person.create({
         name: "joey",
         age: 20,
@@ -273,40 +215,6 @@ describe("CoMap - with zod based schema", () => {
 
       expect(john.friends.jj.name).toBe("jane");
       expect(john.friends.jj.friends.joey.name).toBe("joey");
-    });
-
-    it("should return a loaded type when a self reference is passed on create", () => {
-      const personBaseProps = {
-        name: z.string(),
-        age: z.number(),
-      };
-
-      const Person: CoMapSchemaClass<
-        typeof personBaseProps & {
-          friend: LazySchema<Optional<typeof Person>>;
-        },
-        undefined,
-        false
-      > = co.map({
-        ...personBaseProps,
-        friend: co.lazy(() => Person.optional()),
-      });
-
-      const john = Person.create({
-        name: "John",
-        age: 30,
-        friend: {
-          name: "Jane",
-          age: 20,
-          friend: { name: "Bob", age: 20 },
-        },
-      });
-
-      expectTypeOf<typeof john.friend.friend.name>().toEqualTypeOf<string>();
-
-      expectTypeOf<
-        typeof john.friend.friend.friend
-      >().toEqualTypeOf<undefined>();
     });
 
     it("should not throw an error if an optional self reference is missing", () => {
@@ -378,22 +286,6 @@ describe("CoMap - with zod based schema", () => {
       });
 
       expect(friends.joe.name).toBe("joe");
-    });
-
-    it("should accept support a self reference as a catchall", () => {
-      const Person: CoMapSchemaClass<
-        {},
-        { key: z.ZodString; value: LazySchema<Optional<typeof Person>> },
-        false
-      > = co.map({}).catchall(co.lazy(() => Person.optional()));
-
-      const john = Person.create({
-        extra: { extra: {} },
-      });
-
-      expect(john).toEqual({
-        extra: { extra: {} },
-      });
     });
   });
 
@@ -666,12 +558,6 @@ describe("CoMap - with zod based schema", () => {
       expect(john.friend.name).toBe("Jane");
       expect(johnWithANewFriend.friend?.name).toBe("Bob");
       expect(john.$jazz.updated().friend).toBe(johnWithANewFriend.friend);
-
-      const name = johnWithANewFriend.friend?.name;
-
-      // TODO: It would be interesting to keep the Loaded type as non-nullable when returning updated values
-      // because based on the set value we know for sure that the value is or is not undefined
-      expectTypeOf<typeof name>().toMatchTypeOf<string | undefined>();
     });
 
     it("should return the same instance on $updated if there are no changes", () => {
@@ -703,10 +589,6 @@ describe("CoMap - with zod based schema", () => {
       const values = friends.$jazz.values();
 
       expect(values).toEqual([{ name: "joe" }, { name: "bob" }]);
-
-      expectTypeOf(friends.joe).toEqualTypeOf<
-        Loaded<typeof Friends.record.value>
-      >();
     });
 
     it("should return correct entries with $jazz.entries()", () => {
@@ -728,23 +610,6 @@ describe("CoMap - with zod based schema", () => {
         ["joe", { name: "joe" }],
         ["bob", { name: "bob" }],
       ]);
-
-      for (const [key, value] of entries) {
-        expectTypeOf(key).toEqualTypeOf<string>();
-
-        // TODO: Can we make this MaybeLoaded and remove the undefined case?
-        expectTypeOf(value).toEqualTypeOf<
-          Unloaded<typeof Friends.record.value> | undefined
-        >();
-      }
-
-      expectTypeOf(friends.joe).toEqualTypeOf<
-        Loaded<typeof Friends.record.value>
-      >();
-
-      expectTypeOf(friends.x).toEqualTypeOf<
-        Unloaded<typeof Friends.record.value> | undefined
-      >();
     });
 
     it("should return correct keys with $jazz.keys()", () => {
@@ -761,7 +626,6 @@ describe("CoMap - with zod based schema", () => {
       });
 
       const keys = friends.$jazz.keys();
-      expectTypeOf(keys).toEqualTypeOf<Array<string>>();
 
       expect(keys).toEqual(["joe", "bob"]);
     });

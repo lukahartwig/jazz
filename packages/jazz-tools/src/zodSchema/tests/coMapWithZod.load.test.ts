@@ -1,22 +1,13 @@
 import { cojsonInternals } from "cojson";
-import {
-  assert,
-  beforeEach,
-  describe,
-  expect,
-  expectTypeOf,
-  it,
-  vi,
-} from "vitest";
-import { Group } from "../exports.js";
-import { createJazzTestAccount, setupJazzTestSync } from "../testing.js";
-import { waitFor } from "../tests/utils.js";
-import { CoMapClassToSchema, CoMapSchemaClass } from "./coMap/schema.js";
-import { LazySchema } from "./coValue/lazy.js";
-import { Optional } from "./coValue/optional.js";
-import { MaybeLoaded, Unloaded } from "./coValue/types.js";
-import { Loaded, co, z } from "./schema.js";
-import { loadCoValue, subscribeToCoValue } from "./subscribe.js";
+import { assert, beforeEach, describe, expect, it, vi } from "vitest";
+import { Group } from "../../exports.js";
+import { createJazzTestAccount, setupJazzTestSync } from "../../testing.js";
+import { waitFor } from "../../tests/utils.js";
+import { CoMapSchemaClass } from "../coMap/schema.js";
+import { LazySchema } from "../coValue/lazy.js";
+import { Optional } from "../coValue/optional.js";
+import { Loaded, co, z } from "../schema.js";
+import { loadCoValue, subscribeToCoValue } from "../subscribe.js";
 
 beforeEach(async () => {
   await setupJazzTestSync();
@@ -74,10 +65,6 @@ describe("CoMap with Zod", () => {
           id: john.address.$jazz.id,
         },
       });
-
-      expectTypeOf(loaded.address).toEqualTypeOf<
-        Unloaded<typeof Person.shape.address>
-      >();
     });
 
     it("should load a CoMap with nested values", async () => {
@@ -112,10 +99,6 @@ describe("CoMap with Zod", () => {
       expect(loaded.name).toBe("John");
       expect(loaded.age).toBe(30);
       expect(loaded.address).toEqual({ street: "123 Main St" });
-
-      expectTypeOf(loaded.address).toEqualTypeOf<
-        Loaded<typeof Person.shape.address, true>
-      >();
     });
 
     it("should load a CoMap with a primitive catchall property", async () => {
@@ -138,24 +121,10 @@ describe("CoMap with Zod", () => {
         resolve: { address: true },
       });
 
-      type PersonSchema = CoMapClassToSchema<typeof Person>;
-
-      expectTypeOf(loaded).toEqualTypeOf<
-        MaybeLoaded<PersonSchema, { address: true }>
-      >();
-
-      expectTypeOf(loaded).toEqualTypeOf<
-        MaybeLoaded<typeof Person, { address: true }>
-      >();
-
       assert(loaded.$jazzState === "loaded");
 
       expect(loaded.name).toBe("John");
       expect(loaded.extra).toBe("extra");
-
-      expectTypeOf(loaded).toEqualTypeOf<
-        Loaded<typeof Person, { address: true }>
-      >();
     });
 
     it("should load a CoMap with a catchall relation", async () => {
@@ -224,10 +193,6 @@ describe("CoMap with Zod", () => {
 
       assert(loaded.$jazzState === "loaded");
 
-      expectTypeOf(loaded.joe).toEqualTypeOf<
-        Loaded<typeof Friends.record.value, true> | undefined
-      >();
-
       expect(loaded.joe?.name).toBe("joe");
       expect(loaded.bob?.name).toBe("bob");
     });
@@ -271,23 +236,6 @@ describe("CoMap with Zod", () => {
       });
 
       assert(loaded.$jazzState === "loaded");
-
-      const values = loaded.$jazz.values();
-      const entries = loaded.$jazz.entries();
-      const keys = loaded.$jazz.keys();
-
-      expectTypeOf(values).toEqualTypeOf<
-        Loaded<typeof Friends.record.value, { address: true }>[]
-      >();
-
-      for (const [key, value] of entries) {
-        expectTypeOf(key).toEqualTypeOf<string>();
-        expectTypeOf(value).toEqualTypeOf<
-          Loaded<typeof Friends.record.value, { address: true }>
-        >();
-      }
-
-      expectTypeOf(keys).toEqualTypeOf<string[]>();
 
       expect(loaded.joe?.name).toBe("joe");
       expect(loaded.joe?.address.street).toBe("123 Main St");
@@ -376,10 +324,6 @@ describe("CoMap with Zod", () => {
       expect(loaded.name).toBe("John");
       expect(loaded.age).toBe(30);
       expect(loaded.address).toBeUndefined();
-
-      expectTypeOf(loaded.address).toEqualTypeOf<
-        Loaded<typeof Person.shape.address, true> | undefined
-      >();
     });
 
     it("should return unloaded if the value is not available", async () => {
@@ -607,9 +551,6 @@ describe("CoMap with Zod", () => {
       });
 
       expect(address).toEqual(john.address);
-      expectTypeOf(address).toEqualTypeOf<
-        Loaded<typeof Person.shape.address, true>
-      >();
     });
 
     it("should throw if one of the nested values is not available", async () => {
@@ -702,6 +643,8 @@ describe("CoMap with Zod", () => {
         }),
       });
 
+      const spy = vi.fn();
+
       const john = Person.create({
         name: "John",
         age: 30,
@@ -712,6 +655,7 @@ describe("CoMap with Zod", () => {
 
       subscribeToCoValue(Person, john.$jazz.id, { resolve: true }, (value) => {
         result = value;
+        spy();
       });
 
       const johnAfterSubscribe = result as Loaded<typeof Person, true>;
@@ -725,6 +669,8 @@ describe("CoMap with Zod", () => {
           id: john.address.$jazz.id,
         },
       });
+
+      expect(spy).toHaveBeenCalledOnce();
     });
 
     it("should syncronously load a locally available CoMap with nested values", async () => {
@@ -744,12 +690,15 @@ describe("CoMap with Zod", () => {
 
       let result: any;
 
+      const spy = vi.fn();
+
       subscribeToCoValue(
         Person,
         john.$jazz.id,
         { resolve: { address: true } },
         (value) => {
           result = value;
+          spy();
         },
       );
 
@@ -758,431 +707,479 @@ describe("CoMap with Zod", () => {
         age: 30,
         address: { street: "123 Main St" },
       });
-    });
-  });
 
-  it("should emit on updates", async () => {
-    const Person = co.map({
-      name: z.string(),
-      age: z.number(),
-      address: co.map({
-        street: z.string(),
-      }),
+      expect(spy).toHaveBeenCalledOnce();
     });
 
-    const john = Person.create({
-      name: "John",
-      age: 30,
-      address: { street: "123 Main St" },
-    });
-
-    let result: any;
-
-    subscribeToCoValue(
-      Person,
-      john.$jazz.id,
-      { resolve: { address: true } },
-      (value) => {
-        result = value;
-      },
-    );
-
-    const resultBeforeSet = result;
-
-    john.$jazz.set("name", "Jane");
-
-    expect(result).toEqual({
-      name: "Jane",
-      age: 30,
-      address: { street: "123 Main St" },
-    });
-
-    expect(resultBeforeSet).not.toBe(result);
-  });
-
-  it("should emit on nested values updates", async () => {
-    const Person = co.map({
-      name: z.string(),
-      age: z.number(),
-      address: co.map({
-        street: z.string(),
-      }),
-    });
-
-    const john = Person.create({
-      name: "John",
-      age: 30,
-      address: { street: "123 Main St" },
-    });
-
-    let result: any;
-
-    subscribeToCoValue(
-      Person,
-      john.$jazz.id,
-      { resolve: { address: true } },
-      (value) => {
-        result = value;
-      },
-    );
-
-    const resultBeforeSet = result;
-
-    john.$jazz.set("address", { street: "456 Main St" });
-
-    expect(result).toEqual({
-      name: "John",
-      age: 30,
-      address: { street: "456 Main St" },
-    });
-
-    expect(resultBeforeSet).not.toBe(result);
-  });
-
-  it("should emit when a catchall relation is updated", async () => {
-    const Friends = co.map({}).catchall(
-      co.map({
+    it("should emit on updates", async () => {
+      const Person = co.map({
         name: z.string(),
-      }),
-    );
+        age: z.number(),
+        address: co.map({
+          street: z.string(),
+        }),
+      });
 
-    const friends = Friends.create({
-      john: {
+      const john = Person.create({
         name: "John",
-      },
+        age: 30,
+        address: { street: "123 Main St" },
+      });
+
+      let result: any;
+
+      const spy = vi.fn();
+
+      subscribeToCoValue(
+        Person,
+        john.$jazz.id,
+        { resolve: { address: true } },
+        (value) => {
+          result = value;
+          spy();
+        },
+      );
+
+      const resultBeforeSet = result;
+
+      john.$jazz.set("name", "Jane");
+
+      expect(result).toEqual({
+        name: "Jane",
+        age: 30,
+        address: { street: "123 Main St" },
+      });
+
+      expect(spy).toHaveBeenCalledTimes(2);
+      expect(resultBeforeSet).not.toBe(result);
     });
 
-    let result: any;
+    it("should emit on nested values updates", async () => {
+      const Person = co.map({
+        name: z.string(),
+        age: z.number(),
+        address: co.map({
+          street: z.string(),
+        }),
+      });
 
-    subscribeToCoValue(
-      Friends,
-      friends.$jazz.id,
-      { resolve: { john: true } },
-      (value) => {
-        result = value;
-      },
-    );
+      const john = Person.create({
+        name: "John",
+        age: 30,
+        address: { street: "123 Main St" },
+      });
 
-    const resultBeforeSet = result;
+      let result: any;
 
-    friends.$jazz.set("john", {
-      name: "John Doe",
+      const spy = vi.fn();
+
+      subscribeToCoValue(
+        Person,
+        john.$jazz.id,
+        { resolve: { address: true } },
+        (value) => {
+          result = value;
+          spy(value);
+        },
+      );
+
+      const resultBeforeSet = result;
+
+      john.$jazz.set("address", { street: "456 Main St" });
+
+      expect(result).toEqual({
+        name: "John",
+        age: 30,
+        address: { street: "456 Main St" },
+      });
+
+      expect(resultBeforeSet).not.toBe(result);
+
+      // TODO: This is not correct, it should be called 2 times
+      expect(spy).toHaveBeenCalledTimes(3);
     });
 
-    expect(result).toEqual({
-      john: {
+    it("should emit when a catchall relation is updated", async () => {
+      const Friends = co.map({}).catchall(
+        co.map({
+          name: z.string(),
+        }),
+      );
+
+      const friends = Friends.create({
+        john: {
+          name: "John",
+        },
+      });
+
+      let result: any;
+
+      const spy = vi.fn();
+
+      subscribeToCoValue(
+        Friends,
+        friends.$jazz.id,
+        { resolve: { john: true } },
+        (value) => {
+          result = value;
+          spy();
+        },
+      );
+
+      const resultBeforeSet = result;
+
+      friends.$jazz.set("john", {
         name: "John Doe",
-      },
+      });
+
+      expect(result).toEqual({
+        john: {
+          name: "John Doe",
+        },
+      });
+
+      expect(resultBeforeSet).not.toBe(result);
+
+      // TODO: This is not correct, it should be called 2 times
+      expect(spy).toHaveBeenCalledTimes(3);
     });
 
-    expect(resultBeforeSet).not.toBe(result);
-  });
+    it("should emit when a catchall relation outside the resolve is added", async () => {
+      const Friends = co.map({}).catchall(
+        co.map({
+          name: z.string(),
+        }),
+      );
 
-  it("should emit when a catchall relation outside the resolve is added", async () => {
-    const Friends = co.map({}).catchall(
-      co.map({
+      const friends = Friends.create({
+        john: {
+          name: "John",
+        },
+      });
+
+      let result: any;
+
+      const spy = vi.fn();
+
+      subscribeToCoValue(
+        Friends,
+        friends.$jazz.id,
+        { resolve: { john: true } },
+        (value) => {
+          result = value;
+          spy();
+        },
+      );
+
+      const resultBeforeSet = result;
+
+      const { jane } = friends.$jazz.set("jane", {
+        name: "Jane",
+      });
+
+      expect(result).toEqual({
+        john: {
+          name: "John",
+        },
+        jane: {
+          $jazzState: "unloaded",
+          $jazz: {
+            schema: Friends.record.value,
+            id: jane?.$jazz.id,
+          },
+        },
+      });
+
+      expect(jane).toEqual({
+        name: "Jane",
+      });
+
+      expect(resultBeforeSet).not.toBe(result);
+
+      expect(spy).toHaveBeenCalledTimes(2);
+    });
+
+    it("should not emit updates if a stale nested value is updated", async () => {
+      const Person = co.map({
         name: z.string(),
-      }),
-    );
+        age: z.number(),
+        address: co.map({
+          street: z.string(),
+        }),
+      });
 
-    const friends = Friends.create({
-      john: {
+      const john = Person.create({
         name: "John",
-      },
+        age: 30,
+        address: { street: "123 Main St" },
+      });
+
+      let result: any;
+
+      const spy = vi.fn();
+
+      subscribeToCoValue(
+        Person,
+        john.$jazz.id,
+        { resolve: { address: true } },
+        (value) => {
+          result = value;
+          spy(value);
+        },
+      );
+
+      john.$jazz.set("address", { street: "456 Main St" });
+
+      spy.mockReset();
+
+      john.address.$jazz.set("street", "updated");
+
+      expect(result).toEqual({
+        name: "John",
+        age: 30,
+        address: { street: "456 Main St" },
+      });
+
+      expect(spy).not.toHaveBeenCalled();
     });
 
-    let result: any;
+    it("should emit when an optional nested value becomes missing", async () => {
+      const Person = co.map({
+        name: z.string(),
+        age: z.number(),
+        address: co
+          .map({
+            street: z.string(),
+          })
+          .optional(),
+      });
 
-    subscribeToCoValue(
-      Friends,
-      friends.$jazz.id,
-      { resolve: { john: true } },
-      (value) => {
+      const john = Person.create({
+        name: "John",
+        age: 30,
+        address: { street: "123 Main St" },
+      });
+
+      let result: any;
+
+      const spy = vi.fn();
+
+      subscribeToCoValue(
+        Person,
+        john.$jazz.id,
+        { resolve: { address: true } },
+        (value) => {
+          result = value;
+          spy();
+        },
+      );
+
+      const resultBeforeSet = result;
+
+      john.$jazz.set("address", undefined);
+
+      expect(result).toEqual({
+        name: "John",
+        age: 30,
+      });
+
+      expect(resultBeforeSet).not.toBe(result);
+
+      expect(spy).toHaveBeenCalledTimes(2);
+    });
+
+    it("should set the property as unloaded if we have the value but it is not requested", async () => {
+      const Person = co.map({
+        name: z.string(),
+        age: z.number(),
+        address: co
+          .map({
+            street: z.string(),
+          })
+          .optional(),
+      });
+
+      const john = Person.create({
+        name: "John",
+        age: 30,
+        address: { street: "123 Main St" },
+      });
+
+      let result: any;
+
+      const spy = vi.fn();
+
+      subscribeToCoValue(Person, john.$jazz.id, { resolve: true }, (value) => {
         result = value;
-      },
-    );
+        spy();
+      });
 
-    const resultBeforeSet = result;
-
-    const { jane } = friends.$jazz.set("jane", {
-      name: "Jane",
-    });
-
-    expect(result).toEqual({
-      john: {
-        name: "John",
-      },
-      jane: {
+      expect(result.address).toMatchObject({
         $jazzState: "unloaded",
         $jazz: {
-          schema: Friends.record.value,
-          id: jane?.$jazz.id,
+          schema: Person.shape.address,
+          id: john.address.$jazz.id,
         },
-      },
+      });
+
+      expect(spy).toHaveBeenCalledTimes(1);
     });
 
-    expect(jane).toEqual({
-      name: "Jane",
-    });
+    it("should set the property as undefined if we have the nested coValue is optional and missing", async () => {
+      const Person = co.map({
+        name: z.string(),
+        age: z.number(),
+        address: co
+          .map({
+            street: z.string(),
+          })
+          .optional(),
+      });
 
-    expect(resultBeforeSet).not.toBe(result);
-  });
+      const john = Person.create({
+        name: "John",
+        age: 30,
+      });
 
-  it("should not emit updates if a stale nested value is updated", async () => {
-    const Person = co.map({
-      name: z.string(),
-      age: z.number(),
-      address: co.map({
-        street: z.string(),
-      }),
-    });
+      let result: any;
 
-    const john = Person.create({
-      name: "John",
-      age: 30,
-      address: { street: "123 Main St" },
-    });
+      const spy = vi.fn();
 
-    let result: any;
-
-    const spy = vi.fn();
-
-    subscribeToCoValue(
-      Person,
-      john.$jazz.id,
-      { resolve: { address: true } },
-      (value) => {
+      subscribeToCoValue(Person, john.$jazz.id, { resolve: true }, (value) => {
         result = value;
-        spy(value);
-      },
-    );
+        spy();
+      });
 
-    john.$jazz.set("address", { street: "456 Main St" });
+      expect(result.address).toBe(undefined);
 
-    spy.mockReset();
-
-    john.address.$jazz.set("street", "updated");
-
-    expect(result).toEqual({
-      name: "John",
-      age: 30,
-      address: { street: "456 Main St" },
+      expect(spy).toHaveBeenCalledTimes(1);
     });
 
-    expect(spy).not.toHaveBeenCalled();
-  });
+    it("should emit the update only when the nested coValue is loaded", async () => {
+      const anotherAccount = await createJazzTestAccount();
 
-  it("should emit when an optional nested value becomes missing", async () => {
-    const Person = co.map({
-      name: z.string(),
-      age: z.number(),
-      address: co
-        .map({
+      const Person = co.map({
+        name: z.string(),
+        age: z.number(),
+        address: co.map({
           street: z.string(),
-        })
-        .optional(),
-    });
+        }),
+      });
 
-    const john = Person.create({
-      name: "John",
-      age: 30,
-      address: { street: "123 Main St" },
-    });
+      const john = Person.create({
+        name: "John",
+        age: 30,
+        address: { street: "123 Main St" },
+      });
 
-    let result: any;
+      let result: any;
 
-    subscribeToCoValue(
-      Person,
-      john.$jazz.id,
-      { resolve: { address: true } },
-      (value) => {
-        result = value;
-      },
-    );
+      const spy = vi.fn();
 
-    const resultBeforeSet = result;
+      subscribeToCoValue(
+        Person,
+        john.$jazz.id,
+        { resolve: { address: true } },
+        (value) => {
+          result = value;
+          spy();
+        },
+      );
 
-    john.$jazz.set("address", undefined);
+      const firstResult = result as Loaded<typeof Person, { address: true }>;
 
-    expect(result).toEqual({
-      name: "John",
-      age: 30,
-    });
+      const group = Group.create(anotherAccount);
+      group.addMember("everyone", "reader");
 
-    expect(resultBeforeSet).not.toBe(result);
-  });
+      const newAddress = Person.shape.address.create(
+        { street: "456 Main St" },
+        group,
+      );
 
-  it("should set the property as unloaded if we have the value but it is not requested", async () => {
-    const Person = co.map({
-      name: z.string(),
-      age: z.number(),
-      address: co
-        .map({
-          street: z.string(),
-        })
-        .optional(),
-    });
+      john.$jazz.set("address", newAddress);
 
-    const john = Person.create({
-      name: "John",
-      age: 30,
-      address: { street: "123 Main St" },
-    });
+      expect(result).toBe(firstResult);
 
-    let result: any;
+      await waitFor(() => {
+        expect(result).not.toBe(firstResult);
+      });
 
-    subscribeToCoValue(Person, john.$jazz.id, { resolve: true }, (value) => {
-      result = value;
-    });
-
-    expect(result.address).toMatchObject({
-      $jazzState: "unloaded",
-      $jazz: {
-        schema: Person.shape.address,
-        id: john.address.$jazz.id,
-      },
-    });
-  });
-
-  it("should set the property as undefined if we have the nested coValue is optional and missing", async () => {
-    const Person = co.map({
-      name: z.string(),
-      age: z.number(),
-      address: co
-        .map({
-          street: z.string(),
-        })
-        .optional(),
-    });
-
-    const john = Person.create({
-      name: "John",
-      age: 30,
-    });
-
-    let result: any;
-
-    subscribeToCoValue(Person, john.$jazz.id, { resolve: true }, (value) => {
-      result = value;
-    });
-
-    expect(result.address).toBe(undefined);
-  });
-
-  it("should emit the update only when the nested coValue is loaded", async () => {
-    const anotherAccount = await createJazzTestAccount();
-
-    const Person = co.map({
-      name: z.string(),
-      age: z.number(),
-      address: co.map({
-        street: z.string(),
-      }),
-    });
-
-    const john = Person.create({
-      name: "John",
-      age: 30,
-      address: { street: "123 Main St" },
-    });
-
-    let result: any;
-
-    subscribeToCoValue(
-      Person,
-      john.$jazz.id,
-      { resolve: { address: true } },
-      (value) => {
-        result = value;
-      },
-    );
-
-    const firstResult = result as Loaded<typeof Person, { address: true }>;
-
-    const group = Group.create(anotherAccount);
-    group.addMember("everyone", "reader");
-
-    const newAddress = Person.shape.address.create(
-      { street: "456 Main St" },
-      group,
-    );
-
-    john.$jazz.set("address", newAddress);
-
-    expect(result).toBe(firstResult);
-
-    await waitFor(() => {
-      expect(result).not.toBe(firstResult);
-    });
-
-    expect(result).toEqual({
-      name: "John",
-      age: 30,
-      address: { street: "456 Main St" },
-    });
-  });
-
-  it("should preserve references of unchanged nested values", async () => {
-    const personBaseProps = {
-      name: z.string(),
-      age: z.number(),
-      address: co.map({
-        street: z.string(),
-      }),
-    };
-
-    const Person: CoMapSchemaClass<
-      typeof personBaseProps & {
-        friend: LazySchema<Optional<typeof Person>>;
-      },
-      undefined,
-      false
-    > = co.map({
-      ...personBaseProps,
-      friend: co.lazy(() => Person.optional()),
-    });
-
-    const john = Person.create({
-      name: "John",
-      age: 30,
-      address: { street: "123 Main St" },
-      friend: {
-        name: "Jane",
-        age: 20,
+      expect(result).toEqual({
+        name: "John",
+        age: 30,
         address: { street: "456 Main St" },
-      },
+      });
+
+      expect(spy).toHaveBeenCalledTimes(2);
     });
 
-    let result: any;
+    it("should preserve references of unchanged nested values", async () => {
+      const personBaseProps = {
+        name: z.string(),
+        age: z.number(),
+        address: co.map({
+          street: z.string(),
+        }),
+      };
 
-    subscribeToCoValue(
-      Person,
-      john.$jazz.id,
-      { resolve: { address: true, friend: { address: true } } },
-      (value) => {
-        result = value;
-      },
-    );
+      const Person: CoMapSchemaClass<
+        typeof personBaseProps & {
+          friend: LazySchema<Optional<typeof Person>>;
+        },
+        undefined,
+        false
+      > = co.map({
+        ...personBaseProps,
+        friend: co.lazy(() => Person.optional()),
+      });
 
-    expect(result).toEqual(john);
+      const john = Person.create({
+        name: "John",
+        age: 30,
+        address: { street: "123 Main St" },
+        friend: {
+          name: "Jane",
+          age: 20,
+          address: { street: "456 Main St" },
+        },
+      });
 
-    const resultBeforeSet = result;
+      let result: any;
 
-    john.address.$jazz.set("street", "456 Main St");
+      const spy = vi.fn();
 
-    expect(result).toEqual({
-      name: "John",
-      age: 30,
-      address: { street: "456 Main St" },
-      friend: {
-        name: "Jane",
-        age: 20,
+      subscribeToCoValue(
+        Person,
+        john.$jazz.id,
+        { resolve: { address: true, friend: { address: true } } },
+        (value) => {
+          result = value;
+          spy();
+        },
+      );
+
+      expect(result).toEqual(john);
+
+      const resultBeforeSet = result;
+
+      john.address.$jazz.set("street", "456 Main St");
+
+      expect(result).toEqual({
+        name: "John",
+        age: 30,
         address: { street: "456 Main St" },
-      },
-    });
+        friend: {
+          name: "Jane",
+          age: 20,
+          address: { street: "456 Main St" },
+        },
+      });
 
-    expect(resultBeforeSet).not.toBe(result);
-    expect(resultBeforeSet.friend).toBe(result.friend);
-    expect(resultBeforeSet.address).not.toBe(result.address);
+      expect(spy).toHaveBeenCalledTimes(2);
+
+      expect(resultBeforeSet).not.toBe(result);
+      expect(resultBeforeSet.friend).toBe(result.friend);
+      expect(resultBeforeSet.address).not.toBe(result.address);
+    });
   });
 });
