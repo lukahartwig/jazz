@@ -21,7 +21,7 @@ export function AuthButtons() {
 
   if (auth.state === "signedIn") {
     return (
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col items-center gap-8">
         <div className="flex gap-2 justify-center flex-wrap">
           <Button color="destructive" onClick={handleLogOut}>
             Log out
@@ -38,7 +38,7 @@ export function AuthButtons() {
   }
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col items-center gap-8">
       <div className="flex gap-2 justify-center flex-wrap">
         <Button onClick={() => auth.signUp("supercoolusername")}>
           Sign up

@@ -1,4 +1,5 @@
 import { useHandleMagicLinkAuthAsProvider } from "jazz-react";
+import { BackToHomepageContainer } from "../BackToHomepageContainer";
 import { Button } from "../Button";
 
 export default function MagicLinkHandlerProviderPage() {
@@ -20,7 +21,7 @@ function MagicLinkHandlerProvider() {
 
   if (status === "waitingForConfirmLogIn") {
     return (
-      <div className="flex flex-col gap-4 p-4">
+      <div className="flex flex-col items-center gap-2">
         <p>You scanned the QR code!</p>
 
         <p>Are you sure you want to log in?</p>
@@ -53,16 +54,6 @@ function MagicLinkHandlerProvider() {
       <BackToHomepageContainer>Something went wrong</BackToHomepageContainer>
     );
   }
-}
 
-function BackToHomepageContainer({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="flex flex-col items-center gap-4">
-      <p>{children}</p>
-
-      <a href="/">
-        <Button color="primary">Back to homepage</Button>
-      </a>
-    </div>
-  );
+  return null;
 }

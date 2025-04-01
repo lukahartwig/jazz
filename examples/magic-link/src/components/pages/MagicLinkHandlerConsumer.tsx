@@ -1,4 +1,5 @@
 import { useHandleMagicLinkAuthAsConsumer } from "jazz-react";
+import { BackToHomepageContainer } from "../BackToHomepageContainer";
 
 export default function MagicLinkHandlerConsumerPage() {
   return (
@@ -24,6 +25,15 @@ function MagicLinkHandlerConsumer() {
     return <p>Waiting for provider to confirm log in...</p>;
   }
 
-  if (status === "authorized") return <p>Logged in!</p>;
-  if (status === "error") return <p>Something went wrong</p>;
+  if (status === "authorized") {
+    return <BackToHomepageContainer>Logged in!</BackToHomepageContainer>;
+  }
+
+  if (status === "error") {
+    return (
+      <BackToHomepageContainer>Something went wrong</BackToHomepageContainer>
+    );
+  }
+
+  return null;
 }

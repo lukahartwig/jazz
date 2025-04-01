@@ -19,9 +19,13 @@ export function QRCodeContainer({ url }: QRCodeContainerProps) {
   }, [url]);
 
   return (
-    <div className="border-2 border-blue-600 p-6 rounded-lg flex flex-col items-center gap-4">
+    <div className="flex flex-col items-center gap-4">
       {qr ? (
-        <img src={qr} alt="QR Code" className="w-72 h-72 rounded" />
+        <img
+          src={qr}
+          alt="QR Code"
+          className="w-72 h-72 rounded-xl border-2 border-blue-600"
+        />
       ) : (
         <div className="w-96 h-96 bg-white rounded-lg flex items-center justify-center">
           Loading...
@@ -34,7 +38,7 @@ export function QRCodeContainer({ url }: QRCodeContainerProps) {
           setCopied(true);
         }}
       >
-        {copied ? "Copied!" : "Copy link"}
+        {copied ? "Copied to clipboard!" : "Copy link to clipboard"}
       </Button>
     </div>
   );

@@ -32,7 +32,7 @@ export function CreateMagicLinkAsConsumer({
 
   if (status === "waitingForProvider") {
     return (
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col items-center gap-4">
         <p>Scan QR code to log in</p>
 
         {link ? <QRCodeContainer url={link} /> : null}
@@ -42,7 +42,7 @@ export function CreateMagicLinkAsConsumer({
 
   if (status === "waitingForConfirmLogIn") {
     return (
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col items-center gap-4">
         <p>Please confirm the log in on your mobile device</p>
       </div>
     );
