@@ -490,12 +490,19 @@ export function subscribeToExistingCoValue<
   );
 }
 
-export function waitForCoValueCondition<V extends CoValue, Depth>(
+export function waitForCoValueCondition<
+  V extends CoValue,
+  const R extends RefsToResolve<V>,
+>(
   existing: V,
-  depth: Depth & DepthsIn<V>,
-  conditionFn: (value: DeeplyLoaded<V, Depth>) => boolean,
+  options: {
+    resolve?: RefsToResolveStrict<V, R>;
+    onUnavailable?: () => void;
+    onUnauthorized?: () => void;
+  },
+  conditionFn: (value: V) => boolean,
   timeoutMs = 15000,
-): Promise<DeeplyLoaded<V, Depth>> {
+): Promise<V> {
   return new Promise((resolve, reject) => {
     let aborted = false;
     let unsubscribe = () => {};
@@ -509,8 +516,10 @@ export function waitForCoValueCondition<V extends CoValue, Depth>(
     subscribeToCoValue(
       existing.constructor as CoValueClass<V>,
       existing.id,
-      existing._loadedAs,
-      depth,
+      {
+        loadAs: existing._loadedAs,
+        ...options,
+      },
       (value, unsubscribeParam) => {
         unsubscribe = unsubscribeParam;
         if (aborted) return;
