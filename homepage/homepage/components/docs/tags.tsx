@@ -2,8 +2,8 @@ import { Icon } from "gcmp-design-system/src/app/components/atoms/Icon";
 import Link from "next/link";
 import { ReactNode } from "react";
 import { createHighlighter } from "shiki";
-import { jazzLight } from "../../themes/jazzLight.mjs";
 import { jazzDark } from "../../themes/jazzDark.mjs";
+import { jazzLight } from "../../themes/jazzLight.mjs";
 
 const highlighterPromise = createHighlighter({
   langs: ["typescript", "bash", "tsx", "json", "svelte", "vue"],
@@ -32,17 +32,14 @@ export async function Highlight({
   lang?: string;
   className?: string;
 }) {
-  const html = (await highlighterPromise).codeToHtml(
-    children,
-    {
-      lang,
-      structure: "inline",
-      themes: {
-        light: "jazz-light",
-        dark: "jazz-dark",
-      },
+  const html = (await highlighterPromise).codeToHtml(children, {
+    lang,
+    structure: "inline",
+    themes: {
+      light: "jazz-light",
+      dark: "jazz-dark",
     },
-  );
+  });
 
   return (
     <code className={className} dangerouslySetInnerHTML={{ __html: html }} />

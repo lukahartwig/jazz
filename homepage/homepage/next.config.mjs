@@ -1,13 +1,13 @@
 import createMDX from "@next/mdx";
+import { transformerNotationDiff } from "@shikijs/transformers";
+import { transformerTwoslash } from "@shikijs/twoslash";
 import withToc from "@stefanprobst/rehype-extract-toc";
 import withTocExport from "@stefanprobst/rehype-extract-toc/mdx";
 import rehypeSlug from "rehype-slug";
 import { createHighlighter } from "shiki";
-import { transformerNotationDiff, transformerRemoveLineBreak } from '@shikijs/transformers'
-import { transformerTwoslash } from "@shikijs/twoslash";
 import { SKIP, visit } from "unist-util-visit";
-import { jazzLight } from "./themes/jazzLight.mjs";
 import { jazzDark } from "./themes/jazzDark.mjs";
+import { jazzLight } from "./themes/jazzLight.mjs";
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -63,10 +63,13 @@ function highlightPlugin() {
           transformerTwoslash({
             explicitTrigger: true,
             throws: process.env.NODE_ENV === "production",
-            onTwoslashError: process.env.NODE_ENV !== "production" ? (e) => {
-              console.error(e);
-              error = e;
-            } : undefined,
+            onTwoslashError:
+              process.env.NODE_ENV !== "production"
+                ? (e) => {
+                    console.error(e);
+                    error = e;
+                  }
+                : undefined,
           }),
           transformerNotationDiff(),
         ],

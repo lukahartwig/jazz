@@ -153,10 +153,10 @@ Update the schema to include a `validate` method.
 <CodeGroup>
 ```ts
 // schema.ts
-export class DraftBubbleTeaOrder extends CoMap { // old
-  name = co.optional.string; // old
+export class DraftBubbleTeaOrder extends CoMap {
+  name = co.optional.string;
 
-  validate() {
+  validate() {  // [!code ++:9]
     const errors: string[] = [];
 
     if (!this.name) {
@@ -165,7 +165,7 @@ export class DraftBubbleTeaOrder extends CoMap { // old
 
     return { errors };
   }
-} // old
+}
 ```
 </CodeGroup>
 
@@ -174,33 +174,33 @@ Then perform the validation on submit.
 <CodeGroup>
 ```tsx
 // CreateOrder.tsx
-export function CreateOrder() { // old
-  const { me } = useAccount(); // old
-  const [draft, setDraft] = useState<DraftBubbleTeaOrder>(); // old
+export function CreateOrder() {
+  const { me } = useAccount();
+  const [draft, setDraft] = useState<DraftBubbleTeaOrder>();
 
-  useEffect(() => { // old
-    setDraft(DraftBubbleTeaOrder.create({})); // old
-  }, [me?.id]); // old
+  useEffect(() => {
+    setDraft(DraftBubbleTeaOrder.create({}));
+  }, [me?.id]);
 
-  const onSave = (e: React.FormEvent<HTMLFormElement>) => { // old
-    e.preventDefault(); // old
-    if (!draft) return; // old
+  const onSave = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!draft) return;
 
-    const validation = draft.validate();
+    const validation = draft.validate(); // [!code ++:5]
     if (validation.errors.length > 0) {
       console.log(validation.errors);
       return;
     }
 
-    const order = draft as BubbleTeaOrder; // old
+    const order = draft as BubbleTeaOrder;
 
-    console.log("Order created:", order); // old
-  }; // old
+    console.log("Order created:", order);
+  };
 
-  if (!draft) return; // old
+  if (!draft) return;
 
-  return <OrderForm order={draft} onSave={onSave} />; // old
-} // old
+  return <OrderForm order={draft} onSave={onSave} />;
+}
 ```
 </CodeGroup>
 
@@ -213,15 +213,15 @@ By storing the draft in the user's account, they can come back to it anytime wit
 <CodeGroup>
 ```ts
 // schema.ts
-export class BubbleTeaOrder extends CoMap { // old
-  name = co.string; // old
-} // old
+export class BubbleTeaOrder extends CoMap {
+  name = co.string;
+}
 
-export class DraftBubbleTeaOrder extends CoMap { // old
-  name = co.optional.string; // old
-} // old
+export class DraftBubbleTeaOrder extends CoMap {
+  name = co.optional.string;
+}
 
-export class AccountRoot extends CoMap {
+export class AccountRoot extends CoMap { // [!code ++:15]
   draft = co.ref(DraftBubbleTeaOrder);
 }
 
@@ -243,22 +243,22 @@ Let's not forget to update the `AccountSchema`.
 
 <CodeGroup>
 ```ts
-import { JazzProvider } from "jazz-react"; // old
-import { JazzAccount } from "./schema";
+import { JazzProvider } from "jazz-react";
+import { JazzAccount } from "./schema"; // [!code ++]
 
-export function MyJazzProvider({ children }: { children: React.ReactNode }) { // old
-    return ( // old
-        <JazzProvider // old
+export function MyJazzProvider({ children }: { children: React.ReactNode }) {
+    return (
+        <JazzProvider
             sync={{ peer: "wss://cloud.jazz.tools/?key=you@example.com" }}
-            AccountSchema={JazzAccount}
-        >// old
-            {children} // old
-        </JazzProvider> // old
-    ); // old
-} // old
+            AccountSchema={JazzAccount} // [!code ++]
+        >
+            {children}
+        </JazzProvider>
+    );
+}
 
 // Register the Account schema so `useAccount` returns our custom `JazzAccount`
-declare module "jazz-react" {
+declare module "jazz-react" { // [!code ++:5]
     interface Register {
         Account: JazzAccount;
     }
@@ -271,36 +271,36 @@ Instead of creating a new draft every time we use the create form, let's use the
 <CodeGroup>
 ```tsx
 // CreateOrder.tsx
-export function CreateOrder() {// old
-  const { me } = useAccount({ root: { draft: {} } });
+export function CreateOrder() {
+  const { me } = useAccount({ root: { draft: {} } }); // [!code ++:3]
 
   if (!me?.root) return;
 
-  const onSave = (e: React.FormEvent<HTMLFormElement>) => {// old
-    e.preventDefault();// old
+  const onSave = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
 
-    const draft = me.root.draft;
+    const draft = me.root.draft; // [!code ++:2]
     if (!draft) return;
 
-    const validation = draft.validate();// old
-    if (validation.errors.length > 0) {// old
-      console.log(validation.errors);// old
-      return;// old
-    }// old
+    const validation = draft.validate();
+    if (validation.errors.length > 0) {
+      console.log(validation.errors);
+      return;
+    }
 
-    const order = draft as BubbleTeaOrder;// old
-    console.log("Order created:", order);// old
+    const order = draft as BubbleTeaOrder;
+    console.log("Order created:", order);
 
     // create a new empty draft
-    me.root.draft = DraftBubbleTeaOrder.create(
+    me.root.draft = DraftBubbleTeaOrder.create( // [!code ++:3]
       {},
     );
-  };// old
+  };
 
   return <CreateOrderForm id={me.root.draft.id} onSave={onSave} />
-} // old
+}
 
-function CreateOrderForm({
+function CreateOrderForm({ // [!code ++:13]
   id,
   onSave,
 }: {
@@ -330,23 +330,23 @@ Simply add a `hasChanges` checker to your schema.
 <CodeGroup>
 ```ts
 // schema.ts
-export class DraftBubbleTeaOrder extends CoMap { // old
-  name = co.optional.string; // old
+export class DraftBubbleTeaOrder extends CoMap {
+  name = co.optional.string;
 
-  validate() { // old
-    const errors: string[] = []; // old
+  validate() {
+    const errors: string[] = [];
 
-    if (!this.name) { // old
-      errors.push("Plese enter a name."); // old
-    } // old
+    if (!this.name) {
+      errors.push("Plese enter a name.");
+    }
 
-    return { errors }; // old
-  } // old
+    return { errors };
+  }
 
-  get hasChanges() {
+  get hasChanges() { // [!code ++:3]
     return Object.keys(this._edits).length;
   }
-} // old
+}
 ```
 </CodeGroup>
 

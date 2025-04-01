@@ -12,15 +12,16 @@ Wrap your application with `<JazzProvider />`, this is where you specify the syn
 import { JazzProvider } from "jazz-react";
 import { MyAppAccount } from "./schema";
 
-ReactDOM.createRoot(document.getElementById("root")!).render( // old
-    <JazzProvider
+ReactDOM.createRoot(document.getElementById("root")!).render(
+    <JazzProvider // [!code ++:6]
         sync={{ peer: "wss://cloud.jazz.tools/?key=you@example.com" }}
         AccountSchema={MyAppAccount}
     >
         <App />
     </JazzProvider>
-);// old
+);
 
+ // [!code ++:6]
 // Register the Account schema so `useAccount` returns our custom `MyAppAccount`
 declare module "jazz-react" {
     interface Register {
@@ -42,21 +43,21 @@ The easiest way to use Jazz with Next.JS is to only use it on the client side. Y
 
 <CodeGroup>
   {/* prettier-ignore */}
-  ```tsx
-    "use client"
-    import { JazzProvider } from "jazz-react"; // old
-    import { MyAppAccount } from "./schema"; // old
+```tsx
+"use client" // [!code ++]
+import { JazzProvider } from "jazz-react";
+import { MyAppAccount } from "./schema";
 
-    export function MyJazzProvider(props: { children: React.ReactNode }) { 
-        return ( 
-            <JazzProvider   
-                sync={{ peer: "wss://cloud.jazz.tools/?key=you@example.com" }}
-                AccountSchema={MyAppAccount}
-            >
-                {props.children}
-            </JazzProvider> 
-        ); 
-    } 
+export function MyJazzProvider(props: { children: React.ReactNode }) {
+    return (
+        <JazzProvider
+            sync={{ peer: "wss://cloud.jazz.tools/?key=you@example.com" }}
+            AccountSchema={MyAppAccount}
+        >
+            {props.children}
+        </JazzProvider>
+    );
+}
 ```
 </CodeGroup>
 
