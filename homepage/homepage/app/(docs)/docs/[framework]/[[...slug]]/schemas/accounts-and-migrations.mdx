@@ -86,26 +86,26 @@ If you want to extend the `profile` to contain additional fields (such as an ava
 import { Account, Profile, ImageDefinition } from "jazz-tools";
 
 export class MyAppAccount extends Account {
-  profile = co.ref(MyAppProfile);
-  root = co.ref(MyAppRoot);// old
+  profile = co.ref(MyAppProfile); // [!code focus]
+  root = co.ref(MyAppRoot);
 }
 
-export class MyAppRoot extends CoMap {// old
-  myChats = co.ref(ListOfChats);// old
-  myContacts = co.ref(ListOfAccounts);// old
-}// old
+export class MyAppRoot extends CoMap {
+  myChats = co.ref(ListOfChats);
+  myContacts = co.ref(ListOfAccounts);
+}
 
-export class MyAppProfile extends Profile {
+export class MyAppProfile extends Profile { // [!code focus:4]
   name = co.string; // compatible with default Profile schema
   avatar = co.optional.ref(ImageDefinition);
 }
 
-// Register the Account schema so `useAccount` returns our custom `MyAppAccount` // old
-declare module "jazz-react" {// old
-    interface Register {// old
-        Account: MyAppAccount;// old
-    }// old
-}// old
+// Register the Account schema so `useAccount` returns our custom `MyAppAccount` 
+declare module "jazz-react" {
+    interface Register {
+        Account: MyAppAccount;
+    }
+}
 ```
 </CodeGroup>
 
@@ -203,24 +203,24 @@ Now let's say we want to add a `myBookmarks` field to the `root` schema:
 {/* prettier-ignore */}
 ```ts
 export class MyAppAccount extends Account {
-    root = co.ref(MyAppRoot);// old
+    root = co.ref(MyAppRoot);
 
     async migrate(this: MyAppAccount) {
-      if (this.root === undefined) {  // old
-        this.root = MyAppRoot.create({  // old
-          myChats: ListOfChats.create([], Group.create()),  // old
-          myContacts: ListOfAccounts.create([], Group.create()) // old
-        }); // old
-      } // old
+      if (this.root === undefined) {  
+        this.root = MyAppRoot.create({  
+          myChats: ListOfChats.create([], Group.create()),  
+          myContacts: ListOfAccounts.create([], Group.create()) 
+        }); 
+      } 
 
       // We need to load the root field to check for the myContacts field
-      const { root } = await this.ensureLoaded({
+      const { root } = await this.ensureLoaded({ // [!code focus:3]
         root: {},
       });
 
       // we specifically need to check for undefined,
       // because myBookmarks might simply be not loaded (`null`) yet
-      if (root.myBookmarks === undefined) {
+      if (root.myBookmarks === undefined) { // [!code focus:3]
         root.myBookmarks = ListOfBookmarks.create([], Group.create());
       }
     }
