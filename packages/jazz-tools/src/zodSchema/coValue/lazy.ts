@@ -2,18 +2,22 @@ import { CoValueSchema } from "../coMap/schema.js";
 
 export const LazySchemaSymbol = "LazySchema" as const;
 
-export type LazySchema<T> = {
-  [LazySchemaSymbol]: true;
+export class LazySchema<T extends CoValueSchema> {
   lazySchema: () => T;
-};
+  [LazySchemaSymbol]: true;
+
+  declare output: T;
+
+  constructor(lazySchema: () => T) {
+    this.lazySchema = lazySchema;
+    this[LazySchemaSymbol] = true;
+  }
+}
 
 export function lazy<T extends CoValueSchema>(
   lazySchema: () => T,
 ): LazySchema<T> {
-  return {
-    [LazySchemaSymbol]: true,
-    lazySchema,
-  };
+  return new LazySchema(lazySchema);
 }
 
 export function isLazySchema<T extends CoValueSchema>(

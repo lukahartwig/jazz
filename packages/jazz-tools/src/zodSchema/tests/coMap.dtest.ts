@@ -200,7 +200,7 @@ describe("CoMap - test types", () => {
         friend: {
           name: "Jane",
           age: 20,
-          friend: { name: "Bob", age: 20 },
+          friend: Person.create({ name: "Bob", age: 20 }),
         },
       });
 

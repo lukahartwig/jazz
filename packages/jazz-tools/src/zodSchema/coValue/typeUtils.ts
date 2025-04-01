@@ -6,7 +6,7 @@ export type requiredKeys<T extends object> = {
   [k in keyof T]: undefined extends T[k] ? never : k;
 }[keyof T];
 
-export type addQuestionMarks<T extends object, _O = any> = {
+export type addQuestionMarks<T extends object> = {
   [K in requiredKeys<T>]: T[K];
 } & {
   [K in optionalKeys<T>]?: T[K];
@@ -17,7 +17,7 @@ export type flatten<T> = T extends string
   ? T
   : identity<{ [k in keyof T]: T[k] }>;
 
-type DEPTH_LIMIT = 5;
+type DEPTH_LIMIT = 10;
 
 export type IsDepthLimit<CurrentDepth extends number[]> =
   DEPTH_LIMIT extends CurrentDepth["length"] ? true : false;

@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { createJazzTestAccount } from "../../testing.js";
-import { CoMapSchemaClass } from "../coMap/schema.js";
+import { CoMapInit, CoMapSchemaClass } from "../coMap/schema.js";
 import { LazySchema } from "../coValue/lazy.js";
 import { Optional } from "../coValue/optional.js";
 import { co, z } from "../schema.js";
@@ -172,7 +172,7 @@ describe("CoMap - with zod based schema", () => {
         friend: {
           name: "Jane",
           age: 20,
-          friend: { name: "Bob", age: 20 },
+          friend: Person.create({ name: "Bob", age: 20 }),
         },
       });
 

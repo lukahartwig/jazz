@@ -95,7 +95,8 @@ export class CoValueResolutionNode<
   R extends ResolveQuery<D>,
 > {
   childNodes = new Map<string, CoValueResolutionNode<CoValueSchema, any>>();
-  childValues = new Map<string, Loaded<any, any> | Unloaded<any> | undefined>();
+  childValues: Map<string, Loaded<any, any> | Unloaded<any> | undefined> =
+    new Map<string, Loaded<any, any> | Unloaded<any> | undefined>();
   value: Loaded<D, R> | undefined;
   error: undefined | "unauthorized" | "unavailable";
   promise: ResolvablePromise<void> | undefined;

@@ -20,7 +20,7 @@ export function optional<T extends { optional: () => any }>(
 
 export function isOptional<
   T extends CoValueSchema | LazySchema<any> | ZodTypeAny,
->(value: T): value is T & { isOptional: true } {
+>(value: T) {
   if (isLazySchema(value)) {
     return isOptional(value.lazySchema());
   }
@@ -28,6 +28,5 @@ export function isOptional<
   return (value as CoValueSchema).isOptional;
 }
 
-export type Optional<T extends CoMapSchemaClass<any, any, any>> = ReturnType<
-  T["optional"]
->;
+export type Optional<T extends CoMapSchemaClass<any, any, any>> =
+  T["OptionalType"];

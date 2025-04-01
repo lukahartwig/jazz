@@ -144,8 +144,8 @@ export type LoadedCoMapRecordProps<
   CurrentDepth extends number[],
 > = UnwrapRecordReference<S> extends CoValueSchema
   ? CoMapRecordExplicitlyQueriedProps<S, R, Options, CurrentDepth> &
-      (R extends { $each: infer EachQuery }
-        ? CoMapRecordQueriedByEachProps<S, R, EachQuery, Options, CurrentDepth>
+      (R extends { $each: unknown }
+        ? CoMapRecordQueriedByEachProps<S, R, R["$each"], Options, CurrentDepth>
         : {
             // Filling the primitive record properties
             readonly [K in CoMapRecordKey<S>]?: Unloaded<
