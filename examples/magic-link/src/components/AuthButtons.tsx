@@ -3,6 +3,7 @@
 import { useAccount, usePasskeyAuth } from "jazz-react";
 import { useState } from "react";
 import { APPLICATION_NAME } from "../main";
+import { Button } from "./Button";
 import { CreateMagicLinkAsConsumer } from "./CreateMagicLinkAsConsumer";
 import { CreateMagicLinkAsProvider } from "./CreateMagicLinkAsProvider";
 
@@ -21,20 +22,14 @@ export function AuthButtons() {
   if (auth.state === "signedIn") {
     return (
       <div className="flex flex-col gap-4">
-        <div className="flex gap-2">
-          <button
-            onClick={handleLogOut}
-            className="bg-stone-100 py-1.5 px-3 text-sm rounded-md"
-          >
+        <div className="flex gap-2 justify-center flex-wrap">
+          <Button color="destructive" onClick={handleLogOut}>
             Log out
-          </button>
+          </Button>
 
-          <button
-            onClick={() => setMagicLinkFlow(true)}
-            className="bg-stone-100 py-1.5 px-3 text-sm rounded-md"
-          >
-            Log in your mobile device
-          </button>
+          <Button color="primary" onClick={() => setMagicLinkFlow(true)}>
+            ✨ Get your mobile device logged in ✨
+          </Button>
         </div>
 
         {magicLinkFlow ? <CreateMagicLinkAsProvider /> : null}
@@ -43,28 +38,17 @@ export function AuthButtons() {
   }
 
   return (
-    <div className="flex flex-col gap-2">
-      <div className="flex gap-2">
-        <button
-          className="bg-stone-100 py-1.5 px-3 text-sm rounded-md"
-          onClick={() => auth.signUp("supercoolusername")}
-        >
+    <div className="flex flex-col gap-8">
+      <div className="flex gap-2 justify-center flex-wrap">
+        <Button onClick={() => auth.signUp("supercoolusername")}>
           Sign up
-        </button>
+        </Button>
 
-        <button
-          onClick={() => auth.logIn()}
-          className="bg-stone-100 py-1.5 px-3 text-sm rounded-md"
-        >
-          Log in with passkey
-        </button>
+        <Button onClick={() => auth.logIn()}>Log in with passkey</Button>
 
-        <button
-          onClick={() => setMagicLinkFlow(true)}
-          className="bg-stone-100 py-1.5 px-3 text-sm rounded-md"
-        >
-          Log in via mobile device
-        </button>
+        <Button color="primary" onClick={() => setMagicLinkFlow(true)}>
+          ✨ Use mobile device to log in ✨
+        </Button>
       </div>
 
       {magicLinkFlow ? (
@@ -74,7 +58,13 @@ export function AuthButtons() {
             setMagicLinkFlow(false);
           }}
         />
-      ) : null}
+      ) : (
+        <p className="text-balance">
+          You can also use the{" "}
+          <span className="font-bold">Get your mobile device logged in</span>{" "}
+          button on an already logged-in device
+        </p>
+      )}
     </div>
   );
 }

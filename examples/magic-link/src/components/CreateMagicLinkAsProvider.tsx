@@ -2,6 +2,7 @@
 
 import { useCreateMagicLinkAuthAsProvider } from "jazz-react";
 import { useState } from "react";
+import { Button } from "./Button";
 import { QRCodeContainer } from "./QRCodeContainer";
 
 export function CreateMagicLinkAsProvider() {
@@ -17,7 +18,9 @@ export function CreateMagicLinkAsProvider() {
 
   if (status === "idle") {
     return (
-      <button onClick={() => createLink().then(setLink)}>Create QR code</button>
+      <Button color="primary" onClick={() => createLink().then(setLink)}>
+        Create QR code
+      </Button>
     );
   }
 
@@ -25,6 +28,7 @@ export function CreateMagicLinkAsProvider() {
     return (
       <div className="flex flex-col gap-2">
         <p>Scan QR code to log in your mobile device</p>
+
         {link ? <QRCodeContainer url={link} /> : null}
       </div>
     );
@@ -34,13 +38,12 @@ export function CreateMagicLinkAsProvider() {
     return (
       <div className="flex flex-col gap-2">
         <p>A device has scanned the QR code!</p>
+
         <p>Click confirm to allow the device to log in</p>
-        <button
-          onClick={() => confirmLogIn()}
-          className="bg-blue-600 text-white p-2 font-lg"
-        >
+
+        <Button color="primary" onClick={() => confirmLogIn()}>
           Confirm log in
-        </button>
+        </Button>
       </div>
     );
   }

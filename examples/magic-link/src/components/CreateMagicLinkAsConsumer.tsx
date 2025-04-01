@@ -2,6 +2,7 @@
 
 import { useCreateMagicLinkAuthAsConsumer } from "jazz-react";
 import { useState } from "react";
+import { Button } from "./Button";
 import { QRCodeContainer } from "./QRCodeContainer";
 
 interface CreateMagicLinkAsConsumerProps {
@@ -22,13 +23,18 @@ export function CreateMagicLinkAsConsumer({
   const onCreateLink = () => createLink().then(setLink);
 
   if (status === "idle") {
-    return <button onClick={onCreateLink}>Create QR code</button>;
+    return (
+      <Button color="primary" onClick={onCreateLink}>
+        Create QR code
+      </Button>
+    );
   }
 
   if (status === "waitingForProvider") {
     return (
       <div className="flex flex-col gap-2">
         <p>Scan QR code to log in</p>
+
         {link ? <QRCodeContainer url={link} /> : null}
       </div>
     );
