@@ -9,8 +9,9 @@ import {
   IsDepthLimit,
   addQuestionMarks,
   flatten,
+  simplifyResolveQuery,
 } from "../coValue/typeUtils.js";
-import { Loaded, MaybeLoaded, ValidateQuery } from "../coValue/types.js";
+import { Loaded, MaybeLoaded } from "../coValue/types.js";
 import { LoadedCoMapJazzProps, createCoMap } from "./instance.js";
 
 export type CoMapField = AnyCoMapSchema | ZodTypeAny | LazySchema<any>;
@@ -136,8 +137,7 @@ export type ResolveQueryForCoMapInit<
 > = IsDepthLimit<CurrentDepth> extends true
   ? true
   : I extends CoMapSimpleInit<S>
-    ? ValidateQuery<
-        S,
+    ? simplifyResolveQuery<
         {
           [K in keyof I & RefProps<S>]: ReolveQueryForCoMapChild<
             UnwrapReference<S, K>,

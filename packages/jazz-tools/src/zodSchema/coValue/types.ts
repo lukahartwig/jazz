@@ -224,11 +224,6 @@ export type MaybeLoaded<
 
 export type UnwrapZodType<T, O> = T extends ZodTypeAny ? TypeOf<T> : O;
 
-export type ValidateQuery<
-  D extends CoValueSchema,
-  I,
-> = I extends ResolveQuery<D> ? simplifyResolveQuery<I> : true; // TODO: this seems dangerous?
-
 export type addNullable<
   O extends "nullable" | "non-nullable",
   T,

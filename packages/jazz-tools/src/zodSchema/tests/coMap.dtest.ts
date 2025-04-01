@@ -256,10 +256,7 @@ describe("CoMap - test types", () => {
           typeof Person,
           {
             friends: {
-              // TODO: This is not correct, it should be { joey: true }
-              joey: {
-                friends: never;
-              };
+              joey: true;
             };
           }
         >,
@@ -359,15 +356,7 @@ describe("CoMap - test types", () => {
         string | number | undefined
       >();
 
-      type LoadedPerson = Loaded<
-        typeof Person,
-        // TODO: This is not correct, it should be true
-        {
-          name: never;
-          age: never;
-          extra: never;
-        }
-      >;
+      type LoadedPerson = Loaded<typeof Person, true>;
 
       function isValidLoaded(value: LoadedPerson) {
         return value;
