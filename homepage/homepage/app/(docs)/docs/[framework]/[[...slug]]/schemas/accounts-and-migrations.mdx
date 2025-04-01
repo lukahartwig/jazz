@@ -83,7 +83,7 @@ If you want to extend the `profile` to contain additional fields (such as an ava
 <CodeGroup>
 {/* prettier-ignore */}
 ```ts
-import { Account, Profile, ImageDefinition } from "jazz-tools";
+import { Account, Profile, ImageDefinition } from "jazz-tools"; // [!code ++]
 
 export class MyAppAccount extends Account {
   profile = co.ref(MyAppProfile); // [!code ++]

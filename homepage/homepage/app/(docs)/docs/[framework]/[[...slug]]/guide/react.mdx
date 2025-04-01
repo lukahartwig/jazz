@@ -756,12 +756,12 @@ import { createInviteLink } from "jazz-react"; // [!code ++]
 export function ProjectComponent({ projectID }: { projectID: ID<Project> }) {
     const project = useCoState(Project, projectID, { resolve: { issues:  { $each: true } } }); 
 
-    const { me } = useAccount(); // [!code ++]
+    const { me } = useAccount(); // [!code ++:6]
 
-    const invite = (role: "reader" | "writer") => { // [!code ++]
-        const link = createInviteLink(project, role, { valueHint: "project" }); // [!code ++]
-        navigator.clipboard.writeText(link); // [!code ++]
-    }; // [!code ++]
+    const invite = (role: "reader" | "writer") => {
+        const link = createInviteLink(project, role, { valueHint: "project" });
+        navigator.clipboard.writeText(link);
+    };
 
     const createAndAddIssue = () => {
         project?.issues.push(Issue.create({ 
