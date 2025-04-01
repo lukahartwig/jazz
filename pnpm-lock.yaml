@@ -9,6 +9,11 @@ overrides:
   react-dom: 18.3.1
   esbuild: 0.24.0
 
+patchedDependencies:
+  expo-router:
+    hash: sc7oaojtc4okkvj25thl4ppkci
+    path: patches/expo-router.patch
+
 importers:
 
   .:
@@ -411,7 +416,7 @@ importers:
         version: 7.0.5(expo@52.0.42(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@expo/metro-runtime@4.0.1(react-native@0.76.7(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@react-native-community/cli-server-api@15.0.1)(@types/react@18.3.12)(react@18.3.1)))(graphql@16.10.0)(react-native@0.76.7(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@react-native-community/cli-server-api@15.0.1)(@types/react@18.3.12)(react@18.3.1))(react@18.3.1))(react-native@0.76.7(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@react-native-community/cli-server-api@15.0.1)(@types/react@18.3.12)(react@18.3.1))(react@18.3.1)
       expo-router:
         specifier: ~4.0.19
-        version: 4.0.19(mxx76toocpt4zgmqyhatjwa2mi)
+        version: 4.0.19(patch_hash=sc7oaojtc4okkvj25thl4ppkci)(mxx76toocpt4zgmqyhatjwa2mi)
       expo-secure-store:
         specifier: ~14.0.0
         version: 14.0.1(expo@52.0.42(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@expo/metro-runtime@4.0.1(react-native@0.76.7(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@react-native-community/cli-server-api@15.0.1)(@types/react@18.3.12)(react@18.3.1)))(graphql@16.10.0)(react-native@0.76.7(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@react-native-community/cli-server-api@15.0.1)(@types/react@18.3.12)(react@18.3.1))(react@18.3.1))
@@ -20007,7 +20012,7 @@ snapshots:
     dependencies:
       invariant: 2.2.4
 
-  expo-router@4.0.19(mxx76toocpt4zgmqyhatjwa2mi):
+  expo-router@4.0.19(patch_hash=sc7oaojtc4okkvj25thl4ppkci)(mxx76toocpt4zgmqyhatjwa2mi):
     dependencies:
       '@expo/metro-runtime': 4.0.1(react-native@0.76.7(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@react-native-community/cli-server-api@15.0.1)(@types/react@18.3.12)(react@18.3.1))
       '@expo/server': 0.5.3
