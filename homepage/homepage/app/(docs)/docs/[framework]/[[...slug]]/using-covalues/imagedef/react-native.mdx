@@ -6,7 +6,7 @@ export const metadata = { title: "ImageDefinition" };
 
 `ImageDefinition` is a specialized CoValue designed specifically for managing images in Jazz. It extends beyond basic file storage by supporting multiple resolutions of the same image, optimized for mobile devices.
 
-> **Note**: This guide applies to both Expo and framework-less React Native implementations. The functionality described here is identical regardless of which implementation you're using, though you'll need to import from the appropriate package (`jazz-expo` or `jazz-react-native`).
+**Note**: This guide applies to both Expo and framework-less React Native implementations. The functionality described here is identical regardless of which implementation you're using, though you'll need to import from the appropriate package (`jazz-expo` or `jazz-react-native`).
 
 Jazz offers several tools to work with images in React Native:
 - [`createImage()`](#creating-images) - function to create an `ImageDefinition` from a base64 image data URI
@@ -25,14 +25,14 @@ The easiest way to create and use images in your Jazz application is with the `c
 <CodeGroup>
 ```tsx
 import { createImage } from "jazz-react-native-media-images";
-import * as ImagePicker from 'expo-image-picker';
+import { launchImageLibrary } from 'react-native-image-picker';
 
 async function handleImagePicker() {
   try {
     // Launch the image picker
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      base64: true,
+    const result = await launchImageLibrary({
+      mediaType: 'photo',
+      includeBase64: true,
       quality: 1,
     });
 
