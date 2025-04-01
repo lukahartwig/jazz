@@ -1,11 +1,12 @@
-import { AnonymousJazzAgent, ID, SchemaV2 } from "jazz-tools";
+import { AnonymousJazzAgent, SchemaV2 } from "jazz-tools";
 import type { Account } from "jazz-tools";
 import type {
   CoValueSchema,
+  ID,
   Loaded,
   ResolveQuery,
   ResolveQueryStrict,
-} from "jazz-tools/dist/schema/schema.js";
+} from "jazz-tools/dist/zodSchema/schema.js";
 import { useCallback, useRef, useState, useSyncExternalStore } from "react";
 import { useJazzContextManager } from "./hooks.js";
 import {
