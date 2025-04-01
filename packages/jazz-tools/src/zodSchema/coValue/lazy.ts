@@ -6,7 +6,7 @@ export class LazySchema<T extends CoValueSchema> {
   lazySchema: () => T;
   [LazySchemaSymbol]: true;
 
-  declare output: T;
+  declare _schema: T;
 
   constructor(lazySchema: () => T) {
     this.lazySchema = lazySchema;

@@ -29,4 +29,4 @@ export function isOptional<
 }
 
 export type Optional<T extends CoMapSchemaClass<any, any, any>> =
-  T["OptionalType"];
+  T["_optionalType"];

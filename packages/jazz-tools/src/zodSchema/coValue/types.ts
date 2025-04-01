@@ -4,17 +4,13 @@ import { IDMarker } from "../../internal.js";
 import { LoadedCoMapJazzProps } from "../coMap/instance.js";
 import {
   AnyCoMapSchema,
-  CoMapClassToSchema,
   CoMapRecordDef,
   CoMapRecordKey,
   CoMapSchema,
-  CoValueClassToSchema,
   CoValueSchema,
   CoValueSchemaToClass,
   PrimitiveProps,
   RefProps,
-  UnwrapRecordReference,
-  UnwrapReference,
 } from "../coMap/schema.js";
 import { IsDepthLimit, flatten, simplifyResolveQuery } from "./typeUtils.js";
 
@@ -33,23 +29,23 @@ export type ResolveQuery<
       : S extends AnyCoMapSchema
         ? simplifyResolveQuery<
             {
-              [K in RefProps<S>]?: UnwrapReference<S, K> extends CoValueSchema
-                ? ResolveQuery<UnwrapReference<S, K>, [0, ...CurrentDepth]>
+              [K in keyof S["shape"]]?: S["shape"][K] extends {
+                _schema: CoValueSchema;
+              }
+                ? ResolveQuery<S["shape"][K]["_schema"], [0, ...CurrentDepth]>
                 : never;
-            } & (S["record"] extends CoMapRecordDef
-              ? UnwrapRecordReference<S> extends CoValueSchema
-                ? {
-                    [K in CoMapRecordKey<S>]?: ResolveQuery<
-                      UnwrapRecordReference<S>,
-                      [0, ...CurrentDepth]
-                    >;
-                  } & {
-                    $each?: ResolveQuery<
-                      UnwrapRecordReference<S>,
-                      [0, ...CurrentDepth]
-                    >;
-                  }
-                : unknown
+            } & (S["record"] extends { value: { _schema: CoValueSchema } }
+              ? {
+                  [K in CoMapRecordKey<S>]?: ResolveQuery<
+                    S["record"]["value"]["_schema"],
+                    [0, ...CurrentDepth]
+                  >;
+                } & {
+                  $each?: ResolveQuery<
+                    S["record"]["value"]["_schema"],
+                    [0, ...CurrentDepth]
+                  >;
+                }
               : unknown)
           >
         : true);
@@ -115,8 +111,10 @@ export type LoadedCoMapExplicitRefProps<
   Options extends "nullable" | "non-nullable",
   CurrentDepth extends number[],
 > = {
-  readonly [K in RefProps<S>]: UnwrapReference<S, K> extends infer ChildSchema
-    ? ChildSchema extends AnyCoMapSchema
+  readonly [K in RefProps<S>]: S["shape"][K] extends {
+    _schema: infer ChildSchema;
+  }
+    ? ChildSchema extends CoValueSchema
       ? isQueryLeafNode<R> extends true
         ? Options extends "non-nullable"
           ? ChildSchema extends { isOptional: true }
@@ -142,14 +140,14 @@ export type LoadedCoMapRecordProps<
   R,
   Options extends "nullable" | "non-nullable",
   CurrentDepth extends number[],
-> = UnwrapRecordReference<S> extends CoValueSchema
+> = S["record"]["value"] extends { _schema: CoValueSchema }
   ? CoMapRecordExplicitlyQueriedProps<S, R, Options, CurrentDepth> &
       (R extends { $each: unknown }
         ? CoMapRecordQueriedByEachProps<S, R, R["$each"], Options, CurrentDepth>
         : {
             // Filling the primitive record properties
             readonly [K in CoMapRecordKey<S>]?: Unloaded<
-              UnwrapRecordReference<S>
+              S["record"]["value"]["_schema"]
             >;
           })
   : S["record"]["value"] extends ZodTypeAny
@@ -164,25 +162,25 @@ export type CoMapRecordExplicitlyQueriedProps<
   R,
   Options extends "nullable" | "non-nullable",
   CurrentDepth extends number[],
-> = UnwrapRecordReference<S> extends CoValueSchema
+> = S["record"]["value"] extends { _schema: CoValueSchema }
   ? {
       // Filling the record relations directly resolved with the query
       readonly [K in Exclude<
         CoMapRecordKey<S> & keyof R,
         "$each"
-      >]: R[K] extends ResolveQuery<UnwrapRecordReference<S>>
+      >]: R[K] extends ResolveQuery<S["record"]["value"]["_schema"]>
         ? isQueryLeafNode<R> extends true
           ?
-              | Loaded<UnwrapRecordReference<S>>
-              | addNullable<Options, UnwrapRecordReference<S>>
+              | Loaded<S["record"]["value"]["_schema"]>
+              | addNullable<Options, S["record"]["value"]["_schema"]>
           :
               | Loaded<
-                  UnwrapRecordReference<S>,
+                  S["record"]["value"]["_schema"],
                   R[K],
                   Options,
                   [0, ...CurrentDepth]
                 >
-              | addNullable<Options, UnwrapRecordReference<S>>
+              | addNullable<Options, S["record"]["value"]["_schema"]>
         : "Not a valid reference key for the schema";
     }
   : {};
@@ -193,22 +191,22 @@ export type CoMapRecordQueriedByEachProps<
   EachQuery,
   Options extends "nullable" | "non-nullable",
   CurrentDepth extends number[],
-> = UnwrapRecordReference<S> extends CoValueSchema
+> = S["record"]["value"] extends { _schema: CoValueSchema }
   ? {
       // Either fill the record relations or set them as null
       readonly [K in CoMapRecordKey<S>]: isQueryLeafNode<R> extends true
         ?
-            | Loaded<UnwrapRecordReference<S>>
-            | addNullable<Options, UnwrapRecordReference<S>>
-        : EachQuery extends ResolveQuery<UnwrapRecordReference<S>>
+            | Loaded<S["record"]["value"]["_schema"]>
+            | addNullable<Options, S["record"]["value"]["_schema"]>
+        : EachQuery extends ResolveQuery<S["record"]["value"]["_schema"]>
           ?
               | Loaded<
-                  UnwrapRecordReference<S>,
+                  S["record"]["value"]["_schema"],
                   EachQuery,
                   Options,
                   [0, ...CurrentDepth]
                 >
-              | addNullable<Options, UnwrapRecordReference<S>>
+              | addNullable<Options, S["record"]["value"]["_schema"]>
           : "Invalid $each query";
     }
   : {};
@@ -227,8 +225,6 @@ export type MaybeLoaded<
   D extends CoValueSchema,
   R extends ResolveQuery<D> = true,
 > = Loaded<D, R> | Unloaded<D>;
-
-export type UnwrapZodType<T, O> = T extends ZodTypeAny ? TypeOf<T> : O;
 
 export type addNullable<
   O extends "nullable" | "non-nullable",

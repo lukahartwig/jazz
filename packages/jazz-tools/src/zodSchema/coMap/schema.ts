@@ -4,7 +4,7 @@ import { Account } from "../../coValues/account.js";
 import { Group } from "../../coValues/group.js";
 import { parseCoValueCreateOptions } from "../../internal.js";
 import { LazySchema } from "../coValue/lazy.js";
-import { addOptional, isOptional } from "../coValue/optional.js";
+import { isOptional } from "../coValue/optional.js";
 import {
   IsDepthLimit,
   flatten,
@@ -27,27 +27,10 @@ export type CoMapSchemaKey<S extends AnyCoMapSchema> =
 export type CoMapRecordKey<S extends AnyCoMapSchema> =
   S["record"] extends CoMapRecordDef ? TypeOf<S["record"]["key"]> : never;
 
-export type CoMapRecordFieldType<S extends AnyCoMapSchema> =
-  S["record"] extends CoMapRecordDef ? S["record"]["value"] : never;
-
 export type CoValueSchema = AnyCoMapSchema;
 
-export type UnwrapRecordReference<S extends CoValueSchema> =
-  S["record"] extends CoMapRecordDef
-    ? S["record"]["value"] extends CoValueSchema | LazySchema<any>
-      ? S["record"]["value"]["output"]
-      : "Not a valid reference"
-    : "Not a valid record";
-
-export type UnwrapReference<
-  S extends AnyCoMapSchema,
-  K extends CoMapSchemaKey<S>,
-> = S["shape"][K] extends CoValueSchema | LazySchema<any>
-  ? S["shape"][K]["output"]
-  : "Not a valid reference";
-
 export type RefProps<S extends AnyCoMapSchema> = {
-  [K in keyof S["shape"]]: S["shape"][K] extends CoValueSchema | LazySchema<any>
+  [K in keyof S["shape"]]: S["shape"][K] extends { _schema: CoValueSchema }
     ? K
     : never;
 }[keyof S["shape"]];
@@ -56,17 +39,12 @@ export type PrimitiveProps<S extends AnyCoMapSchema> = {
   [K in keyof S["shape"]]: S["shape"][K] extends ZodTypeAny ? K : never;
 }[keyof S["shape"]];
 
-type CoMapChildSchemaInit<
-  S extends AnyCoMapSchema,
-  CurrentDepth extends number[],
-> = CoMapInit<CoMapSchema<S["shape"], S["record"], false>, CurrentDepth>; // To accept inline init values
-
 type OptionalKeys<S extends AnyCoMapSchema> = {
   [K in keyof S["shape"]]: S["shape"][K] extends ZodTypeAny
     ? undefined extends TypeOf<S["shape"][K]>
       ? K
       : never
-    : isOptional<UnwrapReference<S, K>> extends true
+    : isOptional<S["shape"][K]["_schema"]> extends true
       ? K
       : never;
 }[keyof S["shape"]];
@@ -76,7 +54,7 @@ type RequiredKeys<S extends AnyCoMapSchema> = {
     ? undefined extends TypeOf<S["shape"][K]>
       ? never
       : K
-    : isOptional<UnwrapReference<S, K>> extends true
+    : isOptional<S["shape"][K]["_schema"]> extends true
       ? never
       : K;
 }[keyof S["shape"]];
@@ -90,11 +68,11 @@ export type CoMapInit<
       {
         [K in OptionalKeys<S>]?: S["shape"][K] extends ZodTypeAny
           ? TypeOf<S["shape"][K]>
-          : CoMapChildSchemaInit<S["shape"][K]["output"], [0, ...CurrentDepth]>;
+          : CoMapInit<S["shape"][K]["_schema"], [0, ...CurrentDepth]>;
       } & {
         [K in RequiredKeys<S>]: S["shape"][K] extends ZodTypeAny
           ? TypeOf<S["shape"][K]>
-          : CoMapChildSchemaInit<S["shape"][K]["output"], [0, ...CurrentDepth]>;
+          : CoMapInit<S["shape"][K]["_schema"], [0, ...CurrentDepth]>;
       } & {
         [K in keyof S["shape"]]?: unknown;
       }
@@ -103,9 +81,9 @@ export type CoMapInit<
         ? {
             [K in CoMapRecordKey<S>]: S["record"]["value"] extends ZodTypeAny
               ? TypeOf<S["record"]["value"]>
-              : S["record"]["value"] extends CoValueSchema | LazySchema<any>
-                ? CoMapChildSchemaInit<
-                    S["record"]["value"]["output"],
+              : S["record"]["value"] extends { _schema: CoValueSchema }
+                ? CoMapInit<
+                    S["record"]["value"]["_schema"],
                     [0, ...CurrentDepth]
                   >
                 : never;
@@ -123,7 +101,7 @@ type ReolveQueryForCoMapChild<
   CurrentDepth extends number[],
 > = ChildSchema extends AnyCoMapSchema
   ? I extends LoadedCoMapJazzProps<ChildSchema, any> // If the init is a CoMap, return the resolve query
-    ? I["$jazz"]["resolveQuery"]
+    ? I["$jazz"]["_resolveQuery"]
     : I extends CoMapInit<ChildSchema>
       ? ResolveQueryForCoMapInit<ChildSchema, I, CurrentDepth>
       : never
@@ -139,14 +117,14 @@ export type ResolveQueryForCoMapInit<
     ? simplifyResolveQuery<
         {
           [K in keyof I & RefProps<S>]: ReolveQueryForCoMapChild<
-            UnwrapReference<S, K>,
+            S["shape"][K]["_schema"],
             I[K],
             [0, ...CurrentDepth]
           >;
-        } & (S["record"] extends CoMapRecordDef
+        } & (S["record"] extends { value: { _schema: CoValueSchema } }
           ? {
               [K in keyof I & CoMapRecordKey<S>]: ReolveQueryForCoMapChild<
-                UnwrapRecordReference<S>,
+                S["record"]["value"]["_schema"],
                 I[K],
                 [0, ...CurrentDepth]
               >;
@@ -164,26 +142,17 @@ export type CoMapSchema<
   record: R;
   isOptional: O;
 
-  output: CoMapSchema<S, R, O>;
+  _schema: CoMapSchema<S, R, O>;
 
   get(key: CoMapSchemaKey<CoMapSchema<S, R>>): CoMapField | undefined;
   keys(): (keyof S & string)[];
 };
 
-export type CoValueClassToSchema<D extends CoValueSchema> =
-  D extends AnyCoMapSchema ? CoMapClassToSchema<D> : never;
-
-export type CoMapClassToSchema<D extends AnyCoMapSchema> = D extends {
-  $isSchemaClass: true;
-}
-  ? CoMapSchema<D["shape"], D["record"], D["isOptional"]>
-  : D;
-
 export type CoValueSchemaToClass<D extends CoValueSchema> =
   D extends AnyCoMapSchema ? CoMapSchemaToClass<D> : never;
 
 export type CoMapSchemaToClass<D extends AnyCoMapSchema> = D extends {
-  $isSchemaClass: true;
+  _isSchemaClass: true;
 }
   ? D
   : CoMapSchemaClass<D["shape"], D["record"], D["isOptional"]>;
@@ -200,9 +169,9 @@ export class CoMapSchemaClass<
   record: R;
   isOptional: O;
 
-  declare output: CoMapSchema<S, R, O>;
-  declare OptionalType: CoMapSchemaClass<S, R, true>;
-  declare $isSchemaClass: true;
+  declare _schema: CoMapSchema<S, R, O>;
+  declare _optionalType: CoMapSchemaClass<S, R, true>;
+  declare _isSchemaClass: true;
 
   constructor(schema: S, record: R, isOptional: O) {
     this.shape = schema;

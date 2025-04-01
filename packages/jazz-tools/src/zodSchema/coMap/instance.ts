@@ -69,7 +69,7 @@ export class CoMapJazzApi<
   refs: ChildMap<D> = new Map();
   protected lastUpdateTx: number;
   declare _instance: Loaded<D, R>;
-  declare resolveQuery: R;
+  declare _resolveQuery: R;
 
   constructor(
     schema: D,
