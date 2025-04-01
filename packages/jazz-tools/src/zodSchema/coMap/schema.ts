@@ -4,14 +4,15 @@ import { Account } from "../../coValues/account.js";
 import { Group } from "../../coValues/group.js";
 import { parseCoValueCreateOptions } from "../../internal.js";
 import { LazySchema } from "../coValue/lazy.js";
-import { isOptional } from "../coValue/optional.js";
 import {
   IsDepthLimit,
+  ResolveQueryOf,
+  SchemaOf,
   flatten,
   simplifyResolveQuery,
 } from "../coValue/typeUtils.js";
 import { Loaded } from "../coValue/types.js";
-import { LoadedCoMapJazzProps, createCoMap } from "./instance.js";
+import { createCoMap } from "./instance.js";
 
 export type CoMapField = CoValueSchema | ZodTypeAny | LazySchema<any>;
 export type CoMapRecordDef = { key: ZodString; value: CoMapField };
@@ -44,7 +45,7 @@ type OptionalKeys<S extends AnyCoMapSchema> = {
     ? undefined extends TypeOf<S["shape"][K]>
       ? K
       : never
-    : isOptional<S["shape"][K]["_schema"]> extends true
+    : SchemaOf<S["shape"][K]> extends { isOptional: true }
       ? K
       : never;
 }[keyof S["shape"]];
@@ -54,7 +55,7 @@ type RequiredKeys<S extends AnyCoMapSchema> = {
     ? undefined extends TypeOf<S["shape"][K]>
       ? never
       : K
-    : isOptional<S["shape"][K]["_schema"]> extends true
+    : SchemaOf<S["shape"][K]> extends { isOptional: true }
       ? never
       : K;
 }[keyof S["shape"]];
@@ -68,11 +69,11 @@ export type CoMapInit<
       {
         [K in OptionalKeys<S>]?: S["shape"][K] extends ZodTypeAny
           ? TypeOf<S["shape"][K]>
-          : CoMapInit<S["shape"][K]["_schema"], [0, ...CurrentDepth]>;
+          : CoMapInit<SchemaOf<S["shape"][K]>, [0, ...CurrentDepth]>;
       } & {
         [K in RequiredKeys<S>]: S["shape"][K] extends ZodTypeAny
           ? TypeOf<S["shape"][K]>
-          : CoMapInit<S["shape"][K]["_schema"], [0, ...CurrentDepth]>;
+          : CoMapInit<SchemaOf<S["shape"][K]>, [0, ...CurrentDepth]>;
       } & {
         [K in keyof S["shape"]]?: unknown;
       }
@@ -83,7 +84,7 @@ export type CoMapInit<
               ? TypeOf<S["record"]["value"]>
               : S["record"]["value"] extends { _schema: CoValueSchema }
                 ? CoMapInit<
-                    S["record"]["value"]["_schema"],
+                    SchemaOf<S["record"]["value"]>,
                     [0, ...CurrentDepth]
                   >
                 : never;
@@ -100,11 +101,9 @@ type ReolveQueryForCoMapChild<
   I,
   CurrentDepth extends number[],
 > = ChildSchema extends AnyCoMapSchema
-  ? I extends LoadedCoMapJazzProps<ChildSchema, any> // If the init is a CoMap, return the resolve query
-    ? I["$jazz"]["_resolveQuery"]
-    : I extends CoMapInit<ChildSchema>
-      ? ResolveQueryForCoMapInit<ChildSchema, I, CurrentDepth>
-      : never
+  ? I extends { $jazz: { _resolveQuery: any } }
+    ? ResolveQueryOf<I>
+    : ResolveQueryForCoMapInit<ChildSchema, I, CurrentDepth>
   : never;
 
 export type ResolveQueryForCoMapInit<
@@ -117,19 +116,19 @@ export type ResolveQueryForCoMapInit<
     ? simplifyResolveQuery<
         {
           [K in keyof I & RefProps<S>]: ReolveQueryForCoMapChild<
-            S["shape"][K]["_schema"],
+            SchemaOf<S["shape"][K]>,
             I[K],
             [0, ...CurrentDepth]
           >;
         } & (S["record"] extends { value: { _schema: CoValueSchema } }
           ? {
               [K in keyof I & CoMapRecordKey<S>]: ReolveQueryForCoMapChild<
-                S["record"]["value"]["_schema"],
+                SchemaOf<S["record"]["value"]>,
                 I[K],
                 [0, ...CurrentDepth]
               >;
             }
-          : {})
+          : unknown)
       >
     : true;
 
@@ -143,6 +142,7 @@ export type CoMapSchema<
   isOptional: O;
 
   _schema: CoMapSchema<S, R, O>;
+  _ID: { shape: S; record: R }; // Used to identify the schema through the ID type
 
   get(key: CoMapSchemaKey<CoMapSchema<S, R>>): CoMapField | undefined;
   keys(): (keyof S & string)[];
@@ -172,6 +172,7 @@ export class CoMapSchemaClass<
   declare _schema: CoMapSchema<S, R, O>;
   declare _optionalType: CoMapSchemaClass<S, R, true>;
   declare _isSchemaClass: true;
+  declare _ID: { shape: S; record: R };
 
   constructor(schema: S, record: R, isOptional: O) {
     this.shape = schema;

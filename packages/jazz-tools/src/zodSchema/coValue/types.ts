@@ -12,7 +12,12 @@ import {
   PrimitiveProps,
   RefProps,
 } from "../coMap/schema.js";
-import { IsDepthLimit, flatten, simplifyResolveQuery } from "./typeUtils.js";
+import {
+  IsDepthLimit,
+  SchemaOf,
+  flatten,
+  simplifyResolveQuery,
+} from "./typeUtils.js";
 
 export type ResolveQueryStrict<
   T extends CoValueSchema,
@@ -32,17 +37,17 @@ export type ResolveQuery<
               [K in keyof S["shape"]]?: S["shape"][K] extends {
                 _schema: CoValueSchema;
               }
-                ? ResolveQuery<S["shape"][K]["_schema"], [0, ...CurrentDepth]>
+                ? ResolveQuery<SchemaOf<S["shape"][K]>, [0, ...CurrentDepth]>
                 : never;
             } & (S["record"] extends { value: { _schema: CoValueSchema } }
               ? {
                   [K in CoMapRecordKey<S>]?: ResolveQuery<
-                    S["record"]["value"]["_schema"],
+                    SchemaOf<S["record"]["value"]>,
                     [0, ...CurrentDepth]
                   >;
                 } & {
                   $each?: ResolveQuery<
-                    S["record"]["value"]["_schema"],
+                    SchemaOf<S["record"]["value"]>,
                     [0, ...CurrentDepth]
                   >;
                 }
@@ -147,7 +152,7 @@ export type LoadedCoMapRecordProps<
         : {
             // Filling the primitive record properties
             readonly [K in CoMapRecordKey<S>]?: Unloaded<
-              S["record"]["value"]["_schema"]
+              SchemaOf<S["record"]["value"]>
             >;
           })
   : S["record"]["value"] extends ZodTypeAny
@@ -168,19 +173,19 @@ export type CoMapRecordExplicitlyQueriedProps<
       readonly [K in Exclude<
         CoMapRecordKey<S> & keyof R,
         "$each"
-      >]: R[K] extends ResolveQuery<S["record"]["value"]["_schema"]>
+      >]: R[K] extends ResolveQuery<SchemaOf<S["record"]["value"]>>
         ? isQueryLeafNode<R> extends true
           ?
-              | Loaded<S["record"]["value"]["_schema"]>
-              | addNullable<Options, S["record"]["value"]["_schema"]>
+              | Loaded<SchemaOf<S["record"]["value"]>>
+              | addNullable<Options, SchemaOf<S["record"]["value"]>>
           :
               | Loaded<
-                  S["record"]["value"]["_schema"],
+                  SchemaOf<S["record"]["value"]>,
                   R[K],
                   Options,
                   [0, ...CurrentDepth]
                 >
-              | addNullable<Options, S["record"]["value"]["_schema"]>
+              | addNullable<Options, SchemaOf<S["record"]["value"]>>
         : "Not a valid reference key for the schema";
     }
   : {};
@@ -196,17 +201,17 @@ export type CoMapRecordQueriedByEachProps<
       // Either fill the record relations or set them as null
       readonly [K in CoMapRecordKey<S>]: isQueryLeafNode<R> extends true
         ?
-            | Loaded<S["record"]["value"]["_schema"]>
-            | addNullable<Options, S["record"]["value"]["_schema"]>
-        : EachQuery extends ResolveQuery<S["record"]["value"]["_schema"]>
+            | Loaded<SchemaOf<S["record"]["value"]>>
+            | addNullable<Options, SchemaOf<S["record"]["value"]>>
+        : EachQuery extends ResolveQuery<SchemaOf<S["record"]["value"]>>
           ?
               | Loaded<
-                  S["record"]["value"]["_schema"],
+                  SchemaOf<S["record"]["value"]>,
                   EachQuery,
                   Options,
                   [0, ...CurrentDepth]
                 >
-              | addNullable<Options, S["record"]["value"]["_schema"]>
+              | addNullable<Options, SchemaOf<S["record"]["value"]>>
           : "Invalid $each query";
     }
   : {};
@@ -235,12 +240,5 @@ export type addNullable<
     : never
   : never;
 
-export type ID<D extends CoValueSchema> = CojsonInternalTypes.RawCoID &
-  IDMarker<
-    D extends AnyCoMapSchema
-      ? {
-          shape: D["shape"];
-          record: D["record"];
-        }
-      : never
-  >;
+export type ID<S extends CoValueSchema> = CojsonInternalTypes.RawCoID &
+  IDMarker<S["_ID"]>;

@@ -28,8 +28,8 @@ type validResolveKeys<T> = {
 
 export type simplifyResolveQuery<R> = validResolveKeys<R> extends never
   ? true
-  : { [K in keyof R]: R[K] };
+  : identity<{ [K in keyof R]: R[K] }>;
 
-export type readonly<T> = {
-  readonly [K in keyof T]: T[K];
-};
+export type SchemaOf<T extends { _schema: any }> = T["_schema"];
+export type ResolveQueryOf<T extends { $jazz: { _resolveQuery: any } }> =
+  T["$jazz"]["_resolveQuery"];
