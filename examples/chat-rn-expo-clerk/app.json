@@ -23,6 +23,7 @@
       },
       "package": "com.jazz.chatrnclerk"
     },
+    "newArchEnabled": true,
     "plugins": [
       "expo-secure-store",
       "expo-font",
