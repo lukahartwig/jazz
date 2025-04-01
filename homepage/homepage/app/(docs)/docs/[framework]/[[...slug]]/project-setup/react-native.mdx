@@ -10,12 +10,7 @@ Jazz supports the [New Architecture](https://reactnative.dev/architecture/landin
 
 Tested with:
 
-<CodeGroup>
-```json
-"react-native": "0.76.7",
-"react": "18.3.1"
-```
-</CodeGroup>
+<CodeGroup>```json "react-native": "0.76.7", "react": "18.3.1" ```</CodeGroup>
 
 ## Setup
 
@@ -24,10 +19,7 @@ Tested with:
 (Skip this step if you already have one)
 
 <CodeGroup>
-```bash
-pnpx @react-native-community/cli init my-jazz-app
-cd my-jazz-app
-```
+  ```bash pnpx @react-native-community/cli init my-jazz-app cd my-jazz-app ```
 </CodeGroup>
 
 ### Install dependencies
@@ -38,11 +30,14 @@ cd my-jazz-app
 npm install @react-native-community/netinfo @bam.tech/react-native-image-resizer
 
 # React Native polyfills
+
 npm i -S @azure/core-asynciterator-polyfill react-native-url-polyfill readable-stream react-native-get-random-values @craftzdog/react-native-buffer @op-engineering/op-sqlite react-native-mmkv
 
 # Jazz dependencies
+
 npm i -S jazz-tools jazz-react-native jazz-react-native-media-images
-```
+
+````
 </CodeGroup>
 
 **Note**: Hermes has added support for `atob` and `btoa` in React Native 0.74. If you are using earlier versions, you may also need to polyfill `atob` and `btoa` in your `package.json`. Packages to try include `text-encoding` and `base-64`, and you can drop `@bacons/text-decoder`.
@@ -54,7 +49,8 @@ If you're compiling for iOS, you'll need to install CocoaPods for your project. 
 <CodeGroup>
 ```bash
 pnpm pods
-```
+````
+
 </CodeGroup>
 
 ### Configure Metro
@@ -118,7 +114,8 @@ module.exports = makeMetroConfig({
   sourceExts: ["mjs", "js", "json", "ts", "tsx"],
   watchFolders,
 });
-```
+````
+
 </CodeGroup>
 
 ### Additional monorepo configuration (for pnpm)
@@ -171,7 +168,8 @@ import {name as appName} from './app.json';
 import './src/polyfills';
 
 AppRegistry.registerComponent(appName, () => App);
-```
+
+````
 </CodeGroup>
 
 Lastly, ensure that the `"main"` field in your `package.json` points to `index.js`:
@@ -183,7 +181,8 @@ Lastly, ensure that the `"main"` field in your `package.json` points to `index.j
   "main": "index.js",
   ...
 }
-```
+````
+
 </CodeGroup>
 
 ## Setting up the provider
@@ -209,11 +208,12 @@ export function MyJazzProvider({ children }: { children: React.ReactNode }) {
 
 // Register the Account schema so `useAccount` returns our custom `MyAppAccount`
 declare module "jazz-react-native" {
-  interface Register {
-    Account: MyAppAccount;
-  }
+interface Register {
+Account: MyAppAccount;
 }
-```
+}
+
+````
 </CodeGroup>
 
 ### Provider Options
@@ -269,7 +269,8 @@ import {
 >
   {children}
 </JazzProvider>
-```
+````
+
 </CodeGroup>
 
 ### Choosing an auth method
@@ -322,7 +323,8 @@ const handleImageUpload = async () => {
     console.error('Failed to upload image:', error);
   }
 };
-```
+
+````
 </CodeGroup>
 
 #### Displaying Images
@@ -348,7 +350,8 @@ import { Image } from "react-native";
     />
   )}
 </ProgressiveImg>
-```
+````
+
 </CodeGroup>
 
 The `ProgressiveImg` component:
@@ -372,5 +375,7 @@ pnpm ios
 
 pnpm i
 pnpm android
+
 ```
 </CodeGroup>
+```
