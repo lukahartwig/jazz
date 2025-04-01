@@ -7,6 +7,7 @@ import { AnonymousJazzAgent } from "../../internal.js";
 import { coValuesCache } from "../../lib/cache.js";
 import { LazySchema, isLazySchema } from "../coValue/lazy.js";
 import { isOptional } from "../coValue/optional.js";
+import { extensibleResolveQuery } from "../coValue/typeUtils.js";
 import {
   ID,
   Loaded,
@@ -65,16 +66,16 @@ export class CoMapJazzApi<
   raw: RawCoMap;
   schema: D;
   id: ID<D>;
-  _resolutionNode: CoValueResolutionNode<D, R> | undefined;
+  _resolutionNode: CoValueResolutionNode<D> | undefined;
   refs: ChildMap<D> = new Map();
   protected lastUpdateTx: number;
-  declare _instance: Loaded<D, R>;
-  declare _resolveQuery: R;
+  declare _instance: Loaded<D, any>;
+  declare _resolveQuery: extensibleResolveQuery<R>;
 
   constructor(
     schema: D,
     raw: RawCoMap,
-    resolutionNode?: CoValueResolutionNode<D, R>,
+    resolutionNode?: CoValueResolutionNode<D>,
   ) {
     this.schema = schema;
     this.raw = raw;
@@ -133,7 +134,7 @@ export class CoMapJazzApi<
 
   updated(refs?: ChildMap<D>): Loaded<D, R> {
     if (this.lastUpdateTx === this.raw.totalProcessedTransactions && !refs) {
-      return this._instance;
+      return this._instance as Loaded<D, R>;
     }
 
     return createCoMapFromRaw<D, R>(
@@ -154,7 +155,7 @@ export class CoMapJazzApi<
   ensureLoaded<O extends ResolveQuery<D>>(options: {
     resolve: ResolveQueryStrict<D, O>;
   }): Promise<Loaded<D, O>> {
-    return ensureCoValueLoaded<D, R, O>(this._instance, {
+    return ensureCoValueLoaded<D, R, O>(this._instance as Loaded<D, R>, {
       resolve: options.resolve,
     });
   }
@@ -229,7 +230,7 @@ export function createCoMapFromRaw<
   schema: D,
   raw: RawCoMap,
   refs?: ChildMap<D>,
-  resolutionNode?: CoValueResolutionNode<D, R>,
+  resolutionNode?: CoValueResolutionNode<D>,
 ) {
   const instance = Object.create({
     $jazz: new CoMapJazzApi(schema, raw, resolutionNode),

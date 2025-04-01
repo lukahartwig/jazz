@@ -17,6 +17,7 @@ import {
   SchemaOf,
   flatten,
   simplifyResolveQuery,
+  validResolveKeys,
 } from "./typeUtils.js";
 
 export type ResolveQueryStrict<
@@ -124,8 +125,8 @@ export type LoadedCoMapExplicitRefProps<
         ? Options extends "non-nullable"
           ? ChildSchema extends { isOptional: true }
             ? undefined
-            : Unloaded<ChildSchema>
-          : Unloaded<ChildSchema> | addNullable<Options, ChildSchema>
+            : MaybeLoaded<ChildSchema>
+          : MaybeLoaded<ChildSchema> | addNullable<Options, ChildSchema>
         : R[K] extends ResolveQuery<ChildSchema>
           ?
               | Loaded<ChildSchema, R[K], Options, [0, ...CurrentDepth]>
@@ -150,8 +151,7 @@ export type LoadedCoMapRecordProps<
       (R extends { $each: unknown }
         ? CoMapRecordQueriedByEachProps<S, R, R["$each"], Options, CurrentDepth>
         : {
-            // Filling the primitive record properties
-            readonly [K in CoMapRecordKey<S>]?: Unloaded<
+            readonly [K in CoMapRecordKey<S>]?: MaybeLoaded<
               SchemaOf<S["record"]["value"]>
             >;
           })
@@ -171,7 +171,7 @@ export type CoMapRecordExplicitlyQueriedProps<
   ? {
       // Filling the record relations directly resolved with the query
       readonly [K in Exclude<
-        CoMapRecordKey<S> & keyof R,
+        CoMapRecordKey<S> & validResolveKeys<R>,
         "$each"
       >]: R[K] extends ResolveQuery<SchemaOf<S["record"]["value"]>>
         ? isQueryLeafNode<R> extends true
@@ -186,7 +186,7 @@ export type CoMapRecordExplicitlyQueriedProps<
                   [0, ...CurrentDepth]
                 >
               | addNullable<Options, SchemaOf<S["record"]["value"]>>
-        : "Not a valid reference key for the schema";
+        : K;
     }
   : {};
 

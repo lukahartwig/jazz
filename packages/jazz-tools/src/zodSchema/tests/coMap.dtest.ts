@@ -526,11 +526,11 @@ describe("CoMap - test types", () => {
       expectTypeOf<typeof friends.john.name>().toEqualTypeOf<string>();
 
       expectTypeOf<typeof friends.jane>().toEqualTypeOf<
-        undefined | Unloaded<typeof Friends.record.value>
+        undefined | MaybeLoaded<typeof Friends.record.value>
       >();
 
       expectTypeOf<typeof friendsAfterAddingJane.jane>().toEqualTypeOf<
-        undefined | Unloaded<typeof Friends.record.value>
+        undefined | MaybeLoaded<typeof Friends.record.value>
       >();
     });
 
@@ -600,9 +600,8 @@ describe("CoMap - test types", () => {
 
       const values = friends.$jazz.values();
 
-      // TODO: Can we make this MaybeLoaded and remove the undefined case?
       function isValid(
-        values: (Unloaded<typeof Friends.record.value> | undefined)[],
+        values: Array<MaybeLoaded<typeof Friends.record.value> | undefined>,
       ) {
         return values;
       }
@@ -625,9 +624,11 @@ describe("CoMap - test types", () => {
 
       const entries = friends.$jazz.entries();
 
-      // TODO: Can we make this MaybeLoaded and remove the undefined case?
       function isValid(
-        entries: [string, Unloaded<typeof Friends.record.value> | undefined][],
+        entries: [
+          string,
+          MaybeLoaded<typeof Friends.record.value> | undefined,
+        ][],
       ) {
         return entries;
       }
@@ -723,6 +724,10 @@ describe("CoMap - test types", () => {
       }
 
       isValidLoaded(loaded);
+
+      assert(loaded.$jazzState === "loaded");
+
+      expectTypeOf(loaded).toEqualTypeOf<Loaded<typeof Person>>();
     });
 
     it("should disallow resolving extra properties in the load function (catchall)", async () => {
@@ -733,7 +738,10 @@ describe("CoMap - test types", () => {
       });
 
       const loaded = await loadCoValue(Person, john.$jazz.id, {
-        resolve: true,
+        // @ts-expect-error - extra is not a valid relation
+        resolve: {
+          extra: true,
+        },
       });
     });
 
@@ -759,6 +767,12 @@ describe("CoMap - test types", () => {
       }
 
       isValidLoaded(loaded);
+
+      assert(loaded.$jazzState === "loaded");
+
+      expectTypeOf(loaded.first).toEqualTypeOf<
+        MaybeLoaded<typeof Person.record.value> | undefined
+      >();
     });
 
     it("should load all the relations on co.record when using $each", async () => {
@@ -806,7 +820,7 @@ describe("CoMap - test types", () => {
       >();
 
       expectTypeOf(loaded.joe?.address).toEqualTypeOf<
-        Unloaded<typeof Friends.record.value.shape.address> | undefined
+        MaybeLoaded<typeof Friends.record.value.shape.address> | undefined
       >();
 
       const values = loaded.$jazz.values();
@@ -983,8 +997,6 @@ describe("CoMap - test types", () => {
         return value;
       }
 
-      // TODO: This is not correct, it should be valid
-      // @ts-expect-error - deepLoaded is not a valid Loaded type
       isValid(deepLoaded);
     });
 
@@ -1006,8 +1018,6 @@ describe("CoMap - test types", () => {
         return value;
       }
 
-      // TODO: This is not correct, it should be valid
-      // @ts-expect-error - deepLoaded is not a valid Loaded type
       isValid(deepLoaded);
     });
 
@@ -1029,8 +1039,6 @@ describe("CoMap - test types", () => {
         return value;
       }
 
-      // TODO: This is not correct, it should be valid
-      // @ts-expect-error - deepLoaded is not a valid Loaded type
       isValid(deepLoaded);
     });
   });

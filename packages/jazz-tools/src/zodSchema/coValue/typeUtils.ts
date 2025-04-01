@@ -22,14 +22,20 @@ type DEPTH_LIMIT = 10;
 export type IsDepthLimit<CurrentDepth extends number[]> =
   DEPTH_LIMIT extends CurrentDepth["length"] ? true : false;
 
-type validResolveKeys<T> = {
-  [K in keyof T]: T[K] extends never ? never : K;
-}[keyof T];
+export type validResolveKeys<T> = T extends true
+  ? never
+  : {
+      [K in keyof T]: T[K] extends never ? never : K;
+    }[keyof T];
 
 export type simplifyResolveQuery<R> = validResolveKeys<R> extends never
   ? true
-  : identity<{ [K in keyof R]: R[K] }>;
+  : identity<{ [K in keyof R]: simplifyResolveQuery<R[K]> }>;
+
+export type extensibleResolveQuery<R> = R extends true
+  ? {}
+  : identity<{ [K in keyof R]: extensibleResolveQuery<R[K]> }>;
 
 export type SchemaOf<T extends { _schema: any }> = T["_schema"];
 export type ResolveQueryOf<T extends { $jazz: { _resolveQuery: any } }> =
-  T["$jazz"]["_resolveQuery"];
+  simplifyResolveQuery<T["$jazz"]["_resolveQuery"]>;

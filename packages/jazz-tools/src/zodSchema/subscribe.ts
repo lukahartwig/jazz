@@ -90,19 +90,16 @@ class Subscription {
   }
 }
 
-export class CoValueResolutionNode<
-  D extends CoValueSchema,
-  R extends ResolveQuery<D>,
-> {
-  childNodes = new Map<string, CoValueResolutionNode<CoValueSchema, any>>();
+export class CoValueResolutionNode<D extends CoValueSchema> {
+  childNodes = new Map<string, CoValueResolutionNode<CoValueSchema>>();
   childValues: Map<string, Loaded<any, any> | Unloaded<any> | undefined> =
     new Map<string, Loaded<any, any> | Unloaded<any> | undefined>();
-  value: Loaded<D, R> | undefined;
+  value: Loaded<D, any> | undefined;
   error: undefined | "unauthorized" | "unavailable";
   promise: ResolvablePromise<void> | undefined;
   subscription: Subscription;
   listener:
-    | ((value: Loaded<D, R> | "unavailable" | "unauthorized") => void)
+    | ((value: Loaded<D, any> | "unavailable" | "unauthorized") => void)
     | undefined;
 
   constructor(
@@ -132,7 +129,7 @@ export class CoValueResolutionNode<
     }
 
     if (!this.value) {
-      const instance = createCoMapFromRaw<D, R>(
+      const instance = createCoMapFromRaw<D, any>(
         this.schema,
         value,
         this.childValues,
@@ -149,7 +146,7 @@ export class CoValueResolutionNode<
       if (this.isLoaded()) {
         const value = this.value.$jazz.updated(
           changesOnChildren ? this.childValues : undefined,
-        ) as Loaded<D, R>;
+        );
 
         if (value !== this.value) {
           this.value = value;
@@ -172,7 +169,7 @@ export class CoValueResolutionNode<
     }
 
     if (this.value && this.isLoaded()) {
-      this.value = this.value.$jazz.updated(this.childValues) as Loaded<D, R>;
+      this.value = this.value.$jazz.updated(this.childValues) as Loaded<D, any>;
 
       this.listener?.(this.value);
     }
@@ -191,7 +188,7 @@ export class CoValueResolutionNode<
   }
 
   setListener(
-    listener: (value: Loaded<D, R> | "unavailable" | "unauthorized") => void,
+    listener: (value: Loaded<D, any> | "unavailable" | "unauthorized") => void,
   ) {
     this.listener = listener;
     if (this.value && this.isLoaded()) {
@@ -216,14 +213,15 @@ export class CoValueResolutionNode<
 
     let hasChanged = false;
 
-    const fieldsToLoad = resolve.$each
-      ? raw
-          .keys()
-          .filter((key: string) => !(key in schema.shape))
-          .map((key: string) => [key, resolve.$each])
-      : Object.entries(resolve);
+    const fieldsToLoad =
+      "$each" in resolve && resolve.$each
+        ? raw
+            .keys()
+            .filter((key: string) => !(key in schema.shape))
+            .map((key: string) => [key, resolve.$each])
+        : Object.entries(resolve);
 
-    const newNodes = new Map<string, CoValueResolutionNode<any, any>>();
+    const newNodes = new Map<string, CoValueResolutionNode<any>>();
 
     for (const [key, query] of fieldsToLoad as [
       string,
@@ -316,7 +314,7 @@ export function subscribeToCoValue<
 
   let unsubscribed = false;
 
-  const rootNode = new CoValueResolutionNode<D, R>(
+  const rootNode = new CoValueResolutionNode<D>(
     node,
     resolve,
     id as ID<D>,
@@ -329,7 +327,9 @@ export function subscribeToCoValue<
     rootNode.subscription.unsubscribe();
   }
 
-  function handleUpdate(value: Loaded<D, R> | "unavailable" | "unauthorized") {
+  function handleUpdate(
+    value: Loaded<D, any> | "unavailable" | "unauthorized",
+  ) {
     if (unsubscribed) return;
 
     if (value === "unavailable") {
@@ -337,7 +337,7 @@ export function subscribeToCoValue<
     } else if (value === "unauthorized") {
       options.onUnauthorized?.();
     } else {
-      listener(value, unsubscribe);
+      listener(value as Loaded<D, R>, unsubscribe);
     }
   }
 
