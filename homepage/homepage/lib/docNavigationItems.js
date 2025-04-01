@@ -166,6 +166,7 @@ export const docNavigationItems = [
         done: {
           react: 100,
           "react-native": 100,
+          "react-native-expo": 100,
           vanilla: 100,
         },
       },
