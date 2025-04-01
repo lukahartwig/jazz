@@ -224,7 +224,10 @@ export class CoValueResolutionNode<
 
     const newNodes = new Map<string, CoValueResolutionNode<any, any>>();
 
-    for (const [key, query] of fieldsToLoad) {
+    for (const [key, query] of fieldsToLoad as [
+      string,
+      ResolveQuery<any, [0]>,
+    ][]) {
       const value = raw.get(key);
       const descriptor = schema.get(key);
 
@@ -260,7 +263,10 @@ export class CoValueResolutionNode<
           childSchema = childSchema.lazySchema();
         }
 
-        this.childValues.set(key, getUnloadedState(childSchema, value));
+        this.childValues.set(
+          key,
+          getUnloadedState(childSchema, value as ID<any>),
+        );
         const child = new CoValueResolutionNode(
           node,
           query,
@@ -390,6 +396,5 @@ export async function ensureCoValueLoaded<
     );
   }
 
-  // TODO: Remove this cast
-  return response as Loaded<D, R>;
+  return response;
 }

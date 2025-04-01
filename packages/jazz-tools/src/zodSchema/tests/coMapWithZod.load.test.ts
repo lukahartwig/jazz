@@ -22,9 +22,7 @@ beforeEach(() => {
   cojsonInternals.CO_VALUE_LOADING_CONFIG.TIMEOUT = 1;
 });
 
-// TODO: Test $each + errors
-// TODO: Test validation errors
-// TODO: Split type tests vs runtime tests
+// TODO: Test validation errors on load
 describe("CoMap with Zod", () => {
   describe("load", () => {
     it("should load a CoMap without nested values", async () => {
@@ -118,7 +116,7 @@ describe("CoMap with Zod", () => {
       );
 
       const loaded = await loadCoValue(Person, john.$jazz.id, {
-        resolve: { address: true },
+        resolve: true,
       });
 
       assert(loaded.$jazzState === "loaded");

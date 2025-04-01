@@ -33,14 +33,14 @@ export type CoMapRecordFieldType<S extends AnyCoMapSchema> =
 
 export type CoValueSchema = AnyCoMapSchema;
 
-export type UnwrapRecordReference<S extends AnyCoMapSchema> =
+export type UnwrapRecordReference<S extends CoValueSchema> =
   CoMapRecordFieldType<S> extends CoValueSchema
     ? CoMapRecordFieldType<S>
     : CoMapRecordFieldType<S> extends LazySchema<infer T>
       ? T extends CoValueSchema
         ? T
-        : never
-      : never;
+        : "Not a valid reference"
+      : "Not a valid reference";
 
 export type UnwrapReference<
   S extends AnyCoMapSchema,
@@ -49,7 +49,7 @@ export type UnwrapReference<
   ? S["shape"][K]
   : S["shape"][K] extends LazySchema<infer T>
     ? T
-    : never;
+    : "Not a valid reference";
 
 export type RefProps<S extends AnyCoMapSchema> = {
   [K in keyof S["shape"]]: S["shape"][K] extends CoValueSchema | LazySchema<any>

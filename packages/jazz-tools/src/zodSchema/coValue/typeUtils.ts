@@ -22,13 +22,13 @@ type DEPTH_LIMIT = 5;
 export type IsDepthLimit<CurrentDepth extends number[]> =
   DEPTH_LIMIT extends CurrentDepth["length"] ? true : false;
 
-export type keysOf<T> = {
+type validResolveKeys<T> = {
   [K in keyof T]: T[K] extends never ? never : K;
 }[keyof T];
 
-export type simplifyResolveQuery<R> = keysOf<R> extends never
+export type simplifyResolveQuery<R> = validResolveKeys<R> extends never
   ? true
-  : flatten<R>;
+  : { [K in keyof R]: R[K] };
 
 export type readonly<T> = {
   readonly [K in keyof T]: T[K];

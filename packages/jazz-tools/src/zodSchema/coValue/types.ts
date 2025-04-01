@@ -142,12 +142,8 @@ export type LoadedCoMapRecordProps<
   R,
   Options extends "nullable" | "non-nullable",
   CurrentDepth extends number[],
-> = S["record"]["value"] extends ZodTypeAny
-  ? {
-      // Filling the primitive record properties
-      readonly [K in CoMapRecordKey<S>]: TypeOf<S["record"]["value"]>;
-    }
-  : CoMapRecordExplicitlyQueriedProps<S, R, Options, CurrentDepth> &
+> = UnwrapRecordReference<S> extends CoValueSchema
+  ? CoMapRecordExplicitlyQueriedProps<S, R, Options, CurrentDepth> &
       (R extends { $each: infer EachQuery }
         ? CoMapRecordQueriedByEachProps<S, R, EachQuery, Options, CurrentDepth>
         : {
@@ -155,33 +151,41 @@ export type LoadedCoMapRecordProps<
             readonly [K in CoMapRecordKey<S>]?: Unloaded<
               UnwrapRecordReference<S>
             >;
-          });
+          })
+  : S["record"]["value"] extends ZodTypeAny
+    ? {
+        // Filling the primitive record properties
+        readonly [K in CoMapRecordKey<S>]: TypeOf<S["record"]["value"]>;
+      }
+    : "Not a valid record schema";
 
 export type CoMapRecordExplicitlyQueriedProps<
   S extends CoMapSchema<any, CoMapRecordDef, boolean>,
   R,
   Options extends "nullable" | "non-nullable",
   CurrentDepth extends number[],
-> = {
-  // Filling the record relations directly resolved with the query
-  readonly [K in Exclude<
-    CoMapRecordKey<S> & keyof R,
-    "$each"
-  >]: R[K] extends ResolveQuery<UnwrapRecordReference<S>>
-    ? isQueryLeafNode<R> extends true
-      ?
-          | Loaded<UnwrapRecordReference<S>>
-          | addNullable<Options, UnwrapRecordReference<S>>
-      :
-          | Loaded<
-              UnwrapRecordReference<S>,
-              R[K],
-              Options,
-              [0, ...CurrentDepth]
-            >
-          | addNullable<Options, UnwrapRecordReference<S>>
-    : "Not a valid reference key for the schema";
-};
+> = UnwrapRecordReference<S> extends CoValueSchema
+  ? {
+      // Filling the record relations directly resolved with the query
+      readonly [K in Exclude<
+        CoMapRecordKey<S> & keyof R,
+        "$each"
+      >]: R[K] extends ResolveQuery<UnwrapRecordReference<S>>
+        ? isQueryLeafNode<R> extends true
+          ?
+              | Loaded<UnwrapRecordReference<S>>
+              | addNullable<Options, UnwrapRecordReference<S>>
+          :
+              | Loaded<
+                  UnwrapRecordReference<S>,
+                  R[K],
+                  Options,
+                  [0, ...CurrentDepth]
+                >
+              | addNullable<Options, UnwrapRecordReference<S>>
+        : "Not a valid reference key for the schema";
+    }
+  : {};
 
 export type CoMapRecordQueriedByEachProps<
   S extends CoMapSchema<any, CoMapRecordDef, boolean>,
@@ -189,23 +193,25 @@ export type CoMapRecordQueriedByEachProps<
   EachQuery,
   Options extends "nullable" | "non-nullable",
   CurrentDepth extends number[],
-> = {
-  // Either fill the record relations or set them as null
-  readonly [K in CoMapRecordKey<S>]: isQueryLeafNode<R> extends true
-    ?
-        | Loaded<UnwrapRecordReference<S>>
-        | addNullable<Options, UnwrapRecordReference<S>>
-    : EachQuery extends ResolveQuery<UnwrapRecordReference<S>>
-      ?
-          | Loaded<
-              UnwrapRecordReference<S>,
-              EachQuery,
-              Options,
-              [0, ...CurrentDepth]
-            >
-          | addNullable<Options, UnwrapRecordReference<S>>
-      : "Invalid $each query";
-};
+> = UnwrapRecordReference<S> extends CoValueSchema
+  ? {
+      // Either fill the record relations or set them as null
+      readonly [K in CoMapRecordKey<S>]: isQueryLeafNode<R> extends true
+        ?
+            | Loaded<UnwrapRecordReference<S>>
+            | addNullable<Options, UnwrapRecordReference<S>>
+        : EachQuery extends ResolveQuery<UnwrapRecordReference<S>>
+          ?
+              | Loaded<
+                  UnwrapRecordReference<S>,
+                  EachQuery,
+                  Options,
+                  [0, ...CurrentDepth]
+                >
+              | addNullable<Options, UnwrapRecordReference<S>>
+          : "Invalid $each query";
+    }
+  : {};
 
 export type UnloadedJazzAPI<D extends CoValueSchema> = flatten<{
   schema: CoValueSchemaToClass<D>;

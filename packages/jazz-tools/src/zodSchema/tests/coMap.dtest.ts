@@ -1,9 +1,13 @@
 import { assert, beforeEach, describe, expectTypeOf, it } from "vitest";
 import { createJazzTestAccount } from "../../testing.js";
-import { CoMapSchemaClass } from "../coMap/schema.js";
+import {
+  CoMapSchemaClass,
+  CoValueSchema,
+  UnwrapRecordReference,
+} from "../coMap/schema.js";
 import { LazySchema } from "../coValue/lazy.js";
 import { Optional } from "../coValue/optional.js";
-import { MaybeLoaded, Unloaded } from "../coValue/types.js";
+import { MaybeLoaded, ResolveQuery, Unloaded } from "../coValue/types.js";
 import { Loaded, co, z } from "../schema.js";
 import { loadCoValue, subscribeToCoValue } from "../subscribe.js";
 
@@ -732,11 +736,8 @@ describe("CoMap - test types", () => {
         first: "John",
       });
 
-      // TODO - first is not a valid relation
       const loaded = await loadCoValue(Person, john.$jazz.id, {
-        resolve: {
-          first: true,
-        },
+        resolve: true,
       });
     });
 
