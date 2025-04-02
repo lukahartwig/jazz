@@ -59,10 +59,22 @@ describe("CoMap - with zod based schema", () => {
         age: z.number(),
       });
 
-      // @ts-expect-error - age is required
-      expect(() => Person.create({ name: "John" })).toThrow(
-        /^Failed to parse field age/,
-      );
+      expect(() =>
+        // @ts-expect-error - age is required
+        Person.create({ name: "John" }),
+      ).toThrowErrorMatchingInlineSnapshot(`
+        [ZodError: [
+          {
+            "code": "invalid_type",
+            "expected": "number",
+            "received": "undefined",
+            "path": [
+              "age"
+            ],
+            "message": "Required"
+          }
+        ]]
+      `);
     });
 
     it("should not throw an error if a optional field is missing", () => {
@@ -128,10 +140,22 @@ describe("CoMap - with zod based schema", () => {
         }),
       });
 
-      // @ts-expect-error - address is required
-      expect(() => Person.create({ name: "John", age: 30 })).toThrow(
-        /^Field address is required/,
-      );
+      expect(() =>
+        // @ts-expect-error - address is required
+        Person.create({ name: "John", age: 30 }),
+      ).toThrowErrorMatchingInlineSnapshot(`
+        [ZodError: [
+          {
+            "code": "invalid_type",
+            "expected": "string",
+            "received": "undefined",
+            "path": [
+              "address"
+            ],
+            "message": "Required"
+          }
+        ]]
+      `);
     });
 
     it("should not throw an error if a required ref is missing", () => {
@@ -401,6 +425,68 @@ describe("CoMap - with zod based schema", () => {
       expect(johnAfterMoving.address.street).toBe("456 Main St");
       expect(johnAfterMoving.address.$jazz.owner).not.toBe(john.$jazz.owner);
       expect(john.$jazz.updated().address).toBe(johnAfterMoving.address);
+    });
+
+    it("should throw an error if the value is invalid", () => {
+      const Person = co.map({
+        name: z.string(),
+        age: z.number(),
+      });
+
+      const john = Person.create({ name: "John", age: 30 });
+
+      expect(() =>
+        // @ts-expect-error - age is a number
+        john.$jazz.set("age", "30"),
+      ).toThrowErrorMatchingInlineSnapshot(`
+        [ZodError: [
+          {
+            "code": "invalid_type",
+            "expected": "number",
+            "received": "string",
+            "path": [
+              "age"
+            ],
+            "message": "Expected number, received string"
+          }
+        ]]
+      `);
+    });
+
+    it("should throw an error if the value is not a reference", () => {
+      const Person = co.map({
+        name: z.string(),
+        age: z.number(),
+        address: co.map({
+          street: z.string(),
+        }),
+      });
+
+      const john = Person.create({
+        name: "John",
+        age: 30,
+        address: { street: "123 Main St" },
+      });
+
+      expect(() =>
+        john.$jazz.set("address", {
+          // @ts-expect-error - street is a string
+          street: 1,
+        }),
+      ).toThrowErrorMatchingInlineSnapshot(`
+        [ZodError: [
+          {
+            "code": "invalid_type",
+            "expected": "string",
+            "received": "number",
+            "path": [
+              "address",
+              "street"
+            ],
+            "message": "Expected string, received number"
+          }
+        ]]
+      `);
     });
 
     it("should update nested values with JSON data", () => {

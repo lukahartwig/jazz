@@ -1,5 +1,5 @@
 import { CoValueUniqueness, JsonValue, RawAccount, RawCoMap } from "cojson";
-import { ZodTypeAny } from "zod";
+import { ZodError, ZodIssue, ZodTypeAny } from "zod";
 import type { Account } from "../../coValues/account.js";
 import type { Group } from "../../coValues/group.js";
 import { RegisteredSchemas } from "../../coValues/registeredSchemas.js";
@@ -72,6 +72,8 @@ export class CoMapJazzApi<
   declare _instance: Loaded<D, any>;
   declare _resolveQuery: extensibleResolveQuery<R>;
 
+  error: undefined;
+
   constructor(
     schema: D,
     raw: RawCoMap,
@@ -116,11 +118,21 @@ export class CoMapJazzApi<
         this.refs.delete(key as RelationsKeys<D>);
       } else {
         if (!isCoValue(value)) {
-          // To support inline CoMap creation on set
-          value = getSchemaFromDescriptor(this.schema, key).create(
-            value,
-            this.owner,
-          ) as PropertyType<D, K>;
+          try {
+            // To support inline CoMap creation on set
+            value = getSchemaFromDescriptor(this.schema, key).create(
+              value,
+              this.owner,
+            ) as PropertyType<D, K>;
+          } catch (error) {
+            if (error instanceof ZodError) {
+              for (const issue of error.issues) {
+                issue.path.unshift(key as string);
+              }
+            }
+
+            throw error;
+          }
         }
 
         this.refs.set(key as RelationsKeys<D>, value as Loaded<any, any>);
@@ -246,6 +258,8 @@ export function createCoMapFromRaw<
     }
   }
 
+  let errors: ZodIssue[] = [];
+
   for (const key of fields) {
     const descriptor = schema.get(key);
 
@@ -267,13 +281,22 @@ export function createCoMapFromRaw<
           );
         }
       }
-    } else {
-      Object.defineProperty(instance, key, {
-        value: getValue(raw, schema, key as CoMapSchemaKey<D>),
-        writable: false,
-        enumerable: true,
-        configurable: true,
-      });
+    } else if (descriptor) {
+      const result = descriptor.safeParse(raw.get(key));
+
+      if (!result.success) {
+        for (const issue of result.error.issues) {
+          issue.path.unshift(key);
+          errors.push(issue);
+        }
+      } else {
+        Object.defineProperty(instance, key, {
+          value: result.data,
+          writable: false,
+          enumerable: true,
+          configurable: true,
+        });
+      }
     }
   }
 
@@ -283,34 +306,11 @@ export function createCoMapFromRaw<
     }
   }
 
-  return instance as unknown as Loaded<D, R>;
-}
-
-function getValue<D extends AnyCoMapSchema>(
-  raw: RawCoMap,
-  schema: D,
-  key: CoMapSchemaKey<D>,
-) {
-  const descriptor = schema.get(key);
-
-  if (descriptor && typeof key === "string") {
-    const value = raw.get(key);
-
-    if (isRelationRef(descriptor)) {
-      return undefined;
-    } else {
-      try {
-        // TODO: If something fails on parse, we should navigate the history and get the last valid value
-        return descriptor.parse(value);
-      } catch (error) {
-        throw new Error(
-          `Failed to parse field ${key}: ${JSON.stringify(error)}`,
-        );
-      }
-    }
-  } else {
-    return undefined;
+  if (errors.length > 0) {
+    throw new ZodError(errors);
   }
+
+  return instance as unknown as Loaded<D, R>;
 }
 
 function setValue<D extends AnyCoMapSchema>(
@@ -327,7 +327,15 @@ function setValue<D extends AnyCoMapSchema>(
         if (isOptional(descriptor)) {
           raw.set(key, undefined);
         } else {
-          throw new Error(`Field ${key} is required`);
+          throw new ZodError([
+            {
+              code: "invalid_type",
+              expected: "string",
+              received: "undefined",
+              path: [key],
+              message: "Required",
+            },
+          ]);
         }
       } else {
         if (value && typeof value === "object" && "$jazz" in value) {
@@ -336,17 +344,28 @@ function setValue<D extends AnyCoMapSchema>(
             (value as unknown as Loaded<CoMapSchema<{}>, true>).$jazz.id,
           );
         } else {
-          throw new Error(`The value assigned to ${key} is not a reference`);
+          throw new ZodError([
+            {
+              code: "invalid_type",
+              expected: "object", // TODO: Provide the expected type
+              received: typeof value,
+              path: [key],
+              message: "The value assigned to this field is not a reference",
+            },
+          ]);
         }
       }
     } else {
-      // TODO: Provide better parse errors with the field information
-      try {
-        raw.set(key, descriptor.parse(value));
-      } catch (error) {
-        throw new Error(
-          `Failed to parse field ${key}: ${JSON.stringify(error)}`,
-        );
+      const result = descriptor.safeParse(value);
+
+      if (!result.success) {
+        for (const issue of result.error.issues) {
+          issue.path.unshift(key as string);
+        }
+
+        throw result.error;
+      } else {
+        raw.set(key, result.data);
       }
     }
 
@@ -365,6 +384,8 @@ function createCoMapFromInit<D extends AnyCoMapSchema>(
   const rawInit = {} as Record<string, JsonValue | undefined>;
 
   const refs = new Map<string, MaybeLoaded<any>>();
+
+  let errors: ZodIssue[] = [];
 
   if (init) {
     const fields = new Set(schema.keys());
@@ -392,7 +413,13 @@ function createCoMapFromInit<D extends AnyCoMapSchema>(
           if (isOptional(descriptor)) {
             rawInit[key] = undefined;
           } else {
-            throw new Error(`Field ${key} is required`);
+            errors.push({
+              code: "invalid_type",
+              expected: "string",
+              received: "undefined",
+              path: [key],
+              message: "Required",
+            });
           }
         } else {
           let instance: MaybeLoaded<CoValueSchema>;
@@ -410,16 +437,22 @@ function createCoMapFromInit<D extends AnyCoMapSchema>(
           refs.set(key as string, instance);
         }
       } else {
-        // TODO: Provide better parse errors with the field information
-        try {
-          rawInit[key] = descriptor.parse(initValue);
-        } catch (error) {
-          throw new Error(
-            `Failed to parse field ${key}: ${JSON.stringify(error)}`,
-          );
+        const result = descriptor.safeParse(initValue);
+
+        if (!result.success) {
+          for (const issue of result.error.issues) {
+            issue.path.unshift(key);
+            errors.push(issue);
+          }
+        } else {
+          rawInit[key] = result.data;
         }
       }
     }
+  }
+
+  if (errors.length > 0) {
+    throw new ZodError(errors);
   }
 
   const raw = rawOwner.createMap(rawInit, null, "private", uniqueness);

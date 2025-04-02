@@ -976,7 +976,9 @@ describe("CoMap - test types", () => {
       });
 
       subscribeToCoValue(Person, john.$jazz.id, { resolve: true }, (value) => {
-        expectTypeOf(value).toEqualTypeOf<Loaded<typeof Person, true>>();
+        expectTypeOf(value).toEqualTypeOf<
+          Loaded<typeof Person, true> | Unloaded<typeof Person>
+        >();
       });
     });
   });

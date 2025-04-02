@@ -22,7 +22,6 @@ beforeEach(() => {
   cojsonInternals.CO_VALUE_LOADING_CONFIG.TIMEOUT = 1;
 });
 
-// TODO: Test validation errors on load
 describe("CoMap with Zod", () => {
   describe("load", () => {
     it("should load a CoMap without nested values", async () => {
@@ -511,6 +510,81 @@ describe("CoMap with Zod", () => {
       });
 
       expect(loaded.$jazzState).toBe("unauthorized");
+    });
+
+    it("should return validationError if the value is not valid", async () => {
+      const Person = co.map({
+        name: z.string(),
+        age: z.number(),
+        address: co.map({
+          street: z.string(),
+        }),
+      });
+
+      const john = Person.create({
+        name: "John",
+        age: 30,
+        address: { street: "123 Main St" },
+      });
+
+      john.$jazz.raw.set("age", "not a number");
+
+      const loaded = await loadCoValue(Person, john.$jazz.id, {
+        resolve: { address: true },
+      });
+
+      expect(loaded.$jazzState).toBe("validationError");
+      expect(loaded.$jazz.error).toMatchInlineSnapshot(`
+        [ZodError: [
+          {
+            "code": "invalid_type",
+            "expected": "number",
+            "received": "string",
+            "path": [
+              "age"
+            ],
+            "message": "Expected number, received string"
+          }
+        ]]
+      `);
+    });
+
+    it("should return validationError if the nested value is not valid", async () => {
+      const Person = co.map({
+        name: z.string(),
+        age: z.number(),
+        address: co.map({
+          street: z.string(),
+        }),
+      });
+
+      const john = Person.create({
+        name: "John",
+        age: 30,
+        address: { street: "123 Main St" },
+      });
+
+      john.address.$jazz.raw.set("street", 123);
+
+      const loaded = await loadCoValue(Person, john.$jazz.id, {
+        resolve: { address: true },
+      });
+
+      expect(loaded.$jazzState).toBe("validationError");
+      expect(loaded.$jazz.error).toMatchInlineSnapshot(`
+        [ZodError: [
+          {
+            "code": "invalid_type",
+            "expected": "string",
+            "received": "number",
+            "path": [
+              "address",
+              "street"
+            ],
+            "message": "Expected string, received number"
+          }
+        ]]
+      `);
     });
   });
 

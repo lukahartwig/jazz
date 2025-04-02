@@ -1,5 +1,5 @@
 import type { CojsonInternalTypes } from "cojson";
-import { TypeOf, ZodTypeAny } from "zod";
+import { TypeOf, ZodError, ZodTypeAny } from "zod";
 import { IDMarker } from "../../internal.js";
 import { LoadedCoMapJazzProps } from "../coMap/instance.js";
 import {
@@ -219,10 +219,11 @@ export type CoMapRecordQueriedByEachProps<
 export type UnloadedJazzAPI<D extends CoValueSchema> = flatten<{
   schema: CoValueSchemaToClass<D>;
   id: ID<D>;
+  error?: ZodError;
 }>;
 
 export type Unloaded<D extends CoValueSchema> = flatten<{
-  $jazzState: "unloaded" | "unauthorized" | "unavailable";
+  $jazzState: "unloaded" | "unauthorized" | "unavailable" | "validationError";
   $jazz: UnloadedJazzAPI<D>;
 }>;
 

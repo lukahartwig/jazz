@@ -1,4 +1,5 @@
 import { LocalNode, RawCoMap } from "cojson";
+import { ZodError } from "zod";
 import { Account } from "../exports.js";
 import { activeAccountContext } from "../implementation/activeAccountContext.js";
 import { AnonymousJazzAgent } from "../internal.js";
@@ -18,10 +19,11 @@ import {
   getUnauthorizedState,
   getUnavailableState,
   getUnloadedState,
+  getValidationErrorState,
 } from "./coValue/unloaded.js";
 
 type SubscribeListener<D extends CoValueSchema, R extends ResolveQuery<D>> = (
-  value: Loaded<D, R>,
+  value: Loaded<D, R> | Unloaded<D>,
   unsubscribe: () => void,
 ) => void;
 
@@ -95,12 +97,10 @@ export class CoValueResolutionNode<D extends CoValueSchema> {
   childValues: Map<string, Loaded<any, any> | Unloaded<any> | undefined> =
     new Map<string, Loaded<any, any> | Unloaded<any> | undefined>();
   value: Loaded<D, any> | undefined;
-  error: undefined | "unauthorized" | "unavailable";
+  error: undefined | Unloaded<D>;
   promise: ResolvablePromise<void> | undefined;
   subscription: Subscription;
-  listener:
-    | ((value: Loaded<D, any> | "unavailable" | "unauthorized") => void)
-    | undefined;
+  listener: ((value: Loaded<D, any> | Unloaded<D>) => void) | undefined;
 
   constructor(
     public node: LocalNode,
@@ -113,32 +113,42 @@ export class CoValueResolutionNode<D extends CoValueSchema> {
     });
   }
 
+  // TODO: Pass the error values around
   handleUpdate(value: RawCoMap | "unavailable") {
     if (value === "unavailable") {
-      this.error = "unavailable";
-      this.listener?.(value);
+      this.error = getUnavailableState(this.schema, this.id);
+      this.listener?.(this.error);
       return;
     }
 
     const owner = getOwnerFromRawValue(value);
 
     if (owner.myRole() === undefined) {
-      this.error = "unauthorized";
-      this.listener?.("unauthorized");
+      this.error = getUnauthorizedState(this.schema, this.id);
+      this.listener?.(this.error);
       return;
     }
 
     if (!this.value) {
-      const instance = createCoMapFromRaw<D, any>(
-        this.schema,
-        value,
-        this.childValues,
-        this,
-      );
-      this.value = instance;
-      this.loadChildren();
-      if (this.isLoaded()) {
-        this.listener?.(this.value);
+      try {
+        const instance = createCoMapFromRaw<D, any>(
+          this.schema,
+          value,
+          this.childValues,
+          this,
+        );
+        this.value = instance;
+        this.loadChildren();
+        if (this.isLoaded()) {
+          this.listener?.(this.value);
+        }
+      } catch (error) {
+        if (error instanceof ZodError) {
+          this.error = getValidationErrorState(this.schema, this.id, error);
+          this.listener?.(this.error);
+        } else {
+          throw error;
+        }
       }
     } else if (this.isLoaded()) {
       const changesOnChildren = this.loadChildren();
@@ -158,11 +168,22 @@ export class CoValueResolutionNode<D extends CoValueSchema> {
 
   handleChildUpdate = (
     key: string,
-    value: Loaded<any, any> | "unavailable" | "unauthorized",
+    value: Loaded<any, any> | Unloaded<any>,
   ) => {
-    if (value === "unavailable" || value === "unauthorized") {
-      this.error = value;
-      this.listener?.(value);
+    if (
+      value.$jazzState === "unavailable" ||
+      value.$jazzState === "unauthorized" ||
+      value.$jazzState === "validationError"
+    ) {
+      this.error = value as Unloaded<D>;
+
+      if (this.error.$jazz.error) {
+        this.error.$jazz.error.issues.forEach((issue) => {
+          issue.path.unshift(key);
+        });
+      }
+
+      this.listener?.(this.error);
       return;
     } else {
       this.childValues.set(key, value);
@@ -187,9 +208,7 @@ export class CoValueResolutionNode<D extends CoValueSchema> {
     return true;
   }
 
-  setListener(
-    listener: (value: Loaded<D, any> | "unavailable" | "unauthorized") => void,
-  ) {
+  setListener(listener: (value: Loaded<D, any> | Unloaded<D>) => void) {
     this.listener = listener;
     if (this.value && this.isLoaded()) {
       this.listener(this.value);
@@ -302,8 +321,6 @@ export function subscribeToCoValue<
   options: {
     resolve?: ResolveQueryStrict<D, R>;
     loadAs?: Account | AnonymousJazzAgent;
-    onUnavailable?: () => void;
-    onUnauthorized?: () => void;
   },
   listener: SubscribeListener<D, R>,
 ) {
@@ -327,18 +344,10 @@ export function subscribeToCoValue<
     rootNode.subscription.unsubscribe();
   }
 
-  function handleUpdate(
-    value: Loaded<D, any> | "unavailable" | "unauthorized",
-  ) {
+  function handleUpdate(value: Loaded<D, any> | Unloaded<D>) {
     if (unsubscribed) return;
 
-    if (value === "unavailable") {
-      options.onUnavailable?.();
-    } else if (value === "unauthorized") {
-      options.onUnauthorized?.();
-    } else {
-      listener(value as Loaded<D, R>, unsubscribe);
-    }
+    listener(value as Loaded<D, R> | Unloaded<D>, unsubscribe);
   }
 
   return unsubscribe;
@@ -359,12 +368,6 @@ export function loadCoValue<D extends CoValueSchema, R extends ResolveQuery<D>>(
       {
         resolve: options?.resolve,
         loadAs: options?.loadAs,
-        onUnavailable: () => {
-          resolve(getUnavailableState(schema, id));
-        },
-        onUnauthorized: () => {
-          resolve(getUnauthorizedState(schema, id));
-        },
       },
       (value, unsubscribe) => {
         resolve(value);
