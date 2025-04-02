@@ -1,0 +1,100 @@
+export const metadata = { title: "React Native Providers" };
+
+import { CodeGroup } from "@/components/forMdx";
+
+# React Native Providers
+
+## Introduction
+
+The `JazzProvider` is the core component that connects your React Native application to the Jazz ecosystem. It handles:
+
+- **Data Synchronization**: Manages connections to peers and the Jazz cloud
+- **Local Storage**: Persists data locally between app sessions
+- **Schema Management**: Associates your data models with Jazz
+- **Authentication**: Connects your authentication system to Jazz
+
+## Setting up the provider
+
+Wrap your app components with the `<JazzProvider />` component:
+
+<CodeGroup>
+```tsx
+// App.tsx
+import { JazzProvider } from "jazz-react-native";
+import { MyAppAccount } from "./schema";
+
+export function MyJazzProvider({ children }: { children: React.ReactNode }) {
+  return (
+    <JazzProvider
+      sync={{ peer: "wss://cloud.jazz.tools/?key=you@example.com" }}
+      AccountSchema={MyAppAccount}
+    >
+      {children}
+    </JazzProvider>
+  );
+}
+
+// Register the Account schema so `useAccount` returns our custom `MyAppAccount`
+declare module "jazz-react-native" {
+  interface Register {
+    Account: MyAppAccount;
+  }
+}
+```
+</CodeGroup>
+
+## Provider Options
+
+- `kvStore`
+  - `MMKVStoreAdapter` (default)
+- `AccountSchema`
+  - `Account` (default)
+- `CryptoProvider`
+  - `PureJSCrypto` (default) - Pure JavaScript crypto provider
+  - `RNQuickCrypto` - C++ accelerated crypto provider
+
+## Local Persistence
+
+Jazz for React Native includes built-in local persistence using SQLite. This implementation uses:
+
+- **Database Storage**: `@op-engineering/op-sqlite` - A high-performance SQLite implementation
+- **Key-Value Storage**: `react-native-mmkv` - A fast key-value storage system
+
+Local persistence is enabled by default with no additional configuration required. Your data will automatically persist across app restarts.
+
+### Advanced Configuration
+
+You can customize the storage options in the `JazzProvider`:
+
+<CodeGroup>
+```tsx
+// App.tsx 
+import {
+  JazzProvider,
+  OpSQLiteAdapter,
+  MMKVStoreAdapter,
+} from "jazz-react-native";
+
+// Default configuration - no parameters needed
+<JazzProvider
+  sync={{ peer: "wss://cloud.jazz.tools/?key=you@example.com" }}
+  AccountSchema={MyAppAccount}
+>
+  {children}
+</JazzProvider>
+
+// Or with explicit configuration
+<JazzProvider
+  storage="sqlite" // Use default OpSQLiteAdapter
+  // Or with custom configuration
+  // storage={{
+  //   adapter: new OpSQLiteAdapter({ /* custom options */ }),
+  //   kvStore: new MMKVStoreAdapter({ /* custom options */ })
+  // }}
+  sync={{ peer: "wss://cloud.jazz.tools/?key=you@example.com" }}
+  AccountSchema={MyAppAccount}
+>
+  {children}
+</JazzProvider>
+```
+</CodeGroup>
