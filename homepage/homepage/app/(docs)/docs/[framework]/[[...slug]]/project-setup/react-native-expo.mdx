@@ -18,7 +18,7 @@ Tested with:
 ```
 </CodeGroup>
 
-## Setup
+## Installation
 
 ### Create a new project
 
@@ -138,144 +138,54 @@ If you're using `pnpm`, you'll need to make sure that your expo app's `package.j
 
 For more information, refer to [this Expo monorepo example](https://github.com/byCedric/expo-monorepo-example#pnpm-workarounds).
 
-## Setting up the provider
+## Authentication
 
-Wrap your app components with the `<JazzProvider />` component:
+Refer to the Jazz + Expo demo projects for implementing authentication:
+
+- [DemoAuth Example](https://github.com/garden-co/jazz/tree/main/examples/chat-rn-expo-clerk)
+
+In the demos, you'll find details on:
+
+- Using JazzProvider with your chosen authentication method
+- Defining a Jazz schema
+- Creating and subscribing to covalues
+- Handling invites
+
+For a complete implementation example, see the [Chat Example](https://github.com/garden-co/jazz/blob/main/examples/chat-rn-expo-clerk/app/chat/[chatId].tsx).
+
+## Next Steps
+
+Now that you've set up your Expo project for Jazz, you'll need to:
+
+1. [Set up the Jazz Provider](/docs/react-native-expo/project-setup/providers) - Configure how your app connects to Jazz
+2. Define your schema - See the [schema docs](/docs/schemas/covalues) for more information
+3. Run your app:
 
 <CodeGroup>
-```tsx
-// App.tsx
-import { JazzProvider } from "jazz-expo";
-import { MyAppAccount } from "./schema";
-
-export function MyJazzProvider({ children }: { children: React.ReactNode }) {
-  return (
-    <JazzProvider
-      sync={{ peer: "wss://cloud.jazz.tools/?key=you@example.com" }}
-      AccountSchema={MyAppAccount}
-    >
-      {children}
-    </JazzProvider>
-  );
-}
-
-// Register the Account schema so `useAccount` returns our custom `MyAppAccount`
-declare module "jazz-expo" {
-  interface Register {
-    Account: MyAppAccount;
-  }
-}
+```sh
+npx expo run:ios
+# or
+npx expo run:android
 ```
 </CodeGroup>
 
-### Provider Options
+## Verification
 
-- `kvStore`
-  - `ExpoSecureStoreAdapter` (default)
-- `AccountSchema`
-  - `Account` (default)
-- `CryptoProvider`
+Ready to see if everything's working? Let's fire up your app:
 
-### Local Persistence
-
-Jazz for Expo includes built-in local persistence using SQLite. Following Expo's best practices, the Expo implementation uses:
-
-- **Database Storage**: `expo-sqlite` - Expo's official SQLite module
-- **Key-Value Storage**: `expo-secure-store` - Expo's secure storage system
-
-Local persistence is enabled by default with no additional configuration required. Your data will automatically persist across app restarts.
-
-#### Advanced Configuration
-
-You can customize the storage options in the `JazzProvider`:
-
-<CodeGroup>
-```tsx
-// App.tsx
-import {
-  JazzProvider,
-  ExpoSQLiteAdapter,
-  ExpoSecureStoreAdapter,
-} from "jazz-expo";
-
-// Default configuration - no parameters needed
-<JazzProvider
-  sync={{ peer: "wss://cloud.jazz.tools/?key=you@example.com" }}
-  AccountSchema={MyAppAccount}
->
-  {children}
-</JazzProvider>
-
-// Or with explicit configuration
-<JazzProvider
-  storage="sqlite" // Use default ExpoSQLiteAdapter
-  // Or with custom configuration
-  // storage={{
-  //   adapter: new ExpoSQLiteAdapter({ /* custom options */ }),
-  //   kvStore: new ExpoSecureStoreAdapter({ /* custom options */ })
-  // }}
-  sync={{ peer: "wss://cloud.jazz.tools/?key=you@example.com" }}
-  AccountSchema={MyAppAccount}
->
-  {children}
-</JazzProvider>
+```sh
+npx expo run:ios
+# or
+npx expo run:android
 ```
-</CodeGroup>
 
-## Create Schema
+If all goes well, your app should start up without any angry red error screens. Take a quick look at the Metro console too - no Jazz-related errors there means you're all set! If you see your app's UI come up smoothly, you've nailed the installation.
 
-To define what database types your app uses, create `schema.ts` with a CoValue schema:
+If you run into any issues that aren't covered in the Common Issues section, drop by our Discord for help: https://discord.gg/utDMjHYg42
 
-<CodeGroup>
-```tsx
-// schema.ts
-import { Account, AuthSession, createCoValueClass, z } from "jazz-expo";
+## Common Issues
 
-export class Chat extends createCoValueClass("chat", {
-  name: z.string(),
-  participants: z.array(z.string()),
-  messages: z.array(
-    z.object({
-      sender: z.string(),
-      text: z.string(),
-      timestamp: z.number(),
-    })
-  ),
-}) {}
-
-export class MyAppAccount extends Account {
-  static collections = {
-    ...Account.collections,
-    chats: Chat,
-  };
-}
-```
-</CodeGroup>
-
-## Using hooks
-
-Now you can create a chat, add messages, invite collaborators, or sync data across devices:
-
-<CodeGroup>
-```tsx
-// MyComponent.tsx
-import { useAccount, useCoValue } from "jazz-expo";
-import { Chat, MyAppAccount } from "./schema";
-
-export function MyComponent() {
-  const account = useAccount<MyAppAccount>();
-
-  // Create a new chat
-  const handleNewChat = useCallback(async () => {
-    const chatRef = await account.chats.add(new Chat({
-      name: "New Chat",
-      participants: [account.id],
-      messages: [],
-    }));
-    console.log("Created chat with id: ", chatRef.id);
-  }, [account]);
-
-  // ...
-}
-```
-</CodeGroup>
+- **Metro bundler errors**: If you see errors about missing polyfills, ensure all polyfills are properly imported.
+- **iOS build failures**: Make sure you've run `pod install` after adding the dependencies.
+- **Android build failures**: Ensure you've run `npx expo prebuild` to generate native code.
+- **Expo Go incompatibility**: Remember that Jazz requires a development build and won't work with Expo Go.

@@ -1,12 +1,12 @@
-export const metadata = { title: "React Native Providers" };
+export const metadata = { title: "React Native Expo Providers" };
 
 import { CodeGroup } from "@/components/forMdx";
 
-# React Native Providers
+# React Native Expo Providers
 
 ## Introduction
 
-`<JazzProvider />` is the core component that connects your React Native application to Jazz. It handles:
+`<JazzProvider />` is the core component that connects your Expo application to Jazz. It handles:
 
 - **Data Synchronization**: Manages connections to peers and the Jazz cloud
 - **Local Storage**: Persists data locally between app sessions
@@ -20,7 +20,7 @@ Wrap your app components with the `<JazzProvider />` component:
 <CodeGroup>
 ```tsx
 // App.tsx
-import { JazzProvider } from "jazz-react-native";
+import { JazzProvider } from "jazz-expo";
 import { MyAppAccount } from "./schema";
 
 export function MyJazzProvider({ children }: { children: React.ReactNode }) {
@@ -35,7 +35,7 @@ export function MyJazzProvider({ children }: { children: React.ReactNode }) {
 }
 
 // Register the Account schema so `useAccount` returns our custom `MyAppAccount`
-declare module "jazz-react-native" {
+declare module "jazz-expo" {
   interface Register {
     Account: MyAppAccount;
   }
@@ -46,7 +46,7 @@ declare module "jazz-react-native" {
 ## Provider Options
 
 - `kvStore`
-  - `MMKVStoreAdapter` (default)
+  - `ExpoSecureStoreAdapter` (default)
 - `AccountSchema`
   - `Account` (default)
 - `CryptoProvider`
@@ -55,18 +55,14 @@ declare module "jazz-react-native" {
 
 ## Authentication in the Provider
 
-`<JazzProvider />` works with various authentication methods, with Passkey being the easiest way to get started. Passkeys are secure, simple for users, and work across devices. For authentication details, refer to our [Authentication Overview](/docs/authentication/overview) guide.
+`<JazzProvider />` works with various authentication methods, with Passkey being the easiest way to get started. Passkeys are secure, simple for users, and work across devices.
 
-Implementing Passkey authentication is straightforward:
-
-1. Use the `usePasskeyAuth` hook to handle authentication state
-2. Show appropriate UI based on the auth state
-3. Pass the auth object to your provider
+For detailed implementation, refer to our [Authentication Overview](/docs/authentication/overview) guide.
 
 <CodeGroup>
 ```tsx
 // Example with Passkey authentication
-import { JazzProvider, usePasskeyAuth } from "jazz-react-native";
+import { JazzProvider, usePasskeyAuth } from "jazz-expo";
 
 function AuthenticatedProvider({ children }) {
   const auth = usePasskeyAuth();
@@ -98,12 +94,14 @@ function AuthenticatedProvider({ children }) {
 ```
 </CodeGroup>
 
+For a complete example, see the [Expo Chat Demo with Clerk](https://github.com/garden-co/jazz/tree/main/examples/chat-rn-expo-clerk).
+
 ## Local Persistence
 
-Jazz for React Native includes built-in local persistence using SQLite. This implementation uses:
+Jazz for Expo includes built-in local persistence using SQLite. Following Expo's best practices, the Expo implementation uses:
 
-- **Database Storage**: `@op-engineering/op-sqlite` - A high-performance SQLite implementation
-- **Key-Value Storage**: `react-native-mmkv` - A fast key-value storage system
+- **Database Storage**: `expo-sqlite` - Expo's official SQLite module
+- **Key-Value Storage**: `expo-secure-store` - Expo's secure storage system
 
 Local persistence is enabled by default with no additional configuration required. Your data will automatically persist across app restarts.
 
@@ -113,12 +111,12 @@ You can customize the storage options in the `JazzProvider`:
 
 <CodeGroup>
 ```tsx
-// App.tsx 
+// App.tsx
 import {
   JazzProvider,
-  OpSQLiteAdapter,
-  MMKVStoreAdapter,
-} from "jazz-react-native";
+  ExpoSQLiteAdapter,
+  ExpoSecureStoreAdapter,
+} from "jazz-expo";
 
 // Default configuration - no parameters needed
 <JazzProvider
@@ -130,11 +128,11 @@ import {
 
 // Or with explicit configuration
 <JazzProvider
-  storage="sqlite" // Use default OpSQLiteAdapter
+  storage="sqlite" // Use default ExpoSQLiteAdapter
   // Or with custom configuration
   // storage={{
-  //   adapter: new OpSQLiteAdapter({ /* custom options */ }),
-  //   kvStore: new MMKVStoreAdapter({ /* custom options */ })
+  //   adapter: new ExpoSQLiteAdapter({ /* custom options */ }),
+  //   kvStore: new ExpoSecureStoreAdapter({ /* custom options */ })
   // }}
   sync={{ peer: "wss://cloud.jazz.tools/?key=you@example.com" }}
   AccountSchema={MyAppAccount}
