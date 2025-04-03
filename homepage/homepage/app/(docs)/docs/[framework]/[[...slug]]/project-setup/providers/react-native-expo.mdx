@@ -1,8 +1,8 @@
-export const metadata = { title: "React Native Expo Providers" };
+export const metadata = { title: "Providers - React Native Expo" };
 
 import { CodeGroup } from "@/components/forMdx";
 
-# React Native Expo Providers
+# Providers
 
 ## Introduction
 
@@ -18,7 +18,8 @@ import { CodeGroup } from "@/components/forMdx";
 Wrap your app components with the `<JazzProvider />` component:
 
 <CodeGroup>
-```tsx
+```tsx twoslash
+// @noErrors: 2307 7031 2304 2686 2664
 // App.tsx
 import { JazzProvider } from "jazz-expo";
 import { MyAppAccount } from "./schema";
@@ -55,26 +56,30 @@ declare module "jazz-expo" {
 
 ## Authentication in the Provider
 
-`<JazzProvider />` works with various authentication methods, with Passkey being the easiest way to get started. Passkeys are secure, simple for users, and work across devices.
+`<JazzProvider />` works with various authentication methods, with PassphraseAuth being the easiest way to get started for development and testing.
 
 For detailed implementation, refer to our [Authentication Overview](/docs/authentication/overview) guide.
 
 <CodeGroup>
-```tsx
-// Example with Passkey authentication
-import { JazzProvider, usePasskeyAuth } from "jazz-expo";
+```tsx twoslash
+// @noErrors: 2307 7031 2304 2686
+// Example with PassphraseAuth
+import { JazzProvider, usePassphraseAuth } from "jazz-expo";
+import { englishWordlist } from "./wordlist";
 
 function AuthenticatedProvider({ children }) {
-  const auth = usePasskeyAuth();
+  const auth = usePassphraseAuth({
+    wordlist: englishWordlist, // Provide a wordlist for generating recovery phrases
+  });
 
-  // Show passkey registration UI if needed
+  // Handle registration
   if (auth.state === "needsRegistration") {
-    return <PasskeyRegistrationScreen auth={auth} />;
+    return <RegistrationScreen auth={auth} />;
   }
   
-  // Show passkey sign-in UI if needed
+  // Handle sign in
   if (auth.state === "needsSignIn") {
-    return <PasskeySignInScreen auth={auth} />;
+    return <SignInScreen auth={auth} />;
   }
   
   return (
@@ -94,7 +99,7 @@ function AuthenticatedProvider({ children }) {
 ```
 </CodeGroup>
 
-For a complete example, see the [Expo Chat Demo with Clerk](https://github.com/garden-co/jazz/tree/main/examples/chat-rn-expo-clerk).
+For a complete example, see the [Expo Chat Demo](https://github.com/garden-co/jazz/tree/main/examples/chat-rn-expo).
 
 ## Local Persistence
 
@@ -110,7 +115,8 @@ Local persistence is enabled by default with no additional configuration require
 You can customize the storage options in the `JazzProvider`:
 
 <CodeGroup>
-```tsx
+```tsx twoslash
+// @noErrors: 2307 2686 2304 2657
 // App.tsx
 import {
   JazzProvider,
