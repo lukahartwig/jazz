@@ -56,9 +56,9 @@ npm i -S jazz-tools jazz-react-native jazz-react-native-media-images
 If you are not working within a monorepo, create a new file `metro.config.js` in the root of your project with the following content:
 
 <CodeGroup>
-```ts
+```ts twoslash
 // metro.config.js
-const {getDefaultConfig, mergeConfig} = require('@react-native/metro-config');
+const { getDefaultConfig, mergeConfig } = require('@react-native/metro-config');
 
 const config = {
   resolver: {
@@ -76,7 +76,7 @@ module.exports = mergeConfig(getDefaultConfig(__dirname), config);
 For monorepos, use the following `metro.config.js`:
 
 <CodeGroup>
-```ts
+```ts twoslash
 // metro.config.js
 const path = require("path");
 const { makeMetroConfig } = require("@rnx-kit/metro-config");
@@ -137,7 +137,8 @@ module.exports = makeMetroConfig({
 Create a file `polyfills.js` at the project root with the following content:
 
 <CodeGroup>
-```js
+```ts twoslash
+// @noErrors: 7016
 // polyfills.js
 import { polyfillGlobal } from 'react-native/Libraries/Utilities/PolyfillFunctions';
 import { Buffer } from "@craftzdog/react-native-buffer";
@@ -155,7 +156,8 @@ import 'react-native-get-random-values'; // polyfill getRandomValues
 Update `index.js`:
 
 <CodeGroup>
-```ts
+```ts twoslash
+// @noErrors: 2307
 // index.js
 import { AppRegistry } from 'react-native';
 import App from './App';
@@ -202,15 +204,17 @@ npx react-native run-android
 
 Ready to see if everything's working? Let's fire up your app:
 
+<CodeGroup>
 ```sh
 npx react-native run-ios
 # or
 npx react-native run-android
 ```
+</CodeGroup>
 
 If all goes well, your app should start up without any angry red error screens. Take a quick look at the Metro console too - no Jazz-related errors there means you're all set! If you see your app's UI come up smoothly, you've nailed the installation.
 
-If you run into any issues that aren't covered in the Common Issues section, drop by our Discord for help: https://discord.gg/utDMjHYg42
+If you run into any issues that aren't covered in the Common Issues section, [drop by our Discord for help](https://discord.gg/utDMjHYg42).
 
 ## Common Issues
 
