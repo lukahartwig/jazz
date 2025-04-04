@@ -1260,5 +1260,9 @@ describe("CoMap with Zod", () => {
     it.todo(
       "should send an update when all the errors from nested values are resolved",
     );
+
+    it.todo(
+      "should send an update when all the errors from nested values are resolved (errors are from values with the same id)",
+    );
   });
 });
