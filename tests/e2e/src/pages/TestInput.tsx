@@ -18,7 +18,7 @@ export function TestInput() {
 
     group.addMember("everyone", "writer");
 
-    setId(InputTestCoMap.create({ title: "" }, { owner: group }).$id);
+    setId(InputTestCoMap.create({ title: "" }, { owner: group }).$jazz.id);
   }, [me]);
 
   if (!coMap) return null;
@@ -29,8 +29,7 @@ export function TestInput() {
       onChange={(e) => {
         if (!coMap) return;
 
-        // @ts-expect-error
-        coMap.$set("title", e.target.value);
+        coMap.$jazz.set("title", e.target.value);
       }}
     />
   );
