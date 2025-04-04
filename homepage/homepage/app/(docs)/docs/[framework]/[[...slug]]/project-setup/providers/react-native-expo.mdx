@@ -10,7 +10,7 @@ import { CodeGroup } from "@/components/forMdx";
 
 - **Data Synchronization**: Manages connections to peers and the Jazz cloud
 - **Local Storage**: Persists data locally between app sessions
-- **Schema Management**: Associates your data models with Jazz
+- **Schema Types**: Provides APIs for the [AccountSchema](/docs/schemas/accounts-and-migrations)
 - **Authentication**: Connects your authentication system to Jazz
 
 ## Setting up the provider
@@ -109,41 +109,3 @@ Jazz for Expo includes built-in local persistence using SQLite. Following Expo's
 - **Key-Value Storage**: `expo-secure-store` - Expo's secure storage system
 
 Local persistence is enabled by default with no additional configuration required. Your data will automatically persist across app restarts.
-
-### Advanced Configuration
-
-You can customize the storage options in the `JazzProvider`:
-
-<CodeGroup>
-```tsx twoslash
-// @noErrors: 2307 2686 2304 2657
-// App.tsx
-import {
-  JazzProvider,
-  ExpoSQLiteAdapter,
-  ExpoSecureStoreAdapter,
-} from "jazz-expo";
-
-// Default configuration - no parameters needed
-<JazzProvider
-  sync={{ peer: "wss://cloud.jazz.tools/?key=you@example.com" }}
-  AccountSchema={MyAppAccount}
->
-  {children}
-</JazzProvider>
-
-// Or with explicit configuration
-<JazzProvider
-  storage="sqlite" // Use default ExpoSQLiteAdapter
-  // Or with custom configuration
-  // storage={{
-  //   adapter: new ExpoSQLiteAdapter({ /* custom options */ }),
-  //   kvStore: new ExpoSecureStoreAdapter({ /* custom options */ })
-  // }}
-  sync={{ peer: "wss://cloud.jazz.tools/?key=you@example.com" }}
-  AccountSchema={MyAppAccount}
->
-  {children}
-</JazzProvider>
-```
-</CodeGroup>
