@@ -56,43 +56,50 @@ declare module "jazz-expo" {
 
 ## Authentication in the Provider
 
-`<JazzProvider />` works with various authentication methods, with PassphraseAuth being the easiest way to get started for development and testing.
+`<JazzProvider />` works with various authentication methods, with PassphraseAuth being the easiest way to get started for development and testing. For authentication details, refer to our [Authentication Overview](/docs/authentication/overview) guide.
 
-For detailed implementation, refer to our [Authentication Overview](/docs/authentication/overview) guide.
+The authentication hooks must always be used inside the `<JazzProvider />` component.
+
+Implementing PassphraseAuth is straightforward:
+
+1. Import the [wordlist](https://github.com/bitcoinjs/bip39/tree/a7ecbfe2e60d0214ce17163d610cad9f7b23140c/src/wordlists) for generating recovery phrases
+2. Use the `usePassphraseAuth` hook to handle authentication 
+3. Create simple registration and sign-in screens
 
 <CodeGroup>
 ```tsx twoslash
-// @noErrors: 2307 7031 2304 2686
+// @noErrors: 2307
+import React, { ReactNode } from "react";
+function SignInScreen({ auth }: { auth: any }) {
+  return null;
+}
+// ---cut-before---
 // Example with PassphraseAuth
 import { JazzProvider, usePassphraseAuth } from "jazz-expo";
 import { englishWordlist } from "./wordlist";
 
-function AuthenticatedProvider({ children }) {
+function JazzAuthentication({ children }: { children: ReactNode }) {
   const auth = usePassphraseAuth({
-    wordlist: englishWordlist, // Provide a wordlist for generating recovery phrases
+    wordlist: englishWordlist,
   });
 
-  // Handle registration
-  if (auth.state === "needsRegistration") {
-    return <RegistrationScreen auth={auth} />;
+  // If the user is already signed in, render the App
+  if (auth.state === "signedIn") {
+    return children
   }
   
-  // Handle sign in
-  if (auth.state === "needsSignIn") {
-    return <SignInScreen auth={auth} />;
-  }
-  
+  // Otherwise, show a sign-in screen
+  return <SignInScreen auth={auth} />;
+}
+
+function AuthenticatedProvider({ children }: { children: ReactNode }) {
   return (
     <JazzProvider
-      sync={{ 
-        peer: "wss://cloud.jazz.tools/?key=your-api-key",
-        // Only sync when authenticated
-        when: "authenticated" 
-      }}
-      AccountSchema={MyAppAccount}
-      auth={auth}
+      sync={{ peer: "wss://cloud.jazz.tools/?key=your-api-key" }}
     >
-      {children}
+      <JazzAuthentication>
+        {children}
+      </JazzAuthentication>
     </JazzProvider>
   );
 }
