@@ -1,4 +1,4 @@
-import { assert, beforeEach, describe, expectTypeOf, it } from "vitest";
+import { assert, describe, expectTypeOf, it } from "vitest";
 import { createJazzTestAccount } from "../../testing.js";
 import { CoMapSchemaClass } from "../coMap/schema.js";
 import { LazySchema } from "../coValue/lazy.js";
@@ -6,12 +6,6 @@ import { Optional } from "../coValue/optional.js";
 import { MaybeLoaded, Unloaded } from "../coValue/types.js";
 import { Loaded, co, z } from "../schema.js";
 import { loadCoValue, subscribeToCoValue } from "../subscribe.js";
-
-beforeEach(async () => {
-  await createJazzTestAccount({
-    isCurrentActiveAccount: true,
-  });
-});
 
 describe("CoMap - test types", () => {
   describe("init", () => {
