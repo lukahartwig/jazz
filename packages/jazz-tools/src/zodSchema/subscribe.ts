@@ -1,5 +1,5 @@
 import { LocalNode, RawCoMap } from "cojson";
-import { ZodError } from "zod";
+import { ZodError, ZodIssue } from "zod";
 import { Account } from "../exports.js";
 import { activeAccountContext } from "../implementation/activeAccountContext.js";
 import { AnonymousJazzAgent } from "../internal.js";
@@ -18,6 +18,7 @@ import {
 import {
   getUnauthorizedState,
   getUnavailableState,
+  getUnloadedJazzAPI,
   getUnloadedState,
   getValidationErrorState,
 } from "./coValue/unloaded.js";
@@ -94,10 +95,13 @@ class Subscription {
 
 export class CoValueResolutionNode<D extends CoValueSchema> {
   childNodes = new Map<string, CoValueResolutionNode<CoValueSchema>>();
-  childValues: Map<string, Loaded<any, any> | Unloaded<any> | undefined> =
-    new Map<string, Loaded<any, any> | Unloaded<any> | undefined>();
-  value: Loaded<D, any> | undefined;
-  error: undefined | Unloaded<D>;
+  childValues: Map<string, Loaded<any, any> | Unloaded<any>> = new Map<
+    string,
+    Loaded<any, any> | Unloaded<any>
+  >();
+  value: Loaded<D, any> | Unloaded<D>;
+  childErrors: Map<string, Unloaded<any>> = new Map<string, Unloaded<any>>();
+  errorFromChildren: Unloaded<D> | undefined;
   promise: ResolvablePromise<void> | undefined;
   subscription: Subscription;
   listener: ((value: Loaded<D, any> | Unloaded<D>) => void) | undefined;
@@ -108,28 +112,30 @@ export class CoValueResolutionNode<D extends CoValueSchema> {
     public id: ID<D>,
     public schema: D,
   ) {
+    this.value = getUnloadedState(this.schema, this.id);
     this.subscription = new Subscription(node, id, (value) => {
       this.handleUpdate(value);
     });
   }
 
-  // TODO: Pass the error values around
   handleUpdate(value: RawCoMap | "unavailable") {
     if (value === "unavailable") {
-      this.error = getUnavailableState(this.schema, this.id);
-      this.listener?.(this.error);
+      // TODO: Gernerate a ZodError
+      this.value = getUnavailableState(this.schema, this.id);
+      this.triggerUpdate();
       return;
     }
 
     const owner = getOwnerFromRawValue(value);
 
     if (owner.myRole() === undefined) {
-      this.error = getUnauthorizedState(this.schema, this.id);
-      this.listener?.(this.error);
+      // TODO: Gernerate a ZodError
+      this.value = getUnauthorizedState(this.schema, this.id);
+      this.triggerUpdate();
       return;
     }
 
-    if (!this.value) {
+    if (this.value.$jazzState !== "loaded") {
       try {
         const instance = createCoMapFromRaw<D, any>(
           this.schema,
@@ -139,68 +145,100 @@ export class CoValueResolutionNode<D extends CoValueSchema> {
         );
         this.value = instance;
         this.loadChildren();
-        if (this.isLoaded()) {
-          this.listener?.(this.value);
-        }
+        this.triggerUpdate();
       } catch (error) {
         if (error instanceof ZodError) {
-          this.error = getValidationErrorState(this.schema, this.id, error);
-          this.listener?.(this.error);
+          this.value = getValidationErrorState(this.schema, this.id, error);
+          this.triggerUpdate();
         } else {
           throw error;
         }
       }
-    } else if (this.isLoaded()) {
+    } else {
       const changesOnChildren = this.loadChildren();
 
-      if (this.isLoaded()) {
+      if (this.shouldSendUpdates() && !this.errorFromChildren) {
         const value = this.value.$jazz.updated(
           changesOnChildren ? this.childValues : undefined,
         );
 
         if (value !== this.value) {
           this.value = value;
-          this.listener?.(value);
+          this.triggerUpdate();
         }
+      } else if (this.errorFromChildren) {
+        this.triggerUpdate();
       }
     }
+  }
+
+  computeChildErrors() {
+    let errors: ZodIssue[] = [];
+    let errorType: Unloaded<D>["$jazzState"] = "unloaded";
+
+    if (this.childErrors.size === 0) {
+      return undefined;
+    }
+
+    for (const value of this.childErrors.values()) {
+      errorType = value.$jazzState;
+      if (value.$jazz.error) {
+        errors.push(...value.$jazz.error.issues);
+      }
+    }
+
+    if (errors.length > 0) {
+      return getUnloadedJazzAPI(
+        this.schema,
+        this.id,
+        errorType,
+        new ZodError(errors),
+      );
+    }
+
+    return getUnloadedJazzAPI(this.schema, this.id, errorType);
   }
 
   handleChildUpdate = (
     key: string,
     value: Loaded<any, any> | Unloaded<any>,
   ) => {
+    this.childValues.set(key, value as Loaded<any, any>);
+
     if (
       value.$jazzState === "unavailable" ||
       value.$jazzState === "unauthorized" ||
       value.$jazzState === "validationError"
     ) {
-      this.error = value as Unloaded<D>;
+      const error = value as Unloaded<D>;
+      this.childErrors.set(key, error);
 
-      if (this.error.$jazz.error) {
-        this.error.$jazz.error.issues.forEach((issue) => {
+      if (error.$jazz.error) {
+        error.$jazz.error.issues.forEach((issue) => {
           issue.path.unshift(key);
         });
       }
 
-      this.listener?.(this.error);
-      return;
-    } else {
-      this.childValues.set(key, value);
+      this.errorFromChildren = this.computeChildErrors();
+    } else if (this.errorFromChildren && this.childErrors.has(key)) {
+      this.childErrors.delete(key);
+
+      this.errorFromChildren = this.computeChildErrors();
     }
 
-    if (this.value && this.isLoaded()) {
+    if (this.shouldSendUpdates() && !this.errorFromChildren) {
       this.value = this.value.$jazz.updated(this.childValues) as Loaded<D, any>;
-
-      this.listener?.(this.value);
     }
+
+    this.triggerUpdate();
   };
 
-  isLoaded() {
-    if (!this.value) return false;
+  shouldSendUpdates() {
+    if (this.value.$jazzState === "unloaded") return false;
+    if (this.value.$jazzState !== "loaded") return true;
 
     for (const value of this.childValues.values()) {
-      if (value?.$jazzState === "unloaded") {
+      if (value.$jazzState === "unloaded") {
         return false;
       }
     }
@@ -208,19 +246,23 @@ export class CoValueResolutionNode<D extends CoValueSchema> {
     return true;
   }
 
+  triggerUpdate() {
+    if (this.errorFromChildren) {
+      this.listener?.(this.errorFromChildren);
+    } else if (this.shouldSendUpdates()) {
+      this.listener?.(this.value);
+    }
+  }
+
   setListener(listener: (value: Loaded<D, any> | Unloaded<D>) => void) {
     this.listener = listener;
-    if (this.value && this.isLoaded()) {
-      this.listener(this.value);
-    } else if (this.error) {
-      this.listener(this.error);
-    }
+    this.triggerUpdate();
   }
 
   loadChildren() {
     const { node, resolve, schema } = this;
 
-    const raw = this.value?.$jazz.raw;
+    const raw = this.value.$jazz.raw;
 
     if (raw === undefined) {
       throw new Error("RefNode is not initialized");

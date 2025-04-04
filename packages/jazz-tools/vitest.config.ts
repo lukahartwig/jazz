@@ -4,7 +4,7 @@ export default defineConfig({
   test: {
     typecheck: {
       enabled: true,
-      include: ["**/*.dtest.ts"],
+      include: ["**/*.test-d.ts"],
       checker: "tsc",
     },
   },

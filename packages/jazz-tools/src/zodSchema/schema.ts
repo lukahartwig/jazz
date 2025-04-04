@@ -29,5 +29,7 @@ export type {
   ResolveQuery,
   ResolveQueryStrict,
   Loaded,
+  Unloaded,
+  MaybeLoaded,
 } from "./coValue/types.js";
 export type { ID } from "./coValue/types.js";

@@ -2,7 +2,7 @@
 
 import { cojsonInternals } from "cojson";
 import { Group, SchemaV2 } from "jazz-tools";
-import { beforeEach, describe, expect, it } from "vitest";
+import { assert, beforeEach, describe, expect, it } from "vitest";
 import { createJazzTestAccount, setupJazzTestSync } from "../testing.js";
 import { useCoStateWithZod } from "../useCoStateWithZod.js";
 import { act, renderHook, waitFor } from "./testUtils.js";
@@ -43,7 +43,9 @@ describe("useCoStateWithZod", () => {
       },
     );
 
-    expect(result.current?.value).toBe("123");
+    assert(result.current.$jazzState === "loaded");
+
+    expect(result.current.value).toBe("123");
   });
 
   it("should update the value when the coValue changes", async () => {
@@ -65,14 +67,15 @@ describe("useCoStateWithZod", () => {
         account,
       },
     );
+    assert(result.current.$jazzState === "loaded");
 
-    expect(result.current?.value).toBe("123");
+    expect(result.current.value).toBe("123");
 
     act(() => {
       map.$jazz.set("value", "456");
     });
 
-    expect(result.current?.value).toBe("456");
+    expect(result.current.value).toBe("456");
   });
 
   it("should load nested values if requested", async () => {
@@ -108,8 +111,10 @@ describe("useCoStateWithZod", () => {
       },
     );
 
-    expect(result.current?.value).toBe("123");
-    expect(result.current?.nested.value).toBe("456");
+    assert(result.current.$jazzState === "loaded");
+
+    expect(result.current.value).toBe("123");
+    expect(result.current.nested.value).toBe("456");
   });
 
   it("should return null if the coValue is not found", async () => {
@@ -132,10 +137,10 @@ describe("useCoStateWithZod", () => {
       },
     );
 
-    expect(result.current).toBeUndefined();
+    expect(result.current.$jazzState).toBe("unloaded");
 
     await waitFor(() => {
-      expect(result.current).toBeNull();
+      expect(result.current.$jazzState).toBe("unavailable");
     });
   });
 
@@ -166,10 +171,10 @@ describe("useCoStateWithZod", () => {
       },
     );
 
-    expect(result.current).toBeUndefined();
+    expect(result.current.$jazzState).toBe("unloaded");
 
     await waitFor(() => {
-      expect(result.current).toBeNull();
+      expect(result.current.$jazzState).toBe("unauthorized");
     });
   });
 
@@ -203,14 +208,15 @@ describe("useCoStateWithZod", () => {
       },
     );
 
-    expect(result.current).toBeUndefined();
+    expect(result.current.$jazzState).toBe("unloaded");
 
     await waitFor(() => {
-      expect(result.current?.value).toBe("123");
+      assert(result.current.$jazzState === "loaded");
+      expect(result.current.value).toBe("123");
     });
   });
 
-  it.skip("should return a value when the coValue becomes accessible", async () => {
+  it("should return a value when the coValue becomes accessible", async () => {
     const TestMap = co.map({
       value: z.string(),
     });
@@ -239,28 +245,27 @@ describe("useCoStateWithZod", () => {
       },
     );
 
-    expect(result.current).toBeUndefined();
+    expect(result.current.$jazzState).toBe("unloaded");
 
     await waitFor(() => {
-      expect(result.current).toBeNull();
+      assert(result.current.$jazzState === "unauthorized");
     });
 
     group.addMember("everyone", "reader");
 
     await waitFor(() => {
-      expect(result.current).not.toBeNull();
-      expect(result.current?.value).toBe("123");
+      expect(result.current.$jazzState).toBe("loaded");
+      assert(result.current.$jazzState === "loaded");
+      expect(result.current.value).toBe("123");
     });
   });
 
-  it.skip("should update when an inner coValue is updated", async () => {
-    const TestNestedMap = co.map({
-      value: z.string(),
-    });
-
+  it("should update when an nested coValue becomes available", async () => {
     const TestMap = co.map({
       value: z.string(),
-      nested: TestNestedMap,
+      nested: co.map({
+        value: z.string(),
+      }),
     });
 
     const someoneElse = await createJazzTestAccount({
@@ -274,9 +279,12 @@ describe("useCoStateWithZod", () => {
     const map = TestMap.create(
       {
         value: "123",
-        nested: {
-          value: "456",
-        },
+        nested: TestMap.shape.nested.create(
+          {
+            value: "456",
+          },
+          group,
+        ),
       },
       everyone,
     );
@@ -297,17 +305,18 @@ describe("useCoStateWithZod", () => {
       },
     );
 
-    expect(result.current).toBeUndefined();
+    expect(result.current.$jazzState).toBe("unloaded");
 
     await waitFor(() => {
-      expect(result.current).not.toBeUndefined();
+      expect(result.current.$jazzState).toBe("unauthorized");
     });
 
-    expect(result.current?.nested).toBeUndefined();
     group.addMember("everyone", "reader");
 
     await waitFor(() => {
-      expect(result.current?.nested?.value).toBe("456");
+      expect(result.current.$jazzState).toBe("loaded");
+      assert(result.current.$jazzState === "loaded");
+      expect(result.current.nested.value).toBe("456");
     });
   });
 });

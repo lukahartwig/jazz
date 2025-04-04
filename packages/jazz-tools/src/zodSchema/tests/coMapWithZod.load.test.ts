@@ -586,6 +586,8 @@ describe("CoMap with Zod", () => {
         ]]
       `);
     });
+
+    it.todo("should aggregate the errors from the nested values");
   });
 
   describe("ensureLoaded", () => {
@@ -955,11 +957,12 @@ describe("CoMap with Zod", () => {
         },
         jane: {
           $jazzState: "unloaded",
-          $jazz: {
-            schema: Friends.record.value,
-            id: jane?.$jazz.id,
-          },
         },
+      });
+
+      expect(result.jane.$jazz).toEqual({
+        schema: Friends.record.value,
+        id: jane?.$jazz.id,
       });
 
       expect(jane).toEqual({
@@ -1253,5 +1256,9 @@ describe("CoMap with Zod", () => {
       expect(resultBeforeSet.friend).toBe(result.friend);
       expect(resultBeforeSet.address).not.toBe(result.address);
     });
+
+    it.todo(
+      "should send an update when all the errors from nested values are resolved",
+    );
   });
 });

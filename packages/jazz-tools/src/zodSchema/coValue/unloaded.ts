@@ -4,46 +4,51 @@ import { ID, Unloaded, UnloadedJazzAPI } from "./types.js";
 
 type LoadingErrors = ZodError;
 
-function getUnloadedJazzAPI<D extends CoValueSchema, E extends LoadingErrors>(
-  schema: D,
-  value: ID<D>,
-  error?: E,
-) {
-  return {
-    schema: schema as CoValueSchemaToClass<D>,
-    id: value,
-    error,
-  } as UnloadedJazzAPI<D>;
+export function getUnloadedJazzAPI<
+  D extends CoValueSchema,
+  E extends LoadingErrors,
+>(schema: D, value: ID<D>, state: Unloaded<D>["$jazzState"], error?: E) {
+  return Object.defineProperties<Unloaded<D>>({} as Unloaded<D>, {
+    $jazzState: {
+      value: state,
+      writable: false,
+      enumerable: true,
+      configurable: false,
+    },
+    $jazz: {
+      value: {
+        schema: schema as CoValueSchemaToClass<D>,
+        id: value,
+        error,
+      },
+      writable: false,
+      enumerable: false,
+      configurable: false,
+    },
+  });
 }
 
 export function getUnloadedState<D extends CoValueSchema>(
   schema: D,
   value: ID<D>,
 ) {
-  return {
-    $jazzState: "unloaded" as const,
-    $jazz: getUnloadedJazzAPI(schema, value),
-  } satisfies Unloaded<D>;
+  return getUnloadedJazzAPI(schema, value, "unloaded");
 }
 
 export function getUnauthorizedState<D extends CoValueSchema>(
   schema: D,
   value: ID<D>,
+  error?: ZodError,
 ) {
-  return {
-    $jazzState: "unauthorized" as const,
-    $jazz: getUnloadedJazzAPI(schema, value),
-  } satisfies Unloaded<D>;
+  return getUnloadedJazzAPI(schema, value, "unauthorized", error);
 }
 
 export function getUnavailableState<D extends CoValueSchema>(
   schema: D,
   value: ID<D>,
+  error?: ZodError,
 ) {
-  return {
-    $jazzState: "unavailable" as const,
-    $jazz: getUnloadedJazzAPI(schema, value),
-  } satisfies Unloaded<D>;
+  return getUnloadedJazzAPI(schema, value, "unavailable", error);
 }
 
 export function getValidationErrorState<D extends CoValueSchema>(
@@ -51,8 +56,5 @@ export function getValidationErrorState<D extends CoValueSchema>(
   value: ID<D>,
   error: ZodError,
 ) {
-  return {
-    $jazzState: "validationError" as const,
-    $jazz: getUnloadedJazzAPI(schema, value, error),
-  } satisfies Unloaded<D>;
+  return getUnloadedJazzAPI(schema, value, "validationError", error);
 }

@@ -6,6 +6,7 @@ import type {
   Loaded,
   ResolveQuery,
   ResolveQueryStrict,
+  Unloaded,
 } from "jazz-tools/dist/zodSchema/schema.js";
 import { useCallback, useRef, useState, useSyncExternalStore } from "react";
 import { useJazzContextManager } from "./hooks.js";
@@ -18,8 +19,7 @@ export function createCoValueObservable<
   V extends CoValueSchema,
   const R extends ResolveQuery<V>,
 >() {
-  let currentValue: Loaded<V, R> | undefined | null = undefined;
-  let subscriberCount = 0;
+  let currentValue: Loaded<V, R> | Unloaded<V>;
 
   function subscribe(
     cls: V,
@@ -27,13 +27,11 @@ export function createCoValueObservable<
     options: {
       loadAs: Account | AnonymousJazzAgent;
       resolve?: ResolveQueryStrict<V, R>;
-      onUnavailable?: () => void;
-      onUnauthorized?: () => void;
       syncResolution?: boolean;
     },
     listener: () => void,
   ) {
-    subscriberCount++;
+    currentValue = SchemaV2.getUnloadedState(cls, id);
 
     const unsubscribe = SchemaV2.subscribeToCoValue(
       cls,
@@ -41,14 +39,6 @@ export function createCoValueObservable<
       {
         loadAs: options.loadAs,
         resolve: options.resolve,
-        onUnavailable: () => {
-          currentValue = null;
-          options.onUnavailable?.();
-        },
-        onUnauthorized: () => {
-          currentValue = null;
-          options.onUnauthorized?.();
-        },
       },
       (value) => {
         currentValue = value;
@@ -58,15 +48,11 @@ export function createCoValueObservable<
 
     return () => {
       unsubscribe();
-      subscriberCount--;
-      if (subscriberCount === 0) {
-        currentValue = undefined;
-      }
     };
   }
 
   const observable = {
-    getCurrentValue: () => currentValue,
+    getCurrentValue: (): Loaded<V, R> | Unloaded<V> => currentValue,
     subscribe,
   };
 
@@ -100,15 +86,20 @@ export function useCoStateWithZod<
   Schema: V,
   id: ID<V> | undefined,
   options?: { resolve?: ResolveQueryStrict<V, R> },
-): Loaded<V, R> | undefined | null {
+): Loaded<V, R> | Unloaded<V> {
   const contextManager = useJazzContextManager();
 
   const observable = useCoValueObservable<V, R>();
 
-  const value = useSyncExternalStore<Loaded<V, R> | undefined | null>(
+  const value = useSyncExternalStore<Loaded<V, R> | Unloaded<V>>(
     useCallback(
       (callback) => {
-        if (!id) return () => {};
+        observable.reset(); // TODO: Cover this with a test
+
+        if (!id) {
+          // What should we return here?
+          return () => {};
+        }
 
         // We subscribe to the context manager to react to the account updates
         // faster than the useSyncExternalStore callback update to keep the isAuthenticated state
@@ -123,8 +114,6 @@ export function useCoStateWithZod<
             {
               loadAs: agent,
               resolve: options?.resolve,
-              onUnauthorized: callback,
-              onUnavailable: callback,
             },
             callback,
           );
