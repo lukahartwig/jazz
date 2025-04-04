@@ -25,14 +25,14 @@ The easiest way to create and use images in your Jazz application is with the `c
 <CodeGroup>
 ```tsx
 import { createImage } from "jazz-react-native-media-images";
-import { launchImageLibrary } from 'react-native-image-picker';
+import * as ImagePicker from 'expo-image-picker';
 
 async function handleImagePicker() {
   try {
     // Launch the image picker
-    const result = await launchImageLibrary({
-      mediaType: 'photo',
-      includeBase64: true,
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      base64: true,
       quality: 1,
     });
 

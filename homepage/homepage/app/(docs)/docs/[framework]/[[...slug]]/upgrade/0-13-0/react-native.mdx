@@ -12,14 +12,20 @@ Version 0.13.0 introduces a significant architectural change in how Jazz support
 
 This guide focuses on upgrading **React Native without Expo** applications. If you're using Expo, please see the [Expo upgrade guide](/docs/react-native-expo/upgrade/0-13-0).
 
-## Migration Steps for Framework-less React Native
+## Migration Steps for React Native
 
 1. **Update Dependencies**
 <CodeGroup>
 ```bash
 # Ensure you have the required dependencies
 npm install @op-engineering/op-sqlite react-native-mmkv @react-native-community/netinfo
-npm install jazz-react-native jazz-react-native-media-images
+
+# Remove the old packages
+npm install jazz-react-native-expo  # [!code --]
+
+# Install the new packages
+npm install jazz-react-native jazz-react-native-media-images # [!code ++]
+
 # Run pod install for iOS
 npx pod-install
 ```
@@ -33,24 +39,26 @@ The `jazz-react-native` package now uses:
 These are now the default storage adapters in the `JazzProvider` for framework-less React Native applications.
 ## Example Provider Setup
 <CodeGroup>
-```tsx
+```tsx twoslash
+// @noErrors: 2307 2686 2664
+// App.tsx
 import { JazzProvider } from "jazz-react-native";
 import { MyAppAccount } from "./schema";
 export function MyJazzProvider({ children }: { children: React.ReactNode }) {
-    return (
-        <JazzProvider
-            sync={{ peer: "wss://cloud.jazz.tools/?key=you@example.com" }}
-            AccountSchema={MyAppAccount}
-        >
-            {children}
-        </JazzProvider>
-    );
+  return (
+    <JazzProvider
+      sync={{ peer: "wss://cloud.jazz.tools/?key=you@example.com" }}
+      AccountSchema={MyAppAccount}
+    >
+      {children}
+    </JazzProvider>
+  );
 }
 // Register the Account schema
 declare module "jazz-react-native" {
-    interface Register {
-        Account: MyAppAccount;
-    }
+  interface Register {
+    Account: MyAppAccount;
+  }
 }
 ```
 </CodeGroup>
@@ -70,7 +78,7 @@ No additional configuration is needed to use Jazz with the New Architecture.
 
 If you encounter pod installation issues in a pnpm workspace environment (such as `undefined method '[]' for nil` in the Podfile at the line `config = use_native_modules!`), replace the problematic line with a manual path reference:
 <CodeGroup>
-```
+```ts
 react_native_path = "../node_modules/react-native"
 config = { :reactNativePath => react_native_path }
 ```

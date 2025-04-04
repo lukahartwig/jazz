@@ -16,6 +16,8 @@ This guide focuses on upgrading **Expo applications**. If you're using framework
 
 1. **Update Dependencies**
 
+Remove the old packages and install the new `jazz-expo` package.
+
 <CodeGroup>
 ```bash
 # Remove the old package
@@ -23,41 +25,68 @@ npm uninstall jazz-react-native
 
 # Install the new Expo-specific packages
 npx expo install expo-sqlite expo-secure-store expo-file-system @react-native-community/netinfo
+
+# Install the new packages
 npm install jazz-expo jazz-react-native-media-images
 ```
 </CodeGroup>
 
 2. **Update Imports**
 
-<CodeGroup>
-```tsx
-// Old imports
-import { JazzProvider, useAccount, useCoValue /* etc */ } from "jazz-react-native"; // *bin*
+Update your imports to use the new `jazz-expo` package.
 
-// New imports
-import { JazzProvider, useAccount, useCoValue /* etc */ } from "jazz-expo"; // *add*
+<CodeGroup>
+```tsx twoslash
+// @noErrors: 2300 2307
+// Before
+import { JazzProvider, useAccount, useCoValue } from "jazz-react-native"; // [!code --]
+
+// After
+import { JazzProvider, useAccount, useCoValue } from "jazz-expo"; // [!code ++]
 ```
 </CodeGroup>
 
 3. **Update Type Declarations**
 
+Update your type declarations to use the new `jazz-expo` package.
+
 <CodeGroup>
-```tsx
-// Old declaration
-declare module "jazz-react-native" { // *bin*
-    interface Register {
-        Account: MyAppAccount;
-    }
+```tsx twoslash
+// @noErrors: 2664 2304
+// Before
+declare module "jazz-react-native" { // [!code --:5]
+  interface Register {
+    Account: MyAppAccount;
+  }
 }
 
-// New declaration
-declare module "jazz-expo" { // *add*
-    interface Register {
-        Account: MyAppAccount;
-    }
+// After
+declare module "jazz-expo" { // [!code ++:5]
+  interface Register {
+    Account: MyAppAccount;
+  }
 }
 ```
 </CodeGroup>
+
+## Clerk Authentication
+
+Clerk authentication has been moved inside the `jazz-expo` package. This is a breaking change that requires updating both your imports and providers.
+
+If you're using Clerk auth in your Expo application, you'll need to:
+
+<CodeGroup>
+```tsx twoslash
+// @noErrors: 2300 2307
+// Before
+import { ClerkAuthProvider, useClerkAuth } from "jazz-react-native-clerk"; // [!code --]
+
+// After
+import { ClerkAuthProvider, useClerkAuth } from "jazz-expo/auth/clerk"; // [!code ++]
+```
+</CodeGroup>
+
+Since Clerk only supports Expo applications, this consolidation makes sense and simplifies your dependency structure. You'll need to completely remove the `jazz-react-native-clerk` package from your dependencies and use the Clerk functionality that's now built into `jazz-expo`.
 
 ## Storage Adapter Changes
 
@@ -70,26 +99,33 @@ These are now the default storage adapters in the `JazzProvider` for Expo applic
 ## Example Provider Setup
 
 <CodeGroup>
-```tsx
-import { JazzProvider } from "jazz-expo";
+```tsx twoslash
+// @noErrors: 2300 2307 2686 2664 2435 1005
+import { JazzProvider } from "jazz-react-native"; // [!code --]
+import { JazzProvider } from "jazz-expo"; // [!code ++]
 import { MyAppAccount } from "./schema";
 
 export function MyJazzProvider({ children }: { children: React.ReactNode }) {
-    return (
-        <JazzProvider
-            sync={{ peer: "wss://cloud.jazz.tools/?key=you@example.com" }}
-            AccountSchema={MyAppAccount}
-        >
-            {children}
-        </JazzProvider>
-    );
+  return (
+    <JazzProvider
+      sync={{ peer: "wss://cloud.jazz.tools/?key=you@example.com" }}
+      AccountSchema={MyAppAccount}
+    >
+      {children}
+    </JazzProvider>
+  );
 }
 
 // Register the Account schema
-declare module "jazz-expo" {
-    interface Register {
-        Account: MyAppAccount;
-    }
+declare module "jazz-react-native" { // [!code --:5]
+  interface Register {
+    Account: MyAppAccount;
+  }
+}
+declare module "jazz-expo" { // [!code ++:5]
+  interface Register {
+    Account: MyAppAccount;
+  }
 }
 ```
 </CodeGroup>
@@ -103,7 +139,8 @@ The `jazz-expo` implementation supports the Expo New Architecture.
 For Expo projects, remember to use NativeWind CSS for styling, which is the recommended approach for Jazz applications built with Expo:
 
 <CodeGroup>
-```tsx
+```tsx twoslash
+// @noErrors: 2305 2686
 import { View, Text } from "react-native";
 import { styled } from "nativewind";
 
@@ -111,13 +148,13 @@ const StyledView = styled(View);
 const StyledText = styled(Text);
 
 export function MyComponent() {
-    return (
-        <StyledView className="p-4 bg-white dark:bg-slate-800">
-            <StyledText className="text-black dark:text-white text-lg font-bold">
-                Hello, Jazz with Expo!
-            </StyledText>
-        </StyledView>
-    );
+  return (
+    <StyledView className="p-4 bg-white dark:bg-slate-800">
+      <StyledText className="text-black dark:text-white text-lg font-bold">
+        Hello, Jazz with Expo!
+      </StyledText>
+    </StyledView>
+  );
 }
 ```
 </CodeGroup>

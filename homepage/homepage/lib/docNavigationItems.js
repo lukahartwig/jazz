@@ -49,7 +49,15 @@ export const docNavigationItems = [
         href: "/docs/project-setup/server-side",
         done: 80,
       },
-    ],
+      {
+        name: "Providers",
+        href: "/docs/project-setup/providers",
+        done: {
+          "react-native": 100,
+          "react-native-expo": 100,
+        },
+      }
+    ]
   },
   {
     name: "Tools",
@@ -166,6 +174,7 @@ export const docNavigationItems = [
         done: {
           react: 100,
           "react-native": 100,
+          "react-native-expo": 100,
           vanilla: 100,
         },
       },
