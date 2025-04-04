@@ -1,5 +1,11 @@
 # cojson
 
+## 0.12.2
+
+### Patch Changes
+
+- c2f4827: StreamingHash: Remove redundant clone and skip double hash generation when creating a local transaction
+
 ## 0.12.1
 
 ### Patch Changes

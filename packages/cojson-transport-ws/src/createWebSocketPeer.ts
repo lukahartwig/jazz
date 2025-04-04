@@ -7,7 +7,7 @@ import {
   logger,
 } from "cojson";
 import { BatchedOutgoingMessages } from "./BatchedOutgoingMessages.js";
-import { deserializeMessages, getErrorMessage } from "./serialization.js";
+import { deserializeMessages } from "./serialization.js";
 import type { AnyWebSocket } from "./types.js";
 
 export const BUFFER_LIMIT = 100_000;
@@ -20,11 +20,16 @@ export type CreateWebSocketPeerOpts = {
   expectPings?: boolean;
   batchingByDefault?: boolean;
   deletePeerStateOnClose?: boolean;
+  pingTimeout?: number;
   onClose?: () => void;
   onSuccess?: () => void;
 };
 
-function createPingTimeoutListener(enabled: boolean, callback: () => void) {
+function createPingTimeoutListener(
+  enabled: boolean,
+  timeout: number,
+  callback: () => void,
+) {
   if (!enabled) {
     return {
       reset() {},
@@ -39,7 +44,7 @@ function createPingTimeoutListener(enabled: boolean, callback: () => void) {
       pingTimeout && clearTimeout(pingTimeout);
       pingTimeout = setTimeout(() => {
         callback();
-      }, 10_000);
+      }, timeout);
     },
     clear() {
       pingTimeout && clearTimeout(pingTimeout);
@@ -128,6 +133,7 @@ export function createWebSocketPeer({
   expectPings = true,
   batchingByDefault = true,
   deletePeerStateOnClose = false,
+  pingTimeout = 10_000,
   onSuccess,
   onClose,
 }: CreateWebSocketPeerOpts): Peer {
@@ -156,14 +162,18 @@ export function createWebSocketPeer({
     handleClose();
   });
 
-  const pingTimeout = createPingTimeoutListener(expectPings, () => {
-    incoming
-      .push("PingTimeout")
-      .catch((e) =>
-        logger.error("Error while pushing ping timeout", { err: e }),
-      );
-    emitClosedEvent();
-  });
+  const pingTimeoutListener = createPingTimeoutListener(
+    expectPings,
+    pingTimeout,
+    () => {
+      incoming
+        .push("PingTimeout")
+        .catch((e) =>
+          logger.error("Error while pushing ping timeout", { err: e }),
+        );
+      emitClosedEvent();
+    },
+  );
 
   const outgoingMessages = createOutgoingMessagesManager(
     websocket,
@@ -172,6 +182,8 @@ export function createWebSocketPeer({
   let isFirstMessage = true;
 
   function handleIncomingMsg(event: { data: unknown }) {
+    pingTimeoutListener.reset();
+
     if (event.data === "") {
       return;
     }
@@ -197,8 +209,6 @@ export function createWebSocketPeer({
       outgoingMessages.setBatchingEnabled(true);
     }
 
-    pingTimeout.reset();
-
     for (const msg of messages) {
       if (msg && "action" in msg) {
         incoming
@@ -222,7 +232,7 @@ export function createWebSocketPeer({
 
         websocket.removeEventListener("message", handleIncomingMsg);
         websocket.removeEventListener("close", handleClose);
-        pingTimeout.clear();
+        pingTimeoutListener.clear();
         emitClosedEvent();
 
         if (websocket.readyState === 0) {

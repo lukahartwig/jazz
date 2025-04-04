@@ -1,5 +1,15 @@
 # jazz-inspector
 
+## 0.12.2
+
+### Patch Changes
+
+- 8a71835: use goober for css
+- Updated dependencies [c2f4827]
+  - cojson@0.12.2
+  - jazz-react-core@0.12.2
+  - jazz-tools@0.12.2
+
 ## 0.12.1
 
 ### Patch Changes
