@@ -1,5 +1,16 @@
 # jazz-example-inspector
 
+## 0.0.120
+
+### Patch Changes
+
+- 8a71835: use goober for css
+- Updated dependencies [8a71835]
+- Updated dependencies [c2f4827]
+  - jazz-inspector@0.12.2
+  - cojson@0.12.2
+  - cojson-transport-ws@0.12.2
+
 ## 0.0.119
 
 ### Patch Changes

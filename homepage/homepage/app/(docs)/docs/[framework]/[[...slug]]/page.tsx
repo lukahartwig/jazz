@@ -8,7 +8,7 @@ async function getMdxSource(framework: string, slugPath?: string) {
   // Try to import the framework-specific file first
   try {
     if (!slugPath) {
-      return await import("./index.mdx")
+      return await import("./index.mdx");
     }
     return await import(`./${slugPath}/${framework}.mdx`);
   } catch (error) {
@@ -85,7 +85,7 @@ export async function generateStaticParams() {
     paths.push({
       framework,
       slug: [],
-    })
+    });
     for (const heading of docNavigationItems) {
       for (const item of heading?.items) {
         if (item.href && item.href.startsWith("/docs")) {

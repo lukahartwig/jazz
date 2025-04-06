@@ -1,6 +1,47 @@
+import { styled } from "goober";
 import { useId } from "react";
-import { classNames } from "../utils.js";
 import { Icon } from "./icon.js";
+
+const SelectContainer = styled("div")<{ className?: string }>`
+  display: grid;
+  gap: 0.25rem;
+`;
+
+const SelectWrapper = styled("div")`
+  position: relative;
+  display: flex;
+  align-items: center;
+`;
+
+const StyledSelect = styled("select")`
+  width: 100%;
+  border-radius: var(--j-radius-md);
+  border: 1px solid var(--j-border-color);
+  padding: 0.5rem 0.875rem 0.5rem 0.875rem;
+  padding-right: 2rem;
+  box-shadow: var(--j-shadow-sm);
+  font-weight: 500;
+  color: var(--j-text-color-strong);
+  appearance: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  @media (prefers-color-scheme: dark) {
+    background-color: var(--j-foreground);
+  }
+`;
+
+const SelectIcon = styled("span")`
+  position: absolute;
+  right: 0.5em;
+  color: var(--j-neutral-400);
+  pointer-events: none;
+
+  @media (prefers-color-scheme: dark) {
+    color: var(--j-neutral-900);
+  }
+`;
 
 export function Select(
   props: React.SelectHTMLAttributes<HTMLSelectElement> & {
@@ -12,40 +53,21 @@ export function Select(
   const generatedId = useId();
   const id = customId || generatedId;
 
-  const containerClassName = classNames("grid gap-1", className);
-
-  const selectClassName = classNames(
-    "w-full rounded-md border pl-3.5 py-2 pr-8 shadow-sm",
-    "font-medium text-stone-900",
-    "dark:text-white dark:bg-stone-925",
-    "appearance-none",
-    "truncate",
-  );
-
   return (
-    <div className={classNames(containerClassName)}>
-      <label
-        htmlFor={id}
-        className={classNames("text-stone-600 dark:text-stone-300", {
-          "sr-only": hideLabel,
-        })}
-      >
+    <SelectContainer className={className}>
+      <label htmlFor={id} className={hideLabel ? "j-sr-only" : ""}>
         {label}
       </label>
 
-      <div className={classNames("relative flex items-center")}>
-        <select {...selectProps} id={id} className={selectClassName}>
+      <SelectWrapper>
+        <StyledSelect {...selectProps} id={id}>
           {props.children}
-        </select>
+        </StyledSelect>
 
-        <Icon
-          name="chevronDown"
-          className={classNames(
-            "absolute right-[0.5em] text-stone-400 dark:text-stone-600",
-          )}
-          size="sm"
-        />
-      </div>
-    </div>
+        <SelectIcon>
+          <Icon name="chevronDown" size="sm" />
+        </SelectIcon>
+      </SelectWrapper>
+    </SelectContainer>
   );
 }

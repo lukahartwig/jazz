@@ -1,5 +1,14 @@
 # multiauth
 
+## 0.0.10
+
+### Patch Changes
+
+- b108c61: Use the new Resolve API
+  - jazz-react@0.12.2
+  - jazz-react-auth-clerk@0.12.2
+  - jazz-tools@0.12.2
+
 ## 0.0.9
 
 ### Patch Changes

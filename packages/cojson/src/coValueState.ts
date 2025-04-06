@@ -176,11 +176,12 @@ export class CoValueState {
   async loadFromPeers(peers: PeerState[]) {
     const state = this.state;
 
-    if (state.type !== "unknown" && state.type !== "unavailable") {
+    if (state.type === "loading" || state.type === "available") {
       return;
     }
 
     if (peers.length === 0) {
+      this.moveToState(new CoValueUnavailableState());
       return;
     }
 
@@ -192,7 +193,11 @@ export class CoValueState {
 
       // If we are in the loading state we move to a new loading state
       // to reset all the loading promises
-      if (this.state.type === "loading" || this.state.type === "unknown") {
+      if (
+        this.state.type === "loading" ||
+        this.state.type === "unknown" ||
+        this.state.type === "unavailable"
+      ) {
         this.moveToState(
           new CoValueLoadingState(peersWithoutErrors.map((p) => p.id)),
         );
@@ -308,6 +313,19 @@ async function loadCoValueFromPeers(
     }
 
     if (coValueEntry.state.type === "loading") {
+      const { promise, resolve } = createResolvablePromise<void>();
+
+      /**
+       * Use a very long timeout for storage peers, because under pressure
+       * they may take a long time to consume the messages queue
+       *
+       * TODO: Track errors on storage and do not rely on timeout
+       */
+      const timeoutDuration =
+        peer.role === "storage"
+          ? CO_VALUE_LOADING_CONFIG.TIMEOUT * 10
+          : CO_VALUE_LOADING_CONFIG.TIMEOUT;
+
       const timeout = setTimeout(() => {
         if (coValueEntry.state.type === "loading") {
           logger.warn("Failed to load coValue from peer", {
@@ -319,9 +337,10 @@ async function loadCoValueFromPeers(
             type: "not-found-in-peer",
             peerId: peer.id,
           });
+          resolve();
         }
-      }, CO_VALUE_LOADING_CONFIG.TIMEOUT);
-      await coValueEntry.state.waitForPeer(peer.id);
+      }, timeoutDuration);
+      await Promise.race([promise, coValueEntry.state.waitForPeer(peer.id)]);
       clearTimeout(timeout);
     }
   }

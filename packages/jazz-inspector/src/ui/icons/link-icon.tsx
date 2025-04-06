@@ -1,6 +1,4 @@
-import { classNames } from "../../utils.js";
-
-export function LinkIcon() {
+export function LinkIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -8,7 +6,7 @@ export function LinkIcon() {
       viewBox="0 0 24 24"
       strokeWidth={1.5}
       stroke="currentColor"
-      className={classNames("w-3 h-3")}
+      {...props}
     >
       <path
         strokeLinecap="round"

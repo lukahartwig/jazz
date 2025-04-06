@@ -1,5 +1,16 @@
 # jazz-browser
 
+## 0.12.2
+
+### Patch Changes
+
+- cc684eb: PasskeyAuth: Change the private attributes visibility to protected
+- Updated dependencies [c2f4827]
+  - cojson@0.12.2
+  - cojson-storage-indexeddb@0.12.2
+  - cojson-transport-ws@0.12.2
+  - jazz-tools@0.12.2
+
 ## 0.12.1
 
 ### Patch Changes

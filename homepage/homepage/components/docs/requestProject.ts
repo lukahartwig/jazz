@@ -1,4 +1,9 @@
-import { Deserializer, FileRegistry, JSONOutput, ProjectReflection } from "typedoc";
+import {
+  Deserializer,
+  FileRegistry,
+  JSONOutput,
+  ProjectReflection,
+} from "typedoc";
 
 import JazzBrowserMediaImagesDocs from "../../typedoc/jazz-browser-media-images.json";
 import JazzBrowserDocs from "../../typedoc/jazz-browser.json";
@@ -22,5 +27,5 @@ export async function requestProject(
   return deserializer.reviveProject(packageName, docs[packageName], {
     projectRoot: "/",
     registry: new FileRegistry(),
-});
+  });
 }
