@@ -1,5 +1,4 @@
 import {
-  Account,
   MagicLinkAuth,
   MagicLinkAuthOptions,
   waitForCoValueCondition,
@@ -9,25 +8,37 @@ import { useAuthSecretStorage, useJazzContext } from "../hooks.js";
 
 const DEFAULT_EXPIRE_IN_MS = 15 * 60 * 1000;
 
+export interface MagicLinkAuthProviderOptions extends MagicLinkAuthOptions {
+  expireInMs?: number;
+}
+
+export interface MagicLinkAuthConsumerOptions extends MagicLinkAuthOptions {
+  handlerTimeout?: number;
+  onLoggedIn?: () => void;
+}
+
 export function useCreateMagicLinkAuthAsProvider(
   origin: string,
   {
-    autoConfirmLogIn = false,
+    expireInMs = DEFAULT_EXPIRE_IN_MS,
     ...options
-  }: Partial<{ autoConfirmLogIn: boolean } & MagicLinkAuthOptions> = {},
+  }: Partial<MagicLinkAuthProviderOptions> = {},
 ) {
   const context = useJazzContext();
   const authSecretStorage = useAuthSecretStorage();
+  const [confirmationCode, setConfirmationCode] = useState<string | undefined>(
+    undefined,
+  );
+
   const [status, setStatus] = useState<
     | "idle"
     | "waitingForConsumer"
-    | "waitingForConfirmLogIn"
-    | "confirmedLogIn"
+    | "confirmationCodeGenerated"
+    | "confirmationCodeCorrect"
+    | "confirmationCodeIncorrect"
     | "authorized"
-    | "expired"
     | "error"
   >("idle");
-  const [confirmLogIn, setConfirmLogIn] = useState<null | (() => void)>(null);
 
   if ("guest" in context) {
     throw new Error("Magic Link Auth is not supported in guest mode");
@@ -43,93 +54,95 @@ export function useCreateMagicLinkAuthAsProvider(
     );
   }, [origin, options]);
 
-  const createLink = useCallback(
-    async (expireInMs?: number) => {
-      expireInMs = expireInMs ?? DEFAULT_EXPIRE_IN_MS;
+  const createLink = useCallback(async () => {
+    let transfer = await magicLinkAuth.createTransferAsProvider();
 
-      let transfer = await magicLinkAuth.createTransferAsProvider(
-        new Date(Date.now() + expireInMs),
-      );
+    const url = magicLinkAuth.createLink("consumer", transfer);
 
-      const url = magicLinkAuth.createLink("consumer", transfer, "writeOnly");
+    async function handleFlow() {
+      try {
+        // Wait for consumer to accept the transfer
+        setStatus("waitingForConsumer");
 
-      async function handleFlow() {
-        try {
-          // Wait for consumer to accept the transfer
-          setStatus("waitingForConsumer");
+        transfer = await waitForCoValueCondition(
+          transfer,
+          {},
+          (t) => Boolean(t.acceptedBy),
+          expireInMs,
+        );
 
-          transfer = await waitForCoValueCondition(
-            transfer,
-            {},
-            (t) => Boolean(t.acceptedBy),
-            expireInMs,
-          );
+        if (!transfer.acceptedBy) throw new Error("Transfer not accepted");
 
-          if (!transfer.acceptedBy) throw new Error("Transfer not accepted");
+        // Wait for confirmation code
+        const code = await magicLinkAuth.createConfirmationCode();
+        setConfirmationCode(code);
 
-          // Wait for confirmation if needed
-          if (!autoConfirmLogIn) {
-            setStatus("waitingForConfirmLogIn");
-            await new Promise<void>((resolve) =>
-              setConfirmLogIn(() => resolve),
-            );
-            setConfirmLogIn(null);
-          }
-          setStatus("confirmedLogIn");
+        setStatus("confirmationCodeGenerated");
+        transfer = await waitForCoValueCondition(
+          transfer,
+          {},
+          (t) => Boolean(t.confirmationCodeInput),
+          expireInMs,
+        );
 
-          // Check if the transfer has expired
-          if (transfer.expiresAt && transfer.expiresAt < new Date()) {
-            setStatus("expired");
-            return;
-          }
-
-          // Reveal the secret to the transfer
-          await magicLinkAuth.revealSecretToTransfer(transfer);
-
-          // Wait for the transfer to be authorized and update the status
-          await waitForCoValueCondition(
-            transfer,
-            {},
-            (t) => t.status === "authorized",
-          );
-          setStatus("authorized");
-        } catch (error) {
-          console.error("Magic Link Auth error", error);
-          setStatus("error");
-          setConfirmLogIn(null);
+        // Check if the confirmation code is correct
+        if (transfer.confirmationCodeInput !== code) {
+          transfer.status = "incorrectCode";
+          await transfer.waitForSync();
+          setStatus("confirmationCodeIncorrect");
+          return;
         }
+        setStatus("confirmationCodeCorrect");
+
+        // Reveal the secret to the transfer
+        await magicLinkAuth.revealSecretToTransfer(transfer);
+
+        // Wait for the transfer to be authorized and update the status
+        await waitForCoValueCondition(
+          transfer,
+          {},
+          (t) => t.status === "authorized",
+        );
+        setStatus("authorized");
+      } catch (error) {
+        console.error("Magic Link Auth error", error);
+        setStatus("error");
+        setConfirmationCode(undefined);
       }
+    }
 
-      handleFlow();
+    handleFlow();
 
-      return url;
-    },
-    [magicLinkAuth, autoConfirmLogIn],
-  );
+    return url;
+  }, [magicLinkAuth]);
 
   return {
     status,
     createLink,
-    confirmLogIn: () => confirmLogIn?.(),
+    confirmationCode,
   } as const;
 }
 
 export function useCreateMagicLinkAuthAsConsumer(
   origin: string,
   {
-    handlerTimeout = DEFAULT_EXPIRE_IN_MS,
+    handlerTimeout = 30 * 1000,
     onLoggedIn,
     ...options
-  }: Partial<
-    { handlerTimeout: number; onLoggedIn: () => void } & MagicLinkAuthOptions
-  > = {},
+  }: Partial<MagicLinkAuthConsumerOptions> = {},
 ) {
   const context = useJazzContext();
   const authSecretStorage = useAuthSecretStorage();
+  const [sendConfirmationCode, setSendConfirmationCode] = useState<
+    null | ((code: string) => void)
+  >(null);
+
   const [status, setStatus] = useState<
     | "idle"
     | "waitingForProvider"
-    | "waitingForConfirmLogIn"
+    | "confirmationCodeRequired"
+    | "confirmationCodePending"
+    | "confirmationCodeIncorrect"
     | "authorized"
     | "error"
   >("idle");
@@ -147,7 +160,7 @@ export function useCreateMagicLinkAuthAsConsumer(
   const createLink = useCallback(async () => {
     let transfer = await magicLinkAuth.createTransferAsConsumer();
 
-    const url = magicLinkAuth.createLink("provider", transfer, "writer");
+    const url = magicLinkAuth.createLink("provider", transfer);
 
     async function handleFlow() {
       try {
@@ -159,16 +172,26 @@ export function useCreateMagicLinkAuthAsConsumer(
           (t) => Boolean(t.acceptedBy),
           handlerTimeout,
         );
-        setStatus("waitingForConfirmLogIn");
 
-        // Wait for provider to confirm and reveal the secret
+        setStatus("confirmationCodeRequired");
+        const code = await new Promise<string>((resolve) => {
+          setSendConfirmationCode(() => (code: string) => resolve(code));
+        });
+        transfer.confirmationCodeInput = code;
+        setStatus("confirmationCodePending");
+
+        // Wait for provider to reject or confirm and reveal the secret
         transfer = await waitForCoValueCondition(
           transfer,
-          {},
-          (t) => Boolean(t.secret),
+          { resolve: {} },
+          (t) => t.status === "incorrectCode" || Boolean(t.secret),
           handlerTimeout,
         );
-        if (!transfer.secret) throw new Error("Transfer secret not set");
+
+        if (transfer.status === "incorrectCode") {
+          setStatus("confirmationCodeIncorrect");
+          return;
+        }
 
         // Log in using the transfer secret
         await magicLinkAuth.logInViaTransfer(transfer);
@@ -188,6 +211,7 @@ export function useCreateMagicLinkAuthAsConsumer(
   return {
     status,
     createLink,
+    sendConfirmationCode,
   } as const;
 }
 
@@ -195,22 +219,25 @@ export function useHandleMagicLinkAuthAsConsumer(
   origin: string,
   url: string,
   {
-    confirmLogInTimeout = DEFAULT_EXPIRE_IN_MS,
+    handlerTimeout = 30 * 1000,
     onLoggedIn,
     ...options
-  }: Partial<
-    {
-      confirmLogInTimeout: number;
-      onLoggedIn: () => void;
-    } & MagicLinkAuthOptions
-  > = {},
+  }: Partial<MagicLinkAuthConsumerOptions> = {},
 ) {
   const context = useJazzContext();
   const authSecretStorage = useAuthSecretStorage();
   const hasRunRef = useRef(false);
+  const [sendConfirmationCode, setSendConfirmationCode] = useState<
+    null | ((code: string) => void)
+  >(null);
 
   const [status, setStatus] = useState<
-    "idle" | "waitingForProvider" | "authorized" | "error"
+    | "idle"
+    | "confirmationCodeRequired"
+    | "confirmationCodePending"
+    | "confirmationCodeIncorrect"
+    | "authorized"
+    | "error"
   >("idle");
 
   const magicLinkAuth = useMemo(() => {
@@ -231,14 +258,25 @@ export function useHandleMagicLinkAuthAsConsumer(
       try {
         let transfer = await magicLinkAuth.acceptTransferUrl(url, "consumer");
 
-        setStatus("waitingForProvider");
+        setStatus("confirmationCodeRequired");
+        const code = await new Promise<string>((resolve) => {
+          setSendConfirmationCode(() => (code: string) => resolve(code));
+        });
+        transfer.confirmationCodeInput = code;
+        setStatus("confirmationCodePending");
+
+        // Wait for provider to reject or confirm and reveal the secret
         transfer = await waitForCoValueCondition(
           transfer,
-          {},
-          (t) => Boolean(t.secret),
-          confirmLogInTimeout,
+          { resolve: {} },
+          (t) => t.status === "incorrectCode" || Boolean(t.secret),
+          handlerTimeout,
         );
-        if (!transfer.secret) throw new Error("Transfer secret not set");
+
+        if (transfer.status === "incorrectCode") {
+          setStatus("confirmationCodeIncorrect");
+          return;
+        }
 
         setStatus("authorized");
         await magicLinkAuth.logInViaTransfer(transfer);
@@ -254,6 +292,7 @@ export function useHandleMagicLinkAuthAsConsumer(
 
   return {
     status,
+    sendConfirmationCode,
   } as const;
 }
 
@@ -261,23 +300,25 @@ export function useHandleMagicLinkAuthAsProvider(
   origin: string,
   url: string,
   {
-    autoConfirmLogIn,
+    expireInMs = DEFAULT_EXPIRE_IN_MS,
     ...options
-  }: Partial<{ autoConfirmLogIn: boolean } & MagicLinkAuthOptions> = {},
+  }: Partial<MagicLinkAuthProviderOptions> = {},
 ) {
   const context = useJazzContext();
   const authSecretStorage = useAuthSecretStorage();
   const hasRunRef = useRef(false);
+  const [confirmationCode, setConfirmationCode] = useState<string | undefined>(
+    undefined,
+  );
 
   const [status, setStatus] = useState<
     | "idle"
-    | "waitingForConfirmLogIn"
-    | "confirmedLogIn"
+    | "confirmationCodeGenerated"
+    | "confirmationCodeIncorrect"
     | "authorized"
-    | "expired"
     | "error"
   >("idle");
-  const [confirmLogIn, setConfirmLogIn] = useState<null | (() => void)>(null);
+
   const magicLinkAuth = useMemo(() => {
     return new MagicLinkAuth(
       context.node.crypto,
@@ -294,19 +335,26 @@ export function useHandleMagicLinkAuthAsProvider(
 
     async function handleFlow() {
       try {
-        const transfer = await magicLinkAuth.acceptTransferUrl(url, "provider");
+        let transfer = await magicLinkAuth.acceptTransferUrl(url, "provider");
 
-        // Wait for the consumer to confirm the transfer
-        if (!autoConfirmLogIn) {
-          setStatus("waitingForConfirmLogIn");
-          await new Promise<void>((resolve) => setConfirmLogIn(() => resolve));
-          setConfirmLogIn(null);
-        }
-        setStatus("confirmedLogIn");
+        // Generate and set confirmation code
+        const code = await magicLinkAuth.createConfirmationCode();
+        setConfirmationCode(code);
+        setStatus("confirmationCodeGenerated");
 
-        // Check whether the transfer has expired
-        if (transfer.expiresAt && transfer.expiresAt < new Date()) {
-          setStatus("expired");
+        // Wait for confirmation code input
+        transfer = await waitForCoValueCondition(
+          transfer,
+          {},
+          (t) => Boolean(t.confirmationCodeInput),
+          expireInMs,
+        );
+
+        // Check if the confirmation code is correct
+        if (transfer.confirmationCodeInput !== code) {
+          transfer.status = "incorrectCode";
+          await transfer.waitForSync();
+          setStatus("confirmationCodeIncorrect");
           return;
         }
 
@@ -331,6 +379,6 @@ export function useHandleMagicLinkAuthAsProvider(
 
   return {
     status,
-    confirmLogIn: () => confirmLogIn?.(),
+    confirmationCode,
   } as const;
 }

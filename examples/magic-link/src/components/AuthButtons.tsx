@@ -4,6 +4,7 @@ import { useAccount, usePasskeyAuth } from "jazz-react";
 import { useState } from "react";
 import { APPLICATION_NAME } from "../main";
 import { Button } from "./Button";
+import { Card } from "./Card";
 import { CreateMagicLinkAsConsumer } from "./CreateMagicLinkAsConsumer";
 import { CreateMagicLinkAsProvider } from "./CreateMagicLinkAsProvider";
 
@@ -32,7 +33,11 @@ export function AuthButtons() {
           </Button>
         </div>
 
-        {magicLinkFlow ? <CreateMagicLinkAsProvider /> : null}
+        {magicLinkFlow ? (
+          <Card className="w-full">
+            <CreateMagicLinkAsProvider />
+          </Card>
+        ) : null}
       </div>
     );
   }
@@ -52,12 +57,14 @@ export function AuthButtons() {
       </div>
 
       {magicLinkFlow ? (
-        <CreateMagicLinkAsConsumer
-          onLoggedIn={() => {
-            console.log("logged in!");
-            setMagicLinkFlow(false);
-          }}
-        />
+        <Card className="w-full">
+          <CreateMagicLinkAsConsumer
+            onLoggedIn={() => {
+              console.log("logged in!");
+              setMagicLinkFlow(false);
+            }}
+          />
+        </Card>
       ) : (
         <p className="text-balance">
           You can also use the{" "}

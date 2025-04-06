@@ -1,8 +1,7 @@
-"use client";
-
 import { useCreateMagicLinkAuthAsConsumer } from "jazz-react";
 import { useState } from "react";
 import { Button } from "./Button";
+import { ConfirmationCodeInput } from "./ConfirmationCodeInput";
 import { QRCodeContainer } from "./QRCodeContainer";
 
 interface CreateMagicLinkAsConsumerProps {
@@ -14,11 +13,12 @@ export function CreateMagicLinkAsConsumer({
 }: CreateMagicLinkAsConsumerProps) {
   const [link, setLink] = useState<string | null>(null);
 
-  const { status, createLink } = useCreateMagicLinkAuthAsConsumer({
-    consumerHandlerPath: "/#/magic-link-handler-consumer",
-    providerHandlerPath: "/#/magic-link-handler-provider",
-    onLoggedIn,
-  });
+  const { status, createLink, sendConfirmationCode } =
+    useCreateMagicLinkAuthAsConsumer({
+      consumerHandlerPath: "/#/magic-link-handler-consumer",
+      providerHandlerPath: "/#/magic-link-handler-provider",
+      onLoggedIn,
+    });
 
   const onCreateLink = () => createLink().then(setLink);
 
@@ -40,18 +40,41 @@ export function CreateMagicLinkAsConsumer({
     );
   }
 
-  if (status === "waitingForConfirmLogIn") {
+  if (status === "confirmationCodeRequired") {
     return (
       <div className="flex flex-col items-center gap-4">
-        <p>Please confirm the log in on your mobile device</p>
+        <p>Enter the confirmation code displayed on your other device</p>
+
+        {sendConfirmationCode ? (
+          <ConfirmationCodeInput onSubmit={sendConfirmationCode} />
+        ) : null}
       </div>
     );
   }
 
-  if (status === "authorized") return <p>Logged in!</p>;
+  if (status === "confirmationCodePending") {
+    return <p>Confirming...</p>;
+  }
+
+  if (status === "confirmationCodeIncorrect") {
+    return (
+      <div className="flex flex-col gap-4">
+        <p>Incorrect confirmation code!</p>
+
+        <Button color="primary" onClick={onCreateLink}>
+          Start again
+        </Button>
+      </div>
+    );
+  }
+
+  if (status === "authorized") {
+    return <p>Logged in!</p>;
+  }
+
   if (status === "error") {
     return (
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-4">
         <p>Something went wrong</p>
 
         <button onClick={onCreateLink}>Try again</button>

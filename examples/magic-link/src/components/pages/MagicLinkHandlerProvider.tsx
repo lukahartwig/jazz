@@ -1,6 +1,5 @@
 import { useHandleMagicLinkAuthAsProvider } from "jazz-react";
 import { BackToHomepageContainer } from "../BackToHomepageContainer";
-import { Button } from "../Button";
 
 export default function MagicLinkHandlerProviderPage() {
   return (
@@ -12,41 +11,42 @@ export default function MagicLinkHandlerProviderPage() {
 }
 
 function MagicLinkHandlerProvider() {
-  const { status, confirmLogIn } = useHandleMagicLinkAuthAsProvider({
+  const { status, confirmationCode } = useHandleMagicLinkAuthAsProvider({
     consumerHandlerPath: "/#/magic-link-handler-consumer",
     providerHandlerPath: "/#/magic-link-handler-provider",
   });
 
-  if (status === "idle") return <p>Loading...</p>;
+  if (status === "idle") {
+    return <p>Loading...</p>;
+  }
 
-  if (status === "waitingForConfirmLogIn") {
+  if (status === "confirmationCodeGenerated") {
     return (
       <div className="flex flex-col items-center gap-2">
-        <p>You scanned the QR code!</p>
-
-        <p>Are you sure you want to log in?</p>
-
-        <Button color="primary" onClick={confirmLogIn}>
-          Confirm log in
-        </Button>
+        <p>Confirmation code:</p>
+        <p className="font-medium text-3xl tracking-widest">
+          {confirmationCode ?? "empty"}
+        </p>
+        <p className="text-red-600">Never share this code with anyone!</p>
       </div>
     );
   }
 
-  if (status === "confirmedLogIn") {
-    return <p>Confirmed! Logging in...</p>;
+  if (status === "confirmationCodeIncorrect") {
+    return (
+      <div className="flex flex-col gap-4">
+        <p>Incorrect confirmation code</p>
+        <p>Please try again</p>
+      </div>
+    );
   }
 
   if (status === "authorized") {
     return (
       <BackToHomepageContainer>
-        Your device is logged in!
+        Your device has been logged in!
       </BackToHomepageContainer>
     );
-  }
-
-  if (status === "expired") {
-    return <BackToHomepageContainer>Link expired</BackToHomepageContainer>;
   }
 
   if (status === "error") {

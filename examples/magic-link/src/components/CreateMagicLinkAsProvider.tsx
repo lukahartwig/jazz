@@ -1,5 +1,3 @@
-"use client";
-
 import { useCreateMagicLinkAuthAsProvider } from "jazz-react";
 import { useState } from "react";
 import { Button } from "./Button";
@@ -8,17 +6,17 @@ import { QRCodeContainer } from "./QRCodeContainer";
 export function CreateMagicLinkAsProvider() {
   const [link, setLink] = useState<string | null>(null);
 
-  const { status, createLink, confirmLogIn } = useCreateMagicLinkAuthAsProvider(
-    {
+  const { status, createLink, confirmationCode } =
+    useCreateMagicLinkAuthAsProvider({
       consumerHandlerPath: "/#/magic-link-handler-consumer",
       providerHandlerPath: "/#/magic-link-handler-provider",
-      autoConfirmLogIn: false,
-    },
-  );
+    });
+
+  const onCreateLink = () => createLink().then(setLink);
 
   if (status === "idle") {
     return (
-      <Button color="primary" onClick={() => createLink().then(setLink)}>
+      <Button color="primary" onClick={onCreateLink}>
         Create QR code
       </Button>
     );
@@ -34,24 +32,44 @@ export function CreateMagicLinkAsProvider() {
     );
   }
 
-  if (status === "waitingForConfirmLogIn") {
+  if (status === "confirmationCodeGenerated") {
     return (
       <div className="flex flex-col items-center gap-2">
-        <p>A device has scanned the QR code!</p>
+        <p>Confirmation code:</p>
+        <p className="font-medium text-3xl tracking-widest">
+          {confirmationCode ?? "empty"}
+        </p>
+      </div>
+    );
+  }
 
-        <p>Click confirm to allow the device to log in</p>
+  if (status === "confirmationCodeCorrect") {
+    return <p>Confirmed! Logging in...</p>;
+  }
 
-        <Button color="primary" onClick={() => confirmLogIn()}>
-          Confirm log in
+  if (status === "confirmationCodeIncorrect") {
+    return (
+      <div className="flex flex-col gap-4">
+        <p>Incorrect confirmation code</p>
+
+        <Button color="primary" onClick={onCreateLink}>
+          Start again
         </Button>
       </div>
     );
   }
 
-  if (status === "confirmedLogIn") return <p>Confirmed! Logging in...</p>;
   if (status === "authorized") return <p>Your device has been logged in!</p>;
-  if (status === "expired") return <p>Link expired</p>;
-  if (status === "error") return <p>Something went wrong</p>;
+
+  if (status === "error") {
+    return (
+      <div className="flex flex-col gap-4">
+        <p>Something went wrong</p>
+
+        <button onClick={onCreateLink}>Try again</button>
+      </div>
+    );
+  }
 
   return null;
 }

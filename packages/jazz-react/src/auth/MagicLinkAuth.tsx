@@ -1,27 +1,26 @@
 import {
+  MagicLinkAuthConsumerOptions,
+  MagicLinkAuthProviderOptions,
   useCreateMagicLinkAuthAsConsumer as useCreateMagicLinkAuthAsConsumerCore,
   useCreateMagicLinkAuthAsProvider as useCreateMagicLinkAuthAsProviderCore,
   useHandleMagicLinkAuthAsConsumer as useHandleMagicLinkAuthAsConsumerCore,
   useHandleMagicLinkAuthAsProvider as useHandleMagicLinkAuthAsProviderCore,
 } from "jazz-react-core";
-import { MagicLinkAuthOptions } from "jazz-tools";
 
 export function useCreateMagicLinkAuthAsProvider(
-  options?: Partial<{ autoConfirmLogIn: boolean } & MagicLinkAuthOptions>,
+  options?: Partial<MagicLinkAuthProviderOptions>,
 ) {
   return useCreateMagicLinkAuthAsProviderCore(window.location.origin, options);
 }
 
 export function useCreateMagicLinkAuthAsConsumer(
-  options?: Partial<
-    { handlerTimeout: number; onLoggedIn: () => void } & MagicLinkAuthOptions
-  >,
+  options?: Partial<MagicLinkAuthConsumerOptions>,
 ) {
   return useCreateMagicLinkAuthAsConsumerCore(window.location.origin, options);
 }
 
 export function useHandleMagicLinkAuthAsConsumer(
-  options?: Partial<{ onLoggedIn: () => void } & MagicLinkAuthOptions>,
+  options?: Partial<MagicLinkAuthConsumerOptions>,
 ) {
   return useHandleMagicLinkAuthAsConsumerCore(
     window.location.origin,
@@ -31,7 +30,7 @@ export function useHandleMagicLinkAuthAsConsumer(
 }
 
 export function useHandleMagicLinkAuthAsProvider(
-  options?: Partial<{ autoConfirmLogIn: boolean } & MagicLinkAuthOptions>,
+  options?: Partial<MagicLinkAuthProviderOptions>,
 ) {
   return useHandleMagicLinkAuthAsProviderCore(
     window.location.origin,
