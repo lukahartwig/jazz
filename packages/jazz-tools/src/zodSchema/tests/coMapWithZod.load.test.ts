@@ -1,5 +1,6 @@
 import { cojsonInternals } from "cojson";
 import { assert, beforeEach, describe, expect, it, vi } from "vitest";
+import { ZodError } from "zod";
 import { Group } from "../../exports.js";
 import { createJazzTestAccount, setupJazzTestSync } from "../../testing.js";
 import { waitFor } from "../../tests/utils.js";
@@ -332,17 +333,24 @@ describe("CoMap with Zod", () => {
         }),
       });
 
-      const john = Person.create({
-        name: "John",
-        age: 30,
-        address: { street: "123 Main St" },
-      });
-
-      const loaded = await loadCoValue(Person, (john.$jazz.id + "1") as any, {
+      const loaded = await loadCoValue(Person, "co_z1" as any, {
         resolve: { address: true },
       });
 
       expect(loaded.$jazzState).toBe("unavailable");
+      expect(loaded.$jazz.error).toMatchInlineSnapshot(`
+        [ZodError: [
+          {
+            "code": "custom",
+            "message": "The value is unavailable",
+            "params": {
+              "id": "co_z1"
+            },
+            "path": []
+          }
+        ]]
+      `);
+      expect(loaded.$jazz.id).toBe("co_z1");
     });
 
     it("should return unloaded if one of the nested values is not available", async () => {
@@ -376,6 +384,21 @@ describe("CoMap with Zod", () => {
       });
 
       expect(loaded.$jazzState).toBe("unavailable");
+      expect(loaded.$jazz.error).toMatchInlineSnapshot(`
+        [ZodError: [
+          {
+            "code": "custom",
+            "message": "The value is unavailable",
+            "params": {
+              "id": "co_z1"
+            },
+            "path": [
+              "address"
+            ]
+          }
+        ]]
+      `);
+      expect(loaded.$jazz.id).toBe(john.$jazz.id);
     });
 
     it("should return unloaded if one of the optional nested values is not available", async () => {
@@ -411,6 +434,21 @@ describe("CoMap with Zod", () => {
       });
 
       expect(loaded.$jazzState).toBe("unavailable");
+      expect(loaded.$jazz.error).toMatchInlineSnapshot(`
+        [ZodError: [
+          {
+            "code": "custom",
+            "message": "The value is unavailable",
+            "params": {
+              "id": "co_z1"
+            },
+            "path": [
+              "address"
+            ]
+          }
+        ]]
+      `);
+      expect(loaded.$jazz.id).toBe(john.$jazz.id);
     });
 
     it("should return unloaded if the value is not accessible", async () => {
@@ -440,6 +478,19 @@ describe("CoMap with Zod", () => {
       });
 
       expect(loaded.$jazzState).toBe("unauthorized");
+      expect(loaded.$jazz.error).toMatchObject({
+        issues: [
+          {
+            code: "custom",
+            message: "The current user is not authorized to access this value",
+            params: {
+              id: john.$jazz.id,
+            },
+            path: [],
+          },
+        ],
+      });
+      expect(loaded.$jazz.id).toBe(john.$jazz.id);
     });
 
     it("should return unloaded if one of the nested values is not accessible", async () => {
@@ -474,6 +525,19 @@ describe("CoMap with Zod", () => {
       });
 
       expect(loaded.$jazzState).toBe("unauthorized");
+      expect(loaded.$jazz.error).toMatchObject({
+        issues: [
+          {
+            code: "custom",
+            message: "The current user is not authorized to access this value",
+            params: {
+              id: john.address.$jazz.id,
+            },
+            path: ["address"],
+          },
+        ],
+      });
+      expect(loaded.$jazz.id).toBe(john.$jazz.id);
     });
 
     it("should return unauthorized if one of the optional nested values is not accessible", async () => {
@@ -510,6 +574,18 @@ describe("CoMap with Zod", () => {
       });
 
       expect(loaded.$jazzState).toBe("unauthorized");
+      expect(loaded.$jazz.error).toMatchObject({
+        issues: [
+          {
+            code: "custom",
+            message: "The current user is not authorized to access this value",
+            params: {
+              id: john.address.$jazz.id,
+            },
+            path: ["address"],
+          },
+        ],
+      });
     });
 
     it("should return validationError if the value is not valid", async () => {

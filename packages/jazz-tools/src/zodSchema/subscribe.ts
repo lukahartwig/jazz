@@ -120,8 +120,20 @@ export class CoValueResolutionNode<D extends CoValueSchema> {
 
   handleUpdate(value: RawCoMap | "unavailable") {
     if (value === "unavailable") {
-      // TODO: Gernerate a ZodError
-      this.value = getUnavailableState(this.schema, this.id);
+      this.value = getUnavailableState(
+        this.schema,
+        this.id,
+        new ZodError([
+          {
+            code: "custom",
+            message: "The value is unavailable",
+            params: {
+              id: this.id,
+            },
+            path: [],
+          },
+        ]),
+      );
       this.triggerUpdate();
       return;
     }
@@ -129,8 +141,20 @@ export class CoValueResolutionNode<D extends CoValueSchema> {
     const owner = getOwnerFromRawValue(value);
 
     if (owner.myRole() === undefined) {
-      // TODO: Gernerate a ZodError
-      this.value = getUnauthorizedState(this.schema, this.id);
+      this.value = getUnauthorizedState(
+        this.schema,
+        this.id,
+        new ZodError([
+          {
+            code: "custom",
+            message: "The current user is not authorized to access this value",
+            params: {
+              id: this.id,
+            },
+            path: [],
+          },
+        ]),
+      );
       this.triggerUpdate();
       return;
     }
