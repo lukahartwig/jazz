@@ -271,9 +271,11 @@ export class CoValueResolutionNode<D extends CoValueSchema> {
   }
 
   triggerUpdate() {
+    if (!this.shouldSendUpdates()) return;
+
     if (this.errorFromChildren) {
       this.listener?.(this.errorFromChildren);
-    } else if (this.shouldSendUpdates()) {
+    } else {
       this.listener?.(this.value);
     }
   }
