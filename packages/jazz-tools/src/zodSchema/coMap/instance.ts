@@ -149,6 +149,10 @@ export class CoMapJazzApi<
       return this._instance as Loaded<D, R>;
     }
 
+    if (refs && shallowEqual(refs, this.refs)) {
+      return this._instance as Loaded<D, R>;
+    }
+
     return createCoMapFromRaw<D, R>(
       this.schema as D,
       this.raw,
@@ -487,4 +491,18 @@ export function isCoValue(
   value: unknown,
 ): value is LoadedCoMapJazzProps<any, any> {
   return typeof value === "object" && value !== null && "$jazz" in value;
+}
+
+function shallowEqual<D extends AnyCoMapSchema>(
+  a: ChildMap<D>,
+  b: ChildMap<D>,
+) {
+  if (a === b) return true;
+  if (a.size !== b.size) return false;
+
+  for (const [key, value] of a.entries()) {
+    if (b.get(key) !== value) return false;
+  }
+
+  return true;
 }

@@ -105,6 +105,7 @@ export class CoValueResolutionNode<D extends CoValueSchema> {
   promise: ResolvablePromise<void> | undefined;
   subscription: Subscription;
   listener: ((value: Loaded<D, any> | Unloaded<D>) => void) | undefined;
+  dirty = false;
 
   constructor(
     public node: LocalNode,
@@ -118,21 +119,30 @@ export class CoValueResolutionNode<D extends CoValueSchema> {
     });
   }
 
+  updateValue(value: Loaded<D, any> | Unloaded<D>) {
+    if (this.value !== value) {
+      this.value = value;
+      this.dirty = true;
+    }
+  }
+
   handleUpdate(value: RawCoMap | "unavailable") {
     if (value === "unavailable") {
-      this.value = getUnavailableState(
-        this.schema,
-        this.id,
-        new ZodError([
-          {
-            code: "custom",
-            message: "The value is unavailable",
-            params: {
-              id: this.id,
+      this.updateValue(
+        getUnavailableState(
+          this.schema,
+          this.id,
+          new ZodError([
+            {
+              code: "custom",
+              message: "The value is unavailable",
+              params: {
+                id: this.id,
+              },
+              path: [],
             },
-            path: [],
-          },
-        ]),
+          ]),
+        ),
       );
       this.triggerUpdate();
       return;
@@ -141,19 +151,22 @@ export class CoValueResolutionNode<D extends CoValueSchema> {
     const owner = getOwnerFromRawValue(value);
 
     if (owner.myRole() === undefined) {
-      this.value = getUnauthorizedState(
-        this.schema,
-        this.id,
-        new ZodError([
-          {
-            code: "custom",
-            message: "The current user is not authorized to access this value",
-            params: {
-              id: this.id,
+      this.updateValue(
+        getUnauthorizedState(
+          this.schema,
+          this.id,
+          new ZodError([
+            {
+              code: "custom",
+              message:
+                "The current user is not authorized to access this value",
+              params: {
+                id: this.id,
+              },
+              path: [],
             },
-            path: [],
-          },
-        ]),
+          ]),
+        ),
       );
       this.triggerUpdate();
       return;
@@ -167,33 +180,26 @@ export class CoValueResolutionNode<D extends CoValueSchema> {
           this.childValues,
           this,
         );
-        this.value = instance;
+        this.updateValue(instance);
         this.loadChildren();
-        this.triggerUpdate();
       } catch (error) {
         if (error instanceof ZodError) {
-          this.value = getValidationErrorState(this.schema, this.id, error);
-          this.triggerUpdate();
+          this.updateValue(
+            getValidationErrorState(this.schema, this.id, error),
+          );
         } else {
           throw error;
         }
       }
     } else {
-      const changesOnChildren = this.loadChildren();
-
-      if (this.shouldSendUpdates() && !this.errorFromChildren) {
-        const value = this.value.$jazz.updated(
-          changesOnChildren ? this.childValues : undefined,
-        );
-
-        if (value !== this.value) {
-          this.value = value;
-          this.triggerUpdate();
-        }
-      } else if (this.errorFromChildren) {
-        this.triggerUpdate();
+      if (this.loadChildren()) {
+        this.updateValue(this.value.$jazz.updated(this.childValues));
+      } else {
+        this.updateValue(this.value.$jazz.updated());
       }
     }
+
+    this.triggerUpdate();
   }
 
   computeChildErrors() {
@@ -250,8 +256,8 @@ export class CoValueResolutionNode<D extends CoValueSchema> {
       this.errorFromChildren = this.computeChildErrors();
     }
 
-    if (this.shouldSendUpdates() && !this.errorFromChildren) {
-      this.value = this.value.$jazz.updated(this.childValues) as Loaded<D, any>;
+    if (this.shouldSendUpdates()) {
+      this.updateValue(this.value.$jazz.updated(this.childValues));
     }
 
     this.triggerUpdate();
@@ -272,12 +278,16 @@ export class CoValueResolutionNode<D extends CoValueSchema> {
 
   triggerUpdate() {
     if (!this.shouldSendUpdates()) return;
+    if (!this.dirty) return;
+    if (!this.listener) return;
 
     if (this.errorFromChildren) {
-      this.listener?.(this.errorFromChildren);
+      this.listener(this.errorFromChildren);
     } else {
-      this.listener?.(this.value);
+      this.listener(this.value);
     }
+
+    this.dirty = false;
   }
 
   setListener(listener: (value: Loaded<D, any> | Unloaded<D>) => void) {

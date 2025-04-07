@@ -1001,8 +1001,7 @@ describe("CoMap with Zod", () => {
 
       expect(resultBeforeSet).not.toBe(result);
 
-      // TODO: This is not correct, it should be called 2 times
-      expect(spy).toHaveBeenCalledTimes(3);
+      expect(spy).toHaveBeenCalledTimes(2);
     });
 
     it("should emit when a catchall relation is updated", async () => {
@@ -1046,8 +1045,7 @@ describe("CoMap with Zod", () => {
 
       expect(resultBeforeSet).not.toBe(result);
 
-      // TODO: This is not correct, it should be called 2 times
-      expect(spy).toHaveBeenCalledTimes(3);
+      expect(spy).toHaveBeenCalledTimes(2);
     });
 
     it("should emit when a catchall relation outside the resolve is added", async () => {
@@ -1389,7 +1387,7 @@ describe("CoMap with Zod", () => {
       expect(resultBeforeSet.address).not.toBe(result.address);
     });
 
-    it.only("should send an update when all the errors from nested values are resolved", async () => {
+    it("should send an update when all the errors from nested values are resolved", async () => {
       const anotherAccount = await createJazzTestAccount();
       const Person = co.map({
         name: z.string(),
@@ -1494,8 +1492,7 @@ describe("CoMap with Zod", () => {
         address2: { street: "456 Main St" },
       });
 
-      // TODO: This should be 3
-      expect(spy).toHaveBeenCalledTimes(5);
+      expect(spy).toHaveBeenCalledTimes(3);
     });
 
     it("should send an update when all the errors from nested values are resolved (errors are from values with the same id)", async () => {
@@ -1581,8 +1578,7 @@ describe("CoMap with Zod", () => {
         address2: { street: "123 Main St" },
       });
 
-      // TODO: This should be 3
-      expect(spy).toHaveBeenCalledTimes(5);
+      expect(spy).toHaveBeenCalledTimes(3);
     });
   });
 });
