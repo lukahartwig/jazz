@@ -120,7 +120,7 @@ const detectPDFMimeType = async (blob: Blob): Promise<string> => {
   if (header === "%PDF") {
     return "application/pdf";
   }
-  return "application/octet-stream";
+  return "unknown";
 };
 
 const BinaryDownloadButton = ({

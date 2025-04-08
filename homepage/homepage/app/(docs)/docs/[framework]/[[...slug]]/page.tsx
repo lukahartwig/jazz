@@ -53,10 +53,19 @@ export default async function Page({
 
   try {
     const mdxSource = await getMdxSource(framework, slugPath);
-    const { default: Content, tableOfContents } = mdxSource;
+    const {
+      default: Content,
+      tableOfContents,
+      headingsFrameworkVisibility,
+      test,
+    } = mdxSource;
 
-    // Exclude h1 from table of contents
-    const tocItems = (tableOfContents as Toc)?.[0]?.children;
+    // Remove items that should not be shown for the current framework
+    const tocItems = (tableOfContents as Toc).filter(({ id }) =>
+      id && id in headingsFrameworkVisibility
+        ? headingsFrameworkVisibility[id]?.includes(framework)
+        : true,
+    );
 
     return (
       <>

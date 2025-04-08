@@ -1,5 +1,18 @@
 # jazz-example-inspector
 
+## 0.0.121
+
+### Patch Changes
+
+- 2796689: various fixes and css refactoring
+- Updated dependencies [a013538]
+- Updated dependencies [2796689]
+- Updated dependencies [2224ed4]
+- Updated dependencies [bce3bcc]
+  - cojson@0.13.0
+  - jazz-inspector@0.13.0
+  - cojson-transport-ws@0.13.0
+
 ## 0.0.120
 
 ### Patch Changes

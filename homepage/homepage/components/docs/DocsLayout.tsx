@@ -51,7 +51,7 @@ export default function DocsLayout({
           </div>
           <div className={clsx("md:col-span-8 lg:col-span-9 flex gap-12")}>
             {children}
-            {tocItems?.length && (
+            {!!tocItems?.length && (
               <>
                 <TableOfContents
                   className="pl-3 py-6 shrink-0 text-sm sticky align-start top-[61px] w-[16rem] h-[calc(100vh-61px)] overflow-y-auto hidden lg:block"

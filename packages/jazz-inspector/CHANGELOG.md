@@ -1,5 +1,19 @@
 # jazz-inspector
 
+## 0.13.0
+
+### Patch Changes
+
+- 2796689: various fixes and css refactoring
+- 2224ed4: show unknown mime type instead of application/octet-stream
+- Updated dependencies [a013538]
+- Updated dependencies [afd1374]
+- Updated dependencies [afd1374]
+- Updated dependencies [bce3bcc]
+  - cojson@0.13.0
+  - jazz-tools@0.13.0
+  - jazz-react-core@0.13.0
+
 ## 0.12.2
 
 ### Patch Changes

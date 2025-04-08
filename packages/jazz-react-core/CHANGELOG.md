@@ -1,5 +1,16 @@
 # jazz-react-core
 
+## 0.13.0
+
+### Patch Changes
+
+- afd1374: Return null when the id provided to useCoState is undefined
+- Updated dependencies [a013538]
+- Updated dependencies [afd1374]
+- Updated dependencies [bce3bcc]
+  - cojson@0.13.0
+  - jazz-tools@0.13.0
+
 ## 0.12.2
 
 ### Patch Changes
