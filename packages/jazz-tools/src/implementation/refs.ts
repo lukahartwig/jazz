@@ -17,6 +17,8 @@ import { coValuesCache } from "../lib/cache.js";
 const TRACE_ACCESSES = false;
 
 export class Ref<out V extends CoValue> {
+  childrenErrorState: "unauthorized" | "unfulfilled" | undefined;
+
   constructor(
     readonly id: ID<V>,
     readonly controlledAccount: Account | AnonymousJazzAgent,
@@ -59,6 +61,14 @@ export class Ref<out V extends CoValue> {
     return true;
   }
 
+  setChildrenState(state: "unauthorized" | "unfulfilled" | "fulfilled") {
+    if (state === "fulfilled") {
+      this.childrenErrorState = undefined;
+    } else {
+      this.childrenErrorState = state;
+    }
+  }
+
   getValueWithoutAccessCheck() {
     const node = this.getNode();
     const raw = node.getLoaded(this.id as unknown as CoID<RawCoValue>);
@@ -74,6 +84,10 @@ export class Ref<out V extends CoValue> {
 
   get value() {
     if (!this.hasReadAccess()) {
+      return null;
+    }
+
+    if (this.childrenErrorState) {
       return null;
     }
 

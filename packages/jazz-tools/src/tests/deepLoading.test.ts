@@ -439,6 +439,83 @@ describe("Deep loading with unauthorized account", async () => {
     expect(mapOnAlice).toBe(null);
   });
 
+  test("unaccessible list element with $skipInvalid", async () => {
+    class Person extends CoMap {
+      name = co.string;
+    }
+    class Friends extends CoList.Of(co.ref(Person)) {}
+
+    const list = Friends.create(
+      [
+        Person.create({ name: "Jane" }, onlyBob),
+        Person.create({ name: "Alice" }, group),
+      ],
+      group,
+    );
+
+    const listOnAlice = await Friends.load(list.id, {
+      resolve: { $each: true, $skipInvalid: true },
+      loadAs: alice,
+    });
+
+    assert(listOnAlice, "listOnAlice is null");
+
+    expect(listOnAlice[0]).toBeNull();
+    expect(listOnAlice[1]).not.toBeNull();
+    expect(listOnAlice[1]?.name).toBe("Alice");
+    expect(listOnAlice).toHaveLength(2);
+  });
+
+  test("unaccessible list element with $skipInvalid and $each with depth", async () => {
+    class Person extends CoMap {
+      name = co.string;
+      friends = co.optional.ref(Friends);
+    }
+    class Friends extends CoList.Of(co.ref(Person)) {}
+
+    const list = Friends.create(
+      [
+        Person.create(
+          {
+            name: "Jane",
+            friends: Friends.create(
+              [Person.create({ name: "Bob" }, onlyBob)],
+              group,
+            ),
+          },
+          group,
+        ),
+        Person.create(
+          {
+            name: "Alice",
+            friends: Friends.create(
+              [Person.create({ name: "Bob" }, group)],
+              group,
+            ),
+          },
+          group,
+        ),
+      ],
+      group,
+    );
+
+    // The error List -> Jane -> Bob should be propagated to the list element Jane
+    // and we should have [null, Alice]
+    const listOnAlice = await Friends.load(list.id, {
+      resolve: { $each: { friends: { $each: true } }, $skipInvalid: true },
+      loadAs: alice,
+    });
+
+    assert(listOnAlice, "listOnAlice is null");
+
+    expect(listOnAlice[0]).toBeNull();
+    expect(listOnAlice[1]).not.toBeNull();
+    expect(listOnAlice[1]?.name).toBe("Alice");
+    expect(listOnAlice[1]?.friends).not.toBeNull();
+    expect(listOnAlice[1]?.friends?.[0]?.name).toBe("Bob");
+    expect(listOnAlice).toHaveLength(2);
+  });
+
   test("unaccessible optional element", async () => {
     const map = TestMap.create(
       {
@@ -537,6 +614,53 @@ describe("Deep loading with unauthorized account", async () => {
     });
 
     expect(mapOnAlice).toBe(null);
+  });
+
+  test("unaccessible record element", async () => {
+    class Person extends CoMap {
+      name = co.string;
+    }
+    class Friend extends CoMap.Record(co.ref(Person)) {}
+
+    const map = Friend.create(
+      {
+        jane: Person.create({ name: "Jane" }, onlyBob),
+        alice: Person.create({ name: "Alice" }, group),
+      },
+      group,
+    );
+
+    const friendsOnAlice = await Friend.load(map.id, {
+      resolve: { $each: true },
+      loadAs: alice,
+    });
+
+    expect(friendsOnAlice).toBeNull();
+  });
+
+  test("unaccessible record element with $skipInvalid", async () => {
+    class Person extends CoMap {
+      name = co.string;
+    }
+    class Friend extends CoMap.Record(co.ref(Person)) {}
+
+    const map = Friend.create(
+      {
+        jane: Person.create({ name: "Jane" }, onlyBob),
+        alice: Person.create({ name: "Alice" }, group),
+      },
+      group,
+    );
+
+    const friendsOnAlice = await Friend.load(map.id, {
+      resolve: { $each: true, $skipInvalid: true },
+      loadAs: alice,
+    });
+
+    assert(friendsOnAlice, "friendsOnAlice is null");
+
+    expect(friendsOnAlice.jane).toBeNull();
+    expect(friendsOnAlice.alice).not.toBeNull();
   });
 });
 

@@ -26,6 +26,18 @@ function hasReadAccess(value: CoValue, key: string | number) {
   );
 }
 
+function setChildrenState(
+  value: CoValue,
+  key: string | number,
+  state: "unauthorized" | "unfulfilled" | "fulfilled",
+) {
+  (
+    value as unknown as {
+      _refs: { [key: string]: Ref<CoValue> | undefined };
+    }
+  )._refs?.[key]?.setChildrenState(state);
+}
+
 function isOptionalField(value: CoValue, key: string): boolean {
   return (
     ((value as CoMap)._schema[key] as RefEncoded<CoValue>)?.optional ?? false
@@ -53,6 +65,10 @@ export function fulfillsDepth(depth: any, value: CoValue): FulfillsDepthResult {
       for (const [key, item] of Object.entries(value)) {
         if (map._raw.get(key) !== undefined) {
           if (!item) {
+            if (depth.$skipInvalid === true) {
+              continue;
+            }
+
             if (hasReadAccess(map, key)) {
               result = "unfulfilled";
               continue;
@@ -62,16 +78,22 @@ export function fulfillsDepth(depth: any, value: CoValue): FulfillsDepthResult {
           }
 
           const innerResult = fulfillsDepth(depth.$each, item);
+          setChildrenState(value, key, innerResult);
+
+          if (depth.$skipInvalid === true) {
+            continue;
+          }
 
           if (innerResult === "unfulfilled") {
             result = "unfulfilled";
-          } else if (
-            innerResult === "unauthorized" &&
-            !isOptionalField(value, ItemsSym)
-          ) {
+          } else if (innerResult === "unauthorized") {
             return "unauthorized"; // If any item is unauthorized, the whole thing is unauthorized
           }
         } else if (!isOptionalField(value, ItemsSym)) {
+          if (depth.$skipInvalid === true) {
+            continue;
+          }
+
           return "unfulfilled";
         }
       }
@@ -121,13 +143,15 @@ export function fulfillsDepth(depth: any, value: CoValue): FulfillsDepthResult {
           }
 
           const innerResult = fulfillsDepth(depth[key], item);
+          setChildrenState(value, key, innerResult);
+
+          if (depth.$skipInvalid === true) {
+            continue;
+          }
 
           if (innerResult === "unfulfilled") {
             result = "unfulfilled";
-          } else if (
-            innerResult === "unauthorized" &&
-            !isOptionalField(value, key)
-          ) {
+          } else if (innerResult === "unauthorized") {
             return "unauthorized"; // If any item is unauthorized, the whole thing is unauthorized
           }
         }
@@ -142,6 +166,10 @@ export function fulfillsDepth(depth: any, value: CoValue): FulfillsDepthResult {
       for (const [key, item] of (value as CoList).entries()) {
         if (hasRefValue(value, key)) {
           if (!item) {
+            if (depth.$skipInvalid === true) {
+              continue;
+            }
+
             if (hasReadAccess(value, key)) {
               result = "unfulfilled";
               continue;
@@ -151,16 +179,22 @@ export function fulfillsDepth(depth: any, value: CoValue): FulfillsDepthResult {
           }
 
           const innerResult = fulfillsDepth(depth.$each, item);
+          setChildrenState(value, key, innerResult);
+
+          if (depth.$skipInvalid === true) {
+            continue;
+          }
 
           if (innerResult === "unfulfilled") {
             result = "unfulfilled";
-          } else if (
-            innerResult === "unauthorized" &&
-            !isOptionalField(value, ItemsSym)
-          ) {
+          } else if (innerResult === "unauthorized") {
             return "unauthorized"; // If any item is unauthorized, the whole thing is unauthorized
           }
         } else if (!isOptionalField(value, ItemsSym)) {
+          if (depth.$skipInvalid === true) {
+            continue;
+          }
+
           return "unfulfilled";
         }
       }
@@ -235,6 +269,7 @@ export type RefsToResolve<
                   DepthLimit,
                   [0, ...CurrentDepth]
                 >;
+                $skipInvalid?: true;
               }
             | boolean
         : // Basically V extends CoMap | Group | Account - but if we used that we'd introduce circularity into the definition of CoMap itself
@@ -256,6 +291,7 @@ export type RefsToResolve<
                         DepthLimit,
                         [0, ...CurrentDepth]
                       >;
+                      $skipInvalid?: true;
                     }
                   : never)
               | boolean
@@ -270,6 +306,7 @@ export type RefsToResolve<
                       DepthLimit,
                       [0, ...CurrentDepth]
                     >;
+                    $skipInvalid?: true;
                   }
                 | boolean
             : boolean);
@@ -285,6 +322,8 @@ export type Resolved<T, R extends RefsToResolve<T> | undefined> = DeeplyLoaded<
   []
 >;
 
+type isNullable<Depth> = Depth extends { $skipInvalid: boolean } ? null : never;
+
 export type DeeplyLoaded<
   V,
   Depth,
@@ -299,13 +338,16 @@ export type DeeplyLoaded<
       ? UnCoNotNull<Item> extends CoValue
         ? Depth extends { $each: infer ItemDepth }
           ? // Deeply loaded CoList
-            (UnCoNotNull<Item> &
-              DeeplyLoaded<
-                UnCoNotNull<Item>,
-                ItemDepth,
-                DepthLimit,
-                [0, ...CurrentDepth]
-              >)[] &
+            (
+              | (Clean<Item> &
+                  DeeplyLoaded<
+                    Clean<Item>,
+                    ItemDepth,
+                    DepthLimit,
+                    [0, ...CurrentDepth]
+                  >)
+              | isNullable<Depth>
+            )[] &
               V // the CoList base type needs to be intersected after so that built-in methods return the correct narrowed array type
           : never
         : V
@@ -315,12 +357,14 @@ export type DeeplyLoaded<
           ? Depth extends { $each: infer ItemDepth }
             ? // Deeply loaded Record-like CoMap
               {
-                [key: string]: DeeplyLoaded<
-                  Clean<V[ItemsSym]>,
-                  ItemDepth,
-                  DepthLimit,
-                  [0, ...CurrentDepth]
-                >;
+                [key: string]:
+                  | DeeplyLoaded<
+                      Clean<V[ItemsSym]>,
+                      ItemDepth,
+                      DepthLimit,
+                      [0, ...CurrentDepth]
+                    >
+                  | isNullable<Depth>;
               } & V // same reason as in CoList
             : never
           : keyof Depth extends never // Depth = {}
