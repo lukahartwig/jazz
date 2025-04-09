@@ -226,11 +226,11 @@ export class CoMapSchemaClass<
   }
 
   fromRaw(
-    raw: RawCoMap,
+    raw: any,
     refs?: any,
     resolutionNode?: CoValueResolutionNode<CoMapSchema<S, R>>,
   ): any {
-    return createCoMapFromRaw(this, raw, refs, resolutionNode) as any;
+    return createCoMapFromRaw(this, raw as any, refs, resolutionNode) as any;
   }
 }
 

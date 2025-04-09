@@ -114,6 +114,6 @@ export class CoListSchemaClass<
     refs?: any,
     resolutionNode?: CoValueResolutionNode<CoListSchema<V>>,
   ): any {
-    return createCoListFromRaw(this, raw, refs, resolutionNode) as any;
+    return createCoListFromRaw(this, raw as any, refs, resolutionNode) as any;
   }
 }
