@@ -134,10 +134,35 @@ export class JazzContextManager<
     if (!this.context || !this.props) {
       return;
     }
+    const originalProps = this.props;
 
-    await this.props.onLogOut?.();
+    // Perform the platform-specific logout actions
     await this.context.logOut();
-    return this.createContext(this.props);
+    // Execute the user-provided callback
+    await originalProps.onLogOut?.();
+
+    // Clear the stored credentials
+    await this.authSecretStorage.clear();
+
+    // Explicitly clear the old platform-specific context instance state
+    this.context = undefined;
+
+    // Immediately create and set the new context (should be anonymous now)
+    try {
+      // Get new context using original props; underlying createJazzContext
+      // should detect cleared storage and create anonymous account.
+      // The delay inside createJazzContext might help the LocalNode race condition.
+      const newContext = await this.getNewContext(originalProps);
+
+      // Update the manager's state - this sets this.value and calls this.notify()
+      await this.updateContext(originalProps, newContext);
+    } catch (error) {
+      console.error("Failed to create context after logout:", error);
+      // Fallback: Clear value and notify
+      this.value = undefined;
+      this.context = undefined;
+      this.notify();
+    }
   };
 
   done = () => {
