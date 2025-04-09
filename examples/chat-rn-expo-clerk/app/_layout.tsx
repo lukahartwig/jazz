@@ -16,7 +16,6 @@ function InitialLayout() {
   const router = useRouter();
 
   useEffect(() => {
-    // Wait for Clerk to load
     if (!isLoaded) {
       return;
     }
