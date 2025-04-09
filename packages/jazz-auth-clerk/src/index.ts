@@ -38,18 +38,13 @@ export class JazzClerkAuth {
   }
 
   onClerkUserChange = async (clerkClient: Pick<MinimalClerkClient, "user">) => {
-    const jazzIsAuthenticated = this.authSecretStorage.isAuthenticated;
-
     if (!clerkClient.user) {
-      if (jazzIsAuthenticated) {
-        await this.authSecretStorage.clear();
-      }
       return;
     }
 
-    if (jazzIsAuthenticated) {
-      return;
-    }
+    const isAuthenticated = this.authSecretStorage.isAuthenticated;
+
+    if (isAuthenticated) return;
 
     const clerkCredentials = clerkClient.user
       .unsafeMetadata as ClerkCredentials;
