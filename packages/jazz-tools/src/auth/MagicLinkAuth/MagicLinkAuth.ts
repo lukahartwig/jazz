@@ -1,5 +1,4 @@
 import {
-  AccountRole,
   CryptoProvider,
   InviteSecret,
   LocalNode,
@@ -7,11 +6,11 @@ import {
   bytesToBase64url,
   cojsonInternals,
 } from "cojson";
-import { Account } from "../coValues/account.js";
-import { CoMap, Group } from "../exports.js";
-import { ID, co } from "../internal.js";
-import { AuthenticateAccountFunction } from "../types.js";
-import { AuthSecretStorage } from "./AuthSecretStorage.js";
+import { Account } from "../../coValues/account.js";
+import { CoMap, Group } from "../../exports.js";
+import { ID, co } from "../../internal.js";
+import { AuthenticateAccountFunction } from "../../types.js";
+import { AuthSecretStorage } from "../AuthSecretStorage.js";
 
 export class MagicLinkAuthTransfer extends CoMap {
   status = co.literal("pending", "incorrectCode", "authorized");

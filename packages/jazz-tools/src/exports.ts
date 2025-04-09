@@ -72,7 +72,11 @@ export {
   MagicLinkAuth,
   MagicLinkAuthTransfer,
   MagicLinkAuthOptions,
-} from "./auth/MagicLinkAuth.js";
+  MagicLinkAuthCreateAsProvider,
+  MagicLinkAuthCreateAsConsumer,
+  MagicLinkAuthHandleAsConsumer,
+  MagicLinkAuthHandleAsProvider,
+} from "./auth/MagicLinkAuth/index.js";
 
 export {
   createInviteLink,
