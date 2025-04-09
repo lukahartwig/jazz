@@ -3,7 +3,7 @@ import { ZodError, ZodIssue } from "zod";
 import { Account } from "../exports.js";
 import { activeAccountContext } from "../implementation/activeAccountContext.js";
 import { AnonymousJazzAgent } from "../internal.js";
-import { createCoMapFromRaw, isRelationRef } from "./coMap/instance.js";
+import { isRelationRef } from "./coMap/instance.js";
 import { getOwnerFromRawValue } from "./coMap/utils.js";
 import { isLazySchema } from "./coValue/lazy.js";
 import {

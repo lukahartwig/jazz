@@ -1,10 +1,4 @@
-import {
-  CoValueUniqueness,
-  JsonValue,
-  RawAccount,
-  RawCoList,
-  RawCoMap,
-} from "cojson";
+import { CoValueUniqueness, JsonValue, RawAccount, RawCoList } from "cojson";
 import { ZodError, ZodIssue, ZodTypeAny } from "zod";
 import type { Account } from "../../coValues/account.js";
 import type { Group } from "../../coValues/group.js";
@@ -25,7 +19,7 @@ import {
 import { getUnloadedState } from "../coValue/unloaded.js";
 import { CoValueResolutionNode, ensureCoValueLoaded } from "../subscribe.js";
 
-import { AnyCoListSchema } from "./schema.js";
+import { AnyCoListSchema, CoListInit } from "./schema.js";
 import { getOwnerFromRawValue } from "./utils.js";
 
 export class LoadedCoListJazzProps<
@@ -33,8 +27,8 @@ export class LoadedCoListJazzProps<
   V,
   R extends ResolveQuery<D> = true,
 > extends Array<V> {
-  $jazzState: "loaded";
-  $jazz: CoListJazzApi<D, R>;
+  declare $jazzState: "loaded";
+  declare $jazz: CoListJazzApi<D, R>;
 }
 
 type ListContent = Array<unknown | undefined>;
@@ -61,6 +55,7 @@ export class CoListJazzApi<
   ) {
     this.schema = schema;
     this.raw = raw;
+    // @ts-expect-error
     this.lastUpdateTx = raw.totalProcessedTransactions;
     this.id = raw.id as unknown as ID<D>;
     this._resolutionNode = resolutionNode;
@@ -102,21 +97,8 @@ export class CoListJazzApi<
     throw new Error("Not implemented");
   }
 
-  updated(refs?: ChildMap<D>): Loaded<D, R> {
-    if (this.lastUpdateTx === this.raw.totalProcessedTransactions && !refs) {
-      return this._instance as Loaded<D, R>;
-    }
-
-    if (refs && shallowEqual(refs, this.refs)) {
-      return this._instance as Loaded<D, R>;
-    }
-
-    return createCoListFromRaw<D, R>(
-      this.schema as D,
-      this.raw,
-      refs ?? this.refs,
-      this._resolutionNode,
-    );
+  updated(): Loaded<D, R> {
+    throw new Error("Not implemented");
   }
 
   /**
@@ -194,7 +176,9 @@ export function createCoList<D extends AnyCoListSchema>(
     uniqueness,
   );
 
-  return createCoListFromRaw<D, true>(schema, raw, refs);
+  throw new Error("Not implemented");
+
+  // return createCoListFromRaw<D, true>(schema, raw, refs);
 }
 
 export function createCoListFromRaw<
@@ -206,17 +190,17 @@ export function createCoListFromRaw<
   refs?: ListContent,
   resolutionNode?: CoValueResolutionNode<D>,
 ) {
-  const instance = new Array(raw.length);
+  // const instance = new Array(raw.length);
 
-  // TODO: Would it be better to use defineProperty instead of setting the prototype?
-  const prototype = [];
+  // // TODO: Would it be better to use defineProperty instead of setting the prototype?
+  // const prototype = [];
 
-  Object.setPrototypeOf(instance, prototype);
+  // Object.setPrototypeOf(instance, prototype);
 
-  prototype.$jazz = new CoListJazzApi(schema, raw, resolutionNode);
-  prototype.$jazzState = "loaded";
+  // prototype.$jazz = new CoListJazzApi(schema, raw, resolutionNode);
+  // prototype.$jazzState = "loaded";
 
-  instance.$jazz._setInstance(instance);
+  // instance.$jazz._setInstance(instance);
 
   throw new Error("Not implemented");
 }
@@ -238,41 +222,4 @@ function createCoListFromInit<D extends AnyCoListSchema>(
   const raw = rawOwner.createList(rawInit, null, "private", uniqueness);
 
   return { raw, refs };
-}
-
-function getSchemaFromDescriptor<
-  S extends AnyCoMapSchema,
-  K extends CoMapSchemaKey<S>,
->(schema: S, key: K) {
-  const descriptor = schema.get(key);
-
-  if (descriptor && isRelationRef(descriptor)) {
-    if (isLazySchema<any>(descriptor)) {
-      return descriptor.lazySchema();
-    } else {
-      return descriptor;
-    }
-  } else {
-    throw new Error(`Field ${String(key)} is not a reference`);
-  }
-}
-
-export function isCoValue(
-  value: unknown,
-): value is LoadedCoMapJazzProps<any, any> {
-  return typeof value === "object" && value !== null && "$jazz" in value;
-}
-
-function shallowEqual<D extends AnyCoMapSchema>(
-  a: ChildMap<D>,
-  b: ChildMap<D>,
-) {
-  if (a === b) return true;
-  if (a.size !== b.size) return false;
-
-  for (const [key, value] of a.entries()) {
-    if (b.get(key) !== value) return false;
-  }
-
-  return true;
 }
