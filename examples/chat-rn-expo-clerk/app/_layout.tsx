@@ -1,9 +1,10 @@
 import "../global.css";
-import { ClerkLoaded, ClerkProvider, useAuth } from "@clerk/clerk-expo";
+import { ClerkLoaded, ClerkProvider } from "@clerk/clerk-expo";
 import { secureStore } from "@clerk/clerk-expo/secure-store";
 import { useFonts } from "expo-font";
 import { Slot, useRouter, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
+import { useIsAuthenticated, useJazzContext } from "jazz-expo";
 import React, { useEffect } from "react";
 import { tokenCache } from "../cache";
 import { JazzAndAuth } from "../src/auth-context";
@@ -11,27 +12,30 @@ import { JazzAndAuth } from "../src/auth-context";
 SplashScreen.preventAutoHideAsync();
 
 function InitialLayout() {
-  const { isLoaded, isSignedIn } = useAuth();
+  const isAuthenticated = useIsAuthenticated();
+  const jazzContext = useJazzContext();
   const segments = useSegments();
   const router = useRouter();
 
+  const isJazzReady = jazzContext !== undefined;
+
   useEffect(() => {
-    if (!isLoaded) {
+    if (!isJazzReady) {
       return;
     }
 
-    const inAuthGroup = segments[0] === "(auth)"; // Adjust if your auth routes are structured differently
+    const inAuthGroup = segments[0] === "(auth)";
 
-    if (isSignedIn && inAuthGroup) {
+    if (isAuthenticated && inAuthGroup) {
       router.replace("/chat");
-    } else if (!isSignedIn && !inAuthGroup) {
+    } else if (!isAuthenticated && !inAuthGroup) {
       router.replace("/");
     }
 
     SplashScreen.hideAsync();
-  }, [isLoaded, isSignedIn, segments, router]);
+  }, [isJazzReady, isAuthenticated, segments, router]);
 
-  if (!isLoaded) {
+  if (!isJazzReady) {
     return null;
   }
 
