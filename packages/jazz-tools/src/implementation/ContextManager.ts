@@ -151,7 +151,6 @@ export class JazzContextManager<
     try {
       // Get new context using original props; underlying createJazzContext
       // should detect cleared storage and create anonymous account.
-      // The delay inside createJazzContext might help the LocalNode race condition.
       const newContext = await this.getNewContext(originalProps);
 
       // Update the manager's state - this sets this.value and calls this.notify()
