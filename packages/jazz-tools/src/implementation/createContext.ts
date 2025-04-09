@@ -227,7 +227,7 @@ export async function createJazzContext<Acc extends Account>(options: {
     // Introduce a small delay to allow the previous session's async
     // cleanup (e.g., gracefulShutdown in LocalNode called via logOut)
     // to potentially complete before creating a new anonymous account.
-    // This might mitigate race conditions observed with fast transitions.
+    // This mitigates race conditions observed with fast transitions.
     await new Promise((resolve) => setTimeout(resolve, 50)); // 50ms delay
 
     const secretSeed = options.crypto.newRandomSecretSeed();
