@@ -1,4 +1,4 @@
-import { CoValueSchema } from "../coMap/schema.js";
+import { CoValueSchema } from "../types.js";
 import { LazySchema, isLazySchema } from "./lazy.js";
 
 export const OptionalSymbol = "isOptional" as const;

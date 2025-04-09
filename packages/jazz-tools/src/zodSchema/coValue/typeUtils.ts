@@ -17,7 +17,8 @@ export type flatten<T> = T extends string
   ? T
   : identity<{ [k in keyof T]: T[k] }>;
 
-type DEPTH_LIMIT = 10;
+// type DEPTH_LIMIT = 10;
+type DEPTH_LIMIT = 5;
 
 export type IsDepthLimit<CurrentDepth extends number[]> =
   DEPTH_LIMIT extends CurrentDepth["length"] ? true : false;

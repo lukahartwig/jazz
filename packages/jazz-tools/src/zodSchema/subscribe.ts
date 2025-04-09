@@ -4,7 +4,6 @@ import { Account } from "../exports.js";
 import { activeAccountContext } from "../implementation/activeAccountContext.js";
 import { AnonymousJazzAgent } from "../internal.js";
 import { createCoMapFromRaw, isRelationRef } from "./coMap/instance.js";
-import { CoValueSchema } from "./coMap/schema.js";
 import { getOwnerFromRawValue } from "./coMap/utils.js";
 import { isLazySchema } from "./coValue/lazy.js";
 import {
@@ -22,6 +21,7 @@ import {
   getUnloadedState,
   getValidationErrorState,
 } from "./coValue/unloaded.js";
+import { CoValueSchema } from "./types.js";
 
 type SubscribeListener<D extends CoValueSchema, R extends ResolveQuery<D>> = (
   value: Loaded<D, R> | Unloaded<D>,
@@ -174,12 +174,8 @@ export class CoValueResolutionNode<D extends CoValueSchema> {
 
     if (this.value.$jazzState !== "loaded") {
       try {
-        const instance = createCoMapFromRaw<D, any>(
-          this.schema,
-          value,
-          this.childValues,
-          this,
-        );
+        // @ts-expect-error fromRaw is not declared on the schema types
+        const instance = this.schema.fromRaw(value, this.childValues, this);
         this.updateValue(instance);
         this.loadChildren();
       } catch (error) {
@@ -310,10 +306,12 @@ export class CoValueResolutionNode<D extends CoValueSchema> {
 
     let hasChanged = false;
 
+    // TODO: Specialized fieldsToLoad for lists and maps
     const fieldsToLoad =
       "$each" in resolve && resolve.$each
         ? raw
             .keys()
+            // @ts-expect-error shape is CoMap only
             .filter((key: string) => !(key in schema.shape))
             .map((key: string) => [key, resolve.$each])
         : Object.entries(resolve);

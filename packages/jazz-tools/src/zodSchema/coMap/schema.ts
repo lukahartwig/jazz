@@ -1,4 +1,5 @@
 import { CoValueUniqueness } from "cojson";
+import { RawCoMap } from "cojson/src/exports.js";
 import { TypeOf, ZodString, ZodTypeAny, z } from "zod";
 import { Account } from "../../coValues/account.js";
 import { Group } from "../../coValues/group.js";
@@ -11,9 +12,14 @@ import {
   flatten,
   simplifyResolveQuery,
 } from "../coValue/typeUtils.js";
-import { Loaded } from "../coValue/types.js";
-import { createCoMap } from "./instance.js";
-
+import {
+  CoValueInit,
+  Loaded,
+  ReolveQueryForCoInitChild,
+} from "../coValue/types.js";
+import { CoValueResolutionNode } from "../subscribe.js";
+import { CoValueSchema } from "../types.js";
+import { createCoMap, createCoMapFromRaw } from "./instance.js";
 export type CoMapField = CoValueSchema | ZodTypeAny | LazySchema<any>;
 export type CoMapRecordDef = { key: ZodString; value: CoMapField };
 
@@ -27,8 +33,6 @@ export type CoMapSchemaKey<S extends AnyCoMapSchema> =
 
 export type CoMapRecordKey<S extends AnyCoMapSchema> =
   S["record"] extends CoMapRecordDef ? TypeOf<S["record"]["key"]> : never;
-
-export type CoValueSchema = AnyCoMapSchema;
 
 export type RefProps<S extends AnyCoMapSchema> = {
   [K in keyof S["shape"]]: S["shape"][K] extends { _schema: CoValueSchema }
@@ -69,11 +73,11 @@ export type CoMapInit<
       {
         [K in OptionalKeys<S>]?: S["shape"][K] extends ZodTypeAny
           ? TypeOf<S["shape"][K]>
-          : CoMapInit<SchemaOf<S["shape"][K]>, [0, ...CurrentDepth]>;
+          : CoValueInit<SchemaOf<S["shape"][K]>, [0, ...CurrentDepth]>;
       } & {
         [K in RequiredKeys<S>]: S["shape"][K] extends ZodTypeAny
           ? TypeOf<S["shape"][K]>
-          : CoMapInit<SchemaOf<S["shape"][K]>, [0, ...CurrentDepth]>;
+          : CoValueInit<SchemaOf<S["shape"][K]>, [0, ...CurrentDepth]>;
       } & {
         [K in keyof S["shape"]]?: unknown;
       }
@@ -83,7 +87,7 @@ export type CoMapInit<
             [K in CoMapRecordKey<S>]: S["record"]["value"] extends ZodTypeAny
               ? TypeOf<S["record"]["value"]>
               : S["record"]["value"] extends { _schema: CoValueSchema }
-                ? CoMapInit<
+                ? CoValueInit<
                     SchemaOf<S["record"]["value"]>,
                     [0, ...CurrentDepth]
                   >
@@ -96,16 +100,6 @@ export type CoMapInitStrict<
   I,
 > = I extends CoMapInit<S> ? CoMapInit<S> : I;
 
-type ReolveQueryForCoMapChild<
-  ChildSchema,
-  I,
-  CurrentDepth extends number[],
-> = ChildSchema extends AnyCoMapSchema
-  ? I extends { $jazz: { _resolveQuery: any } }
-    ? ResolveQueryOf<I>
-    : ResolveQueryForCoMapInit<ChildSchema, I, CurrentDepth>
-  : never;
-
 export type ResolveQueryForCoMapInit<
   S extends AnyCoMapSchema,
   I,
@@ -115,14 +109,14 @@ export type ResolveQueryForCoMapInit<
   : I extends CoMapInit<S>
     ? simplifyResolveQuery<
         {
-          [K in keyof I & RefProps<S>]: ReolveQueryForCoMapChild<
+          [K in keyof I & RefProps<S>]: ReolveQueryForCoInitChild<
             SchemaOf<S["shape"][K]>,
             I[K],
             [0, ...CurrentDepth]
           >;
         } & (S["record"] extends { value: { _schema: CoValueSchema } }
           ? {
-              [K in keyof I & CoMapRecordKey<S>]: ReolveQueryForCoMapChild<
+              [K in keyof I & CoMapRecordKey<S>]: ReolveQueryForCoInitChild<
                 SchemaOf<S["record"]["value"]>,
                 I[K],
                 [0, ...CurrentDepth]
@@ -148,6 +142,7 @@ export type CoMapSchema<
   keys(): (keyof S & string)[];
 };
 
+// TODO: move to types.ts
 export type CoValueSchemaToClass<D extends CoValueSchema> =
   D extends AnyCoMapSchema ? CoMapSchemaToClass<D> : never;
 
@@ -228,6 +223,14 @@ export class CoMapSchemaClass<
   > {
     const { owner, uniqueness } = parseCoValueCreateOptions(options);
     return createCoMap(this as any, init as any, owner, uniqueness) as any;
+  }
+
+  fromRaw(
+    raw: RawCoMap,
+    refs?: any,
+    resolutionNode?: CoValueResolutionNode<CoMapSchema<S, R>>,
+  ): any {
+    return createCoMapFromRaw(this, raw, refs, resolutionNode) as any;
   }
 }
 

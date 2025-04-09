@@ -5,9 +5,10 @@ import type { Group } from "../../coValues/group.js";
 import { RegisteredSchemas } from "../../coValues/registeredSchemas.js";
 import { AnonymousJazzAgent } from "../../internal.js";
 import { coValuesCache } from "../../lib/cache.js";
+import { CoListSchemaClass } from "../coList/schema.js";
 import { LazySchema, isLazySchema } from "../coValue/lazy.js";
 import { isOptional } from "../coValue/optional.js";
-import { extensibleResolveQuery } from "../coValue/typeUtils.js";
+import { SchemaOf, extensibleResolveQuery } from "../coValue/typeUtils.js";
 import {
   ID,
   Loaded,
@@ -18,29 +19,28 @@ import {
 } from "../coValue/types.js";
 import { getUnloadedState } from "../coValue/unloaded.js";
 import { CoValueResolutionNode, ensureCoValueLoaded } from "../subscribe.js";
+import { CoValueSchema } from "../types.js";
 import {
   AnyCoMapSchema,
   CoMapInit,
   CoMapSchema,
   CoMapSchemaClass,
   CoMapSchemaKey,
-  CoValueSchema,
 } from "./schema.js";
 import { getOwnerFromRawValue } from "./utils.js";
 
 type Relations<D extends CoValueSchema> = D extends AnyCoMapSchema
   ? {
-      [K in keyof D["shape"]]: D["shape"][K] extends AnyCoMapSchema
-        ? D["shape"][K]
-        : D["shape"][K] extends LazySchema<infer T extends CoValueSchema>
-          ? T
-          : never;
+      [K in keyof D["shape"]]: D["shape"][K] extends { _schema: CoValueSchema }
+        ? SchemaOf<D["shape"][K]>
+        : never;
     }
   : "never";
 
 type RelationsKeys<D extends CoValueSchema> = keyof Relations<D> &
   (string | number);
 
+// TODO: Refs should be tracked by id so we can reuse this across CoValue types
 type ChildMap<D extends AnyCoMapSchema> = Map<
   RelationsKeys<D>,
   Loaded<any, any> | Unloaded<any> | undefined
@@ -221,6 +221,8 @@ export class CoMapJazzApi<
 
     return Object.keys(this._instance) as KeysOf<Loaded<D, R>>[];
   }
+
+  // TODO Implement the remove method
 }
 
 export function createCoMap<D extends AnyCoMapSchema>(
@@ -482,9 +484,14 @@ function getSchemaFromDescriptor<
 }
 
 export function isRelationRef(
-  descriptor: AnyCoMapSchema | ZodTypeAny | LazySchema<any>,
-): descriptor is AnyCoMapSchema | LazySchema<any> {
-  return descriptor instanceof CoMapSchemaClass || isLazySchema(descriptor);
+  descriptor: CoValueSchema | ZodTypeAny | LazySchema<any>,
+): descriptor is CoValueSchema | LazySchema<any> {
+  // TODO: Symbol-based detection
+  return (
+    descriptor instanceof CoMapSchemaClass ||
+    descriptor instanceof CoListSchemaClass ||
+    isLazySchema(descriptor)
+  );
 }
 
 export function isCoValue(

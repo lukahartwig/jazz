@@ -1,19 +1,29 @@
 import type { CojsonInternalTypes } from "cojson";
 import { TypeOf, ZodError, ZodTypeAny } from "zod";
 import { IDMarker } from "../../internal.js";
+import { LoadedCoListJazzProps } from "../coList/instance.js";
+import {
+  AnyCoListSchema,
+  CoListInit,
+  CoListSchema,
+  ResolveQueryForCoListInit,
+} from "../coList/schema.js";
 import { LoadedCoMapJazzProps } from "../coMap/instance.js";
 import {
   AnyCoMapSchema,
+  CoMapInit,
   CoMapRecordDef,
   CoMapRecordKey,
   CoMapSchema,
-  CoValueSchema,
   CoValueSchemaToClass,
   PrimitiveProps,
   RefProps,
+  ResolveQueryForCoMapInit,
 } from "../coMap/schema.js";
+import { CoValueSchema } from "../types.js";
 import {
   IsDepthLimit,
+  ResolveQueryOf,
   SchemaOf,
   flatten,
   simplifyResolveQuery,
@@ -32,29 +42,45 @@ export type ResolveQuery<
   | true
   | (IsDepthLimit<CurrentDepth> extends true
       ? true
-      : S extends AnyCoMapSchema
-        ? simplifyResolveQuery<
-            {
-              [K in keyof S["shape"]]?: S["shape"][K] extends {
-                _schema: CoValueSchema;
-              }
-                ? ResolveQuery<SchemaOf<S["shape"][K]>, [0, ...CurrentDepth]>
-                : never;
-            } & (S["record"] extends { value: { _schema: CoValueSchema } }
-              ? {
-                  [K in CoMapRecordKey<S>]?: ResolveQuery<
-                    SchemaOf<S["record"]["value"]>,
-                    [0, ...CurrentDepth]
-                  >;
-                } & {
-                  $each?: ResolveQuery<
-                    SchemaOf<S["record"]["value"]>,
-                    [0, ...CurrentDepth]
-                  >;
+      : S extends AnyCoListSchema
+        ? { $each: ResolveQuery<S["items"], [0, ...CurrentDepth]> }
+        : S extends AnyCoMapSchema
+          ? simplifyResolveQuery<
+              {
+                [K in keyof S["shape"]]?: S["shape"][K] extends {
+                  _schema: CoValueSchema;
                 }
-              : unknown)
-          >
-        : true);
+                  ? ResolveQuery<SchemaOf<S["shape"][K]>, [0, ...CurrentDepth]>
+                  : never;
+              } & (S["record"] extends { value: { _schema: CoValueSchema } }
+                ? {
+                    [K in CoMapRecordKey<S>]?: ResolveQuery<
+                      SchemaOf<S["record"]["value"]>,
+                      [0, ...CurrentDepth]
+                    >;
+                  } & {
+                    $each?: ResolveQuery<
+                      SchemaOf<S["record"]["value"]>,
+                      [0, ...CurrentDepth]
+                    >;
+                  }
+                : unknown)
+            >
+          : true);
+
+export type ReolveQueryForCoInitChild<
+  ChildSchema,
+  I,
+  CurrentDepth extends number[],
+> = ChildSchema extends AnyCoListSchema
+  ? I extends { $jazz: { _resolveQuery: any } }
+    ? ResolveQueryOf<I>
+    : ResolveQueryForCoListInit<ChildSchema, I, CurrentDepth>
+  : ChildSchema extends AnyCoMapSchema
+    ? I extends { $jazz: { _resolveQuery: any } }
+      ? ResolveQueryOf<I>
+      : ResolveQueryForCoMapInit<ChildSchema, I, CurrentDepth>
+    : never;
 
 export type isQueryLeafNode<R> = R extends boolean | undefined
   ? true
@@ -76,6 +102,34 @@ export type Loaded<
         Options,
         CurrentDepth
       >
+    : S extends AnyCoListSchema
+      ? LoadedCoList<CoListSchema<S["items"], false>, R, Options, CurrentDepth>
+      : never;
+
+export type LoadedCoList<
+  S extends AnyCoListSchema,
+  R,
+  Options extends "nullable" | "non-nullable" = "non-nullable",
+  CurrentDepth extends number[] = [],
+> = IsDepthLimit<CurrentDepth> extends true
+  ? "You've reached the maximum depth of relations"
+  : R extends ResolveQuery<S>
+    ? LoadedCoListJazzProps<
+        S,
+        S["items"] extends ZodTypeAny
+          ? TypeOf<S["items"]>
+          :
+              | (R extends { $each: unknown }
+                  ? Loaded<
+                      SchemaOf<S["items"]>,
+                      R["$each"],
+                      Options,
+                      [0, ...CurrentDepth]
+                    >
+                  : MaybeLoaded<SchemaOf<S["items"]>>)
+              | addNullable<"nullable", SchemaOf<S["items"]>>, // Values on lists are always nullable
+        R
+      >
     : never;
 
 export type LoadedCoMap<
@@ -86,12 +140,10 @@ export type LoadedCoMap<
 > = flatten<
   IsDepthLimit<CurrentDepth> extends true
     ? "You've reached the maximum depth of relations"
-    : (S extends AnyCoMapSchema
-        ? LoadedCoMapExplicitProps<S, R, Options, CurrentDepth> &
-            (S extends CoMapSchema<any, CoMapRecordDef, boolean>
-              ? LoadedCoMapRecordProps<S, R, Options, CurrentDepth>
-              : {})
-        : "Not a valid CoMapSchema") &
+    : (LoadedCoMapExplicitProps<S, R, Options, CurrentDepth> &
+        (S extends CoMapSchema<any, CoMapRecordDef, boolean>
+          ? LoadedCoMapRecordProps<S, R, Options, CurrentDepth>
+          : {})) &
         (R extends ResolveQuery<S>
           ? LoadedCoMapJazzProps<S, R>
           : "Invalid query (CASE 2)" & { given: R; expected: ResolveQuery<S> })
@@ -215,6 +267,15 @@ export type CoMapRecordQueriedByEachProps<
           : "Invalid $each query";
     }
   : {};
+
+export type CoValueInit<
+  D extends CoValueSchema,
+  CurrentDepth extends number[],
+> = D extends AnyCoListSchema
+  ? CoListInit<D, CurrentDepth>
+  : D extends AnyCoMapSchema
+    ? CoMapInit<D, CurrentDepth>
+    : never;
 
 export type UnloadedJazzAPI<D extends CoValueSchema> = flatten<{
   schema: CoValueSchemaToClass<D>;

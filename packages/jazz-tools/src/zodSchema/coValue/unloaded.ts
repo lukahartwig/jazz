@@ -1,6 +1,7 @@
 import { ZodError } from "zod";
-import { CoValueSchema, CoValueSchemaToClass } from "../coMap/schema.js";
-import { ID, Unloaded, UnloadedJazzAPI } from "./types.js";
+import { CoValueSchemaToClass } from "../coMap/schema.js";
+import { CoValueSchema } from "../types.js";
+import { ID, Unloaded } from "./types.js";
 
 type LoadingErrors = ZodError;
 
