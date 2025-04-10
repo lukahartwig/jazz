@@ -25,7 +25,13 @@ const animals = [
  * @returns A psuedo-random username.
  */
 export function getRandomUsername(str: string) {
-  return `Anonymous ${animals[Math.abs(str.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0)) % animals.length]}`;
+  const animal =
+    animals[
+      Math.abs(
+        str.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0),
+      ) % animals.length
+    ];
+  return [`Anonymous ${animal}`, animal[0].toUpperCase()];
 }
 
 /**
@@ -40,5 +46,5 @@ export function getName(
 ) {
   if (name === "Anonymous user" || !name || !id)
     return getRandomUsername(id ?? "");
-  return name;
+  return [name, name[0].toUpperCase()];
 }

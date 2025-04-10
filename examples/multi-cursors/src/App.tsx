@@ -45,7 +45,7 @@ function App() {
       <footer className="fixed bottom-4 right-4 flex items-center gap-4">
         <input
           type="text"
-          value={getName(me?.profile?.name, me?.sessionID)}
+          defaultValue={getName(me?.profile?.name, me?.sessionID)[0]}
           onChange={(e) => {
             if (!me?.profile) return;
             me.profile.name = e.target.value;
