@@ -1,4 +1,4 @@
-import { useHandleMagicLinkAuthAsProvider } from "jazz-react";
+import { useHandleMagicLinkAuth } from "jazz-react";
 import { BackToHomepageContainer } from "../BackToHomepageContainer";
 
 export default function MagicLinkHandlerProviderPage() {
@@ -11,7 +11,8 @@ export default function MagicLinkHandlerProviderPage() {
 }
 
 function MagicLinkHandlerProvider() {
-  const { status, confirmationCode } = useHandleMagicLinkAuthAsProvider({
+  const { status, confirmationCode } = useHandleMagicLinkAuth({
+    mode: "share-local-credentials",
     consumerHandlerPath: "/#/magic-link-handler-consumer",
     providerHandlerPath: "/#/magic-link-handler-provider",
   });

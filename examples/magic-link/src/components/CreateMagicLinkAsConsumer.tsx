@@ -1,4 +1,4 @@
-import { useCreateMagicLinkAuthAsConsumer } from "jazz-react";
+import { useCreateMagicLinkAuth } from "jazz-react";
 import { useState } from "react";
 import { Button } from "./Button";
 import { ConfirmationCodeInput } from "./ConfirmationCodeInput";
@@ -13,12 +13,12 @@ export function CreateMagicLinkAsConsumer({
 }: CreateMagicLinkAsConsumerProps) {
   const [link, setLink] = useState<string | null>(null);
 
-  const { status, createLink, sendConfirmationCode } =
-    useCreateMagicLinkAuthAsConsumer({
-      consumerHandlerPath: "/#/magic-link-handler-consumer",
-      providerHandlerPath: "/#/magic-link-handler-provider",
-      onLoggedIn,
-    });
+  const { status, createLink, sendConfirmationCode } = useCreateMagicLinkAuth({
+    mode: "authenticate-current-device",
+    consumerHandlerPath: "/#/magic-link-handler-consumer",
+    providerHandlerPath: "/#/magic-link-handler-provider",
+    onLoggedIn,
+  });
 
   const onCreateLink = () => createLink().then(setLink);
 

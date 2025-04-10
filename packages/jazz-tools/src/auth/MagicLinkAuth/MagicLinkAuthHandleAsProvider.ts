@@ -1,5 +1,6 @@
 import { waitForCoValueCondition } from "../../internal.js";
 import { MagicLinkAuth } from "./MagicLinkAuth.js";
+import { MagicLinkAuthProviderOptions } from "./types.js";
 
 export type MagicLinkAuthHandleAsProviderStatus =
   | "idle"
@@ -8,20 +9,16 @@ export type MagicLinkAuthHandleAsProviderStatus =
   | "authorized"
   | "error";
 
-export interface MagicLinkAuthHandleAsProviderOptions {
-  expireInMs?: number;
-}
-
 export class MagicLinkAuthHandleAsProvider {
   constructor(
     private magicLinkAuth: MagicLinkAuth,
     private url: string,
-    options?: MagicLinkAuthHandleAsProviderOptions,
+    options?: MagicLinkAuthProviderOptions,
   ) {
     this.options = { ...defaultOptions, ...options };
   }
 
-  private options: MagicLinkAuthHandleAsProviderOptions;
+  private options: MagicLinkAuthProviderOptions;
 
   public authState: {
     status: MagicLinkAuthHandleAsProviderStatus;
@@ -101,6 +98,6 @@ export class MagicLinkAuthHandleAsProvider {
   }
 }
 
-const defaultOptions: MagicLinkAuthHandleAsProviderOptions = {
+const defaultOptions: MagicLinkAuthProviderOptions = {
   expireInMs: 15 * 60 * 1000,
 };

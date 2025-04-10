@@ -1,4 +1,4 @@
-import { useHandleMagicLinkAuthAsConsumer } from "jazz-react";
+import { useHandleMagicLinkAuth } from "jazz-react";
 import { BackToHomepageContainer } from "../BackToHomepageContainer";
 import { ConfirmationCodeInput } from "../ConfirmationCodeInput";
 
@@ -12,7 +12,8 @@ export default function MagicLinkHandlerConsumerPage() {
 }
 
 function MagicLinkHandlerConsumer() {
-  const { status, sendConfirmationCode } = useHandleMagicLinkAuthAsConsumer({
+  const { status, sendConfirmationCode } = useHandleMagicLinkAuth({
+    mode: "authenticate-current-device",
     consumerHandlerPath: "/#/magic-link-handler-consumer",
     providerHandlerPath: "/#/magic-link-handler-provider",
     onLoggedIn: () => {

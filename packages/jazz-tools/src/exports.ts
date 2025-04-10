@@ -71,11 +71,13 @@ export { PassphraseAuth } from "./auth/PassphraseAuth.js";
 export {
   MagicLinkAuth,
   MagicLinkAuthTransfer,
-  MagicLinkAuthOptions,
+  type MagicLinkAuthOptions,
   MagicLinkAuthCreateAsProvider,
   MagicLinkAuthCreateAsConsumer,
   MagicLinkAuthHandleAsConsumer,
   MagicLinkAuthHandleAsProvider,
+  type MagicLinkAuthConsumerOptions,
+  type MagicLinkAuthProviderOptions,
 } from "./auth/MagicLinkAuth/index.js";
 
 export {

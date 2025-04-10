@@ -1,4 +1,4 @@
-import { useCreateMagicLinkAuthAsProvider } from "jazz-react";
+import { useCreateMagicLinkAuth } from "jazz-react";
 import { useState } from "react";
 import { Button } from "./Button";
 import { QRCodeContainer } from "./QRCodeContainer";
@@ -6,11 +6,11 @@ import { QRCodeContainer } from "./QRCodeContainer";
 export function CreateMagicLinkAsProvider() {
   const [link, setLink] = useState<string | null>(null);
 
-  const { status, createLink, confirmationCode } =
-    useCreateMagicLinkAuthAsProvider({
-      consumerHandlerPath: "/#/magic-link-handler-consumer",
-      providerHandlerPath: "/#/magic-link-handler-provider",
-    });
+  const { status, createLink, confirmationCode } = useCreateMagicLinkAuth({
+    mode: "share-local-credentials",
+    consumerHandlerPath: "/#/magic-link-handler-consumer",
+    providerHandlerPath: "/#/magic-link-handler-provider",
+  });
 
   const onCreateLink = () => createLink().then(setLink);
 

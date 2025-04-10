@@ -1,5 +1,6 @@
 import { waitForCoValueCondition } from "../../internal.js";
 import { MagicLinkAuth } from "./MagicLinkAuth.js";
+import { MagicLinkAuthConsumerOptions } from "./types.js";
 
 export type MagicLinkAuthHandleAsConsumerStatus =
   | "idle"
@@ -9,21 +10,16 @@ export type MagicLinkAuthHandleAsConsumerStatus =
   | "authorized"
   | "error";
 
-export interface MagicLinkAuthHandleAsConsumerOptions {
-  handlerTimeout?: number;
-  onLoggedIn?: () => void;
-}
-
 export class MagicLinkAuthHandleAsConsumer {
   constructor(
     private magicLinkAuth: MagicLinkAuth,
     private url: string,
-    options?: MagicLinkAuthHandleAsConsumerOptions,
+    options?: MagicLinkAuthConsumerOptions,
   ) {
     this.options = { ...defaultOptions, ...options };
   }
 
-  private options: MagicLinkAuthHandleAsConsumerOptions;
+  private options: MagicLinkAuthConsumerOptions;
 
   public authState: {
     status: MagicLinkAuthHandleAsConsumerStatus;
@@ -102,6 +98,6 @@ export class MagicLinkAuthHandleAsConsumer {
   }
 }
 
-const defaultOptions: MagicLinkAuthHandleAsConsumerOptions = {
+const defaultOptions: MagicLinkAuthConsumerOptions = {
   handlerTimeout: 30 * 1000,
 };

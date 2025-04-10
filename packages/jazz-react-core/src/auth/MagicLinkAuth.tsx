@@ -1,10 +1,12 @@
 import {
   MagicLinkAuth,
-  MagicLinkAuthCreateAsProvider,
+  MagicLinkAuthConsumerOptions,
   MagicLinkAuthCreateAsConsumer,
+  MagicLinkAuthCreateAsProvider,
   MagicLinkAuthHandleAsConsumer,
   MagicLinkAuthHandleAsProvider,
   MagicLinkAuthOptions,
+  MagicLinkAuthProviderOptions,
 } from "jazz-tools";
 import {
   useCallback,
@@ -17,21 +19,18 @@ import { useAuthSecretStorage, useJazzContext } from "../hooks.js";
 
 const DEFAULT_EXPIRE_IN_MS = 15 * 60 * 1000;
 
-export interface MagicLinkAuthProviderOptions extends MagicLinkAuthOptions {
-  expireInMs?: number;
-}
+export type UseMagicLinkAuthAsProviderOptions = MagicLinkAuthOptions &
+  MagicLinkAuthProviderOptions;
 
-export interface MagicLinkAuthConsumerOptions extends MagicLinkAuthOptions {
-  handlerTimeout?: number;
-  onLoggedIn?: () => void;
-}
+export type UseMagicLinkAuthAsConsumerOptions = MagicLinkAuthOptions &
+  MagicLinkAuthConsumerOptions;
 
 export function useCreateMagicLinkAuthAsProvider(
   origin: string,
   {
     expireInMs = DEFAULT_EXPIRE_IN_MS,
     ...options
-  }: Partial<MagicLinkAuthProviderOptions> = {},
+  }: Partial<UseMagicLinkAuthAsProviderOptions> = {},
 ) {
   const context = useJazzContext();
   const authSecretStorage = useAuthSecretStorage();
@@ -69,7 +68,7 @@ export function useCreateMagicLinkAuthAsConsumer(
     handlerTimeout = 30 * 1000,
     onLoggedIn,
     ...options
-  }: Partial<MagicLinkAuthConsumerOptions> = {},
+  }: Partial<UseMagicLinkAuthAsConsumerOptions> = {},
 ) {
   const context = useJazzContext();
   const authSecretStorage = useAuthSecretStorage();
@@ -109,7 +108,7 @@ export function useHandleMagicLinkAuthAsConsumer(
     handlerTimeout = 30 * 1000,
     onLoggedIn,
     ...options
-  }: Partial<MagicLinkAuthConsumerOptions> = {},
+  }: Partial<UseMagicLinkAuthAsConsumerOptions> = {},
 ) {
   const context = useJazzContext();
   const authSecretStorage = useAuthSecretStorage();
@@ -152,7 +151,7 @@ export function useHandleMagicLinkAuthAsProvider(
   {
     expireInMs = DEFAULT_EXPIRE_IN_MS,
     ...options
-  }: Partial<MagicLinkAuthProviderOptions> = {},
+  }: Partial<UseMagicLinkAuthAsProviderOptions> = {},
 ) {
   const context = useJazzContext();
   const authSecretStorage = useAuthSecretStorage();
