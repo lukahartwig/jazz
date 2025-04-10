@@ -214,8 +214,8 @@ export class MyAppAccount extends Account {
       } 
 
       // We need to load the root field to check for the myContacts field
-      const { root } = await this.ensureLoaded({ // [!code ++:3]
-        root: {},
+      const { root } = await this.ensureLoaded({
+        resolve: { root: true }
       });
 
       // we specifically need to check for undefined,

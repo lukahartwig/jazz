@@ -1,6 +1,6 @@
 {
   "name": "jazz-react-auth-clerk",
-  "version": "0.12.2",
+  "version": "0.13.2",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -21,8 +21,9 @@
     "build": "rm -rf ./dist && tsc --sourceMap --outDir dist"
   },
   "devDependencies": {
-    "@testing-library/react": "^16.1.0",
-    "@types/react": "^18.3.12",
+    "@testing-library/react": "16.2.0",
+    "@types/react": "18.3.12",
+    "@types/react-dom": "18.3.1",
     "typescript": "~5.6.2"
   }
 }

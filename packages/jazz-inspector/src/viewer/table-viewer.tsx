@@ -3,7 +3,7 @@ import type { JsonObject } from "cojson";
 import { styled } from "goober";
 import { useMemo, useState } from "react";
 import { Button } from "../ui/button.js";
-import { PageInfo } from "./types.js";
+import { PageInfo, isCoId } from "./types.js";
 import { useResolvedCoValues } from "./use-resolve-covalue.js";
 import { ValueRenderer } from "./value-renderer.js";
 
@@ -29,7 +29,7 @@ const PaginationContainer = styled("div")`
   gap: 0.5rem;
 `;
 
-export function TableView({
+function CoValuesTableView({
   data,
   node,
   onNavigate,
@@ -140,5 +140,51 @@ export function TableView({
         )}
       </PaginationContainer>
     </TableContainer>
+  );
+}
+
+export function TableView({
+  data,
+  node,
+  onNavigate,
+}: {
+  data: JsonObject;
+  node: LocalNode;
+  onNavigate: (pages: PageInfo[]) => void;
+}) {
+  const isListOfCoValues = useMemo(() => {
+    return Array.isArray(data) && data.every((k) => isCoId(k));
+  }, [data]);
+
+  // if data is a list of covalue ids, we need to resolve those covalues
+  if (isListOfCoValues) {
+    return (
+      <CoValuesTableView data={data} node={node} onNavigate={onNavigate} />
+    );
+  }
+
+  // if data is a list of primitives, we can render those values directly
+  return (
+    <Table>
+      <TableHead>
+        <TableRow>
+          <TableHeader style={{ width: "5rem" }}>Index</TableHeader>
+          <TableHeader>Value</TableHeader>
+        </TableRow>
+      </TableHead>
+      <TableBody>
+        {Array.isArray(data) &&
+          data?.map((value, index) => (
+            <TableRow key={index}>
+              <TableCell>
+                <Text mono>{index}</Text>
+              </TableCell>
+              <TableCell>
+                <ValueRenderer json={value} />
+              </TableCell>
+            </TableRow>
+          ))}
+      </TableBody>
+    </Table>
   );
 }
