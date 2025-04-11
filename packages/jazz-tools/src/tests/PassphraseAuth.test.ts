@@ -1,17 +1,16 @@
 // @vitest-environment happy-dom
 
-import { mnemonicToEntropy } from "@scure/bip39";
 import { AgentSecret } from "cojson";
-import { PureJSCrypto } from "cojson/src/crypto/PureJSCrypto";
+import { PureJSCrypto } from "cojson/crypto/PureJSCrypto";
+import { assert, beforeEach, describe, expect, it, vi } from "vitest";
+import { PassphraseAuth } from "../auth/PassphraseAuth";
 import {
   Account,
   AuthSecretStorage,
   ID,
   InMemoryKVStore,
   KvStoreContext,
-} from "jazz-tools";
-import { assert, beforeEach, describe, expect, it, vi } from "vitest";
-import { PassphraseAuth } from "../auth/PassphraseAuth";
+} from "../exports";
 import {
   TestJazzContextManager,
   createJazzTestAccount,
@@ -153,7 +152,9 @@ describe("PassphraseAuth", () => {
 
       // Verify the account name was set
       const { profile } = await account.ensureLoaded({
-        profile: {},
+        resolve: {
+          profile: true,
+        },
       });
       expect(profile.name).toBe(testName);
 
@@ -302,6 +303,10 @@ describe("PassphraseAuth with TestJazzContextManager", () => {
 
       // Verify account was created
       expect(accountId).toBeDefined();
+
+      await contextManager
+        .getCurrentValue()
+        ?.node.syncManager.waitForAllCoValuesSync();
 
       // Verify we can log in with the passphrase
       await contextManager.logOut();

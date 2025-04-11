@@ -221,7 +221,7 @@ export class LocalNode {
 
       return node;
     } catch (e) {
-      logger.error("Error withLoadedAccount: " + (e as Error)?.message);
+      logger.error("Error withLoadedAccount", { err: e });
       throw e;
     }
   }
@@ -286,6 +286,14 @@ export class LocalNode {
    * @category 3. Low-level
    */
   async load<T extends RawCoValue>(id: CoID<T>): Promise<T | "unavailable"> {
+    if (!id) {
+      throw new Error("Trying to load CoValue with undefined id");
+    }
+
+    if (!id.startsWith("co_z")) {
+      throw new Error(`Trying to load CoValue with invalid id ${id}`);
+    }
+
     const core = await this.loadCoValueCore(id);
 
     if (core.loadingState === "unavailable") {

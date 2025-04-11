@@ -9,7 +9,7 @@ const TocList = ({
   items,
   level,
   currentId,
-}: { items: TocEntry[]; level: number; currentId: string }) => {
+}: { items: Toc; level: number; currentId: string }) => {
   const isActive = (item: TocEntry) => {
     if (!item.id) return false;
     if (item.id === currentId) return true;
@@ -20,9 +20,9 @@ const TocList = ({
   };
 
   return (
-    <ul className="space-y-3" style={{ paddingLeft: `${level * 1}rem` }}>
+    <ul className="space-y-2" style={{ paddingLeft: level ? "1rem" : "0" }}>
       {items.map((item) => (
-        <li key={item.id} className="space-y-3">
+        <li key={item.id} className="space-y-2">
           {item.id && (
             <Link
               href={`#${item.id}`}
@@ -35,7 +35,7 @@ const TocList = ({
               {item.value}
             </Link>
           )}
-          {item.children && (
+          {!!item.children?.length && (
             <TocList
               items={item.children}
               level={level + 1}

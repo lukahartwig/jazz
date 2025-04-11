@@ -4,6 +4,7 @@ import { mnemonicToEntropy } from "@scure/bip39";
 import { AuthSecretStorage, KvStoreContext } from "jazz-tools";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { usePassphraseAuth } from "../auth/PassphraseAuth";
+import { useAccount } from "../hooks";
 import {
   createJazzTestAccount,
   createJazzTestGuest,
@@ -104,5 +105,74 @@ describe("usePassphraseAuth", () => {
     const passphrase = result.current.passphrase;
 
     expect(await result.current.signUp()).toBe(passphrase);
+  });
+
+  it("should be able to logout after sign up", async () => {
+    const account = await createJazzTestAccount({});
+
+    const accounts: string[] = [];
+    const updates: { state: string; accountIndex: number }[] = [];
+
+    const { result } = renderHook(
+      () => {
+        const passphraseAuth = usePassphraseAuth({ wordlist: testWordlist });
+        const account = useAccount();
+
+        if (!accounts.includes(account.me.id)) {
+          accounts.push(account.me.id);
+        }
+
+        updates.push({
+          state: passphraseAuth.state,
+          accountIndex: accounts.indexOf(account.me.id),
+        });
+
+        return { passphraseAuth, account };
+      },
+      {
+        account,
+        isAuthenticated: false,
+      },
+    );
+
+    expect(result.current?.passphraseAuth.state).toBe("anonymous");
+    expect(result.current?.account?.me).toBeDefined();
+
+    const id = result.current?.account?.me?.id;
+
+    await act(async () => {
+      await result.current?.passphraseAuth.signUp();
+    });
+
+    expect(result.current?.passphraseAuth.state).toBe("signedIn");
+    expect(result.current?.account?.me.id).toBe(id);
+
+    await act(async () => {
+      await result.current?.account?.logOut();
+    });
+
+    expect(result.current?.passphraseAuth.state).toBe("anonymous");
+    expect(result.current?.account?.me.id).not.toBe(id);
+
+    expect(updates).toMatchInlineSnapshot(`
+      [
+        {
+          "accountIndex": 0,
+          "state": "anonymous",
+        },
+        {
+          "accountIndex": 0,
+          "state": "anonymous",
+        },
+        {
+          "accountIndex": 0,
+          "state": "signedIn",
+        },
+        {
+          "accountIndex": 1,
+          "state": "anonymous",
+        },
+      ]
+    `);
   });
 });

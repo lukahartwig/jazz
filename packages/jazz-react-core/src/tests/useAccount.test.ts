@@ -1,13 +1,11 @@
 // @vitest-environment happy-dom
 
-import { Account, CoMap, co } from "jazz-tools";
+import { Account, CoMap, RefsToResolve, Resolved, co } from "jazz-tools";
 import { beforeEach, describe, expect, it } from "vitest";
-import { createUseAccountHooks, useJazzContextManager } from "../hooks.js";
+import { useAccount, useJazzContextManager } from "../hooks.js";
 import { useIsAuthenticated } from "../index.js";
 import { createJazzTestAccount, setupJazzTestSync } from "../testing.js";
 import { act, renderHook } from "./testUtils.js";
-
-const { useAccount } = createUseAccountHooks<Account>();
 
 beforeEach(async () => {
   await setupJazzTestSync();
@@ -39,14 +37,14 @@ describe("useAccount", () => {
       }
     }
 
-    const { useAccount } = createUseAccountHooks<AccountSchema>();
-
     const account = await createJazzTestAccount({ AccountSchema });
 
     const { result } = renderHook(
       () =>
-        useAccount({
-          root: {},
+        useAccount<AccountSchema, RefsToResolve<{ root: true }>>({
+          resolve: {
+            root: true,
+          },
         }),
       {
         account,

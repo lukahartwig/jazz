@@ -1,5 +1,185 @@
 # jazz-example-chat
 
+## 0.0.174
+
+### Patch Changes
+
+- Updated dependencies [3129982]
+  - jazz-react@0.13.4
+  - jazz-tools@0.13.4
+  - jazz-inspector@0.13.4
+
+## 0.0.173
+
+### Patch Changes
+
+- Updated dependencies [12f8bfa]
+- Updated dependencies [bd57177]
+- Updated dependencies [017f6c8]
+  - jazz-tools@0.13.3
+  - jazz-inspector@0.13.3
+  - jazz-react@0.13.3
+
+## 0.0.172
+
+### Patch Changes
+
+- Updated dependencies [ae4be2b]
+  - jazz-inspector@0.13.2
+  - jazz-react@0.13.2
+  - jazz-tools@0.13.2
+
+## 0.0.171
+
+### Patch Changes
+
+- Updated dependencies [2796689]
+- Updated dependencies [afd1374]
+- Updated dependencies [2224ed4]
+  - jazz-inspector@0.13.0
+  - jazz-tools@0.13.0
+  - jazz-react@0.13.0
+
+## 0.0.170
+
+### Patch Changes
+
+- Updated dependencies [8a71835]
+  - jazz-inspector@0.12.2
+  - jazz-react@0.12.2
+  - jazz-tools@0.12.2
+
+## 0.0.169
+
+### Patch Changes
+
+- jazz-inspector@0.12.1
+- jazz-react@0.12.1
+- jazz-tools@0.12.1
+
+## 0.0.168
+
+### Patch Changes
+
+- Updated dependencies [01523dc]
+- Updated dependencies [4ea87dc]
+- Updated dependencies [1e6da19]
+- Updated dependencies [b6c6a0a]
+- Updated dependencies [9a56bb3]
+  - jazz-tools@0.12.0
+  - jazz-inspector@0.12.0
+  - jazz-react@0.12.0
+
+## 0.0.167
+
+### Patch Changes
+
+- Updated dependencies [71b9390]
+  - jazz-inspector@0.11.8
+  - jazz-react@0.11.8
+  - jazz-tools@0.11.8
+
+## 0.0.166
+
+### Patch Changes
+
+- Updated dependencies [2c3761c]
+- Updated dependencies [a140f55]
+- Updated dependencies [4019918]
+- Updated dependencies [2b0d1b0]
+  - jazz-inspector@0.11.7
+  - jazz-tools@0.11.7
+  - jazz-react@0.11.7
+
+## 0.0.165
+
+### Patch Changes
+
+- Updated dependencies [e7c85b7]
+- Updated dependencies [09f0a98]
+- Updated dependencies [11da4d1]
+- Updated dependencies [8ed144e]
+  - jazz-react@0.11.6
+  - jazz-tools@0.11.6
+  - jazz-inspector@0.11.6
+  - jazz-browser-media-images@0.11.6
+
+## 0.0.164
+
+### Patch Changes
+
+- jazz-react@0.11.5
+- jazz-tools@0.11.5
+- jazz-browser-media-images@0.11.5
+
+## 0.0.163
+
+### Patch Changes
+
+- 2074e45: In the chat app example, show a "Message not readable" placeholder, if messages from a chat list are not readable by the user.
+- Updated dependencies [57a3dbe]
+- Updated dependencies [a717754]
+- Updated dependencies [a91f343]
+  - jazz-tools@0.11.4
+  - jazz-browser-media-images@0.11.4
+  - jazz-react@0.11.4
+
+## 0.0.162
+
+### Patch Changes
+
+- jazz-react@0.11.3
+- jazz-tools@0.11.3
+- jazz-browser-media-images@0.11.3
+
+## 0.0.161
+
+### Patch Changes
+
+- Updated dependencies [6892dc6]
+  - jazz-tools@0.11.2
+  - jazz-react@0.11.2
+  - jazz-browser-media-images@0.11.2
+
+## 0.0.160
+
+### Patch Changes
+
+- jazz-react@0.11.1
+
+## 0.0.159
+
+### Patch Changes
+
+- Updated dependencies [6a96d8b]
+- Updated dependencies [a35249a]
+- Updated dependencies [b9d194a]
+- Updated dependencies [a4713df]
+- Updated dependencies [34cbdc3]
+- Updated dependencies [f039e8f]
+- Updated dependencies [e22de9f]
+  - jazz-tools@0.11.0
+  - jazz-browser-media-images@0.11.0
+  - jazz-react@0.11.0
+
+## 0.0.158
+
+### Patch Changes
+
+- Updated dependencies [2f99de0]
+  - jazz-tools@0.10.15
+  - jazz-browser-media-images@0.10.15
+  - jazz-react@0.10.15
+
+## 0.0.157
+
+### Patch Changes
+
+- Updated dependencies [75211e3]
+  - jazz-tools@0.10.14
+  - jazz-react@0.10.14
+  - jazz-browser-media-images@0.10.14
+
 ## 0.0.156
 
 ### Patch Changes

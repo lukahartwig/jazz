@@ -1,0 +1,193 @@
+import { ContentByFramework, CodeGroup } from '@/components/forMdx'
+
+export const metadata = { title: "Group inheritance" };
+
+# Group Inheritance
+
+Groups can inherit members from other groups using the `extend` method. 
+
+When a group extends another group, members of the parent group will become automatically part of the child group.
+
+## Basic Usage
+
+Here's how to extend a group:
+
+<CodeGroup>
+```typescript
+const playlistGroup = Group.create();
+const trackGroup = Group.create();
+
+// This way track becomes visible to the members of playlist
+trackGroup.extend(playlistGroup);
+```
+</CodeGroup>
+
+When you extend a group:
+- Members of the parent group get access to the child group
+- Their roles are inherited (with some exceptions, see [below](#role-inheritance-rules))
+- Removing a member from the parent group also removes their access to child groups
+
+## Inheriting members but overriding their role
+
+In some cases you might want to inherit all members from a parent group but override/flatten their roles to the same specific role in the child group. You can do so by passing an "override role" as a second argument to `extend`:
+
+<CodeGroup>
+```typescript
+const organizationGroup = Group.create();
+organizationGroup.addMember(bob, "admin");
+
+const billingGroup = Group.create();
+
+// This way the members of the organization can only read the billing data
+billingGroup.extend(organizationGroup, "reader"); 
+```
+</CodeGroup>
+
+The "override role" works in both directions:
+
+<CodeGroup>
+```typescript
+const parentGroup = Group.create();
+parentGroup.addMember(bob, "reader");
+parentGroup.addMember(alice, "admin");
+
+const childGroup = Group.create();
+childGroup.extend(parentGroup, "writer");
+
+// Bob and Alice are now writers in the child group
+```
+</CodeGroup>
+
+## Multiple Levels of Inheritance
+
+Groups can be extended multiple levels deep:
+
+<CodeGroup>
+```typescript
+const grandParentGroup = Group.create();
+const parentGroup = Group.create();
+const childGroup = Group.create(); 
+
+childGroup.extend(parentGroup);
+parentGroup.extend(grandParentGroup);
+```
+</CodeGroup>
+
+Members of the grandparent group will get access to all descendant groups based on their roles.
+
+## Permission Changes
+
+When you remove a member from a parent group, they automatically lose access to all child groups. We handle key rotation automatically to ensure security.
+
+<CodeGroup>
+```typescript
+// Remove member from parent
+await parentGroup.removeMember(bob);
+
+// Bob loses access to both parent and child groups
+```
+</CodeGroup>
+
+## Role Inheritance Rules
+
+If the account is already a member of the child group, it will get the more permissive role:
+<CodeGroup>
+```typescript
+const parentGroup = Group.create();
+parentGroup.addMember(bob, "reader");
+
+const childGroup = Group.create();
+parentGroup.addMember(bob, "writer");
+childGroup.extend(parentGroup);
+
+// Bob stays a writer because his role is higher
+// than the inherited reader role.
+```
+</CodeGroup>
+
+When extending groups, only admin, writer and reader roles are inherited:
+<CodeGroup>
+```typescript
+const parentGroup = Group.create();
+parentGroup.addMember(bob, "writeOnly");
+
+const childGroup = Group.create();
+childGroup.extend(parentGroup);
+
+// Bob does not become a member of the child group
+```
+</CodeGroup>
+
+To extend a group:
+
+1. The current account must be an admin in the child group
+2. The current account must be a member of the parent group
+
+<CodeGroup>
+```typescript
+const companyGroup = company._owner.castAs(Group)
+const teamGroup = Group.create();
+
+// Works only if I'm a member of companyGroup
+teamGroup.extend(companyGroup); 
+```
+</CodeGroup>
+
+## Revoking a group extension
+
+You can revoke a group extension by using the `revokeExtend` method:
+
+<CodeGroup>
+```typescript
+const parentGroup = Group.create();
+const childGroup = Group.create();
+
+childGroup.extend(parentGroup); 
+
+// Revoke the extension
+await childGroup.revokeExtend(parentGroup);
+```
+</CodeGroup>
+
+## Getting all parent groups
+
+You can get all the parent groups of a group by calling the `getParentGroups` method:
+
+<CodeGroup>
+```typescript
+const childGroup = Group.create();
+const parentGroup = Group.create();
+childGroup.extend(parentGroup);
+
+console.log(childGroup.getParentGroups()); // [parentGroup]
+```
+</CodeGroup>
+
+## Example: Team Hierarchy
+
+Here's a practical example of using group inheritance for team permissions:
+
+<CodeGroup>
+```typescript
+// Company-wide group
+const companyGroup = Group.create();
+companyGroup.addMember(CEO, "admin");
+
+// Team group with elevated permissions
+const teamGroup = Group.create();
+teamGroup.extend(companyGroup); // Inherits company-wide access
+teamGroup.addMember(teamLead, "admin");
+teamGroup.addMember(developer, "writer");
+
+// Project group with specific permissions
+const projectGroup = Group.create();
+projectGroup.extend(teamGroup); // Inherits team permissions
+projectGroup.addMember(client, "reader"); // Client can only read project items
+```
+</CodeGroup>
+
+This creates a hierarchy where:
+- The CEO has admin access to everything
+- Team members get writer access to team and project content
+- Team leads get admin access to team and project content
+- The client can only read project content

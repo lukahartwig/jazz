@@ -28,7 +28,7 @@ export function deserializeMessages(messages: unknown) {
         | PingMsg[],
     } as const;
   } catch (e) {
-    logger.error(`Error while deserializing messages: ${getErrorMessage(e)}`);
+    logger.error("Error while deserializing messages", { err: e });
     return {
       ok: false,
       error: e,

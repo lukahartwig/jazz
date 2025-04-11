@@ -320,10 +320,10 @@ export class SyncManager {
       | CojsonInternalTypes.KnownStateMessage
       | CojsonInternalTypes.NewContentMessage,
   ): Promise<unknown> {
-    return this.toLocalNode
-      .push(msg)
-      .catch((e) =>
-        logger.error(`Error sending ${msg.action} state, id ${msg.id}`, e),
-      );
+    return this.toLocalNode.push(msg).catch((e) =>
+      logger.error(`Error sending ${msg.action} state, id ${msg.id}`, {
+        err: e,
+      }),
+    );
   }
 }

@@ -1,5 +1,108 @@
 # passkey-svelte
 
+## 0.0.61
+
+### Patch Changes
+
+- jazz-svelte@0.13.4
+
+## 0.0.60
+
+### Patch Changes
+
+- jazz-svelte@0.13.3
+
+## 0.0.59
+
+### Patch Changes
+
+- jazz-svelte@0.13.2
+
+## 0.0.58
+
+### Patch Changes
+
+- jazz-svelte@0.13.0
+
+## 0.0.57
+
+### Patch Changes
+
+- jazz-svelte@0.12.2
+
+## 0.0.56
+
+### Patch Changes
+
+- jazz-svelte@0.12.1
+
+## 0.0.55
+
+### Patch Changes
+
+- jazz-svelte@0.12.0
+
+## 0.0.54
+
+### Patch Changes
+
+- jazz-svelte@0.11.8
+
+## 0.0.53
+
+### Patch Changes
+
+- jazz-svelte@0.11.7
+
+## 0.0.52
+
+### Patch Changes
+
+- 1bfa9bb: Removed when="singedUp" from examples apps' Jazz providers. This is a really niche use-case option and can lead to broken-feeling experiences when anonymous users try to load something.
+  - jazz-svelte@0.11.6
+
+## 0.0.51
+
+### Patch Changes
+
+- jazz-svelte@0.11.5
+
+## 0.0.50
+
+### Patch Changes
+
+- jazz-svelte@0.11.4
+
+## 0.0.49
+
+### Patch Changes
+
+- jazz-svelte@0.11.3
+
+## 0.0.48
+
+### Patch Changes
+
+- jazz-svelte@0.11.2
+
+## 0.0.47
+
+### Patch Changes
+
+- jazz-svelte@0.11.0
+
+## 0.0.46
+
+### Patch Changes
+
+- jazz-svelte@0.10.15
+
+## 0.0.45
+
+### Patch Changes
+
+- jazz-svelte@0.10.14
+
 ## 0.0.44
 
 ### Patch Changes

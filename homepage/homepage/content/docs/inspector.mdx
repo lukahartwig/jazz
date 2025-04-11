@@ -1,0 +1,69 @@
+import { CodeGroup } from '@/components/forMdx'
+import { JazzIcon } from "gcmp-design-system/src/app/components/atoms/logos/JazzIcon";
+
+# Jazz Inspector
+
+[Jazz Inspector](https://inspector.jazz.tools) is a tool to visually inspect a Jazz account or other CoValues.
+
+For now, you can get your account credentials from the `jazz-logged-in-secret` local storage key from within your Jazz app.
+
+[https://inspector.jazz.tools](https://inspector.jazz.tools)
+
+## Exporting current account to Inspector from your app
+
+In development mode, you can launch the Inspector from your Jazz app to inspect your account by pressing `Cmd+J`.
+
+## Embedding the Inspector widget into your app
+
+Alternatively, you can embed the Inspector directly into your app, so you don't need to open a separate window.
+
+Install the package.
+
+<CodeGroup>
+```sh
+npm install jazz-inspector
+```
+</CodeGroup>
+
+Render the component within your `JazzProvider`.
+
+<CodeGroup>
+```tsx
+import { JazzInspector } from "jazz-inspector";
+
+<JazzProvider>
+ // [!code ++]
+  <JazzInspector />
+</JazzProvider>
+```
+</CodeGroup>
+
+This will show the Inspector launch button on the right of your page.
+
+### Positioning the Inspector button
+
+You can also customize the button position with the following options:
+
+- right (default)
+- left
+- bottom right
+- bottom left
+- top right
+- top left
+
+For example:
+<CodeGroup>
+```tsx
+<JazzInspector position="bottom left"/>
+```
+</CodeGroup>
+
+<div className="bg-stone-200 flex items-center justify-center h-72 relative dark:bg-stone-900 mt-5">
+  <span>Your app</span>
+
+  <button className="size-10 p-1.5 border rounded-lg left-4 bottom-4 absolute bg-white shadow-sm" type="button">
+    <JazzIcon className="w-full h-auto"/>
+  </button>
+</div>
+
+Check out the [music player app](https://github.com/garden-co/jazz/blob/main/examples/music-player/src/2_main.tsx) for a full example.

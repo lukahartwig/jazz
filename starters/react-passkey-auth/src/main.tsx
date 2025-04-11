@@ -3,6 +3,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
+import { apiKey } from "./apiKey.ts";
 import { JazzAccount } from "./schema.ts";
 
 // We use this to identify the app in the passkey auth
@@ -18,8 +19,7 @@ createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <JazzProvider
       sync={{
-        peer: "wss://cloud.jazz.tools/?key=react-passkey-auth@garden.co",
-        when: "signedUp", // This way when the user hasn't signed up we store the data only locally
+        peer: `wss://cloud.jazz.tools/?key=${apiKey}`,
       }}
       AccountSchema={JazzAccount}
     >

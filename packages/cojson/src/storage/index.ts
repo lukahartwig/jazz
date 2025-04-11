@@ -83,30 +83,23 @@ export class LSMStorage<WH, RH, FS extends FileSystem<WH, RH>> {
             await this.sendNewContent(msg.id, msg, undefined);
           }
         } catch (e) {
-          logger.error(
-            `Error reading from localNode, handling msg\n\n${JSON.stringify(
-              msg,
-              (k, v) =>
-                k === "changes" || k === "encryptedChanges"
-                  ? v.slice(0, 20) + "..."
-                  : v,
-            )}
-            Error: ${e instanceof Error ? e.message : "Unknown error"},
-            `,
-          );
+          logger.error(`Error reading from localNode, handling msg`, {
+            msg,
+            err: e,
+          });
         }
         nMsg++;
       }
     };
 
     processMessages().catch((e) =>
-      logger.error("Error in processMessages in storage", e),
+      logger.error("Error in processMessages in storage", { err: e }),
     );
 
     setTimeout(
       () =>
         this.compact().catch((e) => {
-          logger.error("Error while compacting", e);
+          logger.error("Error while compacting", { err: e });
         }),
       20000,
     );
@@ -132,7 +125,7 @@ export class LSMStorage<WH, RH, FS extends FileSystem<WH, RH>> {
           sessions: {},
           asDependencyOf,
         })
-        .catch((e) => logger.error("Error while pushing known", e));
+        .catch((e) => logger.error("Error while pushing known", { err: e }));
 
       return;
     }
@@ -188,13 +181,15 @@ export class LSMStorage<WH, RH, FS extends FileSystem<WH, RH>> {
         ...ourKnown,
         asDependencyOf,
       })
-      .catch((e) => logger.error("Error while pushing known", e));
+      .catch((e) => logger.error("Error while pushing known", { err: e }));
 
     for (const message of newContentMessages) {
       if (Object.keys(message.new).length === 0) continue;
       this.toLocalNode
         .push(message)
-        .catch((e) => logger.error("Error while pushing new content", e));
+        .catch((e) =>
+          logger.error("Error while pushing new content", { err: e }),
+        );
     }
 
     this.coValues[id] = coValue;
@@ -502,7 +497,7 @@ export class LSMStorage<WH, RH, FS extends FileSystem<WH, RH>> {
     setTimeout(
       () =>
         this.compact().catch((e) => {
-          logger.error("Error while compacting", e);
+          logger.error("Error while compacting", { err: e });
         }),
       5000,
     );

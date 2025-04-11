@@ -15,6 +15,7 @@ export type JazzContextManagerAuthProps = {
 export type JazzContextManagerBaseProps<Acc extends Account> = {
   onAnonymousAccountDiscarded?: (anonymousAccount: Acc) => Promise<void>;
   onLogOut?: () => void | Promise<unknown>;
+  logOutReplacement?: () => void | Promise<unknown>;
 };
 
 type PlatformSpecificAuthContext<Acc extends Account> = {
@@ -43,11 +44,8 @@ export class JazzContextManager<
   protected context: PlatformSpecificContext<Acc> | undefined;
   protected props: P | undefined;
   protected authSecretStorage = new AuthSecretStorage();
-  protected authSecretStorageWithNotify = Object.assign(
-    Object.create(this.authSecretStorage),
-    { notify: true },
-  );
-  protected authenticating = false;
+  protected keepContextOpen = false;
+  protected contextPromise: Promise<void> | undefined;
 
   constructor() {
     KvStoreContext.getInstance().initialize(this.getKvStore());
@@ -58,6 +56,33 @@ export class JazzContextManager<
   }
 
   async createContext(props: P, authProps?: JazzContextManagerAuthProps) {
+    // We need to store the props here to block the double effect execution
+    // on React. Otherwise when calling propsChanged this.props is undefined.
+    this.props = props;
+
+    // Avoid race condition between the previous context and the new one
+    const { promise, resolve } = createResolvablePromise<void>();
+
+    const prevPromise = this.contextPromise;
+    this.contextPromise = promise;
+
+    await prevPromise;
+
+    try {
+      const result = await this.getNewContext(props, authProps);
+      await this.updateContext(props, result, authProps);
+
+      resolve();
+    } catch (error) {
+      resolve();
+      throw error;
+    }
+  }
+
+  async getNewContext(
+    props: P,
+    authProps?: JazzContextManagerAuthProps,
+  ): Promise<PlatformSpecificContext<Acc>> {
     props;
     authProps;
     throw new Error("Not implemented");
@@ -68,9 +93,9 @@ export class JazzContextManager<
     context: PlatformSpecificContext<Acc>,
     authProps?: JazzContextManagerAuthProps,
   ) {
-    // When authenticating we don't want to close the previous context
+    // When keepContextOpen we don't want to close the previous context
     // because we might need to handle the onAnonymousAccountDiscarded callback
-    if (!this.authenticating) {
+    if (!this.keepContextOpen) {
       this.context?.done();
     }
 
@@ -103,9 +128,7 @@ export class JazzContextManager<
   }
 
   getAuthSecretStorage() {
-    // External updates of the auth secret storage are notified by default (e.g. when registering a new Auth provider)
-    // We skip internal notify to ensure that the isAuthenticated changes are notified along with the context updates
-    return this.authSecretStorageWithNotify;
+    return this.authSecretStorage;
   }
 
   logOut = async () => {
@@ -114,8 +137,13 @@ export class JazzContextManager<
     }
 
     await this.props.onLogOut?.();
-    await this.context.logOut();
-    return this.createContext(this.props);
+
+    if (this.props.logOutReplacement) {
+      await this.props.logOutReplacement();
+    } else {
+      await this.context.logOut();
+      return this.createContext(this.props);
+    }
   };
 
   done = () => {
@@ -124,6 +152,18 @@ export class JazzContextManager<
     }
 
     this.context.done();
+  };
+
+  shouldMigrateAnonymousAccount = async () => {
+    if (!this.props?.onAnonymousAccountDiscarded) {
+      return false;
+    }
+
+    const prevCredentials = await this.authSecretStorage.get();
+    const wasAnonymous =
+      this.authSecretStorage.getIsAuthenticated(prevCredentials) === false;
+
+    return wasAnonymous;
   };
 
   /**
@@ -135,16 +175,15 @@ export class JazzContextManager<
     }
 
     const prevContext = this.context;
-    const prevCredentials = await this.authSecretStorage.get();
-    const wasAnonymous =
-      this.authSecretStorage.getIsAuthenticated(prevCredentials) === false;
+    const migratingAnonymousAccount =
+      await this.shouldMigrateAnonymousAccount();
 
-    this.authenticating = true;
+    this.keepContextOpen = migratingAnonymousAccount;
     await this.createContext(this.props, { credentials }).finally(() => {
-      this.authenticating = false;
+      this.keepContextOpen = false;
     });
 
-    if (wasAnonymous) {
+    if (migratingAnonymousAccount) {
       await this.handleAnonymousAccountMigration(prevContext);
     }
   };
@@ -158,21 +197,20 @@ export class JazzContextManager<
     }
 
     const prevContext = this.context;
-    const prevCredentials = await this.authSecretStorage.get();
-    const wasAnonymous =
-      this.authSecretStorage.getIsAuthenticated(prevCredentials) === false;
+    const migratingAnonymousAccount =
+      await this.shouldMigrateAnonymousAccount();
 
-    this.authenticating = true;
+    this.keepContextOpen = migratingAnonymousAccount;
     await this.createContext(this.props, {
       newAccountProps: {
         secret: accountSecret,
         creationProps,
       },
     }).finally(() => {
-      this.authenticating = false;
+      this.keepContextOpen = false;
     });
 
-    if (wasAnonymous) {
+    if (migratingAnonymousAccount) {
       await this.handleAnonymousAccountMigration(prevContext);
     }
 
@@ -240,4 +278,14 @@ export class JazzContextManager<
       listener();
     }
   }
+}
+
+function createResolvablePromise<T>() {
+  let resolve!: (value: T) => void;
+
+  const promise = new Promise<T>((res) => {
+    resolve = res;
+  });
+
+  return { promise, resolve };
 }

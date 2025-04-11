@@ -61,6 +61,7 @@ export class SQLiteClient implements DBClientInterface {
       const headerValue = coValueRow?.header ?? "";
       logger.warn(`Invalid JSON in header: ${headerValue}`, {
         id: coValueId,
+        err: e,
       });
       return;
     }
@@ -99,7 +100,7 @@ export class SQLiteClient implements DBClientInterface {
         tx: JSON.parse(transactionRow.tx) as Transaction,
       }));
     } catch (e) {
-      logger.warn("Invalid JSON in transaction");
+      logger.warn("Invalid JSON in transaction", { err: e });
       return [];
     }
   }

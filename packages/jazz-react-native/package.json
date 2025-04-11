@@ -1,6 +1,6 @@
 {
   "name": "jazz-react-native",
-  "version": "0.10.13",
+  "version": "0.13.4",
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
@@ -9,48 +9,45 @@
   "exports": {
     ".": {
       "react-native": "./dist/index.js",
-      "types": "./src/index.ts",
+      "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
     "./crypto": {
-      "react-native": "./dist/crypto/index.js",
-      "types": "./src/crypto/index.ts",
-      "default": "./dist/crypto/index.js"
+      "react-native": "./crypto/index.js",
+      "types": "./crypto/index.d.ts",
+      "default": "./crypto/index.js"
     },
     "./testing": {
       "react-native": "./dist/testing.js",
-      "types": "./src/testing.ts",
+      "types": "./dist/testing.d.ts",
       "default": "./dist/testing.js"
     }
   },
   "license": "MIT",
   "dependencies": {
+    "@op-engineering/op-sqlite": "^11.4.8",
     "@scure/base": "1.2.1",
     "cojson": "workspace:*",
-    "cojson-storage-rn-sqlite": "workspace:*",
-    "cojson-transport-ws": "workspace:*",
-    "jazz-react-core": "workspace:*",
+    "cojson-storage": "workspace:*",
+    "jazz-react-native-core": "workspace:*",
     "jazz-tools": "workspace:*",
-    "react-native-nitro-modules": "0.21.0",
-    "react-native-quick-crypto": "1.0.0-beta.12"
+    "react-native-mmkv": "^3.2.0"
   },
   "peerDependencies": {
     "@react-native-community/netinfo": "*",
-    "expo-secure-store": "*",
     "react-native": "*"
   },
   "devDependencies": {
-    "@react-native-community/netinfo": "^11.4.1",
-    "expo-secure-store": "~14.0.0",
-    "react-native": "~0.76.3",
+    "@react-native-community/netinfo": "11.4.1",
+    "react": "18.3.1",
+    "react-native": "0.76.7",
     "typescript": "~5.6.2"
   },
   "scripts": {
     "dev": "tsc --watch --sourceMap --outDir dist",
     "format-and-lint": "biome check .",
     "format-and-lint:fix": "biome check . --write",
-    "build": "rm -rf ./dist && tsc --sourceMap --outDir dist",
-    "prepublishOnly": "npm run build"
+    "build": "rm -rf ./dist && tsc --sourceMap --outDir dist"
   },
   "gitHead": "33c27053293b4801b968c61d5c4c989f93a67d13"
 }

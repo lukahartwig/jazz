@@ -1,9 +1,15 @@
 import createMDX from "@next/mdx";
+import { transformerNotationDiff } from "@shikijs/transformers";
+import { transformerTwoslash } from "@shikijs/twoslash";
 import withToc from "@stefanprobst/rehype-extract-toc";
-import withTocExport from "@stefanprobst/rehype-extract-toc/mdx";
-import rehypeSlug from "rehype-slug";
-import { getHighlighter } from "shiki";
+import { valueToEstree } from "estree-util-value-to-estree";
+import GithubSlugger from "github-slugger";
+import { headingRank } from "hast-util-heading-rank";
+import { toString } from "hast-util-to-string";
+import { createHighlighter } from "shiki";
 import { SKIP, visit } from "unist-util-visit";
+import { jazzDark } from "./themes/jazzDark.mjs";
+import { jazzLight } from "./themes/jazzLight.mjs";
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -16,7 +22,18 @@ const withMDX = createMDX({
   // Add markdown plugins here, as desired
   options: {
     remarkPlugins: [highlightPlugin, remarkHtmlToJsx],
-    rehypePlugins: [rehypeSlug, withToc, withTocExport],
+    rehypePlugins: [
+      // Add id to heading elements, and indicate which frameworks to show the heading for
+      // This is a modified version of rehype-slug
+      withSlugAndHeadingsFrameworkVisibility,
+
+      // Create table of contents array
+      withToc,
+
+      // Return the table of contents and framework visibility data when importing a .mdx file
+      // This is a modified version of withTocExport from @stefanprobst/rehype-extract-toc
+      withTocAndFrameworkHeadingsVisibilityExport,
+    ],
   },
 });
 
@@ -34,74 +51,51 @@ const config = {
   },
 };
 
+const highlighterPromise = createHighlighter({
+  langs: ["typescript", "bash", "tsx", "json", "svelte", "vue"],
+  themes: [jazzLight, jazzDark],
+});
+
 function highlightPlugin() {
   return async function transformer(tree) {
-    const highlighter = await getHighlighter({
-      langs: ["typescript", "bash", "tsx", "json", "svelte"],
-      theme: "css-variables", // use css variables in shiki.css
-    });
+    const highlighter = await highlighterPromise;
 
     visit(tree, "code", visitor);
 
     function visitor(node) {
-      const lines = highlighter.codeToThemedTokens(
-        node.value,
-        node.lang,
-        "css-variables",
-      );
+      let error = "";
+      const html = highlighter.codeToHtml(node.value, {
+        lang: node.lang,
+        meta: { __raw: node.lang + " " + node.meta },
+        themes: {
+          light: "jazz-light",
+          dark: "jazz-dark",
+        },
 
-      let lineNo = -1;
+        transformers: [
+          transformerTwoslash({
+            explicitTrigger: true,
+            throws: process.env.NODE_ENV === "production",
+            onTwoslashError:
+              process.env.NODE_ENV !== "production"
+                ? (e) => {
+                    console.error(e);
+                    error = e;
+                  }
+                : undefined,
+          }),
+          transformerNotationDiff(),
+        ],
+      });
 
       node.type = "html";
-      node.value = `<code class="not-prose py-2 flex flex-col leading-relaxed">${lines
-        .map((line) => {
-          let lineClassName = "";
-
-          const isSubduedLine = line.some((token) =>
-            token.content.includes("// old"),
-          );
-          const isNewLine = line.some((token) =>
-            token.content.includes("// *add*"),
-          );
-          const isBinnedLine = line.some((token) =>
-            token.content.includes("// *bin*"),
-          );
-          const isHighlighted = line.some((token) =>
-            token.content.includes("// *highlight*"),
-          );
-          if (!isBinnedLine) {
-            lineNo++;
-          }
-
-          if (isBinnedLine) {
-            lineClassName = "bg-red-100 dark:bg-red-600/10";
-          } else if (isHighlighted) {
-            lineClassName =
-              "my-0.5 bg-blue-50 text-blue dark:bg-stone-925 dark:text-blue-300";
-          } else if (isNewLine) {
-            lineClassName = "bg-green-100 dark:bg-green-600/10";
-          }
-
-          return (
-            `<span class="block px-3 min-h-[1em] ${lineClassName}" style="${isBinnedLine ? "user-select: none" : ""}">` +
-            line
-              .map((token) => {
-                let color = isHighlighted ? "currentColor" : token.color;
-                return `<span style="color: ${color};${isSubduedLine ? "opacity: 0.4;" : ""}">${escape(token.content.replace("// old", "").replace("// *add*", "").replace("// *bin*", "").replace("// *highlight*", ""))}</span>`;
-              })
-              .join("") +
-            "</span>"
-          );
-        })
-        .join("\n")}</code>`;
+      node.value = error
+        ? `<div style="color: red;">${error}</div>` + html
+        : html;
       node.children = [];
       return SKIP;
     }
   };
-}
-
-function escape(s) {
-  return s.replace(/[^0-9A-Za-z ]/g, (c) => "&#" + c.charCodeAt(0) + ";");
 }
 
 function remarkHtmlToJsx() {
@@ -129,6 +123,87 @@ function remarkHtmlToJsx() {
   }
 
   return transform;
+}
+
+const slugs = new GithubSlugger();
+
+export function withSlugAndHeadingsFrameworkVisibility() {
+  return function (tree, vfile) {
+    slugs.reset();
+    vfile.data.headingsFrameworkVisibility = {};
+
+    visit(tree, "element", function (node) {
+      if (headingRank(node) && !node.properties.id) {
+        const lastChild = node.children?.[node.children.length - 1];
+        if (!lastChild || lastChild.type !== "text") return;
+
+        const match = lastChild.value.match(
+          /\s*\[\!framework=([a-zA-Z0-9,_-]+)\]\s*$/,
+        );
+        if (match) {
+          const frameworks = match[1];
+
+          lastChild.value = lastChild.value.replace(
+            /\s*\[\!framework=[a-zA-Z0-9,_-]+\]\s*$/,
+            "",
+          );
+
+          node.properties.id = slugs.slug(lastChild.value);
+          vfile.data.headingsFrameworkVisibility[node.properties.id] =
+            frameworks.split(",");
+        } else {
+          node.properties.id = slugs.slug(toString(node));
+        }
+      }
+    });
+  };
+}
+
+export function withTocAndFrameworkHeadingsVisibilityExport() {
+  return function transformer(tree, vfile) {
+    if (vfile.data.toc == null) return;
+
+    tree.children.unshift({
+      type: "mdxjsEsm",
+      data: {
+        estree: {
+          type: "Program",
+          sourceType: "module",
+          body: [
+            {
+              type: "ExportNamedDeclaration",
+              source: null,
+              specifiers: [],
+              declaration: {
+                type: "VariableDeclaration",
+                kind: "const",
+                declarations: [
+                  {
+                    type: "VariableDeclarator",
+                    id: {
+                      type: "Identifier",
+                      name: "headingsFrameworkVisibility",
+                    },
+                    init: valueToEstree(vfile.data.headingsFrameworkVisibility),
+                  },
+                  {
+                    type: "VariableDeclarator",
+                    id: { type: "Identifier", name: "tableOfContents" },
+                    init: valueToEstree(
+                      // exclude h1, but handle case where toc is empty or has no children
+                      vfile.data.toc.length && vfile.data.toc[0].children
+                        ? vfile.data.toc[0].children
+                        : [],
+                    ),
+                  },
+                ],
+              },
+            },
+          ],
+        },
+      },
+    });
+  };
 }
 
 export default config;

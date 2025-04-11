@@ -167,12 +167,9 @@ export class Inbox {
                   );
                 }
 
-                return loadCoValue(
-                  Schema,
-                  message.get("payload") as ID<I>,
-                  account,
-                  [],
-                );
+                return loadCoValue(Schema, message.get("payload") as ID<I>, {
+                  loadAs: account,
+                });
               })
               .then((value) => {
                 if (!value) {
@@ -330,6 +327,16 @@ export class InboxSender<I extends CoValue, O extends CoValue | undefined> {
 
     if (inboxOwnerProfileRaw === "unavailable") {
       throw new Error("Failed to load the inbox owner profile");
+    }
+
+    if (
+      inboxOwnerProfileRaw.group.roleOf(currentAccount._raw.id) !== "reader" &&
+      inboxOwnerProfileRaw.group.roleOf(currentAccount._raw.id) !== "writer" &&
+      inboxOwnerProfileRaw.group.roleOf(currentAccount._raw.id) !== "admin"
+    ) {
+      throw new Error(
+        "Insufficient permissions to access the inbox, make sure its user profile is publicly readable.",
+      );
     }
 
     const inboxInvite = inboxOwnerProfileRaw.get("inboxInvite");

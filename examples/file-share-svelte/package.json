@@ -1,6 +1,6 @@
 {
   "name": "file-share-svelte",
-  "version": "0.0.40",
+  "version": "0.0.57",
   "private": true,
   "type": "module",
   "scripts": {

@@ -35,7 +35,7 @@ class TestJazzContextManager<Acc extends Account> extends JazzContextManager<
     AccountSchema?: AccountClass<Acc>;
   }
 > {
-  async createContext(
+  async getNewContext(
     props: JazzContextManagerBaseProps<Acc> & {
       defaultProfileName?: string;
       AccountSchema?: AccountClass<Acc>;
@@ -53,20 +53,16 @@ class TestJazzContextManager<Acc extends Account> extends JazzContextManager<
       AccountSchema: props.AccountSchema,
     });
 
-    await this.updateContext(
-      props,
-      {
-        me: context.account,
-        node: context.node,
-        done: () => {
-          context.done();
-        },
-        logOut: async () => {
-          await context.logOut();
-        },
+    return {
+      me: context.account,
+      node: context.node,
+      done: () => {
+        context.done();
       },
-      authProps,
-    );
+      logOut: async () => {
+        await context.logOut();
+      },
+    };
   }
 }
 
@@ -127,6 +123,23 @@ describe("ContextManager", () => {
     expect(getCurrentValue().me.id).toBe(credentials.accountID);
   });
 
+  test("handles race conditions on the context creation", async () => {
+    const account = await createJazzTestAccount();
+
+    manager.createContext({});
+
+    const credentials = {
+      accountID: account.id,
+      accountSecret: account._raw.core.node.account.agentSecret,
+      provider: "test",
+    };
+
+    // Authenticate without waiting for the previous context to be created
+    await manager.authenticate(credentials);
+
+    expect(getCurrentValue().me.id).toBe(credentials.accountID);
+  });
+
   test("calls onLogOut callback when logging out", async () => {
     const onLogOut = vi.fn();
     await manager.createContext({ onLogOut });
@@ -134,6 +147,18 @@ describe("ContextManager", () => {
     await manager.logOut();
 
     expect(onLogOut).toHaveBeenCalled();
+  });
+
+  test("calls logoutReplacement callback instead of the Jazz logout when logging out", async () => {
+    const logOutReplacement = vi.fn();
+    await manager.createContext({ logOutReplacement });
+
+    const context = manager.getCurrentValue();
+
+    await manager.logOut();
+
+    expect(logOutReplacement).toHaveBeenCalled();
+    expect(manager.getCurrentValue()).toBe(context);
   });
 
   test("notifies listeners of context changes", async () => {
@@ -234,7 +259,9 @@ describe("ContextManager", () => {
       provider: "test",
     });
 
-    const me = await CustomAccount.getMe().ensureLoaded({ root: {} });
+    const me = await CustomAccount.getMe().ensureLoaded({
+      resolve: { root: true },
+    });
 
     expect(me.root.id).toBe(lastRootId);
   });
@@ -253,7 +280,7 @@ describe("ContextManager", () => {
             value: 1,
           });
         } else {
-          const { root } = await this.ensureLoaded({ root: {} });
+          const { root } = await this.ensureLoaded({ resolve: { root: true } });
 
           root.value = 2;
         }
@@ -276,7 +303,9 @@ describe("ContextManager", () => {
       provider: "test",
     });
 
-    const me = await CustomAccount.getMe().ensureLoaded({ root: {} });
+    const me = await CustomAccount.getMe().ensureLoaded({
+      resolve: { root: true },
+    });
 
     expect(me.root.value).toBe(2);
   });
@@ -303,10 +332,16 @@ describe("ContextManager", () => {
       anonymousAccount: CustomAccount,
     ) => {
       const anonymousAccountWithRoot = await anonymousAccount.ensureLoaded({
-        root: {},
+        resolve: {
+          root: true,
+        },
       });
 
-      const meWithRoot = await CustomAccount.getMe().ensureLoaded({ root: {} });
+      const meWithRoot = await CustomAccount.getMe().ensureLoaded({
+        resolve: {
+          root: true,
+        },
+      });
 
       const rootToTransfer = anonymousAccountWithRoot.root;
 
@@ -334,7 +369,11 @@ describe("ContextManager", () => {
       provider: "test",
     });
 
-    const me = await CustomAccount.getMe().ensureLoaded({ root: {} });
+    const me = await CustomAccount.getMe().ensureLoaded({
+      resolve: {
+        root: true,
+      },
+    });
 
     expect(me.root.transferredRoot?.value).toBe("Hello");
   });

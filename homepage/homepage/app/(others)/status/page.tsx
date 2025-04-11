@@ -1,10 +1,12 @@
+import LatencyChart from "@/components/LatencyChart";
 import { clsx } from "clsx";
 import { HeroHeader } from "gcmp-design-system/src/app/components/molecules/HeroHeader";
 import type { Metadata } from "next";
-import dynamic from "next/dynamic";
 import { Fragment } from "react";
 
 const title = "Status";
+
+export const dynamic = "force-static";
 
 export const metadata: Metadata = {
   title,
@@ -13,9 +15,21 @@ export const metadata: Metadata = {
   },
 };
 
-const LatencyChart = dynamic(() => import("@/components/LatencyChart"), {
-  ssr: false,
-});
+const PROBES = [
+  "Montreal",
+  "NorthCalifornia",
+  "NorthVirginia",
+  "SaoPaulo",
+  "Mumbai",
+  "Singapore",
+  "Sydney",
+  "Tokyo",
+  "CapeTown",
+  "London",
+  "Spain",
+  "UAE",
+  "Zurich",
+] as const;
 
 interface DataRow {
   up: boolean;
@@ -26,7 +40,10 @@ interface DataRow {
 
 const query = async () => {
   const res = await fetch("https://gcmp.grafana.net/api/ds/query", {
-    next: { revalidate: 300 },
+    cache: "force-cache",
+    next: {
+      revalidate: 300,
+    },
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -41,7 +58,7 @@ const query = async () => {
             type: "prometheus",
             uid: "grafanacloud-prom",
           },
-          expr: 'probe_success{instance="https://mesh.jazz.tools/self-sync-check", job="self-sync-check"}',
+          expr: `probe_success{instance="https://mesh.jazz.tools/self-sync-check", job="self-sync-check", probe=~"${PROBES.join("|")}"}`,
           instant: true,
           refId: "up",
         },
@@ -50,7 +67,7 @@ const query = async () => {
             type: "prometheus",
             uid: "grafanacloud-prom",
           },
-          expr: '1000 * avg_over_time(probe_duration_seconds{instance="https://mesh.jazz.tools/self-sync-check", job="self-sync-check"}[$__interval]) / 2',
+          expr: `1000 * sum(avg_over_time(probe_duration_seconds{instance="https://mesh.jazz.tools/self-sync-check", job="self-sync-check", probe=~"${PROBES.join("|")}"}[$__interval])) by (probe) / 2`,
           instant: false,
           range: true,
           interval: "15m",
@@ -61,7 +78,7 @@ const query = async () => {
             type: "prometheus",
             uid: "grafanacloud-prom",
           },
-          expr: '1000 * avg(avg_over_time(probe_duration_seconds{instance="https://mesh.jazz.tools/self-sync-check", job="self-sync-check"}[$__range])) by (probe) / 2',
+          expr: `1000 * avg(avg_over_time(probe_duration_seconds{instance="https://mesh.jazz.tools/self-sync-check", job="self-sync-check", probe=~"${PROBES.join("|")}"}[$__range])) by (probe) / 2`,
           instant: true,
           refId: "avg_latency",
         },
@@ -70,7 +87,7 @@ const query = async () => {
             type: "prometheus",
             uid: "grafanacloud-prom",
           },
-          expr: '1000 * histogram_quantile(0.95, sum(rate(probe_all_duration_seconds_bucket{instance="https://mesh.jazz.tools/self-sync-check", job="self-sync-check"}[$__range])) by (le, probe)) / 2',
+          expr: `1000 * histogram_quantile(0.95, sum(rate(probe_all_duration_seconds_bucket{instance="https://mesh.jazz.tools/self-sync-check", job="self-sync-check", probe=~"${PROBES.join("|")}"}[$__range])) by (le, probe)) / 2`,
           instant: true,
           refId: "p99_latency",
         },
@@ -96,7 +113,6 @@ const query = async () => {
 
   for (const frame of responseData.results.latency_over_time.frames) {
     const probe = startCase(frame.schema.fields[1].labels.probe);
-
     byProbe[probe].latencyOverTime = frame.data.values;
   }
 
@@ -111,31 +127,25 @@ const query = async () => {
   }
 
   const byRegion = Object.entries(byProbe).reduce<
-    Record<string, Record<string, DataRow>>
+    Record<string, Record<"EMEA" | "AMER" | "APAC", DataRow>>
   >((acc, [label, row]) => {
     switch (label) {
-      case "Amsterdam":
-      case "Frankfurt":
       case "London":
-      case "Paris":
       case "Cape Town":
+      case "Spain":
+      case "Zurich":
+      case "UAE":
         return { ...acc, EMEA: { ...acc["EMEA"], [label]: row } };
-      case "Atlanta":
-      case "Dallas":
-      case "New York":
-      case "San Francisco":
       case "North Virginia":
-      case "Ohio":
-      case "Oregon":
+      case "North California":
+      case "Montreal":
       case "Sao Paulo":
-      case "Toronto":
         return { ...acc, AMER: { ...acc["AMER"], [label]: row } };
       default:
+      case "Mumbai":
       case "Sydney":
       case "Tokyo":
-      case "Seoul":
-      case "Mumbai":
-      case "Bangalore":
+      case "Singapore":
         return { ...acc, APAC: { ...acc["APAC"], [label]: row } };
     }
   }, {});

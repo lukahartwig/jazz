@@ -1,21 +1,22 @@
 import { PackageDocs } from "@/components/docs/packageDocs";
-import { packages } from "@/lib/packages";
+import { packages } from "@/content/packages";
 import { notFound } from "next/navigation";
 
 interface Props {
-  params: { package: string };
+  params: Promise<{ package: string }>;
 }
 
-export default function Page({ params }: Props) {
-  if (!packages.map((p) => p.name).includes(params.package)) {
+export default async function Page({ params }: Props) {
+  const packageName = (await params).package;
+  if (!packages.map((p) => p.name).includes(packageName)) {
     return notFound();
   }
 
-  return <PackageDocs package={params.package} />;
+  return <PackageDocs package={packageName} />;
 }
 
 export async function generateMetadata({ params }: Props) {
-  const packageName = params.package;
+  const packageName = (await params).package;
   return {
     title: `${packageName} - jazz`,
     description: `API reference for ${packageName}.`,

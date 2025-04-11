@@ -29,7 +29,12 @@ import { RawBinaryCoStream, RawCoStream } from "./coStream.js";
 export const EVERYONE = "everyone" as const;
 export type Everyone = "everyone";
 
-export type ParentGroupReferenceRole = "extend" | "reader" | "writer" | "admin";
+export type ParentGroupReferenceRole =
+  | "revoked"
+  | "extend"
+  | "reader"
+  | "writer"
+  | "admin";
 
 export type GroupShape = {
   profile: CoID<RawCoMap> | null;
@@ -45,7 +50,7 @@ export type GroupShape = {
     { encryptedID: KeyID; encryptingID: KeyID }
   >;
   [parent: ParentGroupReference]: ParentGroupReferenceRole;
-  [child: ChildGroupReference]: "extend";
+  [child: ChildGroupReference]: "revoked" | "extend";
 };
 
 /** A `Group` is a scope for permissions of its members (`"reader" | "writer" | "admin"`), applying to objects owned by that group.
@@ -77,31 +82,36 @@ export class RawGroup<
    *
    * @category 1. Role reading
    */
-  roleOf(accountID: RawAccountID): Role | undefined {
-    return this.roleOfInternal(accountID)?.role;
+  roleOf(accountID: RawAccountID | typeof EVERYONE): Role | undefined {
+    return this.roleOfInternal(accountID);
   }
 
+  /**
+   *  This is a performance-critical function, micro-optimizing it is important
+   *
+   *  Avoid to add objects/array allocations in this function
+   */
   /** @internal */
   roleOfInternal(
     accountID: RawAccountID | AgentID | typeof EVERYONE,
-  ): { role: Role; via: CoID<RawGroup> | undefined } | undefined {
-    const roleHere = this.get(accountID);
+  ): Role | undefined {
+    let roleHere = this.get(accountID);
 
     if (roleHere === "revoked") {
-      return undefined;
+      roleHere = undefined;
     }
 
-    let roleInfo:
-      | {
-          role: Exclude<Role, "revoked">;
-          via: CoID<RawGroup> | undefined;
-        }
-      | undefined = roleHere && { role: roleHere, via: undefined };
+    let roleInfo: Role | undefined = roleHere;
 
-    const parentGroups = this.getParentGroups(this.atTimeFilter);
+    for (const key of Object.keys(this.ops)) {
+      if (!isParentGroupReference(key)) continue;
 
-    for (const { group, role } of parentGroups) {
-      const parentRole = group.roleOfInternal(accountID)?.role;
+      const group = this.getParentGroupFromKey(key, this.atTimeFilter);
+
+      if (!group) continue;
+
+      const role = this.get(key) ?? "extend";
+      const parentRole = group.roleOfInternal(accountID);
 
       if (!isInheritableRole(parentRole)) {
         continue;
@@ -109,31 +119,52 @@ export class RawGroup<
 
       const roleToInherit = role !== "extend" ? role : parentRole;
 
-      if (isMorePermissiveAndShouldInherit(roleToInherit, roleInfo?.role)) {
-        roleInfo = { role: roleToInherit, via: group.id };
+      if (isMorePermissiveAndShouldInherit(roleToInherit, roleInfo)) {
+        roleInfo = roleToInherit;
       }
+    }
+
+    if (!roleInfo && accountID !== "everyone") {
+      const everyoneRole = this.get("everyone");
+
+      if (everyoneRole && everyoneRole !== "revoked") return everyoneRole;
     }
 
     return roleInfo;
   }
 
+  getParentGroupFromKey(key: ParentGroupReference, atTime?: number) {
+    if (this.get(key) === "revoked") {
+      return null;
+    }
+
+    const parent = this.core.node.expectCoValueLoaded(
+      getParentGroupId(key),
+      "Expected parent group to be loaded",
+    );
+
+    const group = expectGroup(parent.getCurrentContent());
+
+    if (atTime) {
+      return group.atTime(atTime);
+    } else {
+      return group;
+    }
+  }
+
   getParentGroups(atTime?: number) {
-    const groups: { group: RawGroup; role: ParentGroupReferenceRole }[] = [];
+    const groups: RawGroup[] = [];
 
-    for (const key of this.keys()) {
-      if (isParentGroupReference(key)) {
-        const parent = this.core.node.expectCoValueLoaded(
-          getParentGroupId(key),
-          "Expected parent group to be loaded",
-        );
+    for (const key of Object.keys(this.ops)) {
+      if (!isParentGroupReference(key)) continue;
 
-        const group = expectGroup(parent.getCurrentContent());
-        const role = this.get(key)!;
+      const group = this.getParentGroupFromKey(key, atTime);
 
+      if (group) {
         if (atTime) {
-          groups.push({ group: group.atTime(atTime), role });
+          groups.push(group.atTime(atTime));
         } else {
-          groups.push({ group, role });
+          groups.push(group);
         }
       }
     }
@@ -171,6 +202,11 @@ export class RawGroup<
 
     for (const key of this.keys()) {
       if (isChildGroupReference(key)) {
+        // Check if the child group reference is revoked
+        if (this.get(key) === "revoked") {
+          continue;
+        }
+
         const child = this.core.node.expectCoValueLoaded(
           getChildGroupId(key),
           "Expected child group to be loaded",
@@ -188,7 +224,7 @@ export class RawGroup<
    * @category 1. Role reading
    */
   myRole(): Role | undefined {
-    return this.roleOfInternal(this.core.node.account.id)?.role;
+    return this.roleOfInternal(this.core.node.account.id);
   }
 
   /**
@@ -373,6 +409,18 @@ export class RawGroup<
     });
   }
 
+  getAllMemberKeysSet() {
+    const memberKeys = new Set(this.getMemberKeys());
+
+    for (const group of this.getParentGroups()) {
+      for (const key of group.getAllMemberKeysSet()) {
+        memberKeys.add(key);
+      }
+    }
+
+    return memberKeys;
+  }
+
   /** @internal */
   rotateReadKey(removedMemberKey?: RawAccountID | AgentID | "everyone") {
     const memberKeys = this.getMemberKeys().filter(
@@ -484,7 +532,7 @@ export class RawGroup<
      *
      * This way the members from the parent groups can still have access to this group
      */
-    for (const { group: parent } of parentGroups) {
+    for (const parent of parentGroups) {
       const { id: parentReadKeyID, secret: parentReadKeySecret } =
         parent.core.getCurrentReadKey();
 
@@ -592,6 +640,43 @@ export class RawGroup<
       }).encrypted,
       "trusting",
     );
+  }
+
+  async revokeExtend(parent: RawGroup) {
+    if (this.myRole() !== "admin") {
+      throw new Error(
+        "To unextend a group, the current account must be an admin in the child group",
+      );
+    }
+
+    if (
+      parent.myRole() !== "admin" &&
+      parent.myRole() !== "writer" &&
+      parent.myRole() !== "reader" &&
+      parent.myRole() !== "writeOnly"
+    ) {
+      throw new Error(
+        "To unextend a group, the current account must be a member of the parent group",
+      );
+    }
+
+    if (
+      !this.get(`parent_${parent.id}`) ||
+      this.get(`parent_${parent.id}`) === "revoked"
+    ) {
+      return;
+    }
+
+    // Set the parent key on the child group to `revoked`
+    this.set(`parent_${parent.id}`, "revoked", "trusting");
+
+    // Set the child key on the parent group to `revoked`
+    parent.set(`child_${this.id}`, "revoked", "trusting");
+
+    await this.loadAllChildGroups();
+
+    // Rotate the keys on the child group
+    this.rotateReadKey();
   }
 
   /**
@@ -769,8 +854,9 @@ export class RawGroup<
 
 export function isInheritableRole(
   roleInParent: Role | undefined,
-): roleInParent is "admin" | "writer" | "reader" {
+): roleInParent is "revoked" | "admin" | "writer" | "reader" {
   return (
+    roleInParent === "revoked" ||
     roleInParent === "admin" ||
     roleInParent === "writer" ||
     roleInParent === "reader"
@@ -778,9 +864,13 @@ export function isInheritableRole(
 }
 
 function isMorePermissiveAndShouldInherit(
-  roleInParent: "admin" | "writer" | "reader",
-  roleInChild: Exclude<Role, "revoked"> | undefined,
+  roleInParent: "revoked" | "admin" | "writer" | "reader",
+  roleInChild: Role | undefined,
 ) {
+  if (roleInParent === "revoked") {
+    return true;
+  }
+
   if (roleInParent === "admin") {
     return !roleInChild || roleInChild !== "admin";
   }

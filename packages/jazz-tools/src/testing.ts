@@ -237,12 +237,10 @@ export class TestJazzContextManager<
     return context;
   }
 
-  async createContext(
+  async getNewContext(
     props: TestJazzContextManagerProps<Acc>,
     authProps?: JazzContextManagerAuthProps,
   ) {
-    this.props = props;
-
     if (!syncServer.current) {
       throw new Error(
         "You need to setup a test sync server with setupJazzTestSync to use the Auth functions",
@@ -260,24 +258,20 @@ export class TestJazzContextManager<
       AccountSchema: props.AccountSchema,
     });
 
-    await this.updateContext(
-      props,
-      {
-        me: context.account,
-        node: context.node,
-        done: () => {
-          context.done();
-        },
-        logOut: () => {
-          return context.logOut();
-        },
+    return {
+      me: context.account,
+      node: context.node,
+      done: () => {
+        context.done();
       },
-      authProps,
-    );
+      logOut: () => {
+        return context.logOut();
+      },
+    };
   }
 }
 
-export function linkAccounts(
+export async function linkAccounts(
   a: Account,
   b: Account,
   aRole: "server" | "client" = "server",
@@ -290,6 +284,9 @@ export function linkAccounts(
 
   a._raw.core.node.syncManager.addPeer(aPeer);
   b._raw.core.node.syncManager.addPeer(bPeer);
+
+  await a.waitForAllCoValuesSync();
+  await b.waitForAllCoValuesSync();
 }
 
 export async function setupJazzTestSync() {

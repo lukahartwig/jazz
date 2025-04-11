@@ -197,13 +197,11 @@ export class SyncManager {
         }
       })
       .catch((e) => {
-        logger.error(
-          "Error processing messages from peer: " + getErrorMessage(e),
-          {
-            peerId: peer.id,
-            peerRole: peer.role,
-          },
-        );
+        logger.error("Error processing messages from peer", {
+          err: e,
+          peerId: peer.id,
+          peerRole: peer.role,
+        });
         if (peer.crashOnClose) {
           this.local.crashed = e;
           throw new Error(e);

@@ -1,15 +1,19 @@
 import type { JsonValue, RawCoList } from "cojson";
 import { RawAccount } from "cojson";
+import { calcPatch } from "fast-myers-diff";
 import type {
   CoValue,
   CoValueClass,
   CoValueFromRaw,
-  DeeplyLoaded,
-  DepthsIn,
   ID,
   RefEncoded,
+  RefsToResolve,
+  RefsToResolveStrict,
+  Resolved,
   Schema,
   SchemaFor,
+  SubscribeListenerOptions,
+  SubscribeRestArgs,
   UnCo,
 } from "../internal.js";
 import {
@@ -24,11 +28,13 @@ import {
   loadCoValueWithoutMe,
   makeRefs,
   parseCoValueCreateOptions,
+  parseSubscribeRestArgs,
   subscribeToCoValueWithoutMe,
   subscribeToExistingCoValue,
   subscriptionsScopes,
 } from "../internal.js";
 import { coValuesCache } from "../lib/cache.js";
+import { RegisteredAccount } from "../types.js";
 import { type Account } from "./account.js";
 import { type Group } from "./group.js";
 import { RegisteredSchemas } from "./registeredSchemas.js";
@@ -153,7 +159,7 @@ export class CoList<Item = any> extends Array<Item> implements CoValue {
     [idx: number]: {
       value?: Item;
       ref?: Item extends CoValue ? Ref<Item> : never;
-      by?: Account;
+      by?: RegisteredAccount;
       madeAt: Date;
     };
   } {
@@ -274,6 +280,13 @@ export class CoList<Item = any> extends Array<Item> implements CoValue {
     return first;
   }
 
+  /**
+   * Splice the `CoList` at a given index.
+   *
+   * @param start - The index to start the splice.
+   * @param deleteCount - The number of items to delete.
+   * @param items - The items to insert.
+   */
   splice(start: number, deleteCount: number, ...items: Item[]): Item[] {
     const deleted = this.slice(start, start + deleteCount);
 
@@ -285,14 +298,64 @@ export class CoList<Item = any> extends Array<Item> implements CoValue {
       this._raw.delete(idxToDelete);
     }
 
-    let appendAfter = Math.max(start - 1, 0);
-    for (const item of toRawItems(items as Item[], this._schema[ItemsSym])) {
-      console.log(this._raw.asArray(), appendAfter);
-      this._raw.append(item, appendAfter);
-      appendAfter++;
+    const rawItems = toRawItems(items as Item[], this._schema[ItemsSym]);
+
+    // If there are no items to insert, return the deleted items
+    if (rawItems.length === 0) {
+      return deleted;
+    }
+
+    // Fast path for single item insertion
+    if (rawItems.length === 1) {
+      const item = rawItems[0];
+      if (item === undefined) return deleted;
+      if (start === 0) {
+        this._raw.prepend(item);
+      } else {
+        this._raw.append(item, Math.max(start - 1, 0));
+      }
+      return deleted;
+    }
+
+    // Handle multiple items
+    if (start === 0) {
+      // Iterate in reverse order without creating a new array
+      for (let i = rawItems.length - 1; i >= 0; i--) {
+        const item = rawItems[i];
+        if (item === undefined) continue;
+        this._raw.prepend(item);
+      }
+    } else {
+      let appendAfter = Math.max(start - 1, 0);
+      for (const item of rawItems) {
+        if (item === undefined) continue;
+        this._raw.append(item, appendAfter);
+        appendAfter++;
+      }
     }
 
     return deleted;
+  }
+
+  /**
+   * Modify the `CoList` to match another list, where the changes are managed internally.
+   *
+   * @param result - The resolved list of items.
+   */
+  applyDiff(result: Item[]) {
+    const current = this._raw.asArray() as Item[];
+    const comparator = isRefEncoded(this._schema[ItemsSym])
+      ? (aIdx: number, bIdx: number) => {
+          return (
+            (current[aIdx] as CoValue)?.id === (result[bIdx] as CoValue)?.id
+          );
+        }
+      : undefined;
+
+    const patches = [...calcPatch(current, result, comparator)];
+    for (const [from, to, insert] of patches.reverse()) {
+      this.splice(from, to - from, ...insert);
+    }
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -360,24 +423,15 @@ export class CoList<Item = any> extends Array<Item> implements CoValue {
    *
    * @category Subscription & Loading
    */
-  static load<C extends CoList, Depth>(
-    this: CoValueClass<C>,
-    id: ID<C>,
-    depth: Depth & DepthsIn<C>,
-  ): Promise<DeeplyLoaded<C, Depth> | undefined>;
-  static load<C extends CoList, Depth>(
-    this: CoValueClass<C>,
-    id: ID<C>,
-    as: Account,
-    depth: Depth & DepthsIn<C>,
-  ): Promise<DeeplyLoaded<C, Depth> | undefined>;
-  static load<C extends CoList, Depth>(
-    this: CoValueClass<C>,
-    id: ID<C>,
-    asOrDepth: Account | (Depth & DepthsIn<C>),
-    depth?: Depth & DepthsIn<C>,
-  ): Promise<DeeplyLoaded<C, Depth> | undefined> {
-    return loadCoValueWithoutMe(this, id, asOrDepth, depth);
+  static load<L extends CoList, const R extends RefsToResolve<L> = true>(
+    this: CoValueClass<L>,
+    id: ID<L>,
+    options?: {
+      resolve?: RefsToResolveStrict<L, R>;
+      loadAs?: Account | AnonymousJazzAgent;
+    },
+  ): Promise<Resolved<L, R> | null> {
+    return loadCoValueWithoutMe(this, id, options);
   }
 
   /**
@@ -408,35 +462,24 @@ export class CoList<Item = any> extends Array<Item> implements CoValue {
    *
    * @category Subscription & Loading
    */
-  static subscribe<C extends CoList, Depth>(
-    this: CoValueClass<C>,
-    id: ID<C>,
-    depth: Depth & DepthsIn<C>,
-    listener: (value: DeeplyLoaded<C, Depth>) => void,
+  static subscribe<L extends CoList, const R extends RefsToResolve<L> = true>(
+    this: CoValueClass<L>,
+    id: ID<L>,
+    listener: (value: Resolved<L, R>, unsubscribe: () => void) => void,
   ): () => void;
-  static subscribe<C extends CoList, Depth>(
-    this: CoValueClass<C>,
-    id: ID<C>,
-    as: Account,
-    depth: Depth & DepthsIn<C>,
-    listener: (value: DeeplyLoaded<C, Depth>) => void,
+  static subscribe<L extends CoList, const R extends RefsToResolve<L> = true>(
+    this: CoValueClass<L>,
+    id: ID<L>,
+    options: SubscribeListenerOptions<L, R>,
+    listener: (value: Resolved<L, R>, unsubscribe: () => void) => void,
   ): () => void;
-  static subscribe<C extends CoList, Depth>(
-    this: CoValueClass<C>,
-    id: ID<C>,
-    asOrDepth: Account | (Depth & DepthsIn<C>),
-    depthOrListener:
-      | (Depth & DepthsIn<C>)
-      | ((value: DeeplyLoaded<C, Depth>) => void),
-    listener?: (value: DeeplyLoaded<C, Depth>) => void,
+  static subscribe<L extends CoList, const R extends RefsToResolve<L>>(
+    this: CoValueClass<L>,
+    id: ID<L>,
+    ...args: SubscribeRestArgs<L, R>
   ): () => void {
-    return subscribeToCoValueWithoutMe<C, Depth>(
-      this,
-      id,
-      asOrDepth,
-      depthOrListener,
-      listener,
-    );
+    const { options, listener } = parseSubscribeRestArgs(args);
+    return subscribeToCoValueWithoutMe<L, R>(this, id, options, listener);
   }
 
   /**
@@ -446,11 +489,11 @@ export class CoList<Item = any> extends Array<Item> implements CoValue {
    *
    * @category Subscription & Loading
    */
-  ensureLoaded<L extends CoList, Depth>(
+  ensureLoaded<L extends CoList, const R extends RefsToResolve<L>>(
     this: L,
-    depth: Depth & DepthsIn<L>,
-  ): Promise<DeeplyLoaded<L, Depth>> {
-    return ensureCoValueLoaded(this, depth);
+    options: { resolve: RefsToResolveStrict<L, R> },
+  ): Promise<Resolved<L, R>> {
+    return ensureCoValueLoaded(this, options);
   }
 
   /**
@@ -462,12 +505,21 @@ export class CoList<Item = any> extends Array<Item> implements CoValue {
    *
    * @category Subscription & Loading
    **/
-  subscribe<L extends CoList, Depth>(
+  subscribe<L extends CoList, const R extends RefsToResolve<L> = true>(
     this: L,
-    depth: Depth & DepthsIn<L>,
-    listener: (value: DeeplyLoaded<L, Depth>) => void,
+    listener: (value: Resolved<L, R>, unsubscribe: () => void) => void,
+  ): () => void;
+  subscribe<L extends CoList, const R extends RefsToResolve<L> = true>(
+    this: L,
+    options: { resolve?: RefsToResolveStrict<L, R> },
+    listener: (value: Resolved<L, R>, unsubscribe: () => void) => void,
+  ): () => void;
+  subscribe<L extends CoList, const R extends RefsToResolve<L>>(
+    this: L,
+    ...args: SubscribeRestArgs<L, R>
   ): () => void {
-    return subscribeToExistingCoValue(this, depth, listener);
+    const { options, listener } = parseSubscribeRestArgs(args);
+    return subscribeToExistingCoValue(this, options, listener);
   }
 
   /** @category Type Helpers */
@@ -492,6 +544,12 @@ export class CoList<Item = any> extends Array<Item> implements CoValue {
   }
 }
 
+/**
+ * Convert an array of items to a raw array of items.
+ * @param items - The array of items to convert.
+ * @param itemDescriptor - The descriptor of the items.
+ * @returns The raw array of items.
+ */
 function toRawItems<Item>(items: Item[], itemDescriptor: Schema) {
   const rawItems =
     itemDescriptor === "json"
@@ -547,7 +605,19 @@ const CoListProxyHandler: ProxyHandler<CoList> = {
       } else if ("encoded" in itemDescriptor) {
         rawValue = itemDescriptor.encoded.encode(value);
       } else if (isRefEncoded(itemDescriptor)) {
-        rawValue = value.id;
+        if (value === null) {
+          if (itemDescriptor.optional) {
+            rawValue = null;
+          } else {
+            throw new Error(`Cannot set required reference ${key} to null`);
+          }
+        } else if (value?.id) {
+          rawValue = value.id;
+        } else {
+          throw new Error(
+            `Cannot set reference ${key} to a non-CoValue. Got ${value}`,
+          );
+        }
       }
       target._raw.replace(Number(key), rawValue);
       return true;

@@ -1,5 +1,98 @@
 # cojson
 
+## 0.13.2
+
+### Patch Changes
+
+- c551839: Add jazz.messagequeue.pushed/pulled counters, remove jazz.messagequeue.size gauge
+
+## 0.13.0
+
+### Minor Changes
+
+- bce3bcc: Version bump. Release focused on React Native.
+
+### Patch Changes
+
+- a013538: Correctly load CoValues after they are marked as unavailable and improve timeout management
+
+## 0.12.2
+
+### Patch Changes
+
+- c2f4827: StreamingHash: Remove redundant clone and skip double hash generation when creating a local transaction
+
+## 0.12.1
+
+### Patch Changes
+
+- 5a00fe0: Re-introducing linked lists on PriorityBasedMessageQueue
+
+## 0.12.0
+
+### Minor Changes
+
+- 01523dc: Check CoValue access permissions when loading
+- 01523dc: Return the EVERYONE role if the account is not direct a member of the group
+
+## 0.11.8
+
+### Patch Changes
+
+- 6c86c4f: Fix "Expected header to be sent in first message error" on sync
+- 9d0c9dc: Update @opentelemetry/api dependency
+
+## 0.11.7
+
+### Patch Changes
+
+- 2b94bc8: Performance: optimize Group.roleOf getter and made the transactions validation incremental for CoMap and CoFeed
+- 2957362: Throw an error when the user tries to load an invalid or undefined id
+
+## 0.11.6
+
+### Patch Changes
+
+- 8ed144e: Fix transaction sorting when the timestamps are equal
+
+## 0.11.5
+
+### Patch Changes
+
+- 60f5b3f: Downgrade the WasmCrypto initialization error logging to a warning
+
+## 0.11.4
+
+### Patch Changes
+
+- 7f036c1: Use PureJSCrypto as fallback when WasmCrypto fails to initialize
+
+## 0.11.3
+
+### Patch Changes
+
+- 68b0242: Improve the error logging to have more information on errors leveraging the pino err serializer
+
+## 0.11.0
+
+### Minor Changes
+
+- e22de9f: Fix roleOf resolution for "everyone"
+- 34cbdc3: Added revokeExtend method to Group
+
+### Patch Changes
+
+- b9d194a: Added getAllMemberKeysSet method on RawGroup
+  Add everyone to the possible inputs of Group.roleOf
+- a4713df: Moving to the d.ts files for the exported type definitions
+- 0f67e0a: Allow optional fields in types passed to co.json
+
+## 0.10.15
+
+### Patch Changes
+
+- f86e278: Downgrade the permissions error logs to debug
+
 ## 0.10.8
 
 ### Patch Changes

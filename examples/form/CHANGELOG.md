@@ -1,5 +1,168 @@
 # form
 
+## 0.1.15
+
+### Patch Changes
+
+- Updated dependencies [3129982]
+  - jazz-react@0.13.4
+  - jazz-tools@0.13.4
+
+## 0.1.14
+
+### Patch Changes
+
+- Updated dependencies [12f8bfa]
+- Updated dependencies [bd57177]
+  - jazz-tools@0.13.3
+  - jazz-react@0.13.3
+
+## 0.1.13
+
+### Patch Changes
+
+- jazz-react@0.13.2
+- jazz-tools@0.13.2
+
+## 0.1.12
+
+### Patch Changes
+
+- Updated dependencies [afd1374]
+  - jazz-tools@0.13.0
+  - jazz-react@0.13.0
+
+## 0.1.11
+
+### Patch Changes
+
+- jazz-react@0.12.2
+- jazz-tools@0.12.2
+
+## 0.1.10
+
+### Patch Changes
+
+- jazz-react@0.12.1
+- jazz-tools@0.12.1
+
+## 0.1.9
+
+### Patch Changes
+
+- Updated dependencies [01523dc]
+- Updated dependencies [4ea87dc]
+- Updated dependencies [1e6da19]
+- Updated dependencies [b6c6a0a]
+  - jazz-tools@0.12.0
+  - jazz-react@0.12.0
+
+## 0.1.8
+
+### Patch Changes
+
+- jazz-react@0.11.8
+- jazz-tools@0.11.8
+
+## 0.1.7
+
+### Patch Changes
+
+- Updated dependencies [a140f55]
+- Updated dependencies [4019918]
+- Updated dependencies [2b0d1b0]
+  - jazz-tools@0.11.7
+  - jazz-react@0.11.7
+
+## 0.1.6
+
+### Patch Changes
+
+- Updated dependencies [e7c85b7]
+- Updated dependencies [8ed144e]
+  - jazz-react@0.11.6
+  - jazz-tools@0.11.6
+  - jazz-browser-media-images@0.11.6
+
+## 0.1.5
+
+### Patch Changes
+
+- jazz-react@0.11.5
+- jazz-tools@0.11.5
+- jazz-browser-media-images@0.11.5
+
+## 0.1.4
+
+### Patch Changes
+
+- Updated dependencies [57a3dbe]
+- Updated dependencies [a717754]
+- Updated dependencies [a91f343]
+  - jazz-tools@0.11.4
+  - jazz-browser-media-images@0.11.4
+  - jazz-react@0.11.4
+
+## 0.1.3
+
+### Patch Changes
+
+- jazz-react@0.11.3
+- jazz-tools@0.11.3
+- jazz-browser-media-images@0.11.3
+
+## 0.1.2
+
+### Patch Changes
+
+- Updated dependencies [6892dc6]
+  - jazz-tools@0.11.2
+  - jazz-react@0.11.2
+  - jazz-browser-media-images@0.11.2
+
+## 0.1.1
+
+### Patch Changes
+
+- jazz-react@0.11.1
+
+## 0.1.0
+
+### Minor Changes
+
+- 18428ea: PasskeyAuth: Sets `profile.name` only if a non-empty username is passed to `signUp`
+
+### Patch Changes
+
+- Updated dependencies [6a96d8b]
+- Updated dependencies [a35249a]
+- Updated dependencies [b9d194a]
+- Updated dependencies [a4713df]
+- Updated dependencies [34cbdc3]
+- Updated dependencies [f039e8f]
+- Updated dependencies [e22de9f]
+  - jazz-tools@0.11.0
+  - jazz-browser-media-images@0.11.0
+  - jazz-react@0.11.0
+
+## 0.0.53
+
+### Patch Changes
+
+- Updated dependencies [2f99de0]
+  - jazz-tools@0.10.15
+  - jazz-browser-media-images@0.10.15
+  - jazz-react@0.10.15
+
+## 0.0.52
+
+### Patch Changes
+
+- Updated dependencies [75211e3]
+  - jazz-tools@0.10.14
+  - jazz-react@0.10.14
+  - jazz-browser-media-images@0.10.14
+
 ## 0.0.51
 
 ### Patch Changes

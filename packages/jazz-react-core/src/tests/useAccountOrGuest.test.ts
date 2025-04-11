@@ -1,12 +1,10 @@
 // @vitest-environment happy-dom
 
-import { Account, CoMap, co } from "jazz-tools";
+import { Account, CoMap, RefsToResolve, co } from "jazz-tools";
 import { describe, expect, it } from "vitest";
-import { createUseAccountHooks } from "../index.js";
+import { useAccountOrGuest } from "../index.js";
 import { createJazzTestAccount, createJazzTestGuest } from "../testing.js";
 import { renderHook } from "./testUtils.js";
-
-const { useAccountOrGuest } = createUseAccountHooks<Account>();
 
 describe("useAccountOrGuest", () => {
   it("should return the correct me value", async () => {
@@ -48,8 +46,10 @@ describe("useAccountOrGuest", () => {
 
     const { result } = renderHook(
       () =>
-        useAccountOrGuest({
-          root: {},
+        useAccountOrGuest<AccountSchema, RefsToResolve<{ root: true }>>({
+          resolve: {
+            root: true,
+          },
         }),
       {
         account,
@@ -66,7 +66,9 @@ describe("useAccountOrGuest", () => {
     const { result } = renderHook(
       () =>
         useAccountOrGuest({
-          root: {},
+          resolve: {
+            root: true,
+          },
         }),
       {
         account,

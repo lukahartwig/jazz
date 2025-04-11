@@ -1,11 +1,13 @@
 import { Icon } from "gcmp-design-system/src/app/components/atoms/Icon";
 import Link from "next/link";
 import { ReactNode } from "react";
-import { getHighlighter } from "shiki";
+import { createHighlighter } from "shiki";
+import { jazzDark } from "../../themes/jazzDark.mjs";
+import { jazzLight } from "../../themes/jazzLight.mjs";
 
-const highlighter = getHighlighter({
-  langs: ["typescript", "bash"],
-  theme: "css-variables", // use the theme
+const highlighterPromise = createHighlighter({
+  langs: ["typescript", "bash", "tsx", "json", "svelte", "vue"],
+  themes: [jazzLight as any, jazzDark as any],
 });
 
 export function Example({ children }: { children: ReactNode }) {
@@ -30,27 +32,17 @@ export async function Highlight({
   lang?: string;
   className?: string;
 }) {
-  const lines = (await highlighter).codeToThemedTokens(
-    children,
+  const html = (await highlighterPromise).codeToHtml(children, {
     lang,
-    "css-variables",
-  );
+    structure: "inline",
+    themes: {
+      light: "jazz-light",
+      dark: "jazz-dark",
+    },
+  });
 
   return (
-    <code className={className}>
-      {lines
-        .filter((_, i) => !hide?.includes(i))
-        .map((line, i, all) => (
-          <>
-            {line.map((token, i) => (
-              <span key={i} style={{ color: token.color }}>
-                {token.content}
-              </span>
-            ))}
-            {i !== all.length - 1 && <br />}
-          </>
-        ))}
-    </code>
+    <code className={className} dangerouslySetInnerHTML={{ __html: html }} />
   );
 }
 
@@ -73,7 +65,7 @@ export function ClassOrInterface({
     <div className="relative not-prose">
       <div
         id={name}
-        className="peer sticky top-0 mt-4 md:top-[72px] md:pt-8 bg-white dark:bg-stone-950 z-20"
+        className="peer sticky top-0 mt-4 md:top-[61px] md:pt-8 bg-white dark:bg-stone-950 z-20"
       >
         <Link
           href={"#" + name}

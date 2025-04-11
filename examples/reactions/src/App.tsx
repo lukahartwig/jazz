@@ -9,8 +9,7 @@ function App() {
   const router = useIframeHashRouter();
 
   const createReactions = () => {
-    if (!me) return;
-    const group = Group.create({ owner: me });
+    const group = Group.create();
     group.addMember("everyone", "writer");
     const chat = Reactions.create([], { owner: group });
     router.navigate("/#/reactions/" + chat.id);

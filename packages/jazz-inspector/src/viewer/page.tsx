@@ -1,5 +1,10 @@
 import { CoID, LocalNode, RawCoStream, RawCoValue } from "cojson";
-import { useEffect, useState } from "react";
+import { styled } from "goober";
+import { useMemo } from "react";
+import React from "react";
+import { Badge } from "../ui/badge.js";
+import { Heading } from "../ui/heading.js";
+import { Text } from "../ui/text.js";
 import { CoStreamView } from "./co-stream-view.js";
 import { GridView } from "./grid-view.js";
 import { TableView } from "./table-viewer.js";
@@ -8,6 +13,65 @@ import { PageInfo } from "./types.js";
 import { useResolvedCoValue } from "./use-resolve-covalue.js";
 import { AccountOrGroupPreview } from "./value-renderer.js";
 
+interface PageContainerProps extends React.HTMLAttributes<HTMLDivElement> {
+  isTopLevel?: boolean;
+}
+
+const BasePageContainer = React.forwardRef<HTMLDivElement, PageContainerProps>(
+  ({ isTopLevel, ...rest }, ref) => <div ref={ref} {...rest} />,
+);
+
+const PageContainer = styled(BasePageContainer)<PageContainerProps>`
+  position: absolute;
+  z-index: 10;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0 0.75rem;
+`;
+
+const BackButton = styled("div")`
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 2.5rem;
+`;
+
+const HeaderContainer = styled("div")`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+`;
+
+const TitleContainer = styled("div")`
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+`;
+
+const Title = styled(Heading)`
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
+`;
+
+const BadgeContainer = styled("div")`
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+`;
+
+const ContentContainer = styled("div")`
+  overflow: auto;
+`;
+
+const OwnerText = styled(Text)`
+  margin-top: 1rem;
+`;
+
 type PageProps = {
   coId: CoID<RawCoValue>;
   node: LocalNode;
@@ -15,7 +79,8 @@ type PageProps = {
   onNavigate: (newPages: PageInfo[]) => void;
   onHeaderClick?: () => void;
   isTopLevel?: boolean;
-  style: React.CSSProperties;
+  style?: React.CSSProperties;
+  className?: string;
 };
 
 export function Page({
@@ -25,22 +90,21 @@ export function Page({
   onNavigate,
   onHeaderClick,
   style,
+  className = "",
   isTopLevel,
 }: PageProps) {
   const { value, snapshot, type, extendedType } = useResolvedCoValue(
     coId,
     node,
   );
-  const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
 
-  const supportsTableView = type === "colist" || extendedType === "record";
-
-  // Automatically switch to table view if the page is a CoMap record
-  useEffect(() => {
-    if (supportsTableView) {
-      setViewMode("table");
+  const viewMode = useMemo(() => {
+    if (type === "colist" || extendedType === "record") {
+      return "table";
+    } else {
+      return "grid";
     }
-  }, [supportsTableView]);
+  }, [type, extendedType]);
 
   if (snapshot === "unavailable") {
     return <div style={style}>Data unavailable</div>;
@@ -51,104 +115,38 @@ export function Page({
   }
 
   return (
-    <div
-      style={{
-        position: "absolute",
-        inset: 0,
-        backgroundColor: "white",
-        borderWidth: "1px",
-        borderColor: "rgba(0, 0, 0, 0.05)",
-        borderRadius: "0.75rem",
-        boxShadow:
-          "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
-        padding: "1.5rem",
-        width: "100%",
-        height: "100%",
-        backgroundClip: "padding-box",
-      }}
-    >
+    <PageContainer style={style} className={className} isTopLevel={isTopLevel}>
       {!isTopLevel && (
-        <div
-          style={{
-            position: "absolute",
-            left: 0,
-            right: 0,
-            top: 0,
-            height: "2.5rem",
-          }}
+        <BackButton
           aria-label="Back"
           onClick={() => {
             onHeaderClick?.();
           }}
           aria-hidden="true"
-        ></div>
+        ></BackButton>
       )}
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: "1rem",
-        }}
-      >
-        <div
-          style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}
-        >
-          <h2
-            style={{
-              fontSize: "1.5rem",
-              fontWeight: "700",
-              display: "flex",
-              alignItems: "flex-start",
-              flexDirection: "column",
-              gap: "0.25rem",
-            }}
-          >
+      <HeaderContainer>
+        <TitleContainer>
+          <Title>
             <span>
               {name}
               {typeof snapshot === "object" && "name" in snapshot ? (
-                <span style={{ color: "rgb(75, 85, 99)", fontWeight: "500" }}>
+                <span style={{ color: "#57534e", fontWeight: 500 }}>
                   {" "}
                   {(snapshot as { name: string }).name}
                 </span>
               ) : null}
             </span>
-          </h2>
-          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-            <span
-              style={{
-                fontSize: "0.75rem",
-                color: "rgb(55, 65, 81)",
-                fontWeight: "500",
-                padding: "0.125rem 0.25rem",
-                marginLeft: "-0.125rem",
-                borderRadius: "0.25rem",
-                backgroundColor: "rgba(55, 65, 81, 0.05)",
-                display: "inline-block",
-                fontFamily: "monospace",
-              }}
-            >
+          </Title>
+          <BadgeContainer>
+            <Badge>
               {type && <TypeIcon type={type} extendedType={extendedType} />}
-            </span>
-            <span
-              style={{
-                fontSize: "0.75rem",
-                color: "rgb(55, 65, 81)",
-                fontWeight: "500",
-                padding: "0.125rem 0.25rem",
-                marginLeft: "-0.125rem",
-                borderRadius: "0.25rem",
-                backgroundColor: "rgba(55, 65, 81, 0.05)",
-                display: "inline-block",
-                fontFamily: "monospace",
-              }}
-            >
-              {coId}
-            </span>
-          </div>
-        </div>
-      </div>
-      <div style={{ overflow: "auto", maxHeight: "calc(100% - 4rem)" }}>
+            </Badge>
+            <Badge>{coId}</Badge>
+          </BadgeContainer>
+        </TitleContainer>
+      </HeaderContainer>
+      <ContentContainer>
         {type === "costream" ? (
           <CoStreamView
             data={snapshot}
@@ -162,13 +160,7 @@ export function Page({
           <TableView data={snapshot} node={node} onNavigate={onNavigate} />
         )}
         {extendedType !== "account" && extendedType !== "group" && (
-          <div
-            style={{
-              fontSize: "0.75rem",
-              color: "rgb(107, 114, 128)",
-              marginTop: "1rem",
-            }}
-          >
+          <OwnerText muted>
             Owned by{" "}
             <AccountOrGroupPreview
               coId={value.group.id}
@@ -178,9 +170,9 @@ export function Page({
                 onNavigate([{ coId: value.group.id, name: "owner" }]);
               }}
             />
-          </div>
+          </OwnerText>
         )}
-      </div>
-    </div>
+      </ContentContainer>
+    </PageContainer>
   );
 }

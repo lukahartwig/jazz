@@ -1,6 +1,7 @@
 import { clsx } from "clsx";
 import { Card } from "gcmp-design-system/src/app/components/atoms/Card";
 import { H2 } from "gcmp-design-system/src/app/components/atoms/Headings";
+import { Kicker } from "gcmp-design-system/src/app/components/atoms/Kicker";
 import { GappedGrid } from "gcmp-design-system/src/app/components/molecules/GappedGrid";
 import CodeStepAction from "./CodeStepAction.mdx";
 import CodeStepCloud from "./CodeStepCloud.mdx";
@@ -76,25 +77,19 @@ function Step({
 }
 
 export function HowJazzWorksSection() {
-  const imageProps = {
-    alt: "Code samples for defining a schema for Jazz, pushing data, and subscribing to changes.",
-    width: 1100,
-    height: 852,
-  };
-
   return (
     <div className="grid gap-8">
       <div className="grid gap-3">
-        <p className="uppercase text-blue tracking-widest text-sm font-medium dark:text-stone-400">
-          Collaborative Values
-        </p>
+        <Kicker>How it works</Kicker>
 
         <H2>Build entire apps using only client-side code</H2>
       </div>
       <GappedGrid>
         <Step
           step={1}
-          description="Define your schema using Collaborative Values &mdash; your new building blocks."
+          description={
+            'Describe your app’s state with CoValues ("collaborative values"), your new cloud-synced building blocks.'
+          }
         >
           <Code fileName="schema.ts">
             <CodeStepSchema />
@@ -110,7 +105,7 @@ export function HowJazzWorksSection() {
         </Step>
         <Step
           step={3}
-          description="Create a Collaborative Value, and it will be synced and persisted automatically."
+          description="Create and edit CoValues, and they will be synced and persisted automatically."
         >
           <Code fileName="sendMessage.ts">
             <CodeStepAction />
@@ -118,7 +113,7 @@ export function HowJazzWorksSection() {
         </Step>
         <Step
           step={4}
-          description="Read your data like simple local state. Get instant sync and UI updates across all devices and users. 🎉"
+          description="Use CoValues like reactive local state. Get instant UI updates on every edit &mdash; across all devices and users. 🎉"
         >
           <Code fileName="ChatScreen.tsx">
             <CodeStepRender />

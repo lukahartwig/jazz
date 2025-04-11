@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { expectMap } from "../coValue.js";
-import type { CoValueHeader } from "../coValueCore.js";
+import type { CoValueHeader, TryAddTransactionsError } from "../coValueCore.js";
 import type { RawAccountID } from "../coValues/account.js";
 import { type MapOpPayload, RawCoMap } from "../coValues/coMap.js";
 import type { RawGroup } from "../coValues/group.js";
@@ -9,7 +9,7 @@ import { stableStringify } from "../jsonStringify.js";
 import { LocalNode } from "../localNode.js";
 import { getPriorityFromHeader } from "../priority.js";
 import { connectedPeers, newQueuePair } from "../streamUtils.js";
-import type { SyncMessage } from "../sync.js";
+import type { LoadMessage, SyncMessage } from "../sync.js";
 import {
   blockMessageTypeOnOutgoingPeer,
   connectNodeToSyncServer,
@@ -963,29 +963,6 @@ test.skip("When a peer's incoming/readable stream closes, we remove the peer", a
     */
 });
 
-test("If we start loading a coValue before connecting to a peer that has it, it will load it once we connect", async () => {
-  const { node: node1 } = await createConnectedTestNode();
-
-  const group = node1.createGroup();
-
-  const map = group.createMap();
-  map.set("hello", "world", "trusting");
-
-  const node2 = createTestNode();
-
-  const mapOnNode2Promise = loadCoValueOrFail(node2, map.id);
-
-  expect(
-    node2.coValuesStore.getOrCreateEmpty(map.core.id).loadingState,
-  ).toEqual("unknown");
-
-  connectNodeToSyncServer(node2);
-
-  const mapOnNode2 = await mapOnNode2Promise;
-
-  expect(mapOnNode2.get("hello")).toEqual("world");
-});
-
 test("should keep the peer state when the peer closes", async () => {
   const client = createTestNode();
 
@@ -1729,6 +1706,45 @@ describe("loadCoValueCore with retry", () => {
     await expect(promise1).resolves.not.toBe("unavailable");
     await expect(promise2).resolves.not.toBe("unavailable");
   });
+
+  test("should load unavailable coValues after they are synced", async () => {
+    const bob = createTestNode();
+    const alice = createTestNode();
+
+    // Create a group and map on anotherClient
+    const group = alice.createGroup();
+    const map = group.createMap();
+    map.set("key1", "value1", "trusting");
+
+    // Start loading before syncing
+    const result = await bob.loadCoValueCore(map.id);
+
+    expect(result).toBe("unavailable");
+
+    connectTwoPeers(alice, bob, "server", "server");
+
+    const result2 = await bob.loadCoValueCore(map.id);
+
+    expect(result2).not.toBe("unavailable");
+  });
+
+  test("should successfully mark a coValue as unavailable if the server does not have it", async () => {
+    const bob = createTestNode();
+    const alice = createTestNode();
+    const charlie = createTestNode();
+
+    connectTwoPeers(bob, charlie, "client", "server");
+
+    // Create a group and map on anotherClient
+    const group = alice.createGroup();
+    const map = group.createMap();
+    map.set("key1", "value1", "trusting");
+
+    // Start loading before syncing
+    const result = await bob.loadCoValueCore(map.id);
+
+    expect(result).toBe("unavailable");
+  });
 });
 
 describe("waitForSyncWithPeer", () => {
@@ -1893,6 +1909,8 @@ describe("sync protocol", () => {
     const map = group.createMap();
     map.set("hello", "world", "trusting");
 
+    await map.core.waitForSync();
+
     const mapOnJazzCloud = await loadCoValueOrFail(jazzCloud, map.id);
     expect(mapOnJazzCloud.get("hello")).toEqual("world");
 
@@ -2037,6 +2055,29 @@ describe("sync protocol", () => {
           },
         },
       },
+      {
+        from: "server",
+        msg: {
+          action: "known",
+          header: true,
+          id: map.id,
+          sessions: {
+            [client.currentSessionID]: 1,
+          },
+        },
+      },
+      {
+        from: "server",
+        msg: {
+          action: "known",
+          asDependencyOf: undefined,
+          header: true,
+          id: map.id,
+          sessions: {
+            [client.currentSessionID]: 1,
+          },
+        },
+      },
     ]);
   });
 });
@@ -2054,3 +2095,106 @@ function groupStateEx(group: RawGroup) {
     id: group.core.id,
   };
 }
+
+describe("LocalNode.load", () => {
+  test("should throw error when trying to load with undefined ID", async () => {
+    const { node } = await createConnectedTestNode();
+
+    // @ts-expect-error Testing with undefined ID
+    await expect(node.load(undefined)).rejects.toThrow(
+      "Trying to load CoValue with undefined id",
+    );
+  });
+
+  test("should throw error when trying to load with invalid ID format", async () => {
+    const { node } = await createConnectedTestNode();
+
+    // @ts-expect-error Testing with invalid ID format
+    await expect(node.load("invalid_id")).rejects.toThrow(
+      "Trying to load CoValue with invalid id invalid_id",
+    );
+  });
+});
+
+describe("SyncManager.handleSyncMessage", () => {
+  test("should ignore messages with undefined ID", async () => {
+    const { node: client } = await createConnectedTestNode();
+    const peer = client.syncManager.getPeers()[0]!;
+
+    // Create an invalid message with undefined ID
+    const invalidMessage = {
+      action: "load",
+      id: undefined,
+      header: false,
+      sessions: {},
+    } as unknown as LoadMessage;
+
+    await client.syncManager.handleSyncMessage(invalidMessage, peer);
+
+    // Verify that no state changes occurred
+    expect(peer.knownStates.has(invalidMessage.id)).toBe(false);
+    expect(peer.optimisticKnownStates.has(invalidMessage.id)).toBe(false);
+  });
+
+  test("should ignore messages with invalid ID format", async () => {
+    const { node: client } = await createConnectedTestNode();
+    const peer = client.syncManager.getPeers()[0]!;
+
+    // Create an invalid message with wrong ID format
+    const invalidMessage = {
+      action: "load",
+      id: "invalid_id",
+      header: false,
+      sessions: {},
+    } as unknown as LoadMessage;
+
+    await client.syncManager.handleSyncMessage(invalidMessage, peer);
+
+    // Verify that no state changes occurred
+    expect(peer.knownStates.has(invalidMessage.id)).toBe(false);
+    expect(peer.optimisticKnownStates.has(invalidMessage.id)).toBe(false);
+  });
+
+  test("should ignore messages for errored coValues", async () => {
+    const { node: client } = await createConnectedTestNode();
+    const peer = client.syncManager.getPeers()[0]!;
+
+    // Add a coValue to the errored set
+    const erroredId = "co_z123" as const;
+    peer.erroredCoValues.set(
+      erroredId,
+      new Error("Test error") as unknown as TryAddTransactionsError,
+    );
+
+    const message = {
+      action: "load" as const,
+      id: erroredId,
+      header: false,
+      sessions: {},
+    } satisfies LoadMessage;
+
+    await client.syncManager.handleSyncMessage(message, peer);
+
+    // Verify that no state changes occurred
+    expect(peer.knownStates.has(message.id)).toBe(false);
+    expect(peer.optimisticKnownStates.has(message.id)).toBe(false);
+  });
+
+  test("should process valid messages", async () => {
+    const { node: client } = await createConnectedTestNode();
+    const group = client.createGroup();
+    const peer = client.syncManager.getPeers()[0]!;
+
+    const validMessage = {
+      action: "load" as const,
+      id: group.id,
+      header: false,
+      sessions: {},
+    };
+
+    await client.syncManager.handleSyncMessage(validMessage, peer);
+
+    // Verify that the message was processed
+    expect(peer.knownStates.has(group.id)).toBe(true);
+  });
+});

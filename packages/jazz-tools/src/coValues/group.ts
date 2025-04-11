@@ -1,29 +1,36 @@
 import type {
   AccountRole,
+  AgentID,
   Everyone,
   RawAccountID,
   RawGroup,
   Role,
 } from "cojson";
+import { activeAccountContext } from "../implementation/activeAccountContext.js";
 import type {
   CoValue,
   CoValueClass,
-  DeeplyLoaded,
-  DepthsIn,
   ID,
   RefEncoded,
+  RefsToResolve,
+  RefsToResolveStrict,
+  Resolved,
   Schema,
+  SubscribeListenerOptions,
+  SubscribeRestArgs,
 } from "../internal.js";
 import {
   CoValueBase,
-  MembersSym,
   Ref,
+  co,
   ensureCoValueLoaded,
   loadCoValueWithoutMe,
   parseGroupCreateOptions,
+  parseSubscribeRestArgs,
   subscribeToCoValueWithoutMe,
   subscribeToExistingCoValue,
 } from "../internal.js";
+import { RegisteredAccount } from "../types.js";
 import { AccountAndGroupProxyHandler, isControlledAccount } from "./account.js";
 import { type Account } from "./account.js";
 import { type CoMap } from "./coMap.js";
@@ -44,7 +51,6 @@ export class Group extends CoValueBase implements CoValue {
   get _schema(): {
     profile: Schema;
     root: Schema;
-    [MembersSym]: RefEncoded<Account>;
   } {
     return (this.constructor as typeof Group)._schema;
   }
@@ -52,10 +58,6 @@ export class Group extends CoValueBase implements CoValue {
     this._schema = {
       profile: "json" satisfies Schema,
       root: "json" satisfies Schema,
-      [MembersSym]: {
-        ref: () => RegisteredSchemas["Account"],
-        optional: false,
-      } satisfies RefEncoded<Account>,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any;
     Object.defineProperty(this.prototype, "_schema", {
@@ -65,7 +67,6 @@ export class Group extends CoValueBase implements CoValue {
 
   declare profile: Profile | null;
   declare root: CoMap | null;
-  declare [MembersSym]: Account | null;
 
   get _refs(): {
     profile: Ref<Profile> | undefined;
@@ -149,34 +150,73 @@ export class Group extends CoValueBase implements CoValue {
     return this._raw.removeMember(member === "everyone" ? member : member._raw);
   }
 
-  get members() {
-    return this._raw
-      .keys()
-      .filter((key) => {
-        return key === "everyone" || key.startsWith("co_");
-      })
-      .map((id) => {
-        const role = this._raw.get(id as Everyone | RawAccountID);
-        const accountID =
-          id === "everyone" ? undefined : (id as unknown as ID<Account>);
-        const ref =
-          accountID &&
-          new Ref<NonNullable<this[MembersSym]>>(
-            accountID,
-            this._loadedAs,
-            this._schema[MembersSym],
-          );
-        const accessRef = () => ref?.accessFrom(this, "members." + id);
+  get members(): Array<{
+    id: ID<RegisteredAccount>;
+    role: AccountRole;
+    ref: Ref<RegisteredAccount>;
+    account: RegisteredAccount;
+  }> {
+    const members = [];
 
-        return {
-          id: id as unknown as Everyone | ID<this[MembersSym]>,
+    const BaseAccountSchema =
+      (activeAccountContext.maybeGet()?.constructor as typeof Account) ||
+      RegisteredSchemas["Account"];
+    const refEncodedAccountSchema = {
+      ref: () => BaseAccountSchema,
+      optional: false,
+    } satisfies RefEncoded<RegisteredAccount>;
+
+    for (const accountID of this._raw.getAllMemberKeysSet()) {
+      if (!isAccountID(accountID)) continue;
+
+      const role = this._raw.roleOf(accountID);
+
+      if (
+        role === "admin" ||
+        role === "writer" ||
+        role === "reader" ||
+        role === "writeOnly"
+      ) {
+        const ref = new Ref<RegisteredAccount>(
+          accountID as unknown as ID<RegisteredAccount>,
+          this._loadedAs,
+          refEncodedAccountSchema,
+        );
+        const accessRef = () => ref.accessFrom(this, "members." + accountID);
+
+        if (!ref.syncLoad()) {
+          console.warn("Account not loaded", accountID);
+        }
+
+        members.push({
+          id: accountID as unknown as ID<Account>,
           role,
           ref,
           get account() {
-            return accessRef();
+            // Accounts values are non-nullable because are loaded as dependencies
+            return accessRef() as RegisteredAccount;
           },
-        };
-      });
+        });
+      }
+    }
+
+    return members;
+  }
+
+  getRoleOf(member: Everyone | ID<Account> | "me") {
+    if (member === "me") {
+      return this._raw.roleOf(
+        activeAccountContext.get().id as unknown as RawAccountID,
+      );
+    }
+
+    return this._raw.roleOf(
+      member === "everyone" ? member : (member as unknown as RawAccountID),
+    );
+  }
+
+  getParentGroups(): Array<Group> {
+    return this._raw.getParentGroups().map((group) => Group.fromRaw(group));
   }
 
   extend(
@@ -187,74 +227,65 @@ export class Group extends CoValueBase implements CoValue {
     return this;
   }
 
-  /** @category Subscription & Loading */
-  static load<C extends Group, Depth>(
-    this: CoValueClass<C>,
-    id: ID<C>,
-    depth: Depth & DepthsIn<C>,
-  ): Promise<DeeplyLoaded<C, Depth> | undefined>;
-  static load<C extends Group, Depth>(
-    this: CoValueClass<C>,
-    id: ID<C>,
-    as: Account,
-    depth: Depth & DepthsIn<C>,
-  ): Promise<DeeplyLoaded<C, Depth> | undefined>;
-  static load<C extends Group, Depth>(
-    this: CoValueClass<C>,
-    id: ID<C>,
-    asOrDepth: Account | (Depth & DepthsIn<C>),
-    depth?: Depth & DepthsIn<C>,
-  ): Promise<DeeplyLoaded<C, Depth> | undefined> {
-    return loadCoValueWithoutMe(this, id, asOrDepth, depth);
+  async revokeExtend(parent: Group) {
+    await this._raw.revokeExtend(parent._raw);
+    return this;
   }
 
   /** @category Subscription & Loading */
-  static subscribe<C extends Group, Depth>(
-    this: CoValueClass<C>,
-    id: ID<C>,
-    depth: Depth & DepthsIn<C>,
-    listener: (value: DeeplyLoaded<C, Depth>) => void,
+  static load<G extends Group, const R extends RefsToResolve<G>>(
+    this: CoValueClass<G>,
+    id: ID<G>,
+    options?: { resolve?: RefsToResolveStrict<G, R>; loadAs?: Account },
+  ): Promise<Resolved<G, R> | null> {
+    return loadCoValueWithoutMe(this, id, options);
+  }
+
+  /** @category Subscription & Loading */
+  static subscribe<G extends Group, const R extends RefsToResolve<G>>(
+    this: CoValueClass<G>,
+    id: ID<G>,
+    listener: (value: Resolved<G, R>, unsubscribe: () => void) => void,
   ): () => void;
-  static subscribe<C extends Group, Depth>(
-    this: CoValueClass<C>,
-    id: ID<C>,
-    as: Account,
-    depth: Depth & DepthsIn<C>,
-    listener: (value: DeeplyLoaded<C, Depth>) => void,
+  static subscribe<G extends Group, const R extends RefsToResolve<G>>(
+    this: CoValueClass<G>,
+    id: ID<G>,
+    options: SubscribeListenerOptions<G, R>,
+    listener: (value: Resolved<G, R>, unsubscribe: () => void) => void,
   ): () => void;
-  static subscribe<C extends Group, Depth>(
-    this: CoValueClass<C>,
-    id: ID<C>,
-    asOrDepth: Account | (Depth & DepthsIn<C>),
-    depthOrListener:
-      | (Depth & DepthsIn<C>)
-      | ((value: DeeplyLoaded<C, Depth>) => void),
-    listener?: (value: DeeplyLoaded<C, Depth>) => void,
+  static subscribe<G extends Group, const R extends RefsToResolve<G>>(
+    this: CoValueClass<G>,
+    id: ID<G>,
+    ...args: SubscribeRestArgs<G, R>
   ): () => void {
-    return subscribeToCoValueWithoutMe<C, Depth>(
-      this,
-      id,
-      asOrDepth,
-      depthOrListener,
-      listener,
-    );
+    const { options, listener } = parseSubscribeRestArgs(args);
+    return subscribeToCoValueWithoutMe<G, R>(this, id, options, listener);
   }
 
   /** @category Subscription & Loading */
-  ensureLoaded<G extends Group, Depth>(
+  ensureLoaded<G extends Group, const R extends RefsToResolve<G>>(
     this: G,
-    depth: Depth & DepthsIn<G>,
-  ): Promise<DeeplyLoaded<G, Depth>> {
-    return ensureCoValueLoaded(this, depth);
+    options?: { resolve?: RefsToResolveStrict<G, R> },
+  ): Promise<Resolved<G, R>> {
+    return ensureCoValueLoaded(this, options);
   }
 
   /** @category Subscription & Loading */
-  subscribe<G extends Group, Depth>(
+  subscribe<G extends Group, const R extends RefsToResolve<G>>(
     this: G,
-    depth: Depth & DepthsIn<G>,
-    listener: (value: DeeplyLoaded<G, Depth>) => void,
+    listener: (value: Resolved<G, R>, unsubscribe: () => void) => void,
+  ): () => void;
+  subscribe<G extends Group, const R extends RefsToResolve<G>>(
+    this: G,
+    options: { resolve?: RefsToResolveStrict<G, R> },
+    listener: (value: Resolved<G, R>, unsubscribe: () => void) => void,
+  ): () => void;
+  subscribe<G extends Group, const R extends RefsToResolve<G>>(
+    this: G,
+    ...args: SubscribeRestArgs<G, R>
   ): () => void {
-    return subscribeToExistingCoValue(this, depth, listener);
+    const { options, listener } = parseSubscribeRestArgs(args);
+    return subscribeToExistingCoValue(this, options, listener);
   }
 
   /**
@@ -268,3 +299,7 @@ export class Group extends CoValueBase implements CoValue {
 }
 
 RegisteredSchemas["Group"] = Group;
+
+export function isAccountID(id: RawAccountID | AgentID): id is RawAccountID {
+  return id.startsWith("co_");
+}

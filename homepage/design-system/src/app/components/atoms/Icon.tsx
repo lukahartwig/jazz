@@ -1,4 +1,5 @@
 import {
+  AlertTriangleIcon,
   ArrowDownIcon,
   ArrowRightIcon,
   BookTextIcon,
@@ -6,8 +7,8 @@ import {
   CheckIcon,
   ChevronDown,
   ChevronRight,
+  ClipboardIcon,
   CodeIcon,
-  CopyIcon,
   FileLock2Icon,
   FileTextIcon,
   FingerprintIcon,
@@ -16,14 +17,16 @@ import {
   GlobeIcon,
   HashIcon,
   ImageIcon,
+  InfoIcon,
   LinkIcon,
   LockKeyholeIcon,
-  LucideIcon,
+  type LucideIcon,
   MailIcon,
   MenuIcon,
   MessageCircleQuestionIcon,
   MonitorSmartphoneIcon,
   MoonIcon,
+  MousePointer2Icon,
   MousePointerSquareDashedIcon,
   ScanFace,
   ScrollIcon,
@@ -46,7 +49,8 @@ const icons = {
   chevronDown: ChevronDown,
   close: XIcon,
   code: CodeIcon,
-  copy: CopyIcon,
+  copy: ClipboardIcon,
+  cursor: MousePointer2Icon,
   darkTheme: MoonIcon,
   delete: TrashIcon,
   devices: MonitorSmartphoneIcon,
@@ -71,6 +75,8 @@ const icons = {
   touchId: FingerprintIcon,
   upload: UploadCloudIcon,
   zip: FolderArchiveIcon,
+  warning: AlertTriangleIcon,
+  info: InfoIcon,
 };
 
 // copied from tailwind line height https://tailwindcss.com/docs/font-size
@@ -108,6 +114,8 @@ const strokeWidths = {
   "9xl": 1,
 };
 
+export type IconName = keyof typeof icons;
+
 export function Icon({
   name,
   icon,
@@ -115,7 +123,7 @@ export function Icon({
   className,
   ...svgProps
 }: {
-  name?: string;
+  name?: IconName;
   icon?: LucideIcon;
   size?: keyof typeof sizes;
   className?: string;

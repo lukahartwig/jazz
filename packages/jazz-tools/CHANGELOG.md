@@ -1,5 +1,156 @@
 # jazz-tools
 
+## 0.13.4
+
+### Patch Changes
+
+- 3129982: Add logOutReplacement hook to replace the Jazz logout function with a custom one
+
+## 0.13.3
+
+### Patch Changes
+
+- 12f8bfa: Log permission errors when loading or subscribing to values
+- bd57177: Handle null properties in the CoMap deep loading
+
+## 0.13.2
+
+### Patch Changes
+
+- Updated dependencies [c551839]
+  - cojson@0.13.2
+
+## 0.13.0
+
+### Patch Changes
+
+- afd1374: Accept null as initial value for createCoValueObservable
+- Updated dependencies [a013538]
+- Updated dependencies [bce3bcc]
+  - cojson@0.13.0
+
+## 0.12.2
+
+### Patch Changes
+
+- Updated dependencies [c2f4827]
+  - cojson@0.12.2
+
+## 0.12.1
+
+### Patch Changes
+
+- Updated dependencies [5a00fe0]
+  - cojson@0.12.1
+
+## 0.12.0
+
+### Minor Changes
+
+- 01523dc: Check CoValue access permissions when loading
+- 4ea87dc: Implement new API for deep loading
+- 1e6da19: The .load function now returns `null` on error
+
+### Patch Changes
+
+- b6c6a0a: Make the linkAccounts test utility wait for the accounts coValues to be synced
+- Updated dependencies [01523dc]
+- Updated dependencies [01523dc]
+  - cojson@0.12.0
+
+## 0.11.8
+
+### Patch Changes
+
+- Updated dependencies [6c86c4f]
+- Updated dependencies [9d0c9dc]
+  - cojson@0.11.8
+
+## 0.11.7
+
+### Patch Changes
+
+- a140f55: Bugfix: Trigger a single update when loading a locally available list of items
+- 2b0d1b0: Export CoFeedEntry type
+- Updated dependencies [2b94bc8]
+- Updated dependencies [2957362]
+  - cojson@0.11.7
+
+## 0.11.6
+
+### Patch Changes
+
+- e7c85b7: Add targetWidth to highestResAvailable to add a way to fetch the next size up
+- Updated dependencies [8ed144e]
+  - cojson@0.11.6
+
+## 0.11.5
+
+### Patch Changes
+
+- Updated dependencies [60f5b3f]
+  - cojson@0.11.5
+
+## 0.11.4
+
+### Patch Changes
+
+- 57a3dbe: Throw when assigning invalid values to ref fields
+- a717754: Use RegisteredAccount types for `by` props
+- a91f343: Fixes coList.splice to handle insertions at start of list
+- Updated dependencies [7f036c1]
+  - cojson@0.11.4
+
+## 0.11.3
+
+### Patch Changes
+
+- Updated dependencies [68b0242]
+  - cojson@0.11.3
+
+## 0.11.2
+
+### Patch Changes
+
+- 6892dc6: Adds `applyDiff` to `CoList`
+
+## 0.11.0
+
+### Minor Changes
+
+- b9d194a: Make members return inherited members
+  Added getRoleOf method to Account and Group
+  Added canRead, canWrite, canAdmin methods to Account so simplify permissions checks
+- 34cbdc3: Added revokeExtend method to Group
+- f039e8f: Remove co.members and use RegisteredAccount and the configured AccountSchema to setup the members Account class. Remove everyone from Group.members results
+- e22de9f: Fix profile migrations
+
+### Patch Changes
+
+- 6a96d8b: Add getParentGroups API to Group
+- a35249a: Fix CoMap.toJSON() with encoded fields
+- a4713df: Moving to the d.ts files for the exported type definitions
+- Updated dependencies [b9d194a]
+- Updated dependencies [a4713df]
+- Updated dependencies [e22de9f]
+- Updated dependencies [34cbdc3]
+- Updated dependencies [0f67e0a]
+  - cojson@0.11.0
+
+## 0.10.15
+
+### Patch Changes
+
+- 2f99de0: Avoid race conditions on context creation and run the anonymous migration only when the hook is provided
+- Updated dependencies [f86e278]
+  - cojson@0.10.15
+
+## 0.10.14
+
+### Patch Changes
+
+- 75211e3: Fixes invalid authentication state when logging out after signUp
+
 ## 0.10.13
 
 ### Patch Changes
