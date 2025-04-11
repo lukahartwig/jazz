@@ -1,5 +1,4 @@
 import { CoValueUniqueness } from "cojson";
-import { RawCoMap } from "cojson/src/exports.js";
 import { TypeOf, ZodString, ZodTypeAny, z } from "zod";
 import { Account } from "../../coValues/account.js";
 import { Group } from "../../coValues/group.js";
@@ -7,7 +6,6 @@ import { parseCoValueCreateOptions } from "../../internal.js";
 import { LazySchema } from "../coValue/lazy.js";
 import {
   IsDepthLimit,
-  ResolveQueryOf,
   SchemaOf,
   flatten,
   simplifyResolveQuery,
