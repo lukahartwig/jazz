@@ -1,6 +1,12 @@
-import { JazzClerkAuth, type MinimalClerkClient } from "jazz-auth-clerk";
-import { useEffect, useMemo } from "react";
 import {
+  JazzClerkAuth,
+  type MinimalClerkClient,
+  isClerkCredentials,
+} from "jazz-auth-clerk";
+import { AuthSecretStorage, KvStoreContext } from "jazz-tools";
+import { useEffect, useMemo, useState } from "react";
+import {
+  ExpoSecureStoreAdapter,
   JazzProvider,
   JazzProviderProps,
   useAuthSecretStorage,
@@ -20,10 +26,7 @@ function useJazzClerkAuth(clerk: MinimalClerkClient) {
   }, []);
 
   useEffect(() => {
-    // Need to use addListener because the clerk user object is not updated when the user logs in
-    return clerk.addListener((event) => {
-      authMethod.onClerkUserChange(event as Pick<MinimalClerkClient, "user">);
-    });
+    return authMethod.registerListener(clerk);
   }, []);
 }
 
@@ -37,9 +40,34 @@ function RegisterClerkAuth(props: {
 
 export const JazzProviderWithClerk = (
   props: { clerk: MinimalClerkClient } & JazzProviderProps,
-): JSX.Element => {
+): JSX.Element | null => {
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  /**
+   * This effect ensures that a logged-in Clerk user is authenticated before the JazzProvider is mounted.
+   *
+   * This is done to optimize the initial load.
+   */
+  useEffect(() => {
+    KvStoreContext.getInstance().initialize(
+      props.kvStore ?? new ExpoSecureStoreAdapter(),
+    );
+
+    JazzClerkAuth.initializeAuth(props.clerk)
+      .then(() => {
+        setIsLoaded(true);
+      })
+      .catch((error) => {
+        console.error("error initializing auth", error);
+      });
+  }, []);
+
+  if (!isLoaded) {
+    return null;
+  }
+
   return (
-    <JazzProvider {...props} onLogOut={props.clerk.signOut}>
+    <JazzProvider {...props} logOutReplacement={props.clerk.signOut}>
       <RegisterClerkAuth clerk={props.clerk}>
         {props.children}
       </RegisterClerkAuth>

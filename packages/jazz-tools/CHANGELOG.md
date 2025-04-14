@@ -1,5 +1,26 @@
 # jazz-tools
 
+## 0.13.5
+
+### Patch Changes
+
+- fe6f561: Gracefully handle unavailable messages error in the Inbox
+- Updated dependencies [e090b39]
+  - cojson@0.13.5
+
+## 0.13.4
+
+### Patch Changes
+
+- 3129982: Add logOutReplacement hook to replace the Jazz logout function with a custom one
+
+## 0.13.3
+
+### Patch Changes
+
+- 12f8bfa: Log permission errors when loading or subscribing to values
+- bd57177: Handle null properties in the CoMap deep loading
+
 ## 0.13.2
 
 ### Patch Changes

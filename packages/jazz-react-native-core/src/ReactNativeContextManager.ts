@@ -17,6 +17,7 @@ export type JazzContextManagerProps<Acc extends Account> = {
   guestMode?: boolean;
   sync: SyncConfig;
   onLogOut?: () => void;
+  logOutReplacement?: () => void;
   storage?: BaseReactNativeContextOptions["storage"];
   AccountSchema?: AccountClass<Acc>;
   defaultProfileName?: string;

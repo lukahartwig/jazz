@@ -1,5 +1,5 @@
-import { Icon404 } from 'gcmp-design-system/src/app/components/atoms/icons/404'
- 
+import { Icon404 } from "gcmp-design-system/src/app/components/atoms/icons/404";
+
 export default function NotFound() {
   const text = "Don't Worry 'Bout Me";
 
@@ -9,5 +9,5 @@ export default function NotFound() {
       <h1 className="text-3xl font-semibold my-7">{text}</h1>
       <p>Page not found.</p>
     </div>
-  )
+  );
 }

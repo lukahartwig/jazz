@@ -190,8 +190,10 @@ export function withTocAndFrameworkHeadingsVisibilityExport() {
                     type: "VariableDeclarator",
                     id: { type: "Identifier", name: "tableOfContents" },
                     init: valueToEstree(
-                      // exclude h1
-                      vfile.data.toc.length ? vfile.data.toc[0].children : [],
+                      // exclude h1, but handle case where toc is empty or has no children
+                      vfile.data.toc.length && vfile.data.toc[0].children
+                        ? vfile.data.toc[0].children
+                        : [],
                     ),
                   },
                 ],

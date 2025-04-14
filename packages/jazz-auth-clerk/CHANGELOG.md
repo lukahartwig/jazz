@@ -1,5 +1,33 @@
 # jazz-auth-clerk
 
+## 0.13.5
+
+### Patch Changes
+
+- Updated dependencies [e090b39]
+- Updated dependencies [fe6f561]
+  - cojson@0.13.5
+  - jazz-tools@0.13.5
+  - jazz-browser@0.13.5
+
+## 0.13.4
+
+### Patch Changes
+
+- 3129982: Rewrite the auth management making Clerk the source of truth. This fixes the logOut issues as well as making the logout work from the Clerk APIs. When the Clerk session expires now the user is correctly logged out from Jazz\
+- Updated dependencies [3129982]
+  - jazz-browser@0.13.4
+  - jazz-tools@0.13.4
+
+## 0.13.3
+
+### Patch Changes
+
+- Updated dependencies [12f8bfa]
+- Updated dependencies [bd57177]
+  - jazz-tools@0.13.3
+  - jazz-browser@0.13.3
+
 ## 0.13.2
 
 ### Patch Changes

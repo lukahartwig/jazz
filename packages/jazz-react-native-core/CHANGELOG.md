@@ -1,5 +1,37 @@
 # jazz-browser
 
+## 0.13.5
+
+### Patch Changes
+
+- Updated dependencies [e090b39]
+- Updated dependencies [fe6f561]
+  - cojson@0.13.5
+  - jazz-tools@0.13.5
+  - cojson-storage@0.13.5
+  - cojson-transport-ws@0.13.5
+  - jazz-react-core@0.13.5
+
+## 0.13.4
+
+### Patch Changes
+
+- 3129982: Add logOutReplacement hook to replace the Jazz logout function with a custom one
+- Updated dependencies [3129982]
+  - jazz-tools@0.13.4
+  - jazz-react-core@0.13.4
+
+## 0.13.3
+
+### Patch Changes
+
+- Updated dependencies [12f8bfa]
+- Updated dependencies [b19cab7]
+- Updated dependencies [bd57177]
+  - jazz-tools@0.13.3
+  - cojson-transport-ws@0.13.3
+  - jazz-react-core@0.13.3
+
 ## 0.13.2
 
 ### Patch Changes

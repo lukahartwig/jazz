@@ -2,28 +2,39 @@ import "../global.css";
 import { ClerkLoaded, ClerkProvider } from "@clerk/clerk-expo";
 import { secureStore } from "@clerk/clerk-expo/secure-store";
 import { useFonts } from "expo-font";
-import { Slot } from "expo-router";
+import { Slot, useRouter, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
+import { useIsAuthenticated, useJazzContext } from "jazz-expo";
 import React, { useEffect } from "react";
 import { tokenCache } from "../cache";
 import { JazzAndAuth } from "../src/auth-context";
 
 SplashScreen.preventAutoHideAsync();
 
-export default function RootLayout() {
-  const [loaded] = useFonts({
-    SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
-  });
+function InitialLayout() {
+  const isAuthenticated = useIsAuthenticated();
+  const segments = useSegments();
+  const router = useRouter();
 
   useEffect(() => {
-    if (loaded) {
-      SplashScreen.hideAsync();
-    }
-  }, [loaded]);
+    const inAuthGroup = segments[0] === "(auth)";
 
-  if (!loaded) {
-    return null;
-  }
+    if (isAuthenticated && inAuthGroup) {
+      router.replace("/chat");
+    } else if (!isAuthenticated && !inAuthGroup) {
+      router.replace("/");
+    }
+
+    SplashScreen.hideAsync();
+  }, [isAuthenticated, segments, router]);
+
+  return <Slot />;
+}
+
+export default function RootLayout() {
+  const [fontsLoaded] = useFonts({
+    SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
+  });
 
   const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY;
 
@@ -31,6 +42,17 @@ export default function RootLayout() {
     throw new Error(
       "Missing Publishable Key. Please set EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY in your .env",
     );
+  }
+
+  useEffect(() => {
+    if (fontsLoaded) {
+    } else {
+      SplashScreen.preventAutoHideAsync();
+    }
+  }, [fontsLoaded]);
+
+  if (!fontsLoaded) {
+    return null;
   }
 
   return (
@@ -41,7 +63,7 @@ export default function RootLayout() {
     >
       <ClerkLoaded>
         <JazzAndAuth>
-          <Slot />
+          <InitialLayout />
         </JazzAndAuth>
       </ClerkLoaded>
     </ClerkProvider>
