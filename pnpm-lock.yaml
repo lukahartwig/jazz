@@ -2202,9 +2202,6 @@ importers:
 
   packages/jazz-react-core:
     dependencies:
-      better-auth:
-        specifier: ^1.2.2
-        version: 1.2.7
       cojson:
         specifier: workspace:*
         version: link:../cojson
@@ -2451,9 +2448,6 @@ importers:
 
   packages/jazz-tools:
     dependencies:
-      '@better-auth/expo':
-        specifier: ^1.2.3
-        version: 1.2.7(better-auth@1.2.7)
       '@scure/bip39':
         specifier: ^1.3.0
         version: 1.5.0
@@ -3574,11 +3568,6 @@ packages:
   '@bcoe/v8-coverage@1.0.2':
     resolution: {integrity: sha512-6zABk/ECA/QYSCQ1NGiVwwbQerUCZ+TQbp64Q3AgmfNvurHH0j8TtXa1qbShXA6qqkpAj4V5W8pP6mLe1mcMqA==}
     engines: {node: '>=18'}
-
-  '@better-auth/expo@1.2.7':
-    resolution: {integrity: sha512-g8qBx7lBFfOWvAzWwNUVZr6IWYwBcZ7D/HcTzBG1zoZmD7PbdseQugWlIeS711vZ/Qqez7ZV0mDwpk2h+uT4nQ==}
-    peerDependencies:
-      better-auth: 1.2.7
 
   '@better-auth/utils@0.2.4':
     resolution: {integrity: sha512-ayiX87Xd5sCHEplAdeMgwkA0FgnXsEZBgDn890XHHwSWNqqRZDYOq3uj2Ei2leTv1I2KbG5HHn60Ah1i2JWZjQ==}
@@ -14524,13 +14513,6 @@ snapshots:
   '@bcoe/v8-coverage@0.2.3': {}
 
   '@bcoe/v8-coverage@1.0.2': {}
-
-  '@better-auth/expo@1.2.7(better-auth@1.2.7)':
-    dependencies:
-      '@better-fetch/fetch': 1.1.18
-      better-auth: 1.2.7
-      better-call: 1.0.8
-      zod: 3.24.2
 
   '@better-auth/utils@0.2.4':
     dependencies:
