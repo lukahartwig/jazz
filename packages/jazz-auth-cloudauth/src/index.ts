@@ -91,7 +91,9 @@ export class CloudAuth {
     }); // Sends the credentials to the authentication server.
 
     const currentAccount = await Account.getMe().ensureLoaded({
-      profile: {},
+      resolve: {
+        profile: true,
+      },
     });
     currentAccount.profile.name = session.user.name;
     await CloudAuth.loadAuthData(this.authSecretStorage, credentials);
