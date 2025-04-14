@@ -9,7 +9,8 @@ export type MagicLinkAuthCreateAsProviderStatus =
   | "confirmationCodeCorrect"
   | "confirmationCodeIncorrect"
   | "authorized"
-  | "error";
+  | "error"
+  | "cancelled";
 
 export class MagicLinkAuthCreateAsProvider {
   constructor(
@@ -20,6 +21,7 @@ export class MagicLinkAuthCreateAsProvider {
   }
 
   private options: MagicLinkAuthProviderOptions;
+  private abortController: AbortController | null = null;
 
   public authState: {
     status: MagicLinkAuthCreateAsProviderStatus;
@@ -37,6 +39,9 @@ export class MagicLinkAuthCreateAsProvider {
   }
 
   public createLink = async () => {
+    this.abortController = new AbortController();
+    const { signal } = this.abortController;
+
     let transfer = await this.magicLinkAuth.createTransferAsProvider();
 
     const url = this.magicLinkAuth.createLink("consumer", transfer);
@@ -49,7 +54,7 @@ export class MagicLinkAuthCreateAsProvider {
 
         transfer = await waitForCoValueCondition(
           transfer,
-          {},
+          { abortSignal: signal },
           (t) => Boolean(t.acceptedBy),
           this.options.expireInMs,
         );
@@ -64,7 +69,7 @@ export class MagicLinkAuthCreateAsProvider {
 
         transfer = await waitForCoValueCondition(
           transfer,
-          {},
+          { abortSignal: signal },
           (t) => Boolean(t.confirmationCodeInput),
           this.options.expireInMs,
         );
@@ -85,15 +90,21 @@ export class MagicLinkAuthCreateAsProvider {
         // Wait for the transfer to be authorized and update the status
         await waitForCoValueCondition(
           transfer,
-          {},
+          { abortSignal: signal },
           (t) => t.status === "authorized",
         );
         this.status = "authorized";
         this.notify();
       } catch (error) {
-        console.error("Magic Link Auth error", error);
-        this.status = "error";
+        if (error instanceof Error && error.message.startsWith("Aborted")) {
+          this.status = "cancelled";
+        } else {
+          console.error("Magic Link Auth error", error);
+          this.status = "error";
+        }
         this.notify();
+      } finally {
+        this.abortController = null;
       }
     };
 
@@ -101,6 +112,10 @@ export class MagicLinkAuthCreateAsProvider {
 
     return url;
   };
+
+  public cancelFlow() {
+    this.abortController?.abort();
+  }
 
   listeners = new Set<() => void>();
   subscribe = (callback: () => void): (() => void) => {

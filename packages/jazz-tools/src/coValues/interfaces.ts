@@ -495,7 +495,11 @@ export function waitForCoValueCondition<
   const R extends RefsToResolve<V>,
 >(
   existing: V,
-  options: {
+  {
+    abortSignal,
+    ...options
+  }: {
+    abortSignal?: AbortSignal;
     resolve?: RefsToResolveStrict<V, R>;
     onUnavailable?: () => void;
     onUnauthorized?: () => void;
@@ -504,14 +508,21 @@ export function waitForCoValueCondition<
   timeoutMs = 15000,
 ): Promise<V> {
   return new Promise((resolve, reject) => {
-    let aborted = false;
+    let done = false;
     let unsubscribe = () => {};
 
-    const abort = () => {
-      aborted = true;
+    const cleanUp = () => {
+      done = true;
       unsubscribe();
       clearTimeout(timeout);
     };
+
+    const abort = () => {
+      cleanUp();
+      reject(new Error("Aborted waiting for CoValue condition"));
+    };
+
+    abortSignal?.addEventListener("abort", abort);
 
     subscribeToCoValue(
       existing.constructor as CoValueClass<V>,
@@ -522,17 +533,17 @@ export function waitForCoValueCondition<
       },
       (value, unsubscribeParam) => {
         unsubscribe = unsubscribeParam;
-        if (aborted) return;
+        if (done) return;
 
         if (conditionFn(value)) {
-          abort();
+          cleanUp();
           resolve(value);
         }
       },
     );
 
     const timeout = setTimeout(() => {
-      abort();
+      cleanUp();
       reject(new Error("Timeout waiting for CoValue condition"));
     }, timeoutMs);
   });

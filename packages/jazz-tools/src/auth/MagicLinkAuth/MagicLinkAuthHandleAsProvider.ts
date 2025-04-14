@@ -7,7 +7,8 @@ export type MagicLinkAuthHandleAsProviderStatus =
   | "confirmationCodeGenerated"
   | "confirmationCodeIncorrect"
   | "authorized"
-  | "error";
+  | "error"
+  | "cancelled";
 
 export class MagicLinkAuthHandleAsProvider {
   constructor(
@@ -19,6 +20,7 @@ export class MagicLinkAuthHandleAsProvider {
   }
 
   private options: MagicLinkAuthProviderOptions;
+  private abortController: AbortController | null = null;
 
   public authState: {
     status: MagicLinkAuthHandleAsProviderStatus;
@@ -36,6 +38,9 @@ export class MagicLinkAuthHandleAsProvider {
   }
 
   public async handleFlow() {
+    this.abortController = new AbortController();
+    const { signal } = this.abortController;
+
     try {
       let transfer = await this.magicLinkAuth.acceptTransferUrl(
         this.url,
@@ -51,7 +56,7 @@ export class MagicLinkAuthHandleAsProvider {
       // Wait for confirmation code input
       transfer = await waitForCoValueCondition(
         transfer,
-        {},
+        { abortSignal: signal },
         (t) => Boolean(t.confirmationCodeInput),
         this.options.expireInMs,
       );
@@ -71,16 +76,26 @@ export class MagicLinkAuthHandleAsProvider {
       // Wait for the transfer to be authorized and update the status
       await waitForCoValueCondition(
         transfer,
-        {},
+        { abortSignal: signal },
         (t) => t.status === "authorized",
       );
       this.status = "authorized";
       this.notify();
     } catch (error) {
-      console.error("Magic Link Auth error", error);
-      this.status = "error";
+      if (error instanceof Error && error.message.startsWith("Aborted")) {
+        this.status = "cancelled";
+      } else {
+        console.error("Magic Link Auth error", error);
+        this.status = "error";
+      }
       this.notify();
+    } finally {
+      this.abortController = null;
     }
+  }
+
+  public cancelFlow() {
+    this.abortController?.abort();
   }
 
   listeners = new Set<() => void>();

@@ -9,7 +9,8 @@ export type MagicLinkAuthCreateAsConsumerStatus =
   | "confirmationCodePending"
   | "confirmationCodeIncorrect"
   | "authorized"
-  | "error";
+  | "error"
+  | "cancelled";
 
 export class MagicLinkAuthCreateAsConsumer {
   constructor(
@@ -20,6 +21,7 @@ export class MagicLinkAuthCreateAsConsumer {
   }
 
   private options: MagicLinkAuthConsumerOptions;
+  private abortController: AbortController | null = null;
 
   public authState: {
     status: MagicLinkAuthCreateAsConsumerStatus;
@@ -39,6 +41,9 @@ export class MagicLinkAuthCreateAsConsumer {
   }
 
   public async createLink() {
+    this.abortController = new AbortController();
+    const { signal } = this.abortController;
+
     let transfer = await this.magicLinkAuth.createTransferAsConsumer();
 
     const url = this.magicLinkAuth.createLink("provider", transfer);
@@ -51,7 +56,7 @@ export class MagicLinkAuthCreateAsConsumer {
 
         transfer = await waitForCoValueCondition(
           transfer,
-          {},
+          { abortSignal: signal },
           (t) => Boolean(t.acceptedBy),
           this.options.handlerTimeout,
         );
@@ -59,8 +64,9 @@ export class MagicLinkAuthCreateAsConsumer {
         this.status = "confirmationCodeRequired";
         this.notify();
 
-        const code = await new Promise<string>((resolve) => {
+        const code = await new Promise<string>((resolve, reject) => {
           this.sendConfirmationCode = (code: string) => resolve(code);
+          signal.addEventListener("abort", () => reject(new Error("Aborted")));
           this.notify();
         });
 
@@ -71,7 +77,7 @@ export class MagicLinkAuthCreateAsConsumer {
         // Wait for provider to reject or confirm and reveal the secret
         transfer = await waitForCoValueCondition(
           transfer,
-          { resolve: {} },
+          { resolve: {}, abortSignal: signal },
           (t) => t.status === "incorrectCode" || Boolean(t.secret),
           this.options.handlerTimeout,
         );
@@ -88,15 +94,25 @@ export class MagicLinkAuthCreateAsConsumer {
         this.notify();
         this.options.onLoggedIn?.();
       } catch (error) {
-        console.error("Magic Link Auth error", error);
-        this.status = "error";
+        if (error instanceof Error && error.message.startsWith("Aborted")) {
+          this.status = "cancelled";
+        } else {
+          console.error("Magic Link Auth error", error);
+          this.status = "error";
+        }
         this.notify();
+      } finally {
+        this.abortController = null;
       }
     };
 
     handleFlow();
 
     return url;
+  }
+
+  public cancelFlow() {
+    this.abortController?.abort();
   }
 
   listeners = new Set<() => void>();

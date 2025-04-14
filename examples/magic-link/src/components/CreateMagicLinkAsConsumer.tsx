@@ -58,7 +58,7 @@ export function CreateMagicLinkAsConsumer({
 
   if (status === "confirmationCodeIncorrect") {
     return (
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col items-center gap-4">
         <p>Incorrect confirmation code!</p>
 
         <Button color="primary" onClick={onCreateLink}>
@@ -74,10 +74,20 @@ export function CreateMagicLinkAsConsumer({
 
   if (status === "error") {
     return (
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col items-center gap-4">
         <p>Something went wrong</p>
 
         <button onClick={onCreateLink}>Try again</button>
+      </div>
+    );
+  }
+
+  if (status === "cancelled") {
+    return (
+      <div className="flex flex-col items-center gap-4">
+        <p>Cancelled</p>
+
+        <Button onClick={onCreateLink}>Try again</Button>
       </div>
     );
   }

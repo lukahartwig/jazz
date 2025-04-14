@@ -59,6 +59,7 @@ export function useCreateMagicLinkAuthAsProvider(
   return {
     ...authState,
     createLink: () => magicLinkAuth.createLink(),
+    cancelFlow: () => magicLinkAuth.cancelFlow(),
   } as const;
 }
 
@@ -98,6 +99,7 @@ export function useCreateMagicLinkAuthAsConsumer(
   return {
     ...authState,
     createLink: () => magicLinkAuth.createLink(),
+    cancelFlow: () => magicLinkAuth.cancelFlow(),
   } as const;
 }
 
@@ -138,10 +140,15 @@ export function useHandleMagicLinkAuthAsConsumer(
     hasRunRef.current = true;
 
     magicLinkAuth.handleFlow();
+
+    return () => {
+      magicLinkAuth.cancelFlow();
+    };
   }, [url]);
 
   return {
     ...authState,
+    cancelFlow: () => magicLinkAuth.cancelFlow(),
   } as const;
 }
 
@@ -181,9 +188,14 @@ export function useHandleMagicLinkAuthAsProvider(
     hasRunRef.current = true;
 
     magicLinkAuth.handleFlow();
+
+    return () => {
+      magicLinkAuth.cancelFlow();
+    };
   }, [url]);
 
   return {
     ...authState,
+    cancelFlow: () => magicLinkAuth.cancelFlow(),
   } as const;
 }

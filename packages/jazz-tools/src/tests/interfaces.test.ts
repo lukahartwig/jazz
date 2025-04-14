@@ -138,4 +138,23 @@ describe("waitForCoValueCondition", () => {
       "Timeout waiting for CoValue condition",
     );
   });
+
+  it("should abort", async () => {
+    const abortController = new AbortController();
+
+    const promise = waitForCoValueCondition(
+      value,
+      { abortSignal: abortController.signal },
+      (x) => Boolean(x.nothing),
+      1000,
+    );
+
+    setTimeout(() => {
+      abortController.abort();
+    }, 50);
+
+    await expect(promise).rejects.toThrow(
+      "Aborted waiting for CoValue condition",
+    );
+  });
 });
