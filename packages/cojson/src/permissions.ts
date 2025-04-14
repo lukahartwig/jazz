@@ -64,6 +64,10 @@ export function determineValidTransactions(
   coValue: CoValueCore,
   knownTransactions?: CoValueKnownState["sessions"],
 ): { txID: TransactionID; tx: Transaction }[] {
+  if (!coValue.header) {
+    throw new Error("CoValue must have a header to get valid transactions");
+  }
+
   if (coValue.header.ruleset.type === "group") {
     const initialAdmin = coValue.header.ruleset.initialAdmin;
     if (!initialAdmin) {

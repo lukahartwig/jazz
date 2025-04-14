@@ -1062,7 +1062,7 @@ export class CoValueCore {
       case "content":
         return this.handleNewContent(msg, peer);
       case "done":
-        return this.handleUnsubscribe(msg);
+        return this.handleUnsubscribe(msg, peer);
       default:
         throw new Error(
           `Unknown message type ${(msg as { action: "string" }).action}`,

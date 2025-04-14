@@ -259,7 +259,8 @@ export class SyncManager {
     const coValues = this.local.coValuesStore.getValues();
     const validCoValues = Array.from(coValues).filter(
       (coValue) =>
-        coValue.state.type === "available" || coValue.state.type === "loading",
+        coValue.loadingState === "available" ||
+        coValue.loadingState === "loading",
     );
 
     return Promise.all(
