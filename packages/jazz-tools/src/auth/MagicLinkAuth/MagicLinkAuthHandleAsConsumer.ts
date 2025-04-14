@@ -14,7 +14,6 @@ export type MagicLinkAuthHandleAsConsumerStatus =
 export class MagicLinkAuthHandleAsConsumer {
   constructor(
     private magicLinkAuth: MagicLinkAuth,
-    private url: string,
     options?: MagicLinkAuthConsumerOptions,
   ) {
     this.options = { ...defaultOptions, ...options };
@@ -40,13 +39,13 @@ export class MagicLinkAuthHandleAsConsumer {
     this.authState = { ...this.authState, sendConfirmationCode };
   }
 
-  public async handleFlow() {
+  public async handleFlow(url: string) {
     this.abortController = new AbortController();
     const { signal } = this.abortController;
 
     try {
       let transfer = await this.magicLinkAuth.acceptTransferUrl(
-        this.url,
+        url,
         "consumer",
       );
 

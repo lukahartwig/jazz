@@ -125,7 +125,6 @@ export function useHandleMagicLinkAuthAsConsumer(
         origin,
         options,
       ),
-      url,
       { handlerTimeout, onLoggedIn },
     );
   }, [origin]);
@@ -139,7 +138,7 @@ export function useHandleMagicLinkAuthAsConsumer(
     if (hasRunRef.current) return;
     hasRunRef.current = true;
 
-    magicLinkAuth.handleFlow();
+    magicLinkAuth.handleFlow(url);
 
     return () => {
       magicLinkAuth.cancelFlow();
@@ -173,7 +172,6 @@ export function useHandleMagicLinkAuthAsProvider(
         origin,
         options,
       ),
-      url,
       { expireInMs },
     );
   }, [origin]);
@@ -187,7 +185,7 @@ export function useHandleMagicLinkAuthAsProvider(
     if (hasRunRef.current) return;
     hasRunRef.current = true;
 
-    magicLinkAuth.handleFlow();
+    magicLinkAuth.handleFlow(url);
 
     return () => {
       magicLinkAuth.cancelFlow();
