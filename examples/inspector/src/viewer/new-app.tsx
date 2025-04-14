@@ -12,14 +12,15 @@ import { WasmCrypto } from "cojson/crypto/WasmCrypto";
 import {
   Breadcrumbs,
   Button,
+  GlobalStyles,
   Icon,
   Input,
   PageStack,
   Select,
 } from "jazz-inspector";
+import { resolveCoValue, useResolvedCoValue } from "jazz-inspector";
 import React, { useState, useEffect } from "react";
 import { usePagePath } from "./use-page-path";
-import { resolveCoValue, useResolvedCoValue } from "./use-resolve-covalue";
 
 interface Account {
   id: CoID<RawAccount>;
@@ -126,7 +127,7 @@ export default function CoJsonViewerApp() {
   }
 
   return (
-    <div
+    <GlobalStyles
       className={clsx(
         "h-screen overflow-hidden flex flex-col",
         " text-stone-700 bg-white",
@@ -202,7 +203,7 @@ export default function CoJsonViewerApp() {
           </form>
         )}
       </PageStack>
-    </div>
+    </GlobalStyles>
   );
 }
 
@@ -302,6 +303,7 @@ function AddAccountForm({
         type="password"
         value={secret}
         onChange={(e) => setSecret(e.target.value)}
+        placeholder="sealerSecret_ziz7NA12340abcdef123789..."
       />
       <Button className="mt-3" type="submit">
         Add account

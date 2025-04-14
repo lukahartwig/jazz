@@ -1,5 +1,60 @@
 # cojson
 
+## 0.13.5
+
+### Patch Changes
+
+- e090b39: Bump crypto version to remove WASM init warning
+
+## 0.13.2
+
+### Patch Changes
+
+- c551839: Add jazz.messagequeue.pushed/pulled counters, remove jazz.messagequeue.size gauge
+
+## 0.13.0
+
+### Minor Changes
+
+- bce3bcc: Version bump. Release focused on React Native.
+
+### Patch Changes
+
+- a013538: Correctly load CoValues after they are marked as unavailable and improve timeout management
+
+## 0.12.2
+
+### Patch Changes
+
+- c2f4827: StreamingHash: Remove redundant clone and skip double hash generation when creating a local transaction
+
+## 0.12.1
+
+### Patch Changes
+
+- 5a00fe0: Re-introducing linked lists on PriorityBasedMessageQueue
+
+## 0.12.0
+
+### Minor Changes
+
+- 01523dc: Check CoValue access permissions when loading
+- 01523dc: Return the EVERYONE role if the account is not direct a member of the group
+
+## 0.11.8
+
+### Patch Changes
+
+- 6c86c4f: Fix "Expected header to be sent in first message error" on sync
+- 9d0c9dc: Update @opentelemetry/api dependency
+
+## 0.11.7
+
+### Patch Changes
+
+- 2b94bc8: Performance: optimize Group.roleOf getter and made the transactions validation incremental for CoMap and CoFeed
+- 2957362: Throw an error when the user tries to load an invalid or undefined id
+
 ## 0.11.6
 
 ### Patch Changes

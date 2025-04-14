@@ -1,5 +1,89 @@
 # jazz-tools
 
+## 0.13.5
+
+### Patch Changes
+
+- fe6f561: Gracefully handle unavailable messages error in the Inbox
+- Updated dependencies [e090b39]
+  - cojson@0.13.5
+
+## 0.13.4
+
+### Patch Changes
+
+- 3129982: Add logOutReplacement hook to replace the Jazz logout function with a custom one
+
+## 0.13.3
+
+### Patch Changes
+
+- 12f8bfa: Log permission errors when loading or subscribing to values
+- bd57177: Handle null properties in the CoMap deep loading
+
+## 0.13.2
+
+### Patch Changes
+
+- Updated dependencies [c551839]
+  - cojson@0.13.2
+
+## 0.13.0
+
+### Patch Changes
+
+- afd1374: Accept null as initial value for createCoValueObservable
+- Updated dependencies [a013538]
+- Updated dependencies [bce3bcc]
+  - cojson@0.13.0
+
+## 0.12.2
+
+### Patch Changes
+
+- Updated dependencies [c2f4827]
+  - cojson@0.12.2
+
+## 0.12.1
+
+### Patch Changes
+
+- Updated dependencies [5a00fe0]
+  - cojson@0.12.1
+
+## 0.12.0
+
+### Minor Changes
+
+- 01523dc: Check CoValue access permissions when loading
+- 4ea87dc: Implement new API for deep loading
+- 1e6da19: The .load function now returns `null` on error
+
+### Patch Changes
+
+- b6c6a0a: Make the linkAccounts test utility wait for the accounts coValues to be synced
+- Updated dependencies [01523dc]
+- Updated dependencies [01523dc]
+  - cojson@0.12.0
+
+## 0.11.8
+
+### Patch Changes
+
+- Updated dependencies [6c86c4f]
+- Updated dependencies [9d0c9dc]
+  - cojson@0.11.8
+
+## 0.11.7
+
+### Patch Changes
+
+- a140f55: Bugfix: Trigger a single update when loading a locally available list of items
+- 2b0d1b0: Export CoFeedEntry type
+- Updated dependencies [2b94bc8]
+- Updated dependencies [2957362]
+  - cojson@0.11.7
+
 ## 0.11.6
 
 ### Patch Changes

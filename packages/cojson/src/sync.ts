@@ -23,10 +23,6 @@ export function emptyKnownState(id: RawCoID): CoValueKnownState {
   };
 }
 
-function getErrorMessage(e: unknown) {
-  return e instanceof Error ? e.message : "Unknown error";
-}
-
 export type SyncMessage =
   | LoadMessage
   | KnownStateMessage
@@ -415,7 +411,20 @@ export class SyncManager {
           entry.loadFromPeers([peer]).catch((e) => {
             logger.error("Error loading coValue in handleLoad", { err: e });
           });
+        } else {
+          // We don't have any eligible peers to load the coValue from
+          // so we send a known state back to the sender to let it know
+          // that the coValue is unavailable
+          this.trySendToPeer(peer, {
+            action: "known",
+            id: msg.id,
+            header: false,
+            sessions: {},
+          }).catch((e) => {
+            logger.error("Error sending known state back", { err: e });
+          });
         }
+
         return;
       } else {
         this.local.loadCoValueCore(msg.id, peer.id).catch((e) => {
@@ -460,6 +469,13 @@ export class SyncManager {
             err: e,
           });
         });
+    } else if (entry.state.type === "unavailable") {
+      this.trySendToPeer(peer, {
+        action: "known",
+        id: msg.id,
+        header: false,
+        sessions: {},
+      });
     }
 
     if (entry.state.type === "available") {
@@ -528,12 +544,36 @@ export class SyncManager {
 
     let coValue: CoValueCore;
 
+    /**
+     * The new content might come while the coValue is loading or is not loaded yet.
+     *
+     * This might happen when we restart the server because:
+     * - The client known state assumes that the coValue is available on the server
+     * - The server might not have loaded the coValue yet because it was not requested
+     *
+     * In this case we need to load the coValue from the storage or other peers.
+     *
+     * If this load fails we send a correction request, because the client has the wrong assumption that
+     * we have the coValue while we don't.
+     */
+    if (entry.state.type !== "available" && !msg.header) {
+      await this.local.loadCoValueCore(msg.id, peer.id);
+    }
+
     if (entry.state.type !== "available") {
       if (!msg.header) {
-        logger.error("Expected header to be sent in first message", {
-          coValueId: msg.id,
-          peerId: peer.id,
-          peerRole: peer.role,
+        this.trySendToPeer(peer, {
+          action: "known",
+          isCorrection: true,
+          id: msg.id,
+          header: false,
+          sessions: {},
+        }).catch((e) => {
+          logger.error("Error sending known state correction", {
+            peerId: peer.id,
+            peerRole: peer.role,
+            err: e,
+          });
         });
         return;
       }
@@ -580,39 +620,12 @@ export class SyncManager {
         continue;
       }
 
-      const before = performance.now();
-      // eslint-disable-next-line neverthrow/must-use-result
       const result = coValue.tryAddTransactions(
         sessionID,
         newTransactions,
         undefined,
         newContentForSession.lastSignature,
       );
-      const after = performance.now();
-      if (after - before > 80) {
-        const totalTxLength = newTransactions
-          .map((t) =>
-            t.privacy === "private"
-              ? t.encryptedChanges.length
-              : t.changes.length,
-          )
-          .reduce((a, b) => a + b, 0);
-        logger.debug(
-          `Adding incoming transactions took ${(after - before).toFixed(
-            2,
-          )}ms for ${totalTxLength} bytes = bandwidth: ${(
-            (1000 * totalTxLength) / (after - before) / (1024 * 1024)
-          ).toFixed(2)} MB/s`,
-        );
-      }
-
-      // const theirTotalnTxs = Object.values(
-      //     peer.optimisticKnownStates[msg.id]?.sessions || {},
-      // ).reduce((sum, nTxs) => sum + nTxs, 0);
-      // const ourTotalnTxs = [...coValue.sessionLogs.values()].reduce(
-      //     (sum, session) => sum + session.transactions.length,
-      //     0,
-      // );
 
       if (result.isErr()) {
         logger.error("Failed to add transactions", {
@@ -711,16 +724,10 @@ export class SyncManager {
   }
 
   async actuallySyncCoValue(coValue: CoValueCore) {
-    // let blockingSince = performance.now();
     for (const peer of this.peersInPriorityOrder()) {
       if (peer.closed) continue;
       if (peer.erroredCoValues.has(coValue.id)) continue;
-      // if (performance.now() - blockingSince > 5) {
-      //     await new Promise<void>((resolve) => {
-      //         setTimeout(resolve, 0);
-      //     });
-      //     blockingSince = performance.now();
-      // }
+
       if (peer.optimisticKnownStates.has(coValue.id)) {
         await this.tellUntoldKnownStateIncludingDependencies(coValue.id, peer);
         await this.sendNewContentIncludingDependencies(coValue.id, peer);

@@ -1,20 +1,63 @@
+import { styled } from "goober";
 import { forwardRef } from "react";
-import { classNames } from "../utils.js";
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: "primary" | "secondary" | "tertiary" | "destructive" | "plain";
-  size?: "sm" | "md" | "lg";
+  variant?: "primary" | "secondary" | "link" | "plain";
   children?: React.ReactNode;
   className?: string;
   disabled?: boolean;
 }
+
+const StyledButton = styled("button")<{ variant: string; disabled?: boolean }>`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  text-align: center;
+  transition: colors 0.2s;
+  border-radius: var(--j-radius-lg);
+  pointer-events: ${(props) => (props.disabled ? "none" : "auto")};
+  opacity: ${(props) => (props.disabled ? 0.5 : 1)};
+  cursor: ${(props) => (props.disabled ? "not-allowed" : "pointer")};
+
+  ${(props) => {
+    switch (props.variant) {
+      case "primary":
+        return `
+          padding: 0.375rem 0.75rem;
+          background-color: var(--j-primary-color);
+          border-color: var(--j-primary-color);
+          color: white;
+          font-weight: 500;
+        `;
+      case "secondary":
+        return `
+          padding: 0.375rem 0.75rem;
+          color: var(--j-text-color-strong);
+          border: 1px solid var(--j-border-color);
+          font-weight: 500;
+          &:hover {
+            border-color: var(--j-border-color-hover);
+          }
+        `;
+      case "link":
+        return `
+          color: var(--j-link-color);
+          &:hover {
+            text-decoration: underline;
+          }
+        `;
+      default:
+        return "";
+    }
+  }}
+`;
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   (
     {
       className,
       children,
-      size = "md",
       variant = "primary",
       disabled,
       type = "button",
@@ -22,44 +65,17 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     },
     ref,
   ) => {
-    const sizeClasses = {
-      sm: "text-sm py-1 px-2",
-      md: "py-1.5 px-3",
-      lg: "md:text-lg  py-2 px-3 md:px-8 md:py-3",
-    };
-
-    const variantClasses = {
-      primary:
-        "bg-blue border-blue text-white font-medium bg-blue hover:bg-blue-800 hover:border-blue-800",
-      secondary:
-        "text-stone-900 border font-medium hover:border-stone-300 hover:dark:border-stone-700 dark:text-white",
-      tertiary: "text-blue underline underline-offset-4",
-      destructive:
-        "bg-red-600 border-red-600 text-white font-medium hover:bg-red-700 hover:border-red-700",
-    };
-
-    const classes =
-      variant === "plain"
-        ? className
-        : classNames(
-            className,
-            "inline-flex items-center justify-center gap-2 rounded-lg text-center transition-colors",
-            "disabled:pointer-events-none disabled:opacity-70",
-            sizeClasses[size],
-            variantClasses[variant],
-            disabled && "opacity-50 cursor-not-allowed pointer-events-none",
-          );
-
     return (
-      <button
+      <StyledButton
         ref={ref}
         {...buttonProps}
         disabled={disabled}
-        className={classes}
+        className={className}
         type={type}
+        variant={variant}
       >
         {children}
-      </button>
+      </StyledButton>
     );
   },
 );

@@ -1,5 +1,4 @@
-import { createImage } from "jazz-browser-media-images";
-import { ProgressiveImg, useAccount } from "jazz-react";
+import { ProgressiveImg, createImage, useAccount } from "jazz-react";
 import { ChangeEvent, useEffect, useRef, useState } from "react";
 
 export default function ImageUpload() {

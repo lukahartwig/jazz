@@ -1,11 +1,68 @@
 import { CoID, LocalNode, RawCoValue } from "cojson";
-import { JsonObject } from "cojson";
-import { Button } from "../ui/button.js";
+import { JsonObject, JsonValue } from "cojson";
 import { ResolveIcon } from "./type-icon.js";
 import { PageInfo, isCoId } from "./types.js";
 import { CoMapPreview, ValueRenderer } from "./value-renderer.js";
 
-import { classNames } from "../utils.js";
+import { Badge } from "../ui/badge.js";
+import { Card, CardBody, CardHeader } from "../ui/card.js";
+import { Grid } from "../ui/grid.js";
+import { Text } from "../ui/text.js";
+
+function GridItem({
+  entry,
+  onNavigate,
+  node,
+}: {
+  entry: [string, JsonValue | undefined];
+  onNavigate: (pages: PageInfo[]) => void;
+  node: LocalNode;
+}) {
+  const [key, value] = entry;
+  const isCoValue = isCoId(value);
+
+  const props = isCoValue
+    ? {
+        onClick: () =>
+          onNavigate([{ coId: value as CoID<RawCoValue>, name: key }]),
+        as: "button",
+      }
+    : {
+        style: {
+          backgroundColor: "var(--j-foreground)",
+          borderColor: "var(--j-foreground)",
+        },
+      };
+
+  return (
+    <Card {...props}>
+      <CardHeader>
+        {isCoValue ? (
+          <>
+            <Text strong>{key}</Text>
+            <Badge>
+              <ResolveIcon coId={value as CoID<RawCoValue>} node={node} />
+            </Badge>
+          </>
+        ) : (
+          <Text strong>{key}</Text>
+        )}
+      </CardHeader>
+      <CardBody style={{ wordBreak: "break-word" }}>
+        {isCoValue ? (
+          <CoMapPreview coId={value as CoID<RawCoValue>} node={node} />
+        ) : (
+          <ValueRenderer
+            json={value}
+            onCoIDClick={(coId) => {
+              onNavigate([{ coId, name: key }]);
+            }}
+          />
+        )}
+      </CardBody>
+    </Card>
+  );
+}
 
 export function GridView({
   data,
@@ -19,62 +76,15 @@ export function GridView({
   const entries = Object.entries(data);
 
   return (
-    <div
-      className={classNames(
-        "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4",
-      )}
-    >
-      {entries.map(([key, child], childIndex) => (
-        <Button
-          variant="plain"
+    <Grid cols={entries.length === 1 ? 1 : 3}>
+      {entries.map((entry, childIndex) => (
+        <GridItem
+          entry={entry}
+          onNavigate={onNavigate}
+          node={node}
           key={childIndex}
-          className={classNames(
-            `p-3 text-left rounded-lg overflow-hidden transition-colors ${
-              isCoId(child)
-                ? "border border-gray-200 shadow-sm hover:bg-gray-100/5"
-                : "bg-gray-50  dark:bg-gray-925 cursor-default"
-            }`,
-          )}
-          onClick={() =>
-            isCoId(child) &&
-            onNavigate([{ coId: child as CoID<RawCoValue>, name: key }])
-          }
-        >
-          <h3
-            className={classNames(
-              "overflow-hidden text-ellipsis whitespace-nowrap",
-            )}
-          >
-            {isCoId(child) ? (
-              <span className={classNames("font-medium flex justify-between")}>
-                {key}
-
-                <div
-                  className={classNames(
-                    "py-1 px-2 text-sm bg-gray-100 rounded dark:bg-gray-900",
-                  )}
-                >
-                  <ResolveIcon coId={child as CoID<RawCoValue>} node={node} />
-                </div>
-              </span>
-            ) : (
-              <span>{key}</span>
-            )}
-          </h3>
-          <div className={classNames("mt-2 text-sm")}>
-            {isCoId(child) ? (
-              <CoMapPreview coId={child as CoID<RawCoValue>} node={node} />
-            ) : (
-              <ValueRenderer
-                json={child}
-                onCoIDClick={(coId) => {
-                  onNavigate([{ coId, name: key }]);
-                }}
-              />
-            )}
-          </div>
-        </Button>
+        />
       ))}
-    </div>
+    </Grid>
   );
 }

@@ -1,6 +1,10 @@
 import { CoID, LocalNode, RawCoStream, RawCoValue } from "cojson";
+import { styled } from "goober";
 import { useMemo } from "react";
-import { classNames } from "../utils.js";
+import React from "react";
+import { Badge } from "../ui/badge.js";
+import { Heading } from "../ui/heading.js";
+import { Text } from "../ui/text.js";
 import { CoStreamView } from "./co-stream-view.js";
 import { GridView } from "./grid-view.js";
 import { TableView } from "./table-viewer.js";
@@ -8,6 +12,65 @@ import { TypeIcon } from "./type-icon.js";
 import { PageInfo } from "./types.js";
 import { useResolvedCoValue } from "./use-resolve-covalue.js";
 import { AccountOrGroupPreview } from "./value-renderer.js";
+
+interface PageContainerProps extends React.HTMLAttributes<HTMLDivElement> {
+  isTopLevel?: boolean;
+}
+
+const BasePageContainer = React.forwardRef<HTMLDivElement, PageContainerProps>(
+  ({ isTopLevel, ...rest }, ref) => <div ref={ref} {...rest} />,
+);
+
+const PageContainer = styled(BasePageContainer)<PageContainerProps>`
+  position: absolute;
+  z-index: 10;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0 0.75rem;
+`;
+
+const BackButton = styled("div")`
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 2.5rem;
+`;
+
+const HeaderContainer = styled("div")`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+`;
+
+const TitleContainer = styled("div")`
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+`;
+
+const Title = styled(Heading)`
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
+`;
+
+const BadgeContainer = styled("div")`
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+`;
+
+const ContentContainer = styled("div")`
+  overflow: auto;
+`;
+
+const OwnerText = styled(Text)`
+  margin-top: 1rem;
+`;
 
 type PageProps = {
   coId: CoID<RawCoValue>;
@@ -52,54 +115,38 @@ export function Page({
   }
 
   return (
-    <div
-      style={style}
-      className={className + "absolute z-10 inset-0 w-full h-full px-3"}
-    >
+    <PageContainer style={style} className={className} isTopLevel={isTopLevel}>
       {!isTopLevel && (
-        <div
-          className={classNames("absolute left-0 right-0 top-0 h-10")}
+        <BackButton
           aria-label="Back"
           onClick={() => {
             onHeaderClick?.();
           }}
           aria-hidden="true"
-        ></div>
+        ></BackButton>
       )}
-      <div className={classNames("flex justify-between items-center mb-4")}>
-        <div className={classNames("flex items-center gap-3")}>
-          <h2
-            className={classNames(
-              "text-lg font-medium flex flex-col items-start gap-1 text-stone-900 dark:text-white",
-            )}
-          >
+      <HeaderContainer>
+        <TitleContainer>
+          <Title>
             <span>
               {name}
               {typeof snapshot === "object" && "name" in snapshot ? (
-                <span className={classNames("text-gray-600 font-medium")}>
+                <span style={{ color: "#57534e", fontWeight: 500 }}>
                   {" "}
                   {(snapshot as { name: string }).name}
                 </span>
               ) : null}
             </span>
-          </h2>
-          <span
-            className={classNames(
-              "text-sm text-gray-700 font-medium py-0.5 px-1 -ml-0.5 rounded bg-gray-700/5 inline-block font-mono",
-            )}
-          >
-            {type && <TypeIcon type={type} extendedType={extendedType} />}
-          </span>
-          <span
-            className={classNames(
-              "text-sm text-gray-700 font-medium py-0.5 px-1 -ml-0.5 rounded bg-gray-700/5 inline-block font-mono",
-            )}
-          >
-            {coId}
-          </span>
-        </div>
-      </div>
-      <div className={classNames("overflow-auto")}>
+          </Title>
+          <BadgeContainer>
+            <Badge>
+              {type && <TypeIcon type={type} extendedType={extendedType} />}
+            </Badge>
+            <Badge>{coId}</Badge>
+          </BadgeContainer>
+        </TitleContainer>
+      </HeaderContainer>
+      <ContentContainer>
         {type === "costream" ? (
           <CoStreamView
             data={snapshot}
@@ -113,7 +160,7 @@ export function Page({
           <TableView data={snapshot} node={node} onNavigate={onNavigate} />
         )}
         {extendedType !== "account" && extendedType !== "group" && (
-          <div className={classNames("text-sm text-gray-500 mt-4")}>
+          <OwnerText muted>
             Owned by{" "}
             <AccountOrGroupPreview
               coId={value.group.id}
@@ -123,9 +170,9 @@ export function Page({
                 onNavigate([{ coId: value.group.id, name: "owner" }]);
               }}
             />
-          </div>
+          </OwnerText>
         )}
-      </div>
-    </div>
+      </ContentContainer>
+    </PageContainer>
   );
 }

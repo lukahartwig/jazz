@@ -19,9 +19,9 @@ import {
  */
 export class BrowserPasskeyAuth {
   constructor(
-    private crypto: CryptoProvider,
-    private authenticate: AuthenticateAccountFunction,
-    private authSecretStorage: AuthSecretStorage,
+    protected crypto: CryptoProvider,
+    protected authenticate: AuthenticateAccountFunction,
+    protected authSecretStorage: AuthSecretStorage,
     public appName: string,
     public appHostname: string = window.location.hostname,
   ) {}
@@ -83,7 +83,9 @@ export class BrowserPasskeyAuth {
     });
 
     const currentAccount = await Account.getMe().ensureLoaded({
-      profile: {},
+      resolve: {
+        profile: true,
+      },
     });
 
     if (username.trim().length !== 0) {

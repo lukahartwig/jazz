@@ -1,5 +1,107 @@
 # jazz-example-inspector
 
+## 0.0.125
+
+### Patch Changes
+
+- Updated dependencies [08ae9b2]
+- Updated dependencies [e090b39]
+  - jazz-inspector@0.13.5
+  - cojson@0.13.5
+  - cojson-transport-ws@0.13.5
+
+## 0.0.124
+
+### Patch Changes
+
+- jazz-inspector@0.13.4
+
+## 0.0.123
+
+### Patch Changes
+
+- Updated dependencies [b19cab7]
+- Updated dependencies [017f6c8]
+  - cojson-transport-ws@0.13.3
+  - jazz-inspector@0.13.3
+
+## 0.0.122
+
+### Patch Changes
+
+- Updated dependencies [ae4be2b]
+- Updated dependencies [c551839]
+  - jazz-inspector@0.13.2
+  - cojson@0.13.2
+  - cojson-transport-ws@0.13.2
+
+## 0.0.121
+
+### Patch Changes
+
+- 2796689: various fixes and css refactoring
+- Updated dependencies [a013538]
+- Updated dependencies [2796689]
+- Updated dependencies [2224ed4]
+- Updated dependencies [bce3bcc]
+  - cojson@0.13.0
+  - jazz-inspector@0.13.0
+  - cojson-transport-ws@0.13.0
+
+## 0.0.120
+
+### Patch Changes
+
+- 8a71835: use goober for css
+- Updated dependencies [8a71835]
+- Updated dependencies [c2f4827]
+  - jazz-inspector@0.12.2
+  - cojson@0.12.2
+  - cojson-transport-ws@0.12.2
+
+## 0.0.119
+
+### Patch Changes
+
+- Updated dependencies [5a00fe0]
+  - cojson@0.12.1
+  - cojson-transport-ws@0.12.1
+  - jazz-inspector@0.12.1
+
+## 0.0.118
+
+### Patch Changes
+
+- Updated dependencies [01523dc]
+- Updated dependencies [01523dc]
+- Updated dependencies [9a56bb3]
+  - cojson@0.12.0
+  - jazz-inspector@0.12.0
+  - cojson-transport-ws@0.12.0
+
+## 0.0.117
+
+### Patch Changes
+
+- Updated dependencies [71b9390]
+- Updated dependencies [6c86c4f]
+- Updated dependencies [9d0c9dc]
+  - jazz-inspector@0.11.8
+  - cojson@0.11.8
+  - cojson-transport-ws@0.11.8
+
+## 0.0.116
+
+### Patch Changes
+
+- 2c3761c: fix: CoFeed and FileStream are showing as CoStream
+- Updated dependencies [2c3761c]
+- Updated dependencies [2b94bc8]
+- Updated dependencies [2957362]
+  - jazz-inspector@0.11.7
+  - cojson@0.11.7
+  - cojson-transport-ws@0.11.7
+
 ## 0.0.115
 
 ### Patch Changes

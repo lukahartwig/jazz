@@ -1,120 +1,159 @@
 import { CoID, JsonValue, LocalNode, RawCoValue } from "cojson";
+import { styled } from "goober";
 import React, { useEffect, useState } from "react";
-import { LinkIcon } from "../link-icon.js";
 import { Button } from "../ui/button.js";
-import { classNames } from "../utils.js";
+import { Icon } from "../ui/icon.js";
+import { Text } from "../ui/text.js";
 import {
   isBrowserImage,
   resolveCoValue,
   useResolvedCoValue,
 } from "./use-resolve-covalue.js";
 
+const LinkContainer = styled("span")`
+  display: inline-flex;
+  gap: 0.25rem;
+  align-items: center;
+`;
+
+const BooleanText = styled("span")<{ value: boolean }>`
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  ${(props) =>
+    props.value
+      ? `
+    color: var(--j-success-color);
+  `
+      : `
+    color: var(--j-destructive-color);
+  `}
+`;
+
+const ObjectContent = styled("pre")`
+  margin-top: 0.375rem;
+  font-size: 0.875rem;
+  white-space: pre-wrap;
+`;
+
+const PreviewContainer = styled("div")`
+  font-size: 0.875rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: flex-start;
+`;
+
+const PreviewGrid = styled("div")`
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.5rem;
+`;
+
+const PreviewMoreText = styled(Text)`
+  text-align: left;
+  margin-top: 0.5rem;
+`;
+
+const ImagePreviewContainer = styled("div")`
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+`;
+
+const PreviewImage = styled("img")`
+  width: 2rem;
+  height: 2rem;
+  border: 2px solid white;
+  box-shadow: var(--j-shadow-sm);
+  margin: 0.5rem 0;
+`;
+
+const RecordText = styled("div")`
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+`;
+
+const ListText = styled("div")`
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+`;
+
 // Is there a chance we can pass the actual CoValue here?
 export function ValueRenderer({
   json,
   onCoIDClick,
+  compact,
 }: {
   json: JsonValue | undefined;
   onCoIDClick?: (childNode: CoID<RawCoValue>) => void;
+  compact?: boolean;
 }) {
   const [isExpanded, setIsExpanded] = useState(false);
 
   if (typeof json === "undefined" || json === undefined) {
-    return <span className={classNames("text-gray-400")}>undefined</span>;
+    return <Text muted>undefined</Text>;
   }
 
   if (json === null) {
-    return <span className={classNames("text-gray-400")}>null</span>;
+    return <Text muted>null</Text>;
   }
 
   if (typeof json === "string" && json.startsWith("co_")) {
-    const linkClasses = onCoIDClick
-      ? "text-blue cursor-pointer inline-flex gap-1 items-center dark:text-blue-400"
-      : "inline-flex gap-1 items-center";
-
     const content = (
       <>
         {json}
-        {onCoIDClick && <LinkIcon />}
+        {onCoIDClick && <Icon name="link" />}
       </>
     );
 
     if (onCoIDClick) {
       return (
         <Button
-          className={classNames(linkClasses)}
+          variant="link"
           onClick={() => {
             onCoIDClick?.(json as CoID<RawCoValue>);
           }}
-          variant="plain"
         >
           {content}
         </Button>
       );
     }
 
-    return <span className={classNames(linkClasses)}>{content}</span>;
+    return <LinkContainer>{content}</LinkContainer>;
   }
 
   if (typeof json === "string") {
-    return (
-      <span
-        className={classNames("text-green-700 font-mono dark:text-green-400")}
-      >
-        {json}
-      </span>
-    );
+    return <Text>{json}</Text>;
   }
 
   if (typeof json === "number") {
-    return (
-      <span className={classNames("text-purple-700 dark:text-purple-400")}>
-        {json}
-      </span>
-    );
+    return <Text mono>{json}</Text>;
   }
 
   if (typeof json === "boolean") {
-    return (
-      <span
-        className={classNames(
-          json
-            ? "text-green-700 bg-green-700/5"
-            : "text-amber-700 bg-amber-500/5",
-          "font-mono",
-          "inline-block px-1 py-0.5 rounded",
-        )}
-      >
-        {json.toString()}
-      </span>
-    );
+    return <BooleanText value={json}>{json.toString()}</BooleanText>;
   }
 
   if (typeof json === "object") {
     return (
-      <span
-        title={JSON.stringify(json, null, 2)}
-        className={classNames("inline-block max-w-64")}
-      >
-        <span className={classNames("text-gray-600")}>
-          {Array.isArray(json) ? <>Array ({json.length})</> : <>Object</>}
-        </span>
-        <pre className={classNames("mt-1.5 text-sm whitespace-pre-wrap")}>
+      <>
+        <p>{Array.isArray(json) ? <>Array ({json.length})</> : <>Object</>}</p>
+        <ObjectContent>
           {isExpanded
             ? JSON.stringify(json, null, 2)
-            : JSON.stringify(json, null, 2).split("\n").slice(0, 3).join("\n") +
-              (Object.keys(json).length > 2 ? "\n..." : "")}
-        </pre>
-        <Button
-          variant="plain"
-          onClick={() => setIsExpanded(!isExpanded)}
-          className={classNames(
-            "mt-1.5 text-sm text-gray-600 hover:text-gray-700",
-          )}
-        >
-          {isExpanded ? "Show less" : "Show more"}
-        </Button>
-      </span>
+            : JSON.stringify(json, null, 2)
+                .split("\n")
+                .slice(0, compact ? 3 : 8)
+                .join("\n") + (Object.keys(json).length > 2 ? "\n..." : "")}
+        </ObjectContent>
+
+        {!compact && (
+          <Button variant="link" onClick={() => setIsExpanded(!isExpanded)}>
+            {isExpanded ? "Show less" : "Show more"}
+          </Button>
+        )}
+      </>
     );
   }
 
@@ -138,9 +177,13 @@ export const CoMapPreview = ({
   if (!snapshot) {
     return (
       <div
-        className={classNames(
-          "rounded bg-gray-100 animate-pulse whitespace-pre w-24",
-        )}
+        style={{
+          borderRadius: "0.25rem",
+          backgroundColor: "var(--j-foreground)",
+          animation: "pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
+          whiteSpace: "pre",
+          width: "6rem",
+        }}
       >
         {" "}
       </div>
@@ -148,72 +191,64 @@ export const CoMapPreview = ({
   }
 
   if (snapshot === "unavailable" && !value) {
-    return <div className={classNames("text-gray-500")}>Unavailable</div>;
+    return (
+      <Text inline muted>
+        Unavailable
+      </Text>
+    );
   }
 
   if (extendedType === "image" && isBrowserImage(snapshot)) {
     return (
-      <div>
-        <img
-          src={snapshot.placeholderDataURL}
-          className={classNames(
-            "size-8 border-2 border-white drop-shadow-md my-2",
-          )}
-        />
-        <span className={classNames("text-gray-500 text-sm")}>
+      <ImagePreviewContainer>
+        <PreviewImage src={snapshot.placeholderDataURL} />
+        <Text inline small muted>
           {snapshot.originalSize[0]} x {snapshot.originalSize[1]}
-        </span>
-
-        {/* <CoMapPreview coId={value[]} node={node} /> */}
-        {/* <ProgressiveImg image={value}>
-                    {({ src }) => <img src={src} className={clsx("w-full")} />}
-                </ProgressiveImg> */}
-      </div>
+        </Text>
+      </ImagePreviewContainer>
     );
   }
 
   if (extendedType === "record") {
     return (
-      <div>
+      <RecordText>
         Record{" "}
-        <span className={classNames("text-gray-500")}>
+        <Text inline muted>
           ({Object.keys(snapshot).length})
-        </span>
-      </div>
+        </Text>
+      </RecordText>
     );
   }
 
   if (type === "colist") {
     return (
-      <div>
+      <ListText>
         List{" "}
-        <span className={classNames("text-gray-500")}>
+        <Text inline muted>
           ({(snapshot as unknown as []).length})
-        </span>
-      </div>
+        </Text>
+      </ListText>
     );
   }
 
   return (
-    <div className={classNames("text-sm flex flex-col gap-2 items-start")}>
-      <div className={classNames("grid grid-cols-[auto_1fr] gap-2")}>
+    <PreviewContainer>
+      <PreviewGrid>
         {Object.entries(snapshot)
           .slice(0, limit)
           .map(([key, value]) => (
             <React.Fragment key={key}>
-              <span className={classNames("font-medium")}>{key}: </span>
-              <span>
-                <ValueRenderer json={value} />
-              </span>
+              <Text strong>{key}: </Text>
+              <ValueRenderer compact json={value} />
             </React.Fragment>
           ))}
-      </div>
+      </PreviewGrid>
       {Object.entries(snapshot).length > limit && (
-        <div className={classNames("text-left text-sm text-gray-500 mt-2")}>
+        <PreviewMoreText muted small>
           {Object.entries(snapshot).length - limit} more
-        </div>
+        </PreviewMoreText>
       )}
-    </div>
+    </PreviewContainer>
   );
 };
 
@@ -256,14 +291,17 @@ export function AccountOrGroupPreview({
   const displayName = extendedType === "account" ? name || "Account" : "Group";
   const displayText = showId ? `${displayName} (${coId})` : displayName;
 
-  const props = onClick
-    ? {
-        onClick: () => onClick(displayName),
-        className: classNames("text-blue-500 cursor-pointer hover:underline"),
-      }
-    : {
-        className: classNames("text-gray-500"),
-      };
+  if (onClick) {
+    return (
+      <Button variant="link" onClick={() => onClick(displayName)}>
+        {displayText}
+      </Button>
+    );
+  }
 
-  return <span {...props}>{displayText}</span>;
+  return (
+    <Text muted inline>
+      {displayText}
+    </Text>
+  );
 }

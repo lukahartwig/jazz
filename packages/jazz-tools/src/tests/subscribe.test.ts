@@ -1,4 +1,12 @@
-import { beforeEach, describe, expect, it, onTestFinished, vi } from "vitest";
+import {
+  assert,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  onTestFinished,
+  vi,
+} from "vitest";
 import {
   Account,
   CoFeed,
@@ -10,12 +18,12 @@ import {
   cojsonInternals,
 } from "../index.js";
 import {
-  type DepthsIn,
   ID,
+  Resolved,
   createCoValueObservable,
   subscribeToCoValue,
 } from "../internal.js";
-import { setupJazzTestSync } from "../testing.js";
+import { createJazzTestAccount, setupJazzTestSync } from "../testing.js";
 import { setupAccount, waitFor } from "./utils.js";
 
 class ChatRoom extends CoMap {
@@ -65,8 +73,7 @@ describe("subscribeToCoValue", () => {
     const unsubscribe = subscribeToCoValue(
       ChatRoom,
       chatRoom.id,
-      meOnSecondPeer,
-      {},
+      { loadAs: meOnSecondPeer },
       updateFn,
     );
 
@@ -126,9 +133,11 @@ describe("subscribeToCoValue", () => {
     const unsubscribe = subscribeToCoValue(
       ChatRoom,
       chatRoom.id,
-      meOnSecondPeer,
       {
-        messages: [],
+        loadAs: meOnSecondPeer,
+        resolve: {
+          messages: true,
+        },
       },
       updateFn,
     );
@@ -156,16 +165,20 @@ describe("subscribeToCoValue", () => {
     const chatRoom = createChatRoom(me, "General");
     const updateFn = vi.fn();
 
-    const { messages } = await chatRoom.ensureLoaded({ messages: [{}] });
+    const { messages } = await chatRoom.ensureLoaded({
+      resolve: { messages: { $each: true } },
+    });
 
     messages.push(createMessage(me, "Hello"));
 
     const unsubscribe = subscribeToCoValue(
       ChatRoom,
       chatRoom.id,
-      meOnSecondPeer,
       {
-        messages: [{}],
+        loadAs: meOnSecondPeer,
+        resolve: {
+          messages: { $each: true },
+        },
       },
       updateFn,
     );
@@ -204,9 +217,13 @@ describe("subscribeToCoValue", () => {
     const unsubscribe = subscribeToCoValue(
       ChatRoom,
       chatRoom.id,
-      meOnSecondPeer,
       {
-        messages: [{}],
+        loadAs: meOnSecondPeer,
+        resolve: {
+          messages: {
+            $each: true,
+          },
+        },
       },
       updateFn,
     );
@@ -249,13 +266,15 @@ describe("subscribeToCoValue", () => {
     const unsubscribe = subscribeToCoValue(
       ChatRoom,
       chatRoom.id,
-      meOnSecondPeer,
       {
-        messages: [
-          {
-            reactions: [],
+        loadAs: meOnSecondPeer,
+        resolve: {
+          messages: {
+            $each: {
+              reactions: true,
+            },
           },
-        ],
+        },
       },
       updateFn,
     );
@@ -315,13 +334,15 @@ describe("subscribeToCoValue", () => {
     const unsubscribe = subscribeToCoValue(
       ChatRoom,
       chatRoom.id,
-      meOnSecondPeer,
       {
-        messages: [
-          {
-            reactions: [],
+        loadAs: meOnSecondPeer,
+        resolve: {
+          messages: {
+            $each: {
+              reactions: true,
+            },
           },
-        ],
+        },
       },
       updateFn,
     );
@@ -352,6 +373,50 @@ describe("subscribeToCoValue", () => {
     expect(lastValue.messages[0]).toBe(initialValue.messages[0]);
     expect(lastValue.messages[1]).toBe(initialValue.messages[1]);
   });
+
+  it("should emit only once when loading a list of values", async () => {
+    class TestMap extends CoMap {
+      value = co.string;
+    }
+
+    class TestList extends CoList.Of(co.ref(TestMap)) {}
+
+    const account = await createJazzTestAccount({
+      isCurrentActiveAccount: true,
+    });
+
+    const list = TestList.create([
+      TestMap.create({ value: "1" }),
+      TestMap.create({ value: "2" }),
+      TestMap.create({ value: "3" }),
+      TestMap.create({ value: "4" }),
+      TestMap.create({ value: "5" }),
+    ]);
+
+    const updateFn = vi.fn();
+
+    const unsubscribe = subscribeToCoValue(
+      TestList,
+      list.id,
+      {
+        loadAs: account,
+        resolve: {
+          $each: true,
+        },
+      },
+      updateFn,
+    );
+
+    onTestFinished(unsubscribe);
+
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
+    assert(list);
+
+    expect(list[0]?.value).toBe("1");
+
+    expect(updateFn).toHaveBeenCalledTimes(1);
+  });
 });
 
 describe("createCoValueObservable", () => {
@@ -372,14 +437,15 @@ describe("createCoValueObservable", () => {
   it("should update currentValue when subscribed", async () => {
     const { me, meOnSecondPeer } = await setupAccount();
     const testMap = createTestMap(me);
-    const observable = createCoValueObservable<TestMap, DepthsIn<TestMap>>();
+    const observable = createCoValueObservable();
     const mockListener = vi.fn();
 
     const unsubscribe = observable.subscribe(
       TestMap,
       testMap.id,
-      meOnSecondPeer,
-      {},
+      {
+        loadAs: meOnSecondPeer,
+      },
       () => {
         mockListener();
       },
@@ -400,14 +466,15 @@ describe("createCoValueObservable", () => {
   it("should reset to undefined after unsubscribe", async () => {
     const { me, meOnSecondPeer } = await setupAccount();
     const testMap = createTestMap(me);
-    const observable = createCoValueObservable<TestMap, DepthsIn<TestMap>>();
+    const observable = createCoValueObservable();
     const mockListener = vi.fn();
 
     const unsubscribe = observable.subscribe(
       TestMap,
       testMap.id,
-      meOnSecondPeer,
-      {},
+      {
+        loadAs: meOnSecondPeer,
+      },
       () => {
         mockListener();
       },
@@ -422,13 +489,15 @@ describe("createCoValueObservable", () => {
 
   it("should return null if the coValue is not found", async () => {
     const { meOnSecondPeer } = await setupAccount();
-    const observable = createCoValueObservable<TestMap, DepthsIn<TestMap>>();
+    const observable = createCoValueObservable<
+      TestMap,
+      Resolved<TestMap, {}>
+    >();
 
     const unsubscribe = observable.subscribe(
       TestMap,
       "co_z123" as ID<TestMap>,
-      meOnSecondPeer,
-      {},
+      { loadAs: meOnSecondPeer },
       () => {},
     );
 

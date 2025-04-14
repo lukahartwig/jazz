@@ -1,10 +1,8 @@
-import { createImage } from "jazz-browser-media-images";
-/* eslint-disable react-hooks/exhaustive-deps */
 import { ChangeEvent, useCallback, useState } from "react";
 import { useNavigate } from "react-router";
 
 import { ProgressiveImg } from "jazz-react";
-import { useAccount, useCoState } from "jazz-react";
+import { createImage, useAccount, useCoState } from "jazz-react";
 import { CoMap, Group, ID, ImageDefinition, co } from "jazz-tools";
 import { PetPost, PetReactions } from "./1_schema";
 import { Button, Input } from "./basicComponents";

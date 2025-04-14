@@ -1,14 +1,7 @@
-import { commands, page, userEvent } from "@vitest/browser/context";
+import { page, userEvent } from "@vitest/browser/context";
 import { createImage } from "jazz-browser-media-images";
-import { Account, AuthSecretStorage, CoMap, Group, co } from "jazz-tools";
-import {
-  assert,
-  afterEach,
-  describe,
-  expect,
-  onTestFinished,
-  test,
-} from "vitest";
+import { AuthSecretStorage } from "jazz-tools";
+import { assert, afterEach, describe, expect, test } from "vitest";
 import { createAccountContext, startSyncServer } from "./testUtils";
 
 describe("Images upload", () => {

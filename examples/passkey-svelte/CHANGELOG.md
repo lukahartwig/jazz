@@ -1,5 +1,65 @@
 # passkey-svelte
 
+## 0.0.62
+
+### Patch Changes
+
+- jazz-svelte@0.13.5
+
+## 0.0.61
+
+### Patch Changes
+
+- jazz-svelte@0.13.4
+
+## 0.0.60
+
+### Patch Changes
+
+- jazz-svelte@0.13.3
+
+## 0.0.59
+
+### Patch Changes
+
+- jazz-svelte@0.13.2
+
+## 0.0.58
+
+### Patch Changes
+
+- jazz-svelte@0.13.0
+
+## 0.0.57
+
+### Patch Changes
+
+- jazz-svelte@0.12.2
+
+## 0.0.56
+
+### Patch Changes
+
+- jazz-svelte@0.12.1
+
+## 0.0.55
+
+### Patch Changes
+
+- jazz-svelte@0.12.0
+
+## 0.0.54
+
+### Patch Changes
+
+- jazz-svelte@0.11.8
+
+## 0.0.53
+
+### Patch Changes
+
+- jazz-svelte@0.11.7
+
 ## 0.0.52
 
 ### Patch Changes

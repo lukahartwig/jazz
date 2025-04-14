@@ -99,10 +99,16 @@ export class RawCoStreamView<
   protected processNewTransactions() {
     const changeEntries = new Set<CoStreamItem<Item>[]>();
 
-    for (const { txID, madeAt, changes } of this.core.getValidTransactions({
+    const newValidTransactions = this.core.getValidTransactions({
       ignorePrivateTransactions: false,
       knownTransactions: this.knownTransactions,
-    })) {
+    });
+
+    if (newValidTransactions.length === 0) {
+      return;
+    }
+
+    for (const { txID, madeAt, changes } of newValidTransactions) {
       for (const changeUntyped of changes) {
         const change = changeUntyped as Item;
         let entries = this.items[txID.sessionID];

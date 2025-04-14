@@ -1,14 +1,35 @@
 import { CoID, LocalNode, RawCoValue } from "cojson";
 import type { JsonObject } from "cojson";
+import { styled } from "goober";
 import { useMemo, useState } from "react";
-import { LinkIcon } from "../link-icon.js";
 import { Button } from "../ui/button.js";
-import { PageInfo } from "./types.js";
+import { PageInfo, isCoId } from "./types.js";
 import { useResolvedCoValues } from "./use-resolve-covalue.js";
 import { ValueRenderer } from "./value-renderer.js";
 
-import { classNames } from "../utils.js";
-export function TableView({
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "../ui/table.js";
+import { Text } from "../ui/text.js";
+
+const TableContainer = styled("div")`
+  margin-top: 2rem;
+`;
+
+const PaginationContainer = styled("div")`
+  padding: 1rem 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+`;
+
+function CoValuesTableView({
   data,
   node,
   onNavigate,
@@ -52,46 +73,20 @@ export function TableView({
   };
 
   return (
-    <div>
-      <table
-        className={classNames(
-          "min-w-full text-sm border-spacing-0 border-collapse",
-        )}
-      >
-        <thead className={classNames("sticky top-0 border-b border-gray-200")}>
-          <tr>
-            {["", ...keys].map((key) => (
-              <th
-                key={key}
-                className={classNames(
-                  "p-3 bg-gray-50 dark:bg-gray-925 text-left font-medium rounded",
-                )}
-              >
-                {key}
-              </th>
+    <TableContainer>
+      <Table>
+        <TableHead>
+          <TableRow>
+            {[...keys, "Action"].map((key) => (
+              <TableHeader key={key}>{key}</TableHeader>
             ))}
-          </tr>
-        </thead>
-        <tbody className={classNames(" border-t border-gray-200")}>
+          </TableRow>
+        </TableHead>
+        <TableBody>
           {resolvedRows.slice(0, visibleRowsCount).map((item, index) => (
-            <tr key={index}>
-              <td className={classNames("p-1")}>
-                <Button
-                  variant="tertiary"
-                  onClick={() =>
-                    onNavigate([
-                      {
-                        coId: item.value!.id,
-                        name: index.toString(),
-                      },
-                    ])
-                  }
-                >
-                  <LinkIcon />
-                </Button>
-              </td>
+            <TableRow key={index}>
               {keys.map((key) => (
-                <td key={key} className={classNames("p-4 whitespace-nowrap")}>
+                <TableCell key={key}>
                   <ValueRenderer
                     json={(item.snapshot as JsonObject)[key]}
                     onCoIDClick={(coId) => {
@@ -111,35 +106,85 @@ export function TableView({
                       handleClick();
                     }}
                   />
-                </td>
+                </TableCell>
               ))}
-            </tr>
+
+              <TableCell>
+                <Button
+                  variant="secondary"
+                  onClick={() =>
+                    onNavigate([
+                      {
+                        coId: item.value!.id,
+                        name: index.toString(),
+                      },
+                    ])
+                  }
+                >
+                  View
+                </Button>
+              </TableCell>
+            </TableRow>
           ))}
-        </tbody>
-      </table>
-      <div
-        className={classNames(
-          "py-4 text-gray-500 flex items-center justify-between gap-2",
-        )}
-      >
-        <span>
+        </TableBody>
+      </Table>
+      <PaginationContainer>
+        <Text muted small>
           Showing {Math.min(visibleRowsCount, coIdArray.length)} of{" "}
           {coIdArray.length}
-        </span>
+        </Text>
         {hasMore && (
-          <div className={classNames("text-center")}>
-            <Button
-              variant="plain"
-              onClick={loadMore}
-              className={classNames(
-                "px-4 py-2 bg-blue text-white rounded hover:bg-blue-800",
-              )}
-            >
-              Load more
-            </Button>
-          </div>
+          <Button variant="secondary" onClick={loadMore}>
+            Load more
+          </Button>
         )}
-      </div>
-    </div>
+      </PaginationContainer>
+    </TableContainer>
+  );
+}
+
+export function TableView({
+  data,
+  node,
+  onNavigate,
+}: {
+  data: JsonObject;
+  node: LocalNode;
+  onNavigate: (pages: PageInfo[]) => void;
+}) {
+  const isListOfCoValues = useMemo(() => {
+    return Array.isArray(data) && data.every((k) => isCoId(k));
+  }, [data]);
+
+  // if data is a list of covalue ids, we need to resolve those covalues
+  if (isListOfCoValues) {
+    return (
+      <CoValuesTableView data={data} node={node} onNavigate={onNavigate} />
+    );
+  }
+
+  // if data is a list of primitives, we can render those values directly
+  return (
+    <Table>
+      <TableHead>
+        <TableRow>
+          <TableHeader style={{ width: "5rem" }}>Index</TableHeader>
+          <TableHeader>Value</TableHeader>
+        </TableRow>
+      </TableHead>
+      <TableBody>
+        {Array.isArray(data) &&
+          data?.map((value, index) => (
+            <TableRow key={index}>
+              <TableCell>
+                <Text mono>{index}</Text>
+              </TableCell>
+              <TableCell>
+                <ValueRenderer json={value} />
+              </TableCell>
+            </TableRow>
+          ))}
+      </TableBody>
+    </Table>
   );
 }

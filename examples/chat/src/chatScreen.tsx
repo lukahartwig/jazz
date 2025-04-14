@@ -1,5 +1,4 @@
-import { createImage } from "jazz-browser-media-images";
-import { useAccount, useCoState } from "jazz-react";
+import { createImage, useAccount, useCoState } from "jazz-react";
 import { Account, ID } from "jazz-tools";
 import { useState } from "react";
 import { Chat, Message } from "./schema.ts";
@@ -17,8 +16,8 @@ import {
 } from "./ui.tsx";
 
 export function ChatScreen(props: { chatID: ID<Chat> }) {
+  const chat = useCoState(Chat, props.chatID, { resolve: { $each: true } });
   const account = useAccount();
-  const chat = useCoState(Chat, props.chatID, [{}]);
   const [showNLastMessages, setShowNLastMessages] = useState(30);
 
   if (!chat)

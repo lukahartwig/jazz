@@ -956,27 +956,6 @@ test.skip("When a peer's incoming/readable stream closes, we remove the peer", a
     */
 });
 
-test("If we start loading a coValue before connecting to a peer that has it, it will load it once we connect", async () => {
-  const { node: node1 } = await createConnectedTestNode();
-
-  const group = node1.createGroup();
-
-  const map = group.createMap();
-  map.set("hello", "world", "trusting");
-
-  const node2 = createTestNode();
-
-  const mapOnNode2Promise = loadCoValueOrFail(node2, map.id);
-
-  expect(node2.coValuesStore.get(map.core.id).state.type).toEqual("unknown");
-
-  connectNodeToSyncServer(node2);
-
-  const mapOnNode2 = await mapOnNode2Promise;
-
-  expect(mapOnNode2.get("hello")).toEqual("world");
-});
-
 test("should keep the peer state when the peer closes", async () => {
   const client = createTestNode();
 
@@ -1726,6 +1705,45 @@ describe("loadCoValueCore with retry", () => {
     await expect(promise1).resolves.not.toBe("unavailable");
     await expect(promise2).resolves.not.toBe("unavailable");
   });
+
+  test("should load unavailable coValues after they are synced", async () => {
+    const bob = createTestNode();
+    const alice = createTestNode();
+
+    // Create a group and map on anotherClient
+    const group = alice.createGroup();
+    const map = group.createMap();
+    map.set("key1", "value1", "trusting");
+
+    // Start loading before syncing
+    const result = await bob.loadCoValueCore(map.id);
+
+    expect(result).toBe("unavailable");
+
+    connectTwoPeers(alice, bob, "server", "server");
+
+    const result2 = await bob.loadCoValueCore(map.id);
+
+    expect(result2).not.toBe("unavailable");
+  });
+
+  test("should successfully mark a coValue as unavailable if the server does not have it", async () => {
+    const bob = createTestNode();
+    const alice = createTestNode();
+    const charlie = createTestNode();
+
+    connectTwoPeers(bob, charlie, "client", "server");
+
+    // Create a group and map on anotherClient
+    const group = alice.createGroup();
+    const map = group.createMap();
+    map.set("key1", "value1", "trusting");
+
+    // Start loading before syncing
+    const result = await bob.loadCoValueCore(map.id);
+
+    expect(result).toBe("unavailable");
+  });
 });
 
 describe("waitForSyncWithPeer", () => {
@@ -1894,6 +1912,8 @@ describe("sync protocol", () => {
     const map = group.createMap();
     map.set("hello", "world", "trusting");
 
+    await map.core.waitForSync();
+
     const mapOnJazzCloud = await loadCoValueOrFail(jazzCloud, map.id);
     expect(mapOnJazzCloud.get("hello")).toEqual("world");
 
@@ -2035,6 +2055,29 @@ describe("sync protocol", () => {
           id: group.id,
           sessions: {
             [client.currentSessionID]: 3,
+          },
+        },
+      },
+      {
+        from: "server",
+        msg: {
+          action: "known",
+          header: true,
+          id: map.id,
+          sessions: {
+            [client.currentSessionID]: 1,
+          },
+        },
+      },
+      {
+        from: "server",
+        msg: {
+          action: "known",
+          asDependencyOf: undefined,
+          header: true,
+          id: map.id,
+          sessions: {
+            [client.currentSessionID]: 1,
           },
         },
       },

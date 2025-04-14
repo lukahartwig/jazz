@@ -1,8 +1,20 @@
-import { CoID, LocalNode, RawBinaryCoStream, RawCoValue } from "cojson";
+import {
+  CoID,
+  LocalNode,
+  RawBinaryCoStream,
+  RawCoStream,
+  RawCoValue,
+} from "cojson";
 import { useEffect, useState } from "react";
+import { detectCoStreamType } from "./co-stream-view.js";
 
 export type CoJsonType = "comap" | "costream" | "colist";
-export type ExtendedCoJsonType = "image" | "record" | "account" | "group";
+export type ExtendedCoJsonType =
+  | "image"
+  | "record"
+  | "account"
+  | "group"
+  | "file";
 
 type JSON = string | number | boolean | null | JSON[] | { [key: string]: JSON };
 type JSONObject = { [key: string]: JSON };
@@ -81,16 +93,6 @@ export async function resolveCoValue(
       extendedType = "account";
     } else if (isGroup(snapshot)) {
       extendedType = "group";
-    } else {
-      // This check is a bit of a hack
-      // There might be a better way to do this
-      const children = Object.values(snapshot).slice(0, 10);
-      if (
-        children.every((c) => typeof c === "string" && c.startsWith("co_")) &&
-        children.length > 3
-      ) {
-        extendedType = "record";
-      }
     }
   }
 
@@ -127,16 +129,12 @@ function subscribeToCoValue(
           extendedType = "account";
         } else if (isGroup(snapshot)) {
           extendedType = "group";
-        } else {
-          const children = Object.values(snapshot).slice(0, 10);
-          if (
-            children.every(
-              (c) => typeof c === "string" && c.startsWith("co_"),
-            ) &&
-            children.length > 3
-          ) {
-            extendedType = "record";
-          }
+        }
+      } else if (type === "costream") {
+        const coStream = detectCoStreamType(value as RawCoStream);
+
+        if (coStream.type === "binary") {
+          extendedType = "file";
         }
       }
 
