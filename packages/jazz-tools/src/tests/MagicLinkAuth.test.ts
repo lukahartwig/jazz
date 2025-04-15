@@ -53,17 +53,6 @@ describe("MagicLinkAuth", () => {
       isCurrentActiveAccount: true,
     });
 
-    // TODO: This shouldn't be needed
-    // Intercept the creation of the temporary agent and link it to the test account
-    const originalCreateTemporaryAgent = utils.createTemporaryAgent;
-    vi.spyOn(utils, "createTemporaryAgent").mockImplementation(
-      async (...args) => {
-        const temporaryAgent = await originalCreateTemporaryAgent(...args);
-        await linkAccounts(account, temporaryAgent);
-        return temporaryAgent;
-      },
-    );
-
     // Create MagicLinkAuth instance
     magicLinkAuth = new MagicLinkAuth(
       crypto,

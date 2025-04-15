@@ -9,19 +9,25 @@ import type { MagicLinkAuthOptions } from "./types.js";
  * @returns The created Account.
  */
 export async function createTemporaryAgent(crypto: CryptoProvider) {
-  const [localPeer, magicLinkAuthPeer] = cojsonInternals.connectedPeers(
-    "local",
-    "magicLinkAuth",
-    { peer1role: "server", peer2role: "client" },
-  );
-  Account.getMe()._raw.core.node.syncManager.addPeer(magicLinkAuthPeer);
-
   const { node } = await LocalNode.withNewlyCreatedAccount({
     creationProps: { name: "Sandbox account" },
-    peersToLoadFrom: [localPeer],
+    peersToLoadFrom: [],
     crypto,
   });
-  return Account.fromNode(node);
+  const account = Account.fromNode(node);
+
+  const [localPeer, magicLinkAuthPeer] = cojsonInternals.connectedPeers(
+    "local",
+    "magicLinkAuth/" + account.id, // Use an unique identifier to avoid conflicts with other magic link auth instances
+    { peer1role: "server", peer2role: "client" },
+  );
+
+  Account.getMe()._raw.core.node.syncManager.addPeer(magicLinkAuthPeer);
+  account._raw.core.node.syncManager.addPeer(localPeer);
+
+  await account.waitForAllCoValuesSync();
+
+  return account;
 }
 
 /**
