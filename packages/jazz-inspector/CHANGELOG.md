@@ -1,5 +1,11 @@
 # jazz-inspector
 
+## 0.13.6
+
+### Patch Changes
+
+- c320615: show list of members in a Group
+
 ## 0.13.5
 
 ### Patch Changes

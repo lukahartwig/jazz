@@ -162,13 +162,6 @@ const LabelContentPairContainer = styled("div")`
   gap: 0.375rem;
 `;
 
-const BinaryStreamContainer = styled("div")`
-  margin-top: 2rem;
-  display: flex;
-  flex-direction: column;
-  gap: 2rem;
-`;
-
 const BinaryStreamGrid = styled("div")`
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -269,7 +262,7 @@ function RenderCoBinaryStream({
   const sizeInKB = (file.totalSize || 0) / 1024;
 
   return (
-    <BinaryStreamContainer>
+    <>
       <BinaryStreamGrid>
         <LabelContentPair
           label="Mime Type"
@@ -305,7 +298,7 @@ function RenderCoBinaryStream({
           }
         />
       ) : null}
-    </BinaryStreamContainer>
+    </>
   );
 }
 

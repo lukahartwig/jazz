@@ -56,10 +56,10 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
 
     const variantClasses = {
       primary:
-        "bg-blue border-blue text-white font-medium bg-blue hover:bg-blue-800 hover:border-blue-800",
+        "bg-primary border border-primary text-white font-medium hover:bg-highlight hover:border-primary hover:text-primary dark:hover:bg-highlight dark:hover:text-primary",
       secondary:
-        "text-stone-900 border font-medium hover:border-stone-300 hover:dark:border-stone-700 dark:text-white",
-      tertiary: "text-blue underline underline-offset-4",
+        "text-stone-900 border font-medium hover:border-primary hover:text-primary hover:bg-highlight hover:dark:border-primary dark:text-white dark:hover:text-primary",
+      tertiary: "text-primary underline underline-offset-4",
       destructive:
         "bg-red-600 border-red-600 text-white font-medium hover:bg-red-700 hover:border-red-700",
     };
@@ -86,7 +86,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
           <ButtonIcon icon={icon} loading={loading} />
           {children}
           {newTab ? (
-            <span className="inline-block text-stone-300 dark:text-stone-700 relative -top-0.5 -left-2 -mr-2">
+            <span className="inline-block text-muted relative -top-0.5 -left-2 -mr-2">
               ⌝
             </span>
           ) : (

@@ -39,7 +39,7 @@ export default function Page() {
               alt=""
             />
             <div className="space-y-2">
-              <h2 className="font-medium text-stone-900 dark:text-white leading-none">
+              <h2 className="font-medium text-highlight leading-none">
                 {product.name}
               </h2>
               <p className="text-sm">{product.description}</p>

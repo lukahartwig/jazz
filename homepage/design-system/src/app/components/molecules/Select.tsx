@@ -33,7 +33,7 @@ export function Select(
 
         <Icon
           name="chevronDown"
-          className="absolute right-[0.5em] text-stone-400 dark:text-stone-600"
+          className="absolute right-[0.5em] text-muted"
           size="xs"
         />
       </div>

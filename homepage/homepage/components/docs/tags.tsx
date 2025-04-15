@@ -199,7 +199,7 @@ export function PropCategory({
 }) {
   return (
     <>
-      <div className="col-span-6 py-3 font-display font-semibold text-lg text-stone-900 dark:text-white">
+      <div className="col-span-6 py-3 font-display font-semibold text-lg text-highlight">
         {name}
       </div>
       {description && <PropDecl doc={description} example={example} />}

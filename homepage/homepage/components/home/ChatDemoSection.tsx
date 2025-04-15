@@ -148,7 +148,7 @@ export function ChatDemoSection() {
         <div className="col-span-2 md:col-span-full lg:col-span-2">
           {chatId && shareUrl && (
             <div className="flex h-full flex-col justify-between gap-3 text-center">
-              <H3 className="font-medium text-stone-900 dark:text-white !mb-0">
+              <H3 className="font-medium text-highlight !mb-0">
                 Join the chat
               </H3>
               <p>Scan the QR code</p>
@@ -176,7 +176,7 @@ export function ChatDemoSection() {
                   />
                   <button
                     type="button"
-                    className="text-blue dark:text-blue-400"
+                    className="text-primary dark:text-blue-400"
                     onClick={copyUrl}
                   >
                     {copied ? (

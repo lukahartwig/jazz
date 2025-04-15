@@ -70,7 +70,7 @@ export function FrameworkSelect() {
         <Icon
           name="chevronDown"
           size="sm"
-          className="text-stone-400 dark:text-stone-600"
+          className="text-muted"
         />
       </DropdownButton>
       <DropdownMenu className="w-[--button-width] z-50" anchor="bottom start">

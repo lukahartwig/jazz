@@ -1,5 +1,12 @@
 # jazz-example-musicplayer
 
+## 0.0.97
+
+### Patch Changes
+
+- Updated dependencies [c320615]
+  - jazz-inspector@0.13.6
+
 ## 0.0.96
 
 ### Patch Changes

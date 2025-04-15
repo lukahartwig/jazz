@@ -17,10 +17,6 @@ import {
 } from "../ui/table.js";
 import { Text } from "../ui/text.js";
 
-const TableContainer = styled("div")`
-  margin-top: 2rem;
-`;
-
 const PaginationContainer = styled("div")`
   padding: 1rem 0;
   display: flex;
@@ -73,7 +69,7 @@ function CoValuesTableView({
   };
 
   return (
-    <TableContainer>
+    <>
       <Table>
         <TableHead>
           <TableRow>
@@ -139,7 +135,7 @@ function CoValuesTableView({
           </Button>
         )}
       </PaginationContainer>
-    </TableContainer>
+    </>
   );
 }
 

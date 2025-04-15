@@ -62,7 +62,7 @@ function highlightPlugin() {
             lineClassName = "bg-red-100 dark:bg-red-800";
           } else if (isHighlighted) {
             lineClassName =
-              "my-0.5 bg-blue-50 text-blue dark:bg-stone-900 dark:text-blue-300";
+              "my-0.5 bg-blue-50 text-primary dark:bg-stone-900 dark:text-blue-300";
           }
 
           return (

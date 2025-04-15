@@ -91,7 +91,7 @@ export function SideNavSection({
             {name}
             {collapse && (
               <Icon
-                className="group-open:rotate-180 transition-transform group-hover:text-stone-500 text-stone-400 dark:text-stone-600"
+                className="group-open:rotate-180 transition-transform group-hover:text-stone-500 text-muted"
                 name="chevronDown"
                 size="xs"
               />
@@ -114,7 +114,7 @@ export function SideNavSectionList({ items }: { items?: SideNavItem[] }) {
             <SideNavItem href={href}>
               <span
                 className={
-                  done === 0 ? "text-stone-400 dark:text-stone-600" : ""
+                  done === 0 ? "text-muted" : ""
                 }
               >
                 {name}

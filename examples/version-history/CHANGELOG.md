@@ -1,5 +1,12 @@
 # version-history
 
+## 0.0.70
+
+### Patch Changes
+
+- Updated dependencies [c320615]
+  - jazz-inspector@0.13.6
+
 ## 0.0.69
 
 ### Patch Changes

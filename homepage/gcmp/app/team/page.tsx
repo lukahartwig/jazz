@@ -25,7 +25,7 @@ const team: Array<TeamMember> = [
     name: "Anselm Eickhoff",
     titles: ["Founder"],
     image: "anselm.jpg",
-    location: "Canterbury, UK ",
+    location: "London, UK",
     x: "anselm_io",
     github: "aeplay",
     website: "http://anselm.io",
@@ -35,7 +35,7 @@ const team: Array<TeamMember> = [
     name: "Andrei Popa",
     titles: ["Full-Stack Dev", "Infra"],
     image: "andrei.jpeg",
-    location: "Bucharest, Romania ",
+    location: "Bucharest, Romania",
     x: "elitepax",
     github: "pax-k",
   },
@@ -43,14 +43,14 @@ const team: Array<TeamMember> = [
     name: "Guido D'Orsi",
     titles: ["Frontend Dev", "React Performance"],
     image: "guido.jpeg",
-    location: "Piano di Sorrento, Italy ",
+    location: "Piano di Sorrento, Italy",
     github: "gdorsi",
   },
   {
     name: "Trisha Lim",
     titles: ["Frontend Dev", "Design", "Marketing"],
     image: "trisha.png",
-    location: "Lisbon, Portugal ",
+    location: "Lisbon, Portugal",
     github: "trishalim",
     website: "https://trishalim.com",
   },
@@ -58,13 +58,13 @@ const team: Array<TeamMember> = [
     name: "Benjamin Leveritt",
     titles: ["Full-Stack Dev"],
     image: "benjamin.jpg",
-    location: "Portsmouth, UK ",
+    location: "Portsmouth, UK",
     github: "bensleveritt",
   },
   {
     name: "Giordano Ricci",
     titles: ["Full-Stack Dev", "DevOps"],
-    location: "Lisbon, Portugal ",
+    location: "Lisbon, Portugal",
     linkedin: "giordanoricci",
     github: "Elfo404",
     website: "https://giordanoricci.com",
@@ -99,7 +99,7 @@ function Person({ person }: { person: TeamMember }) {
         <span className={imageClassName}>
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            className="w-full pt-5 h-full text-stone-300 dark:text-stone-700"
+            className="w-full pt-5 h-full text-muted"
             width="1em"
             height="1em"
             viewBox="0 0 24 24"
@@ -112,15 +112,13 @@ function Person({ person }: { person: TeamMember }) {
         </span>
       )}
       <div className="flex flex-col gap-2.5">
-        <h3 className="text-lg leading-none font-semibold tracking-tight text-stone-900 dark:text-white">
+        <h3 className="text-lg leading-none font-semibold tracking-tight text-highlight">
           {person.name}
         </h3>
-        <p className="text-sm leading-none text-gray-600 dark:text-stone-400">
+        <p className="text-sm leading-none text-gray-600 ">
           {person.titles.join(", ")}
         </p>
-        <p className="text-sm leading-none text-gray-600 dark:text-stone-400">
-          {person.location}
-        </p>
+        <p className="text-sm leading-none text-gray-600 ">{person.location}</p>
 
         <div className="flex gap-2 mt-0.5">
           {person.website && (

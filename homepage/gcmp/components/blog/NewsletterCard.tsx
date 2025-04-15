@@ -9,7 +9,7 @@ export function NewsletterCard() {
   return (
     <Card className="p-4 md:py-16">
       <div className="lg:max-w-3xl md:text-center mx-auto space-y-6">
-        <p className="uppercase text-blue tracking-widest text-sm font-medium dark:text-stone-400">
+        <p className="uppercase text-primary tracking-widest text-sm font-medium ">
           Stay up to date
         </p>
         <H2>Subscribe to our newsletter</H2>

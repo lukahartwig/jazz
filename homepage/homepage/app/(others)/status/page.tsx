@@ -161,7 +161,7 @@ export default async function Page() {
       <HeroHeader title="Systems status" />
 
       <table className="min-w-full">
-        <thead className="text-left text-sm font-semibold text-stone-900 dark:text-white">
+        <thead className="text-left text-sm font-semibold text-highlight">
           <tr>
             <th
               scope="col"

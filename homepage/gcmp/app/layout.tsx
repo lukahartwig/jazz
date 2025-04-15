@@ -95,7 +95,7 @@ export default function RootLayout({
           commitMono.variable,
           inter.className,
           "min-h-full flex flex-col items-center",
-          "bg-white text-stone-700 dark:text-stone-400 dark:bg-stone-950",
+          "bg-white text-default dark:bg-stone-950",
         ].join(" ")}
       >
         <SpeedInsights />

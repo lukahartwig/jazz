@@ -1,5 +1,12 @@
 # jazz-example-inspector
 
+## 0.0.126
+
+### Patch Changes
+
+- Updated dependencies [c320615]
+  - jazz-inspector@0.13.6
+
 ## 0.0.125
 
 ### Patch Changes
