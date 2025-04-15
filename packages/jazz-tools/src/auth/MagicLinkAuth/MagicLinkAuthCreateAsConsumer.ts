@@ -1,6 +1,7 @@
 import { waitForCoValueCondition } from "../../internal.js";
 import { MagicLinkAuth } from "./MagicLinkAuth.js";
 import { MagicLinkAuthConsumerOptions } from "./types.js";
+import { shutdownTransferAccount } from "./utils.js";
 
 export type MagicLinkAuthCreateAsConsumerStatus =
   | "idle"
@@ -25,17 +26,17 @@ export class MagicLinkAuthCreateAsConsumer {
 
   public authState: {
     status: MagicLinkAuthCreateAsConsumerStatus;
-    sendConfirmationCode: null | ((code: string) => void);
+    sendConfirmationCode: undefined | ((code: string) => void);
   } = {
     status: "idle",
-    sendConfirmationCode: null,
+    sendConfirmationCode: undefined,
   };
 
   private set status(status: MagicLinkAuthCreateAsConsumerStatus) {
     this.authState = { ...this.authState, status };
   }
   private set sendConfirmationCode(sendConfirmationCode:
-    | null
+    | undefined
     | ((code: string) => void)) {
     this.authState = { ...this.authState, sendConfirmationCode };
   }
@@ -44,7 +45,7 @@ export class MagicLinkAuthCreateAsConsumer {
     this.abortController = new AbortController();
     const { signal } = this.abortController;
 
-    let transfer = await this.magicLinkAuth.createTransferAsConsumer();
+    let transfer = await this.magicLinkAuth.createTransfer();
 
     const url = this.magicLinkAuth.createLink("provider", transfer);
 
@@ -67,7 +68,6 @@ export class MagicLinkAuthCreateAsConsumer {
         const code = await new Promise<string>((resolve, reject) => {
           this.sendConfirmationCode = (code: string) => resolve(code);
           signal.addEventListener("abort", () => reject(new Error("Aborted")));
-          this.notify();
         });
 
         transfer.confirmationCodeInput = code;
@@ -103,6 +103,7 @@ export class MagicLinkAuthCreateAsConsumer {
         this.notify();
       } finally {
         this.abortController = null;
+        shutdownTransferAccount(transfer);
       }
     };
 

@@ -1,6 +1,7 @@
 import { waitForCoValueCondition } from "../../internal.js";
-import { MagicLinkAuth } from "./MagicLinkAuth.js";
+import { MagicLinkAuth, MagicLinkAuthTransfer } from "./MagicLinkAuth.js";
 import { MagicLinkAuthConsumerOptions } from "./types.js";
+import { shutdownTransferAccount } from "./utils.js";
 
 export type MagicLinkAuthHandleAsConsumerStatus =
   | "idle"
@@ -43,11 +44,10 @@ export class MagicLinkAuthHandleAsConsumer {
     this.abortController = new AbortController();
     const { signal } = this.abortController;
 
+    let transfer: MagicLinkAuthTransfer | undefined;
+
     try {
-      let transfer = await this.magicLinkAuth.acceptTransferUrl(
-        url,
-        "consumer",
-      );
+      transfer = await this.magicLinkAuth.acceptTransferUrl(url, "consumer");
 
       this.status = "confirmationCodeRequired";
       this.notify();
@@ -55,7 +55,6 @@ export class MagicLinkAuthHandleAsConsumer {
       const code = await new Promise<string>((resolve, reject) => {
         this.sendConfirmationCode = (code: string) => resolve(code);
         signal.addEventListener("abort", () => reject(new Error("Aborted")));
-        this.notify();
       });
 
       transfer.confirmationCodeInput = code;
@@ -90,6 +89,7 @@ export class MagicLinkAuthHandleAsConsumer {
       this.notify();
     } finally {
       this.abortController = null;
+      shutdownTransferAccount(transfer);
     }
   }
 

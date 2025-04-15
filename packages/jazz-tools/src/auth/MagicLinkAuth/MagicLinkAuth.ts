@@ -1,7 +1,6 @@
 import {
   CryptoProvider,
   InviteSecret,
-  LocalNode,
   base64URLtoBytes,
   bytesToBase64url,
   cojsonInternals,
@@ -11,18 +10,14 @@ import { CoMap, Group } from "../../exports.js";
 import { ID, co } from "../../internal.js";
 import { AuthenticateAccountFunction } from "../../types.js";
 import { AuthSecretStorage } from "../AuthSecretStorage.js";
+import { MagicLinkAuthOptions } from "./types.js";
+import { createTemporaryAgent, defaultOptions } from "./utils.js";
 
 export class MagicLinkAuthTransfer extends CoMap {
   status = co.literal("pending", "incorrectCode", "authorized");
   secret = co.optional.string;
   acceptedBy = co.optional.ref(Account);
   confirmationCodeInput = co.optional.string;
-}
-
-export interface MagicLinkAuthOptions {
-  confirmationCodeFn: (crypto: CryptoProvider) => string | Promise<string>;
-  consumerHandlerPath: string;
-  providerHandlerPath: string;
 }
 
 /**
@@ -81,25 +76,10 @@ export class MagicLinkAuth {
   }
 
   /**
-   * Creates a transfer as the auth provider.
+   * Creates a transfer as a temporary agent.
    * @returns The created MagicLinkAuthTransfer.
    */
-  public async createTransferAsProvider() {
-    const group = Group.create();
-
-    const transfer = MagicLinkAuthTransfer.create(
-      { status: "pending" },
-      { owner: group },
-    );
-
-    return transfer;
-  }
-
-  /**
-   * Creates a transfer as the auth consumer.
-   * @returns The created MagicLinkAuthTransfer.
-   */
-  public async createTransferAsConsumer() {
+  public async createTransfer() {
     const temporaryAgent = await createTemporaryAgent(this.crypto);
     const group = Group.create({ owner: temporaryAgent });
 
@@ -134,8 +114,6 @@ export class MagicLinkAuth {
     transfer.status = "authorized";
     await transfer.waitForSync();
 
-    (transfer._loadedAs as Account)._raw.core.node.gracefulShutdown();
-
     const secretSeed = base64URLtoBytes(secret);
     const accountSecret = this.crypto.agentSecretFromSecretSeed(secretSeed);
 
@@ -167,15 +145,19 @@ export class MagicLinkAuth {
     url: string,
     targetHandler: "consumer" | "provider",
   ) {
-    const { transferId, inviteSecret } = parseMagicLinkAuthUrl(
-      this.options[`${targetHandler}HandlerPath`],
-      url,
+    const re = new RegExp(
+      `${this.options[`${targetHandler}HandlerPath`]}/(co_z[^/]+)/(inviteSecret_z[^/]+)$`,
     );
 
-    const account =
-      targetHandler === "consumer"
-        ? await createTemporaryAgent(this.crypto)
-        : Account.getMe();
+    const match = url.match(re);
+    if (!match) throw new Error("Invalid URL");
+
+    const transferId = match[1] as ID<MagicLinkAuthTransfer> | undefined;
+    const inviteSecret = match[2] as InviteSecret | undefined;
+
+    if (!transferId || !inviteSecret) throw new Error("Invalid URL");
+
+    const account = await createTemporaryAgent(this.crypto);
 
     const transfer = await account.acceptInvite(
       transferId,
@@ -188,68 +170,4 @@ export class MagicLinkAuth {
 
     return transfer;
   }
-}
-
-/**
- * Default function to generate a 6-digit confirmation code.
- * @param crypto - The crypto provider to use for random number generation.
- * @returns The generated confirmation code.
- */
-async function defaultConfirmationCodeFn(crypto: CryptoProvider) {
-  let code = "";
-  while (code.length < 6) {
-    // value is 0-15
-    const value = crypto.randomBytes(1)[0]! & 0x0f;
-    // discard values >=10 for uniform distribution 0-9
-    if (value >= 10) continue;
-    code += value.toString();
-  }
-  return code;
-}
-
-const defaultOptions: MagicLinkAuthOptions = {
-  confirmationCodeFn: defaultConfirmationCodeFn,
-  consumerHandlerPath: "/magic-link-handler-consumer",
-  providerHandlerPath: "/magic-link-handler-provider",
-};
-
-/**
- * Create a temporary agent to keep the transfer secret isolated from persistent accounts.
- * @param crypto - The crypto provider to use for agent creation.
- * @returns The created Account.
- */
-async function createTemporaryAgent(crypto: CryptoProvider) {
-  const [localPeer, magicLinkAuthPeer] = cojsonInternals.connectedPeers(
-    "local",
-    "magicLinkAuth",
-    { peer1role: "server", peer2role: "client" },
-  );
-  Account.getMe()._raw.core.node.syncManager.addPeer(magicLinkAuthPeer);
-
-  const { node } = await LocalNode.withNewlyCreatedAccount({
-    creationProps: { name: "Sandbox account" },
-    peersToLoadFrom: [localPeer],
-    crypto,
-  });
-  return Account.fromNode(node);
-}
-
-/**
- * Parse a magic link URL to extract the transfer ID and invite secret.
- * @param basePath - The base path of the magic link handler.
- * @param url - The URL to parse.
- * @returns The extracted transfer ID and invite secret.
- */
-function parseMagicLinkAuthUrl(basePath: string, url: string) {
-  const re = new RegExp(`${basePath}/(co_z[^/]+)/(inviteSecret_z[^/]+)$`);
-
-  const match = url.match(re);
-  if (!match) throw new Error("Invalid URL");
-
-  const transferId = match[1] as ID<MagicLinkAuthTransfer> | undefined;
-  const inviteSecret = match[2] as InviteSecret | undefined;
-
-  if (!transferId || !inviteSecret) throw new Error("Invalid URL");
-
-  return { transferId, inviteSecret };
 }
