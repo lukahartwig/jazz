@@ -1,5 +1,43 @@
 import { Prose } from "@components/molecules/Prose";
 import { NewsletterForm } from "@components/organisms/NewsletterForm";
+import resolveConfig from "tailwindcss/resolveConfig";
+import tailwindConfig from "../../tailwind.config";
+
+const fullConfig = resolveConfig(tailwindConfig);
+const colors = fullConfig.theme.colors;
+
+function ColorPalette() {
+  return (
+    <>
+      {Object.entries(colors).map(([name, value]) => {
+        if (typeof value !== "object" || Array.isArray(value)) return null;
+
+        return (
+          <div key={name}>
+            <h3>{name}</h3>
+            <div className="flex flex-wrap gap-2">
+              {Object.entries(value).map(([shade, hex]) =>
+                typeof hex === "string" ? (
+                  <div>
+                    <div
+                      key={shade}
+                      title={`${name}-${shade}: ${hex}`}
+                      className={`size-16 rounded border bg-${name}-${value}`}
+                      style={{
+                        backgroundColor: hex.replace("<alpha-value>", "1"),
+                      }}
+                    />
+                    {shade}
+                  </div>
+                ) : null,
+              )}
+            </div>
+          </div>
+        );
+      })}
+    </>
+  );
+}
 
 export default function Home() {
   return (
@@ -70,6 +108,9 @@ export default function Home() {
       <div className="p-3 border">
         <NewsletterForm />
       </div>
+
+      <h2>Color Palette</h2>
+      <ColorPalette />
     </main>
   );
 }
