@@ -19,6 +19,6 @@
     "dev": " tsc --sourceMap --outDir dist --watch"
   },
   "devDependencies": {
-    "typescript": "~5.6.2"
+    "typescript": "catalog:"
   }
 }

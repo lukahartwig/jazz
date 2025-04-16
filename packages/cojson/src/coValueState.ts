@@ -1,3 +1,5 @@
+import { ValueType } from "@opentelemetry/api";
+import { UpDownCounter, metrics } from "@opentelemetry/api";
 import { PeerState } from "./PeerState.js";
 import { CoValueCore } from "./coValueCore.js";
 import { RawCoID } from "./ids.js";
@@ -106,11 +108,24 @@ type CoValueStateType =
 export class CoValueState {
   promise?: Promise<CoValueCore | "unavailable">;
   private resolve?: (value: CoValueCore | "unavailable") => void;
+  private counter: UpDownCounter;
 
   constructor(
     public id: RawCoID,
     public state: CoValueStateType,
-  ) {}
+  ) {
+    this.counter = metrics
+      .getMeter("cojson")
+      .createUpDownCounter("jazz.covalues.loaded", {
+        description: "The number of covalues in the system",
+        unit: "covalue",
+        valueType: ValueType.INT,
+      });
+
+    this.counter.add(1, {
+      state: this.state.type,
+    });
+  }
 
   static Unknown(id: RawCoID) {
     return new CoValueState(id, new CoValueUnknownState());
@@ -151,7 +166,14 @@ export class CoValueState {
   }
 
   private moveToState(value: CoValueStateType) {
+    this.counter.add(-1, {
+      state: this.state.type,
+    });
     this.state = value;
+
+    this.counter.add(1, {
+      state: this.state.type,
+    });
 
     if (!this.resolve) {
       return;

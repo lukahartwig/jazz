@@ -29,6 +29,10 @@ pre.shiki {
   background-color: transparent !important;
 }
 
+.twoslash-popup-container {
+  white-space: break-spaces;
+}
+
 .twoslash-popup-code pre.shiki {
   padding: 0.2em;
   font-size: 0.8em;

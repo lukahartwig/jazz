@@ -460,6 +460,7 @@ export class CoValueCore {
     )._unsafeUnwrap({ withStackTrace: true });
 
     if (success) {
+      this.node.syncManager.recordTransactionsSize([transaction], "local");
       void this.node.syncManager.syncCoValue(this);
     }
 
