@@ -98,6 +98,10 @@ export class MagicLinkAuthHandleAsProvider {
     this.abortController?.abort();
   }
 
+  public checkValidUrl(url: string) {
+    return this.magicLinkAuth.checkValidUrl(url, "provider");
+  }
+
   listeners = new Set<() => void>();
   subscribe = (callback: () => void): (() => void) => {
     this.listeners.add(callback);

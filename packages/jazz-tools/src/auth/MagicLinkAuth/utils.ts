@@ -1,7 +1,13 @@
-import { type CryptoProvider, LocalNode, cojsonInternals } from "cojson";
+import {
+  type CryptoProvider,
+  type InviteSecret,
+  LocalNode,
+  cojsonInternals,
+} from "cojson";
 import { Account } from "../../coValues/account.js";
 import type { MagicLinkAuthTransfer } from "./MagicLinkAuth.js";
 import type { MagicLinkAuthOptions } from "./types.js";
+import type { ID } from "../../internal.js";
 
 /**
  * Create a temporary agent to keep the transfer secret isolated from persistent accounts.
@@ -28,6 +34,26 @@ export async function createTemporaryAgent(crypto: CryptoProvider) {
   await account.waitForAllCoValuesSync();
 
   return account;
+}
+
+/**
+ * Parse a transfer URL.
+ * @param handlerPath - The path of the handler.
+ * @param url - The URL to parse.
+ * @returns The transfer ID and invite secret.
+ */
+export function parseTransferUrl(handlerPath: string, url: string) {
+  const re = new RegExp(`${handlerPath}/(co_z[^/]+)/(inviteSecret_z[^/]+)$`);
+
+  const match = url.match(re);
+  if (!match) throw new Error("Invalid URL");
+
+  const transferId = match[1] as ID<MagicLinkAuthTransfer> | undefined;
+  const inviteSecret = match[2] as InviteSecret | undefined;
+
+  if (!transferId || !inviteSecret) throw new Error("Invalid URL");
+
+  return { transferId, inviteSecret };
 }
 
 /**

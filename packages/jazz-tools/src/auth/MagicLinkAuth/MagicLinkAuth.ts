@@ -11,7 +11,12 @@ import { ID, co } from "../../internal.js";
 import { AuthenticateAccountFunction } from "../../types.js";
 import { AuthSecretStorage } from "../AuthSecretStorage.js";
 import { MagicLinkAuthOptions } from "./types.js";
-import { createTemporaryAgent, defaultOptions } from "./utils.js";
+import {
+  createTemporaryAgent,
+  defaultOptions,
+  parseTransferUrl,
+  shutdownTransferAccount,
+} from "./utils.js";
 
 export class MagicLinkAuthTransfer extends CoMap {
   status = co.literal("pending", "incorrectCode", "authorized");
@@ -113,6 +118,7 @@ export class MagicLinkAuth {
     if (!secret) throw new Error("Transfer secret not set");
     transfer.status = "authorized";
     await transfer.waitForSync();
+    shutdownTransferAccount(transfer);
 
     const secretSeed = base64URLtoBytes(secret);
     const accountSecret = this.crypto.agentSecretFromSecretSeed(secretSeed);
@@ -145,17 +151,10 @@ export class MagicLinkAuth {
     url: string,
     targetHandler: "consumer" | "provider",
   ) {
-    const re = new RegExp(
-      `${this.options[`${targetHandler}HandlerPath`]}/(co_z[^/]+)/(inviteSecret_z[^/]+)$`,
+    const { transferId, inviteSecret } = parseTransferUrl(
+      this.options[`${targetHandler}HandlerPath`],
+      url,
     );
-
-    const match = url.match(re);
-    if (!match) throw new Error("Invalid URL");
-
-    const transferId = match[1] as ID<MagicLinkAuthTransfer> | undefined;
-    const inviteSecret = match[2] as InviteSecret | undefined;
-
-    if (!transferId || !inviteSecret) throw new Error("Invalid URL");
 
     const account = await createTemporaryAgent(this.crypto);
 
@@ -169,5 +168,20 @@ export class MagicLinkAuth {
     transfer.acceptedBy = account;
 
     return transfer;
+  }
+
+  /**
+   * Check if a URL is a valid transfer URL.
+   * @param url - The URL to check.
+   * @param targetHandler - Specifies whether the URL is for consumer or provider.
+   * @returns True if the URL is a valid transfer URL, false otherwise.
+   */
+  public checkValidUrl(url: string, targetHandler: "consumer" | "provider") {
+    try {
+      parseTransferUrl(this.options[`${targetHandler}HandlerPath`], url);
+      return true;
+    } catch (error) {
+      return false;
+    }
   }
 }

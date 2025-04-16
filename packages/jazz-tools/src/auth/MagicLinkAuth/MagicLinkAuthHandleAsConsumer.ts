@@ -75,9 +75,9 @@ export class MagicLinkAuthHandleAsConsumer {
         return;
       }
 
+      await this.magicLinkAuth.logInViaTransfer(transfer);
       this.status = "authorized";
       this.notify();
-      await this.magicLinkAuth.logInViaTransfer(transfer);
       this.options.onLoggedIn?.();
     } catch (error) {
       if (error instanceof Error && error.message.startsWith("Aborted")) {
@@ -95,6 +95,10 @@ export class MagicLinkAuthHandleAsConsumer {
 
   public cancelFlow() {
     this.abortController?.abort();
+  }
+
+  public checkValidUrl(url: string) {
+    return this.magicLinkAuth.checkValidUrl(url, "consumer");
   }
 
   listeners = new Set<() => void>();
