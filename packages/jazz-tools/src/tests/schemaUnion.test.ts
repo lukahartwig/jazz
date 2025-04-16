@@ -4,6 +4,7 @@ import { SchemaUnion } from "../coValues/schemaUnion.js";
 import {
   Account,
   CoMap,
+  CryptoProvider,
   co,
   loadCoValue,
   subscribeToCoValue,
@@ -63,7 +64,7 @@ const getWidgetSchemaFromRaw = (raw: BaseWidget["_raw"]) => {
 class WidgetUnion extends SchemaUnion.Of<BaseWidget>(getWidgetSchemaFromRaw) {}
 
 describe("SchemaUnion", () => {
-  let Crypto: WasmCrypto;
+  let Crypto: CryptoProvider;
   let me: Account;
 
   beforeAll(async () => {
@@ -88,23 +89,16 @@ describe("SchemaUnion", () => {
       { owner: me },
     );
 
-    const loadedButtonWidget = await loadCoValue(
-      WidgetUnion,
-      buttonWidget.id,
-      me,
-      {},
-    );
-    const loadedSliderWidget = await loadCoValue(
-      WidgetUnion,
-      sliderWidget.id,
-      me,
-      {},
-    );
+    const loadedButtonWidget = await loadCoValue(WidgetUnion, buttonWidget.id, {
+      loadAs: me,
+    });
+    const loadedSliderWidget = await loadCoValue(WidgetUnion, sliderWidget.id, {
+      loadAs: me,
+    });
     const loadedCheckboxWidget = await loadCoValue(
       WidgetUnion,
       checkboxWidget.id,
-      me,
-      {},
+      { loadAs: me },
     );
 
     expect(loadedButtonWidget).toBeInstanceOf(RedButtonWidget);
@@ -121,8 +115,7 @@ describe("SchemaUnion", () => {
     const unsubscribe = subscribeToCoValue(
       WidgetUnion,
       buttonWidget.id,
-      me,
-      {},
+      { loadAs: me, syncResolution: true },
       (value: BaseWidget) => {
         if (value instanceof BlueButtonWidget) {
           expect(value.label).toBe(currentValue);
@@ -130,8 +123,6 @@ describe("SchemaUnion", () => {
           throw new Error("Unexpected widget type");
         }
       },
-      () => {},
-      true,
     );
     currentValue = "Changed";
     buttonWidget.label = "Changed";

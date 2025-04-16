@@ -1,4 +1,5 @@
-import { AgentSecret, LocalNode } from "cojson";
+import { AgentSecret, CryptoProvider, LocalNode } from "cojson";
+import { type AnyWebSocketConstructor } from "cojson-transport-ws";
 import { WasmCrypto } from "cojson/crypto/WasmCrypto";
 import {
   Account,
@@ -14,8 +15,9 @@ type WorkerOptions<Acc extends Account> = {
   accountID?: string;
   accountSecret?: string;
   syncServer?: string;
-  WebSocket?: typeof WebSocket;
+  WebSocket?: AnyWebSocketConstructor;
   AccountSchema?: AccountClass<Acc>;
+  crypto?: CryptoProvider;
 };
 
 /** @category Context Creation */
@@ -60,7 +62,7 @@ export async function startWorker<Acc extends Account>(
     // TODO: locked sessions similar to browser
     sessionProvider: randomSessionProvider,
     peersToLoadFrom: [wsPeer.peer],
-    crypto: await WasmCrypto.create(),
+    crypto: options.crypto ?? (await WasmCrypto.create()),
   });
 
   const account = context.account as Acc;

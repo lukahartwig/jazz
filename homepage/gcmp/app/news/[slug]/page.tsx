@@ -46,8 +46,8 @@ export default async function Post({ params }: Params) {
               alt=""
             />
             <div>
-              <p className="text-stone-900 dark:text-white">{author.name}</p>
-              <p className="text-sm text-stone-600 dark:text-stone-400">
+              <p className="text-highlight">{author.name}</p>
+              <p className="text-sm text-stone-600 ">
                 <FormattedDate date={date} />
               </p>
             </div>

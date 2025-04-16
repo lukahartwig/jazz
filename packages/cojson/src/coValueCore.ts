@@ -183,9 +183,7 @@ export class CoValueCore {
       this.header.meta?.type === "account"
         ? (this.node.currentSessionID.replace(
             this.node.account.id,
-            this.node.account
-              .currentAgentID()
-              ._unsafeUnwrap({ withStackTrace: true }),
+            this.node.account.currentAgentID(),
           ) as SessionID)
         : this.node.currentSessionID;
 
@@ -200,9 +198,8 @@ export class CoValueCore {
     newTransactions: Transaction[],
     givenExpectedNewHash: Hash | undefined,
     newSignature: Signature,
-    options: {
-      skipVerify?: boolean;
-    } = {},
+    skipVerify: boolean = false,
+    givenNewStreamingHash?: StreamingHash,
   ): Result<true, TryAddTransactionsError> {
     return this.node
       .resolveAccountAgent(
@@ -212,41 +209,54 @@ export class CoValueCore {
       .andThen((agent) => {
         const signerID = this.crypto.getAgentSignerID(agent);
 
-        const { expectedNewHash, newStreamingHash } = this.expectedNewHashAfter(
-          sessionID,
-          newTransactions,
-        );
-
-        if (givenExpectedNewHash && givenExpectedNewHash !== expectedNewHash) {
-          return err({
-            type: "InvalidHash",
-            id: this.id,
-            expectedNewHash,
-            givenExpectedNewHash,
-          } satisfies InvalidHashError);
-        }
-
         if (
-          options.skipVerify !== true &&
-          !this.crypto.verify(newSignature, expectedNewHash, signerID)
+          skipVerify === true &&
+          givenNewStreamingHash &&
+          givenExpectedNewHash
         ) {
-          return err({
-            type: "InvalidSignature",
-            id: this.id,
-            newSignature,
+          this.doAddTransactions(
             sessionID,
-            signerID,
-          } satisfies InvalidSignatureError);
-        }
+            newTransactions,
+            newSignature,
+            givenExpectedNewHash,
+            givenNewStreamingHash,
+            "immediate",
+          );
+        } else {
+          const { expectedNewHash, newStreamingHash } =
+            this.expectedNewHashAfter(sessionID, newTransactions);
 
-        this.doAddTransactions(
-          sessionID,
-          newTransactions,
-          newSignature,
-          expectedNewHash,
-          newStreamingHash,
-          "immediate",
-        );
+          if (
+            givenExpectedNewHash &&
+            givenExpectedNewHash !== expectedNewHash
+          ) {
+            return err({
+              type: "InvalidHash",
+              id: this.id,
+              expectedNewHash,
+              givenExpectedNewHash,
+            } satisfies InvalidHashError);
+          }
+
+          if (!this.crypto.verify(newSignature, expectedNewHash, signerID)) {
+            return err({
+              type: "InvalidSignature",
+              id: this.id,
+              newSignature,
+              sessionID,
+              signerID,
+            } satisfies InvalidSignatureError);
+          }
+
+          this.doAddTransactions(
+            sessionID,
+            newTransactions,
+            newSignature,
+            expectedNewHash,
+            newStreamingHash,
+            "immediate",
+          );
+        }
 
         return ok(true as const);
       });
@@ -328,7 +338,11 @@ export class CoValueCore {
     if (notifyMode === "immediate") {
       const content = this.getCurrentContent();
       for (const listener of this.listeners) {
-        listener(content);
+        try {
+          listener(content);
+        } catch (e) {
+          logger.error("Error in listener for coValue " + this.id, { err: e });
+        }
       }
     } else {
       if (!this.nextDeferredNotify) {
@@ -338,7 +352,13 @@ export class CoValueCore {
             this.deferredUpdates = 0;
             const content = this.getCurrentContent();
             for (const listener of this.listeners) {
-              listener(content);
+              try {
+                listener(content);
+              } catch (e) {
+                logger.error("Error in listener for coValue " + this.id, {
+                  err: e,
+                });
+              }
             }
             resolve();
           }, 0);
@@ -364,40 +384,14 @@ export class CoValueCore {
     const streamingHash =
       this.sessionLogs.get(sessionID)?.streamingHash.clone() ??
       new StreamingHash(this.crypto);
+
     for (const transaction of newTransactions) {
       streamingHash.update(transaction);
     }
 
-    const newStreamingHash = streamingHash.clone();
-
     return {
       expectedNewHash: streamingHash.digest(),
-      newStreamingHash,
-    };
-  }
-
-  async expectedNewHashAfterAsync(
-    sessionID: SessionID,
-    newTransactions: Transaction[],
-  ): Promise<{ expectedNewHash: Hash; newStreamingHash: StreamingHash }> {
-    const streamingHash =
-      this.sessionLogs.get(sessionID)?.streamingHash.clone() ??
-      new StreamingHash(this.crypto);
-    let before = performance.now();
-    for (const transaction of newTransactions) {
-      streamingHash.update(transaction);
-      const after = performance.now();
-      if (after - before > 1) {
-        await new Promise((resolve) => setTimeout(resolve, 0));
-        before = performance.now();
-      }
-    }
-
-    const newStreamingHash = streamingHash.clone();
-
-    return {
-      expectedNewHash: streamingHash.digest(),
-      newStreamingHash,
+      newStreamingHash: streamingHash,
     };
   }
 
@@ -442,15 +436,14 @@ export class CoValueCore {
       this.header.meta?.type === "account"
         ? (this.node.currentSessionID.replace(
             this.node.account.id,
-            this.node.account
-              .currentAgentID()
-              ._unsafeUnwrap({ withStackTrace: true }),
+            this.node.account.currentAgentID(),
           ) as SessionID)
         : this.node.currentSessionID;
 
-    const { expectedNewHash } = this.expectedNewHashAfter(sessionID, [
-      transaction,
-    ]);
+    const { expectedNewHash, newStreamingHash } = this.expectedNewHashAfter(
+      sessionID,
+      [transaction],
+    );
 
     const signature = this.crypto.sign(
       this.node.account.currentSignerSecret(),
@@ -462,10 +455,12 @@ export class CoValueCore {
       [transaction],
       expectedNewHash,
       signature,
-      { skipVerify: true },
+      true,
+      newStreamingHash,
     )._unsafeUnwrap({ withStackTrace: true });
 
     if (success) {
+      this.node.syncManager.recordTransactionsSize([transaction], "local");
       void this.node.syncManager.syncCoValue(this);
     }
 
@@ -492,7 +487,10 @@ export class CoValueCore {
     ignorePrivateTransactions: boolean;
     knownTransactions?: CoValueKnownState["sessions"];
   }): DecryptedTransaction[] {
-    const validTransactions = determineValidTransactions(this);
+    const validTransactions = determineValidTransactions(
+      this,
+      options?.knownTransactions,
+    );
 
     const allTransactions: DecryptedTransaction[] = [];
 
@@ -536,7 +534,9 @@ export class CoValueCore {
       }
 
       if (!decryptedChanges) {
-        logger.error("Failed to decrypt transaction despite having key");
+        logger.error("Failed to decrypt transaction despite having key", {
+          err: new Error("Failed to decrypt transaction despite having key"),
+        });
         continue;
       }
 
@@ -566,7 +566,11 @@ export class CoValueCore {
   ) {
     return (
       a.madeAt - b.madeAt ||
-      (a.txID.sessionID < b.txID.sessionID ? -1 : 1) ||
+      (a.txID.sessionID === b.txID.sessionID
+        ? 0
+        : a.txID.sessionID < b.txID.sessionID
+          ? -1
+          : 1) ||
       a.txID.txIndex - b.txID.txIndex
     );
   }
@@ -626,9 +630,7 @@ export class CoValueCore {
       // Try to find key revelation for us
       const lookupAccountOrAgentID =
         this.header.meta?.type === "account"
-          ? this.node.account
-              .currentAgentID()
-              ._unsafeUnwrap({ withStackTrace: true })
+          ? this.node.account.currentAgentID()
           : this.node.account.id;
 
       const lastReadyKeyEdit = content.lastEditAt(

@@ -1,25 +1,27 @@
 import { Pricing } from "@/components/Pricing";
 import { LatencyMap } from "@/components/cloud/latencyMap";
 import { GridCard } from "gcmp-design-system/src/app/components/atoms/GridCard";
-import {
-  H2,
-  H3,
-  H4,
-} from "gcmp-design-system/src/app/components/atoms/Headings";
-import { LI } from "gcmp-design-system/src/app/components/atoms/ListItem";
+import { H2, H3 } from "gcmp-design-system/src/app/components/atoms/Headings";
 import { P } from "gcmp-design-system/src/app/components/atoms/Paragraph";
 import { GappedGrid } from "gcmp-design-system/src/app/components/molecules/GappedGrid";
 import { HeroHeader } from "gcmp-design-system/src/app/components/molecules/HeroHeader";
-import { UL } from "gcmp-design-system/src/app/components/molecules/List";
 import { Prose } from "gcmp-design-system/src/app/components/molecules/Prose";
 import { SectionHeader } from "gcmp-design-system/src/app/components/molecules/SectionHeader";
+import type { Metadata } from "next";
 import CloudPlusBackup from "./cloudPlusBackup.mdx";
 import CloudPlusDIY from "./cloudPlusDIY.mdx";
 import CompletelyDIY from "./completelyDIY.mdx";
 
-export const metadata = {
-  title: "Jazz Cloud",
-  description: "Serverless sync & storage for Jazz apps.",
+const title = "Jazz Cloud";
+const description = "Serverless sync & storage for Jazz apps.";
+
+export const metadata: Metadata = {
+  title,
+  description,
+  openGraph: {
+    title,
+    description,
+  },
 };
 
 export default function Cloud() {
@@ -59,8 +61,8 @@ export default function Cloud() {
       </div>
 
       <div className="bg-stone-100 border-y dark:bg-stone-925 py-8 lg:py-16 dark:border-y-0 dark:bg-transparent dark:py-0">
-        <div className="container">
-          <H2 className="mb-5 sm:text-center md:text-left">Pricing</H2>
+        <div className="container space-y-5">
+          <H2>Pricing</H2>
 
           <Pricing />
         </div>

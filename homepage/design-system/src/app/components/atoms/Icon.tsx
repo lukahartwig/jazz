@@ -1,4 +1,5 @@
 import {
+  AlertTriangleIcon,
   ArrowDownIcon,
   ArrowRightIcon,
   BookTextIcon,
@@ -6,39 +7,39 @@ import {
   CheckIcon,
   ChevronDown,
   ChevronRight,
+  ClipboardIcon,
   CodeIcon,
-  CopyIcon,
   FileLock2Icon,
   FileTextIcon,
   FingerprintIcon,
   FolderArchiveIcon,
   GaugeIcon,
   GlobeIcon,
+  HashIcon,
   ImageIcon,
+  InfoIcon,
   LinkIcon,
   LockKeyholeIcon,
-  LucideIcon,
+  type LucideIcon,
   MailIcon,
   MenuIcon,
   MessageCircleQuestionIcon,
   MonitorSmartphoneIcon,
   MoonIcon,
+  MousePointer2Icon,
   MousePointerSquareDashedIcon,
-  PencilLineIcon,
   ScanFace,
   ScrollIcon,
   SunIcon,
   TrashIcon,
   UploadCloudIcon,
   UserIcon,
-  UserPlusIcon,
   UsersIcon,
   WifiOffIcon,
   XIcon,
 } from "lucide-react";
 
 const icons = {
-  addUser: UserPlusIcon,
   arrowDown: ArrowDownIcon,
   arrowRight: ArrowRightIcon,
   auth: UserIcon,
@@ -48,7 +49,8 @@ const icons = {
   chevronDown: ChevronDown,
   close: XIcon,
   code: CodeIcon,
-  copy: CopyIcon,
+  copy: ClipboardIcon,
+  cursor: MousePointer2Icon,
   darkTheme: MoonIcon,
   delete: TrashIcon,
   devices: MonitorSmartphoneIcon,
@@ -56,6 +58,7 @@ const icons = {
   encryption: LockKeyholeIcon,
   faceId: ScanFace,
   file: FileTextIcon,
+  hash: HashIcon,
   help: MessageCircleQuestionIcon,
   image: ImageIcon,
   instant: GaugeIcon,
@@ -71,8 +74,9 @@ const icons = {
   tableOfContents: ScrollIcon,
   touchId: FingerprintIcon,
   upload: UploadCloudIcon,
-  write: PencilLineIcon,
   zip: FolderArchiveIcon,
+  warning: AlertTriangleIcon,
+  info: InfoIcon,
 };
 
 // copied from tailwind line height https://tailwindcss.com/docs/font-size
@@ -110,6 +114,8 @@ const strokeWidths = {
   "9xl": 1,
 };
 
+export type IconName = keyof typeof icons;
+
 export function Icon({
   name,
   icon,
@@ -117,13 +123,13 @@ export function Icon({
   className,
   ...svgProps
 }: {
-  name?: string;
+  name?: IconName;
   icon?: LucideIcon;
   size?: keyof typeof sizes;
   className?: string;
 } & React.SVGProps<SVGSVGElement>) {
   if (!icon && (!name || !icons.hasOwnProperty(name))) {
-    throw new Error(`Icon not found`);
+    throw new Error(`Icon not found: ${name}`);
   }
 
   // @ts-ignore

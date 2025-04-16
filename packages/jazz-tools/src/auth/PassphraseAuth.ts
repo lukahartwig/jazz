@@ -3,7 +3,10 @@ import { entropyToMnemonic } from "@scure/bip39";
 import { CryptoProvider, cojsonInternals } from "cojson";
 import { Account } from "../coValues/account.js";
 import type { ID } from "../internal.js";
-import type { AuthenticateAccountFunction } from "../types.js";
+import type {
+  AuthenticateAccountFunction,
+  RegisterAccountFunction,
+} from "../types.js";
 import { AuthSecretStorage } from "./AuthSecretStorage.js";
 
 /**
@@ -23,6 +26,7 @@ export class PassphraseAuth {
   constructor(
     private crypto: CryptoProvider,
     private authenticate: AuthenticateAccountFunction,
+    private register: RegisterAccountFunction,
     private authSecretStorage: AuthSecretStorage,
     public wordlist: string[],
   ) {}
@@ -61,7 +65,7 @@ export class PassphraseAuth {
     this.notify();
   };
 
-  signUp = async () => {
+  signUp = async (name?: string) => {
     const credentials = await this.authSecretStorage.get();
 
     if (!credentials || !credentials.secretSeed) {
@@ -77,7 +81,32 @@ export class PassphraseAuth {
       provider: "passphrase",
     });
 
+    if (name?.trim()) {
+      const currentAccount = await Account.getMe().ensureLoaded({
+        resolve: {
+          profile: true,
+        },
+      });
+
+      currentAccount.profile.name = name;
+    }
+
     return passphrase;
+  };
+
+  registerNewAccount = async (passphrase: string, name: string) => {
+    const secretSeed = bip39.mnemonicToEntropy(passphrase, this.wordlist);
+    const accountSecret = this.crypto.agentSecretFromSecretSeed(secretSeed);
+    const accountID = await this.register(accountSecret, { name });
+
+    await this.authSecretStorage.set({
+      accountID,
+      secretSeed,
+      accountSecret,
+      provider: "passphrase",
+    });
+
+    return accountID;
   };
 
   getCurrentAccountPassphrase = async () => {
@@ -88,6 +117,10 @@ export class PassphraseAuth {
     }
 
     return entropyToMnemonic(credentials.secretSeed, this.wordlist);
+  };
+
+  generateRandomPassphrase = () => {
+    return entropyToMnemonic(this.crypto.newRandomSecretSeed(), this.wordlist);
   };
 
   loadCurrentAccountPassphrase = async () => {

@@ -16,7 +16,10 @@ export type EngineConfig = {
   };
 };
 
-export const frameworks = [
+export const frameworks: {
+  name: string;
+  value: Framework;
+}[] = [
   {
     name: "React",
     value: "react",
@@ -85,34 +88,29 @@ export const frameworkToAuthExamples: Partial<
     }
   >
 > = {
-  "react-demo-auth": {
-    name: "React + Jazz + Demo Auth + Tailwind",
-    repo: "garden-co/jazz/starters/react-demo-auth-tailwind",
-    platform: PLATFORM.WEB,
-  },
   "react-passkey-auth": {
-    name: "React + Jazz + Passkey Auth",
-    repo: "garden-co/jazz/examples/passkey",
+    name: "Passkey auth (easiest to start with)",
+    repo: "garden-co/jazz/starters/react-passkey-auth",
     platform: PLATFORM.WEB,
   },
   "react-clerk-auth": {
-    name: "React + Jazz + Clerk Auth",
+    name: "Clerk auth",
     repo: "garden-co/jazz/examples/clerk",
     platform: PLATFORM.WEB,
   },
   "vue-demo-auth": {
-    name: "Vue + Jazz + Demo Auth",
+    name: "Demo auth",
     repo: "garden-co/jazz/examples/todo-vue",
     platform: PLATFORM.WEB,
   },
   "svelte-passkey-auth": {
-    name: "Svelte + Jazz + Passkey Auth",
+    name: "Passkey auth",
     repo: "garden-co/jazz/examples/passkey-svelte",
     platform: PLATFORM.WEB,
   },
   "rn-clerk-auth": {
-    name: "React Native Expo + Jazz + Clerk Auth",
-    repo: "garden-co/jazz/examples/chat-rn-clerk",
+    name: "Clerk auth",
+    repo: "garden-co/jazz/examples/chat-rn-expo-clerk",
     platform: PLATFORM.REACT_NATIVE,
   },
 };

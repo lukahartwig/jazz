@@ -84,6 +84,15 @@ export class RawCoMapView<
       throw new Error("Cannot process transactions on a time travel entity");
     }
 
+    const newValidTransactions = this.core.getValidTransactions({
+      ignorePrivateTransactions: this.ignorePrivateTransactions,
+      knownTransactions: this.knownTransactions,
+    });
+
+    if (newValidTransactions.length === 0) {
+      return;
+    }
+
     const { ops } = this;
 
     const changedEntries = new Map<
@@ -91,12 +100,7 @@ export class RawCoMapView<
       NonNullable<(typeof ops)[keyof typeof ops]>
     >();
 
-    const nextValidTransactions = this.core.getValidTransactions({
-      ignorePrivateTransactions: this.ignorePrivateTransactions,
-      knownTransactions: this.knownTransactions,
-    });
-
-    for (const { txID, changes, madeAt } of nextValidTransactions) {
+    for (const { txID, changes, madeAt } of newValidTransactions) {
       for (let changeIdx = 0; changeIdx < changes.length; changeIdx++) {
         const change = changes[changeIdx] as MapOpPayload<
           keyof Shape & string,
@@ -238,7 +242,7 @@ export class RawCoMapView<
   get<K extends keyof Shape & string>(key: K): Shape[K] | undefined {
     const entry = this.getRaw(key);
 
-    if (entry === undefined) {
+    if (entry?.change === undefined) {
       return undefined;
     }
 

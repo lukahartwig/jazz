@@ -1,7 +1,7 @@
 {
   "name": "version-history",
   "private": true,
-  "version": "0.0.41",
+  "version": "0.0.70",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@tailwindcss/forms": "^0.5.9",
+    "jazz-inspector": "workspace:*",
     "jazz-react": "workspace:*",
     "jazz-tools": "workspace:*",
     "react": "^18.3.1",

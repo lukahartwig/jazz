@@ -42,7 +42,6 @@ function JazzAndAuth({ children }: { children: React.ReactNode }) {
     <JazzProvider
       sync={{
         peer: `wss://cloud.jazz.tools/?key=${apiKey}`,
-        when: "signedUp",
       }}
       AccountSchema={TodoAccount}
     >
@@ -122,7 +121,7 @@ export default function App() {
 
 function HomeScreen() {
   const { me } = useAccount({
-    root: { projects: [{}] },
+    resolve: { root: { projects: { $each: true } } },
   });
   const navigate = useNavigate();
 

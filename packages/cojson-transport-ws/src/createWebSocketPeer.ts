@@ -1,14 +1,14 @@
 import {
-  DisconnectedError,
-  Peer,
-  PingTimeoutError,
-  SyncMessage,
+  type DisconnectedError,
+  type Peer,
+  type PingTimeoutError,
+  type SyncMessage,
   cojsonInternals,
   logger,
 } from "cojson";
 import { BatchedOutgoingMessages } from "./BatchedOutgoingMessages.js";
-import { deserializeMessages, getErrorMessage } from "./serialization.js";
-import { AnyWebSocket } from "./types.js";
+import { deserializeMessages } from "./serialization.js";
+import type { AnyWebSocket } from "./types.js";
 
 export const BUFFER_LIMIT = 100_000;
 export const BUFFER_LIMIT_POLLING_INTERVAL = 10;
@@ -20,11 +20,16 @@ export type CreateWebSocketPeerOpts = {
   expectPings?: boolean;
   batchingByDefault?: boolean;
   deletePeerStateOnClose?: boolean;
+  pingTimeout?: number;
   onClose?: () => void;
   onSuccess?: () => void;
 };
 
-function createPingTimeoutListener(enabled: boolean, callback: () => void) {
+function createPingTimeoutListener(
+  enabled: boolean,
+  timeout: number,
+  callback: () => void,
+) {
   if (!enabled) {
     return {
       reset() {},
@@ -39,7 +44,7 @@ function createPingTimeoutListener(enabled: boolean, callback: () => void) {
       pingTimeout && clearTimeout(pingTimeout);
       pingTimeout = setTimeout(() => {
         callback();
-      }, 10_000);
+      }, timeout);
     },
     clear() {
       pingTimeout && clearTimeout(pingTimeout);
@@ -52,7 +57,7 @@ function waitForWebSocketOpen(websocket: AnyWebSocket) {
     if (websocket.readyState === 1) {
       resolve();
     } else {
-      websocket.addEventListener("open", resolve, { once: true });
+      websocket.addEventListener("open", () => resolve(), { once: true });
     }
   });
 }
@@ -128,6 +133,7 @@ export function createWebSocketPeer({
   expectPings = true,
   batchingByDefault = true,
   deletePeerStateOnClose = false,
+  pingTimeout = 10_000,
   onSuccess,
   onClose,
 }: CreateWebSocketPeerOpts): Peer {
@@ -139,25 +145,35 @@ export function createWebSocketPeer({
   function handleClose() {
     incoming
       .push("Disconnected")
-      .catch((e) => logger.error("Error while pushing disconnect msg", e));
+      .catch((e) =>
+        logger.error("Error while pushing disconnect msg", { err: e }),
+      );
     emitClosedEvent();
   }
 
   websocket.addEventListener("close", handleClose);
+  // TODO (#1537): Remove this any once the WebSocket error event type is fixed
+  // biome-ignore lint/suspicious/noExplicitAny: WebSocket error event type
   websocket.addEventListener("error" as any, (err) => {
     if (err.message) {
-      logger.warn(err.message);
+      logger.warn("WebSocket error", { err });
     }
 
     handleClose();
   });
 
-  const pingTimeout = createPingTimeoutListener(expectPings, () => {
-    incoming
-      .push("PingTimeout")
-      .catch((e) => logger.error("Error while pushing ping timeout", e));
-    emitClosedEvent();
-  });
+  const pingTimeoutListener = createPingTimeoutListener(
+    expectPings,
+    pingTimeout,
+    () => {
+      incoming
+        .push("PingTimeout")
+        .catch((e) =>
+          logger.error("Error while pushing ping timeout", { err: e }),
+        );
+      emitClosedEvent();
+    },
+  );
 
   const outgoingMessages = createOutgoingMessagesManager(
     websocket,
@@ -166,6 +182,8 @@ export function createWebSocketPeer({
   let isFirstMessage = true;
 
   function handleIncomingMsg(event: { data: unknown }) {
+    pingTimeoutListener.reset();
+
     if (event.data === "") {
       return;
     }
@@ -173,9 +191,7 @@ export function createWebSocketPeer({
     const result = deserializeMessages(event.data);
 
     if (!result.ok) {
-      logger.warn(
-        "Error while deserializing messages: " + getErrorMessage(result.error),
-      );
+      logger.warn("Error while deserializing messages", { err: result.error });
       return;
     }
 
@@ -193,13 +209,13 @@ export function createWebSocketPeer({
       outgoingMessages.setBatchingEnabled(true);
     }
 
-    pingTimeout.reset();
-
     for (const msg of messages) {
       if (msg && "action" in msg) {
         incoming
           .push(msg)
-          .catch((e) => logger.error("Error while pushing incoming msg", e));
+          .catch((e) =>
+            logger.error("Error while pushing incoming msg", { err: e }),
+          );
       }
     }
   }
@@ -216,7 +232,7 @@ export function createWebSocketPeer({
 
         websocket.removeEventListener("message", handleIncomingMsg);
         websocket.removeEventListener("close", handleClose);
-        pingTimeout.clear();
+        pingTimeoutListener.clear();
         emitClosedEvent();
 
         if (websocket.readyState === 0) {
@@ -227,7 +243,7 @@ export function createWebSocketPeer({
             },
             { once: true },
           );
-        } else if (websocket.readyState == 1) {
+        } else if (websocket.readyState === 1) {
           websocket.close();
         }
       },

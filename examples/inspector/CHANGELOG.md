@@ -1,5 +1,206 @@
 # jazz-example-inspector
 
+## 0.0.126
+
+### Patch Changes
+
+- Updated dependencies [c320615]
+  - jazz-inspector@0.13.6
+
+## 0.0.125
+
+### Patch Changes
+
+- Updated dependencies [08ae9b2]
+- Updated dependencies [e090b39]
+  - jazz-inspector@0.13.5
+  - cojson@0.13.5
+  - cojson-transport-ws@0.13.5
+
+## 0.0.124
+
+### Patch Changes
+
+- jazz-inspector@0.13.4
+
+## 0.0.123
+
+### Patch Changes
+
+- Updated dependencies [b19cab7]
+- Updated dependencies [017f6c8]
+  - cojson-transport-ws@0.13.3
+  - jazz-inspector@0.13.3
+
+## 0.0.122
+
+### Patch Changes
+
+- Updated dependencies [ae4be2b]
+- Updated dependencies [c551839]
+  - jazz-inspector@0.13.2
+  - cojson@0.13.2
+  - cojson-transport-ws@0.13.2
+
+## 0.0.121
+
+### Patch Changes
+
+- 2796689: various fixes and css refactoring
+- Updated dependencies [a013538]
+- Updated dependencies [2796689]
+- Updated dependencies [2224ed4]
+- Updated dependencies [bce3bcc]
+  - cojson@0.13.0
+  - jazz-inspector@0.13.0
+  - cojson-transport-ws@0.13.0
+
+## 0.0.120
+
+### Patch Changes
+
+- 8a71835: use goober for css
+- Updated dependencies [8a71835]
+- Updated dependencies [c2f4827]
+  - jazz-inspector@0.12.2
+  - cojson@0.12.2
+  - cojson-transport-ws@0.12.2
+
+## 0.0.119
+
+### Patch Changes
+
+- Updated dependencies [5a00fe0]
+  - cojson@0.12.1
+  - cojson-transport-ws@0.12.1
+  - jazz-inspector@0.12.1
+
+## 0.0.118
+
+### Patch Changes
+
+- Updated dependencies [01523dc]
+- Updated dependencies [01523dc]
+- Updated dependencies [9a56bb3]
+  - cojson@0.12.0
+  - jazz-inspector@0.12.0
+  - cojson-transport-ws@0.12.0
+
+## 0.0.117
+
+### Patch Changes
+
+- Updated dependencies [71b9390]
+- Updated dependencies [6c86c4f]
+- Updated dependencies [9d0c9dc]
+  - jazz-inspector@0.11.8
+  - cojson@0.11.8
+  - cojson-transport-ws@0.11.8
+
+## 0.0.116
+
+### Patch Changes
+
+- 2c3761c: fix: CoFeed and FileStream are showing as CoStream
+- Updated dependencies [2c3761c]
+- Updated dependencies [2b94bc8]
+- Updated dependencies [2957362]
+  - jazz-inspector@0.11.7
+  - cojson@0.11.7
+  - cojson-transport-ws@0.11.7
+
+## 0.0.115
+
+### Patch Changes
+
+- 09f0a98: UI and JSON display improvements
+- 11da4d1: isolate class name hashing on inspector
+- Updated dependencies [09f0a98]
+- Updated dependencies [11da4d1]
+- Updated dependencies [8ed144e]
+  - jazz-inspector@0.11.6
+  - cojson@0.11.6
+  - cojson-transport-ws@0.11.6
+
+## 0.0.114
+
+### Patch Changes
+
+- Updated dependencies [60f5b3f]
+  - cojson@0.11.5
+  - cojson-transport-ws@0.11.5
+
+## 0.0.113
+
+### Patch Changes
+
+- Updated dependencies [7f036c1]
+  - cojson@0.11.4
+  - cojson-transport-ws@0.11.4
+
+## 0.0.112
+
+### Patch Changes
+
+- Updated dependencies [68b0242]
+  - cojson-transport-ws@0.11.3
+  - cojson@0.11.3
+
+## 0.0.111
+
+### Patch Changes
+
+- Updated dependencies [b9d194a]
+- Updated dependencies [a4713df]
+- Updated dependencies [e22de9f]
+- Updated dependencies [34cbdc3]
+- Updated dependencies [0f67e0a]
+  - cojson@0.11.0
+  - cojson-transport-ws@0.11.0
+
+## 0.0.110
+
+### Patch Changes
+
+- Updated dependencies [f86e278]
+  - cojson@0.10.15
+  - cojson-transport-ws@0.10.15
+
+## 0.0.109
+
+### Patch Changes
+
+- Updated dependencies [153dc99]
+  - cojson@0.10.8
+  - cojson-transport-ws@0.10.8
+
+## 0.0.108
+
+### Patch Changes
+
+- Updated dependencies [0f83320]
+- Updated dependencies [012022d]
+  - cojson@0.10.7
+  - cojson-transport-ws@0.10.7
+
+## 0.0.107
+
+### Patch Changes
+
+- Updated dependencies [1d71ca1]
+- Updated dependencies [5c76e37]
+  - hash-slash@0.2.2
+  - cojson@0.10.6
+  - cojson-transport-ws@0.10.6
+
+## 0.0.106
+
+### Patch Changes
+
+- Updated dependencies [1af6072]
+  - cojson@0.10.4
+  - cojson-transport-ws@0.10.4
+
 ## 0.0.105
 
 ### Patch Changes

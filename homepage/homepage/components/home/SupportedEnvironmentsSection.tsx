@@ -17,7 +17,7 @@ export function SupportedEnvironmentsSection() {
         <Icon
           name="browser"
           size="3xl"
-          className="text-stone-900 dark:text-white"
+          className="text-highlight"
           height="1em"
           width="1em"
         />
@@ -70,7 +70,7 @@ export function SupportedEnvironmentsSection() {
           {supported.map((tech) => (
             <div key={tech.name} className="flex items-center gap-2">
               <span className="text-xl">{tech.icon}</span>
-              <div className="text-center font-medium text-stone-900 dark:text-white lg:text-lg">
+              <div className="text-center font-medium text-highlight lg:text-lg">
                 {tech.name}
               </div>
             </div>
@@ -82,7 +82,7 @@ export function SupportedEnvironmentsSection() {
             {comingSoon.map((tech) => (
               <div key={tech.name} className="flex items-center gap-2">
                 <span className="text-xl">{tech.icon}</span>
-                <div className="text-center text-sm text-stone-900 dark:text-white">
+                <div className="text-center text-sm text-highlight">
                   {tech.name}
                 </div>
               </div>

@@ -1,7 +1,15 @@
-import { packages } from "@/lib/packages";
+import { packages } from "@/content/packages";
 import { clsx } from "clsx";
 import { Icon } from "gcmp-design-system/src/app/components/atoms/Icon";
+import type { Metadata } from "next";
 import Link from "next/link";
+
+export const metadata: Metadata = {
+  title: "API reference",
+  openGraph: {
+    title: "API reference",
+  },
+};
 
 const CardHeading = ({
   children,
@@ -66,9 +74,9 @@ export default function Page() {
             <Card className="border shadow-sm">
               <Icon
                 name="package"
-                className="text-stone-500 dark:text-stone-400"
+                className="text-stone-500"
               />
-              <CardHeading className="group-hover:text-blue dark:group-hover:text-blue-600">
+              <CardHeading className="group-hover:text-primary dark:group-hover:text-blue-600">
                 {name}
               </CardHeading>
               <CardBody>{description}</CardBody>
@@ -80,7 +88,7 @@ export default function Page() {
           <Icon
             name="help"
             size="md"
-            className="text-stone-500 dark:text-stone-400"
+            className="text-stone-500 "
           />
           <CardHeading>
             Can&apos;t find what you&apos;re looking for?

@@ -9,7 +9,7 @@ export default function RootLayout({
 }) {
   return (
     <DocsLayout nav={<ApiNav />} navIcon="package" navName="API Ref">
-      <Prose className="overflow-x-hidden lg:flex-1 py-8">{children}</Prose>
+      <Prose className="overflow-x-hidden lg:flex-1 py-10">{children}</Prose>
     </DocsLayout>
   );
 }

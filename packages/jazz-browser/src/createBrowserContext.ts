@@ -149,8 +149,6 @@ export async function createJazzBrowserContext<Acc extends Account>(
     const authSecretStorage = options.authSecretStorage;
     const credentials = options.credentials ?? (await authSecretStorage.get());
 
-    authSecretStorage.emitUpdate(credentials);
-
     function handleAuthUpdate(isAuthenticated: boolean) {
       if (isAuthenticated) {
         toggleNetwork(true);
@@ -160,7 +158,7 @@ export async function createJazzBrowserContext<Acc extends Account>(
     }
 
     unsubscribeAuthUpdate = authSecretStorage.onUpdate(handleAuthUpdate);
-    handleAuthUpdate(authSecretStorage.isAuthenticated);
+    handleAuthUpdate(authSecretStorage.getIsAuthenticated(credentials));
   }
 
   const context = await createJazzContext({

@@ -1,5 +1,19 @@
+import { styled } from "goober";
 import React from "react";
+import { Button } from "../ui/button.js";
 import { PageInfo } from "./types.js";
+
+const BreadcrumbsContainer = styled("div")`
+  position: relative;
+  z-index: 20;
+  flex: 1;
+  display: flex;
+  align-items: center;
+`;
+
+const Separator = styled("span")`
+  padding: 0 0.125rem;
+`;
 
 interface BreadcrumbsProps {
   path: PageInfo[];
@@ -11,75 +25,28 @@ export const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
   onBreadcrumbClick,
 }) => {
   return (
-    <div
-      style={{
-        position: "relative",
-        zIndex: 20,
-        backgroundColor: "rgba(129, 140, 248, 0.1)", // indigo-400/10 equivalent
-        backdropFilter: "blur(4px)",
-        borderRadius: "0.5rem",
-        display: "inline-flex",
-        paddingLeft: "0.5rem",
-        paddingRight: "0.5rem",
-        paddingTop: "0.25rem",
-        paddingBottom: "0.25rem",
-        whiteSpace: "pre",
-        transition: "all",
-        alignItems: "center",
-        gap: "0.25rem",
-        minHeight: "2.5rem",
-      }}
-    >
-      <button
+    <BreadcrumbsContainer>
+      <Button
+        variant="link"
+        style={{ padding: "0 0.25rem" }}
         onClick={() => onBreadcrumbClick(-1)}
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          padding: "0.25rem",
-          borderRadius: "0.125rem",
-          transition: "colors",
-        }}
-        onMouseOver={(e) =>
-          (e.currentTarget.style.backgroundColor = "rgba(99, 102, 241, 0.1)")
-        }
-        onMouseOut={(e) =>
-          (e.currentTarget.style.backgroundColor = "transparent")
-        }
-        aria-label="Go to home"
       >
-        Start
-      </button>
+        Home
+      </Button>
       {path.map((page, index) => {
         return (
-          <span
-            key={index}
-            style={{
-              display: "inline-block",
-              paddingLeft: index === 0 ? "0.25rem" : "0",
-              paddingRight: index === path.length - 1 ? "0.25rem" : "0",
-            }}
-          >
-            {index === 0 ? null : (
-              <span style={{ color: "rgba(99, 102, 241, 0.3)" }}>{" / "}</span>
-            )}
-            <button
+          <React.Fragment key={page.coId}>
+            <Separator aria-hidden>/</Separator>
+            <Button
+              variant="link"
+              style={{ padding: "0 0.25rem" }}
               onClick={() => onBreadcrumbClick(index)}
-              style={{
-                color: "rgb(67, 56, 202)",
-              }}
-              onMouseOver={(e) =>
-                (e.currentTarget.style.textDecoration = "underline")
-              }
-              onMouseOut={(e) =>
-                (e.currentTarget.style.textDecoration = "none")
-              }
             >
               {index === 0 ? page.name || "Root" : page.name}
-            </button>
-          </span>
+            </Button>
+          </React.Fragment>
         );
       })}
-    </div>
+    </BreadcrumbsContainer>
   );
 };

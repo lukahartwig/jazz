@@ -14,6 +14,7 @@ export function usePassphraseAuth({
   const auth = new PassphraseAuth(
     context.current.node.crypto,
     context.current.authenticate,
+    context.current.register,
     authSecretStorage,
     wordlist
   );
@@ -35,6 +36,8 @@ export function usePassphraseAuth({
   return {
     logIn: auth.logIn,
     signUp: auth.signUp,
+    registerNewAccount: auth.registerNewAccount,
+    generateRandomPassphrase: auth.generateRandomPassphrase,
     get passphrase() {
       return passphrase;
     },

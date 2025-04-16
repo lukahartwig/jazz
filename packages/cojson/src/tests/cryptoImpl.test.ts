@@ -7,7 +7,7 @@ import { SessionID } from "../ids.js";
 describe.each([
   { impl: await WasmCrypto.create(), name: "Wasm" },
   { impl: await PureJSCrypto.create(), name: "PureJS" },
-])("Crypto $name", ({ impl }) => {
+])("$name implementation", ({ impl, name }) => {
   test("randomBytes", () => {
     expect(impl.randomBytes(32).length).toEqual(32);
   });

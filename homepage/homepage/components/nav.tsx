@@ -1,6 +1,5 @@
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { socials } from "@/lib/socials";
-import { useFramework } from "@/lib/use-framework";
+import { socials } from "@/content/socials";
 import { JazzLogo } from "gcmp-design-system/src/app/components/atoms/logos/JazzLogo";
 import {
   Nav,
@@ -39,13 +38,8 @@ export function JazzNav({ sections }: { sections?: NavSection[] }) {
           newTab: true,
         },
         {
-          title: "Releases",
-          href: "https://github.com/garden-co/jazz/releases",
-          newTab: true,
-        },
-        {
-          title: "Status",
           href: "/status",
+          title: "Status",
         },
       ]}
       socials={socials}

@@ -1,13 +1,12 @@
-import { Database as DatabaseT } from "better-sqlite3";
 import {
   MAX_RECOMMENDED_TX_SIZE,
-  RawCoID,
-  SessionID,
-  StorageAdapter,
+  type RawCoID,
+  type SessionID,
+  type StorageAdapter,
 } from "cojson";
-import { StoredSessionLog } from "cojson";
-import { CojsonInternalTypes } from "cojson";
-import { SyncDBClientInterface } from "./types.js";
+import type { StoredSessionLog } from "cojson";
+import type { CojsonInternalTypes } from "cojson";
+import type { SyncDBClientInterface } from "./types.js";
 
 export class SyncStorageAdapter implements StorageAdapter {
   private dbClient: SyncDBClientInterface;

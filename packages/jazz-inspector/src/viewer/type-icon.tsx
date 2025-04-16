@@ -1,9 +1,24 @@
 import { CoID, LocalNode, RawCoValue } from "cojson";
+import { styled } from "goober";
 import {
   CoJsonType,
   ExtendedCoJsonType,
   useResolvedCoValue,
 } from "./use-resolve-covalue.js";
+
+const IconText = styled("span")`
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+`;
+
+const UnavailableText = styled("div")`
+  font-weight: 500;
+`;
+
+const EmptySpace = styled("div")`
+  white-space: pre;
+  width: 3.5rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+`;
 
 export const TypeIcon = ({
   type,
@@ -16,16 +31,17 @@ export const TypeIcon = ({
     record: "{} Record",
     image: "🖼️ Image",
     comap: "{} CoMap",
-    costream: "≋ CoStream",
+    costream: "≋ CoFeed",
     colist: "☰ CoList",
     account: "👤 Account",
     group: "👥 Group",
+    file: "📃 FileStream",
   };
 
   const iconKey = extendedType || type;
   const icon = iconMap[iconKey as keyof typeof iconMap];
 
-  return icon ? <span style={{ fontFamily: "monospace" }}>{icon}</span> : null;
+  return icon ? <IconText>{icon}</IconText> : null;
 };
 
 export const ResolveIcon = ({
@@ -38,17 +54,10 @@ export const ResolveIcon = ({
   const { type, extendedType, snapshot } = useResolvedCoValue(coId, node);
 
   if (snapshot === "unavailable" && !type) {
-    return <div style={{ color: "#4B5563", fontWeight: 500 }}>Unavailable</div>;
+    return <UnavailableText>Unavailable</UnavailableText>;
   }
 
-  if (!type)
-    return (
-      <div
-        style={{ whiteSpace: "pre", width: "3.5rem", fontFamily: "monospace" }}
-      >
-        {" "}
-      </div>
-    );
+  if (!type) return <EmptySpace> </EmptySpace>;
 
   return <TypeIcon type={type} extendedType={extendedType} />;
 };

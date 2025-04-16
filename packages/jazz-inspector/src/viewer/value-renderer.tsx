@@ -1,114 +1,164 @@
 import { CoID, JsonValue, LocalNode, RawCoValue } from "cojson";
+import { styled } from "goober";
 import React, { useEffect, useState } from "react";
-import { LinkIcon } from "../link-icon.js";
+import { Button } from "../ui/button.js";
+import { Icon } from "../ui/icon.js";
+import { Text } from "../ui/text.js";
 import {
   isBrowserImage,
   resolveCoValue,
   useResolvedCoValue,
 } from "./use-resolve-covalue.js";
 
+const LinkContainer = styled("span")`
+  display: inline-flex;
+  gap: 0.25rem;
+  align-items: center;
+`;
+
+const BooleanText = styled("span")<{ value: boolean }>`
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  ${(props) =>
+    props.value
+      ? `
+    color: var(--j-success-color);
+  `
+      : `
+    color: var(--j-destructive-color);
+  `}
+`;
+
+const ObjectContent = styled("pre")`
+  margin-top: 0.375rem;
+  font-size: 0.875rem;
+  white-space: pre-wrap;
+`;
+
+const PreviewContainer = styled("div")`
+  font-size: 0.875rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: flex-start;
+`;
+
+const PreviewGrid = styled("div")`
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.5rem;
+`;
+
+const PreviewMoreText = styled(Text)`
+  text-align: left;
+  margin-top: 0.5rem;
+`;
+
+const ImagePreviewContainer = styled("div")`
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+`;
+
+const PreviewImage = styled("img")`
+  width: 2rem;
+  height: 2rem;
+  border: 2px solid white;
+  box-shadow: var(--j-shadow-sm);
+  margin: 0.5rem 0;
+`;
+
+const RecordText = styled("div")`
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+`;
+
+const ListText = styled("div")`
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+`;
+
 // Is there a chance we can pass the actual CoValue here?
 export function ValueRenderer({
   json,
-  compact,
   onCoIDClick,
+  compact,
 }: {
   json: JsonValue | undefined;
-  compact?: boolean;
   onCoIDClick?: (childNode: CoID<RawCoValue>) => void;
+  compact?: boolean;
 }) {
+  const [isExpanded, setIsExpanded] = useState(false);
+
   if (typeof json === "undefined" || json === undefined) {
-    return <span style={{ color: "#9CA3AF" }}>undefined</span>;
+    return <Text muted>undefined</Text>;
   }
 
   if (json === null) {
-    return <span style={{ color: "#9CA3AF" }}>null</span>;
+    return <Text muted>null</Text>;
   }
 
   if (typeof json === "string" && json.startsWith("co_")) {
-    const linkStyle = onCoIDClick
-      ? {
-          color: "#3B82F6",
-          cursor: "pointer",
-          display: "inline-flex",
-          gap: "0.25rem",
-          alignItems: "center",
-        }
-      : {
-          display: "inline-flex",
-          gap: "0.25rem",
-          alignItems: "center",
-        };
-
-    return (
-      <span
-        style={linkStyle}
-        onClick={() => {
-          onCoIDClick?.(json as CoID<RawCoValue>);
-        }}
-      >
+    const content = (
+      <>
         {json}
-        {onCoIDClick && <LinkIcon />}
-      </span>
+        {onCoIDClick && <Icon name="link" />}
+      </>
     );
+
+    if (onCoIDClick) {
+      return (
+        <Button
+          variant="link"
+          onClick={() => {
+            onCoIDClick?.(json as CoID<RawCoValue>);
+          }}
+        >
+          {content}
+        </Button>
+      );
+    }
+
+    return <LinkContainer>{content}</LinkContainer>;
   }
 
   if (typeof json === "string") {
-    return (
-      <span style={{ color: "#064E3B", fontFamily: "monospace" }}>{json}</span>
-    );
+    return <Text>{json}</Text>;
   }
 
   if (typeof json === "number") {
-    return <span style={{ color: "#A855F7" }}>{json}</span>;
+    return <Text mono>{json}</Text>;
   }
 
   if (typeof json === "boolean") {
-    const booleanStyle = {
-      color: json ? "#15803D" : "#B45309",
-      backgroundColor: json
-        ? "rgba(34, 197, 94, 0.05)"
-        : "rgba(245, 158, 11, 0.05)",
-      fontFamily: "monospace",
-      display: "inline-block",
-      padding: "0.125rem 0.25rem",
-      borderRadius: "0.25rem",
-    };
-
-    return <span style={booleanStyle}>{json.toString()}</span>;
+    return <BooleanText value={json}>{json.toString()}</BooleanText>;
   }
+  const longJson = JSON.stringify(json, null, 2);
+  const shortJson = longJson
+    .split("\n")
+    .slice(0, compact ? 3 : 8)
+    .join("\n");
 
-  if (Array.isArray(json)) {
-    return (
-      <span title={JSON.stringify(json)}>
-        Array <span style={{ color: "#6B7280" }}>({json.length})</span>
-      </span>
-    );
-  }
+  // Check if collapsed differs from full
+  const hasDifference = longJson !== shortJson;
 
   if (typeof json === "object") {
     return (
-      <span
-        title={JSON.stringify(json, null, 2)}
-        style={{
-          display: "inline-block",
-          maxWidth: "16rem",
-          overflow: "hidden",
-          textOverflow: "ellipsis",
-          whiteSpace: "nowrap",
-        }}
-      >
-        {compact ? (
-          <span>
-            Object{" "}
-            <span style={{ color: "#6B7280" }}>
-              ({Object.keys(json).length})
-            </span>
-          </span>
-        ) : (
-          JSON.stringify(json, null, 2)
-        )}
-      </span>
+      <>
+        <p>{Array.isArray(json) ? <>Array ({json.length})</> : <>Object</>}</p>
+        <ObjectContent>
+          {isExpanded ? longJson : shortJson}
+
+          {hasDifference && !isExpanded ? "\n ..." : null}
+        </ObjectContent>
+
+        {!compact && hasDifference ? (
+          <Button variant="link" onClick={() => setIsExpanded(!isExpanded)}>
+            {isExpanded ? "Show less" : "Show more"}
+          </Button>
+        ) : null}
+      </>
     );
   }
 
@@ -134,7 +184,7 @@ export const CoMapPreview = ({
       <div
         style={{
           borderRadius: "0.25rem",
-          backgroundColor: "#F3F4F6",
+          backgroundColor: "var(--j-foreground)",
           animation: "pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
           whiteSpace: "pre",
           width: "6rem",
@@ -146,80 +196,64 @@ export const CoMapPreview = ({
   }
 
   if (snapshot === "unavailable" && !value) {
-    return <div style={{ color: "#6B7280" }}>Unavailable</div>;
+    return (
+      <Text inline muted>
+        Unavailable
+      </Text>
+    );
   }
 
   if (extendedType === "image" && isBrowserImage(snapshot)) {
     return (
-      <div>
-        <img
-          src={snapshot.placeholderDataURL}
-          style={{
-            width: "2rem",
-            height: "2rem",
-            border: "2px solid white",
-            boxShadow:
-              "0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)",
-            margin: "0.5rem 0",
-          }}
-        />
-        <span style={{ color: "#6B7280", fontSize: "0.875rem" }}>
+      <ImagePreviewContainer>
+        <PreviewImage src={snapshot.placeholderDataURL} />
+        <Text inline small muted>
           {snapshot.originalSize[0]} x {snapshot.originalSize[1]}
-        </span>
-      </div>
+        </Text>
+      </ImagePreviewContainer>
     );
   }
 
   if (extendedType === "record") {
     return (
-      <div>
+      <RecordText>
         Record{" "}
-        <span style={{ color: "#6B7280" }}>
+        <Text inline muted>
           ({Object.keys(snapshot).length})
-        </span>
-      </div>
+        </Text>
+      </RecordText>
     );
   }
 
   if (type === "colist") {
     return (
-      <div>
+      <ListText>
         List{" "}
-        <span style={{ color: "#6B7280" }}>
+        <Text inline muted>
           ({(snapshot as unknown as []).length})
-        </span>
-      </div>
+        </Text>
+      </ListText>
     );
   }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "auto 1fr",
-          gap: "0.5rem",
-        }}
-      >
+    <PreviewContainer>
+      <PreviewGrid>
         {Object.entries(snapshot)
           .slice(0, limit)
           .map(([key, value]) => (
             <React.Fragment key={key}>
-              <span style={{ fontWeight: "bold" }}>{key}: </span>
-              <span>
-                <ValueRenderer json={value} />
-              </span>
+              <Text strong>{key}: </Text>
+              <ValueRenderer compact json={value} />
             </React.Fragment>
           ))}
-      </div>
+      </PreviewGrid>
       {Object.entries(snapshot).length > limit && (
-        <div
-          style={{ textAlign: "left", fontSize: "0.875rem", color: "#6B7280" }}
-        >
+        <PreviewMoreText muted small>
           {Object.entries(snapshot).length - limit} more
-        </div>
+        </PreviewMoreText>
       )}
-    </div>
+    </PreviewContainer>
   );
 };
 
@@ -262,18 +296,17 @@ export function AccountOrGroupPreview({
   const displayName = extendedType === "account" ? name || "Account" : "Group";
   const displayText = showId ? `${displayName} (${coId})` : displayName;
 
-  const props = onClick
-    ? {
-        onClick: () => onClick(displayName),
-        style: {
-          color: "#3B82F6",
-          cursor: "pointer",
-          textDecoration: "underline",
-        },
-      }
-    : {
-        style: { color: "#6B7280" },
-      };
+  if (onClick) {
+    return (
+      <Button variant="link" onClick={() => onClick(displayName)}>
+        {displayText}
+      </Button>
+    );
+  }
 
-  return <span {...props}>{displayText}</span>;
+  return (
+    <Text muted inline>
+      {displayText}
+    </Text>
+  );
 }

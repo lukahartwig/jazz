@@ -5,12 +5,26 @@ import { ReactLogo } from "@/components/icons/ReactLogo";
 import { ReactNativeLogo } from "@/components/icons/ReactNativeLogo";
 import { SvelteLogo } from "@/components/icons/SvelteLogo";
 import { VueLogo } from "@/components/icons/VueLogo";
-import { Example, features, tech } from "@/lib/example";
+import { Example, features, tech } from "@/content/example";
 import { clsx } from "clsx";
 import { H2 } from "gcmp-design-system/src/app/components/atoms/Headings";
 import { Icon } from "gcmp-design-system/src/app/components/atoms/Icon";
 import { GappedGrid } from "gcmp-design-system/src/app/components/molecules/GappedGrid";
 import { HeroHeader } from "gcmp-design-system/src/app/components/molecules/HeroHeader";
+import type { Metadata } from "next";
+
+const title = "Examples";
+const description =
+  "Find an example app with code most similar to what you want to build.";
+
+export const metadata: Metadata = {
+  title,
+  description,
+  openGraph: {
+    title,
+    description,
+  },
+};
 
 const MockButton = ({ children }: { children: React.ReactNode }) => (
   <p className="bg-blue-100 text-blue-800 py-1 px-3 rounded-full font-medium  text-xs inline-flex items-center justify-center">
@@ -55,28 +69,6 @@ const FormIllustration = () => (
         <div className="w-16 h-1 rounded-full bg-stone-400" />
       </div>
       <MockButton>Submit</MockButton>
-    </div>
-  </div>
-);
-
-const OnboardingIllustration = () => (
-  <div className="flex h-full flex-col justify-center text-sm dark:bg-transparent">
-    <div className="mx-auto grid gap-3">
-      {[
-        { icon: "addUser", text: "Add new employee" },
-        {
-          icon: "write",
-          text: "Invite employee to fill in their profile",
-        },
-        { icon: "permissions", text: "Get confirmation from admin" },
-      ].map(({ text, icon }, index) => (
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-green-800 bg-green-100 leading-none font-medium text-center p-1.5 block rounded-full dark:bg-green-800 dark:text-green-200">
-            <Icon name={icon} size="xs" />
-          </span>
-          {text}
-        </div>
-      ))}
     </div>
   </div>
 );
@@ -221,6 +213,30 @@ const ImageUploadIllustration = () => (
   </div>
 );
 
+const FileUploadIllustration = () => (
+  <div className="flex flex-col items-center justify-center h-full p-8">
+    <div className="p-3 w-[12rem] h-[8rem] border border-dashed border-blue dark:border-blue-500 rounded-lg flex gap-2 flex-col items-center justify-center">
+      <Icon
+        name="upload"
+        size="4xl"
+        className="stroke-blue mx-auto dark:stroke-blue-500"
+      />
+      <p className="whitespace-nowrap text-stone-900 dark:text-white">
+        take-five.mp3
+      </p>
+    </div>
+
+    <div className=" w-[12rem] h-2 rounded-full overflow-hidden bg-stone-200 mt-3">
+      <div className="w-3/4 h-full bg-green-500" />
+    </div>
+    <div className="w-[12rem] flex justify-between text-xs mt-1.5">
+      <p>Uploading...</p>
+
+      <p>76%</p>
+    </div>
+  </div>
+);
+
 const ReactionsIllustration = () => (
   <div className="flex bg-stone-100 h-full flex-col items-center justify-center dark:bg-transparent">
     <div className="inline-flex justify-center gap-1.5 mx-auto">
@@ -233,6 +249,38 @@ const ReactionsIllustration = () => (
           {emoji}
         </button>
       ))}
+    </div>
+  </div>
+);
+
+const MultiCursorIllustration = () => (
+  <div className="flex bg-stone-100 h-full flex-col items-center justify-center dark:bg-transparent p-4">
+    <div className=" bg-white md:aspect-[3/2] flex flex-col rounded-md shadow-xl shadow-stone-400/20 dark:shadow-none">
+      <div className="w-full py-2 flex items-center gap-1.5 px-2 border-b dark:border-b-stone-200">
+        <span className="rounded-full size-2 bg-stone-200"></span>
+        <span className="rounded-full size-2 bg-stone-200"></span>
+        <span className="rounded-full size-2 bg-stone-200"></span>
+      </div>
+
+      <div className="h-full mx-auto flex flex-col justify-center p-12 sm:p-16">
+        <div className="inline-block relative px-1 ring-1 ring-blue-400">
+          <div className="absolute size-2 bg-white border border-blue-400 -left-1 -top-1"></div>
+          <div className="absolute size-2 bg-white border border-blue-400 -right-1 -top-1"></div>
+          <div className="absolute size-2 bg-white border border-blue-400 -left-1 -bottom-1"></div>
+          <div className="absolute size-2 bg-white border border-blue-400 -right-1 -bottom-1"></div>
+
+          <span className="text-lg font-semibold md:text-2xl md:font-bold text-stone-800 ">
+            Hello, world!
+          </span>
+          <div className="absolute -top-10 right-4 text-rose-600 flex items-end gap-1">
+            <Icon name="cursor"></Icon> <span className="text-xs">Mia</span>
+          </div>
+          <div className="absolute -bottom-10 left-4 text-green-600 flex items-end gap-1">
+            <Icon name="cursor"></Icon>{" "}
+            <span className="text-xs">Sebastian</span>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 );
@@ -354,11 +402,21 @@ const reactExamples: Example[] = [
   {
     name: "Image upload",
     slug: "image-upload",
-    description: "Learn how to upload and delete images",
+    description: "Learn how to upload and delete images.",
     tech: [tech.react],
     features: [features.imageUpload],
     demoUrl: "https://image-upload-demo.jazz.tools",
     illustration: <ImageUploadIllustration />,
+  },
+  {
+    name: "File upload",
+    slug: "filestream",
+    description:
+      "Upload different types of files, and show upload progress, file size, and type.",
+    tech: [tech.react],
+    features: [features.fileUpload],
+    demoUrl: "https://file-upload-demo.jazz.tools",
+    illustration: <FileUploadIllustration />,
   },
   {
     name: "Reactions",
@@ -368,6 +426,16 @@ const reactExamples: Example[] = [
     features: [features.coFeed],
     demoUrl: "https://reactions-demo.jazz.tools",
     illustration: <ReactionsIllustration />,
+  },
+  {
+    name: "Cursor presence",
+    slug: "multi-cursors",
+    description:
+      "Track user presence on a canvas with multiple cursors and out of bounds indicators.",
+    tech: [tech.react],
+    features: [features.coFeed],
+    demoUrl: "https://jazz-multi-cursors.vercel.app",
+    illustration: <MultiCursorIllustration />,
   },
   {
     name: "Rate my pet",
@@ -436,15 +504,6 @@ const reactExamples: Example[] = [
     illustration: <FormIllustration />,
   },
   {
-    name: "HR Onboarding",
-    slug: "onboarding",
-    description:
-      "See how admin and writer permissions work while onboarding new employees",
-    tech: [tech.react],
-    features: [features.imageUpload, features.inviteLink],
-    illustration: <OnboardingIllustration />,
-  },
-  {
     name: "Organization/Team",
     slug: "organization",
     description:
@@ -467,16 +526,27 @@ const rnExamples: Example[] = [
   {
     name: "Chat",
     slug: "chat-rn",
-    description: "A simple app that creates a chat room with a shareable link.",
+    description:
+      "A simple React Native app that creates a chat room with a shareable link.",
     tech: [tech.reactNative],
     illustration: <ChatIllustration />,
   },
 
   {
     name: "Chat",
-    slug: "chat-rn-clerk",
-    description: "Exactly like the React Native chat app, with Clerk for auth.",
-    tech: [tech.reactNative],
+    slug: "chat-rn-expo",
+    description:
+      "A simple Expo app that creates a chat room with a shareable link.",
+    tech: [tech.reactNative, tech.expo],
+    illustration: <ChatIllustration />,
+  },
+
+  {
+    name: "Chat",
+    slug: "chat-rn-expo-clerk",
+    description:
+      "Exactly like the React Native Expo chat app, with Clerk for auth.",
+    tech: [tech.reactNative, tech.expo],
     features: [features.clerk],
     illustration: <ClerkIllustration />,
   },

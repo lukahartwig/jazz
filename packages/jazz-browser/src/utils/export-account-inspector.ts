@@ -49,7 +49,10 @@ export function setupInspector() {
   if (typeof window === "undefined") return;
 
   const url = new URL(window.location.href);
-  if (url.hash.includes("allowJazzInspector")) {
+  if (
+    url.hash.includes("allowJazzInspector") ||
+    process.env.NODE_ENV === "development"
+  ) {
     return listenForCmdJ();
   }
 }

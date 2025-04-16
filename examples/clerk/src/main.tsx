@@ -1,4 +1,4 @@
-import { ClerkProvider, useClerk } from "@clerk/clerk-react";
+import { ClerkProvider, SignOutButton, useClerk } from "@clerk/clerk-react";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
@@ -21,7 +21,6 @@ function JazzProvider({ children }: { children: React.ReactNode }) {
       clerk={clerk}
       sync={{
         peer: `wss://cloud.jazz.tools/?key=${apiKey}`,
-        when: "signedUp", // This makes the app work in local mode when the user is not authenticated
       }}
     >
       {children}
@@ -29,12 +28,23 @@ function JazzProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-createRoot(document.getElementById("root")!).render(
-  <StrictMode>
-    <ClerkProvider publishableKey={PUBLISHABLE_KEY} afterSignOutUrl="/">
-      <JazzProvider>
-        <App />
-      </JazzProvider>
-    </ClerkProvider>
-  </StrictMode>,
-);
+// Route to test that when the Clerk user expires, the app is logged out
+if (location.search.includes("expirationTest")) {
+  createRoot(document.getElementById("root")!).render(
+    <StrictMode>
+      <ClerkProvider publishableKey={PUBLISHABLE_KEY} afterSignOutUrl="/">
+        <SignOutButton>Simulate expiration</SignOutButton>
+      </ClerkProvider>
+    </StrictMode>,
+  );
+} else {
+  createRoot(document.getElementById("root")!).render(
+    <StrictMode>
+      <ClerkProvider publishableKey={PUBLISHABLE_KEY} afterSignOutUrl="/">
+        <JazzProvider>
+          <App />
+        </JazzProvider>
+      </ClerkProvider>
+    </StrictMode>,
+  );
+}

@@ -6,6 +6,10 @@ import { Stringified, parseJSON, stableStringify } from "../jsonStringify.js";
 import { JsonValue } from "../jsonValue.js";
 import { logger } from "../logger.js";
 
+function randomBytes(bytesLength = 32): Uint8Array {
+  return crypto.getRandomValues(new Uint8Array(bytesLength));
+}
+
 export type SignerSecret = `signerSecret_z${string}`;
 export type SignerID = `signer_z${string}`;
 export type Signature = `signature_z${string}`;
@@ -21,7 +25,9 @@ export const textDecoder = new TextDecoder();
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export abstract class CryptoProvider<Blake3State = any> {
-  abstract randomBytes(length: number): Uint8Array;
+  randomBytes(length: number): Uint8Array {
+    return randomBytes(length);
+  }
 
   abstract newEd25519SigningKey(): Uint8Array;
 
@@ -160,7 +166,7 @@ export abstract class CryptoProvider<Blake3State = any> {
     try {
       return parseJSON(this.decryptRaw(encrypted, keySecret, nOnceMaterial));
     } catch (e) {
-      logger.error("Decryption error: " + (e as Error)?.message);
+      logger.error("Decryption error", { err: e });
       return undefined;
     }
   }

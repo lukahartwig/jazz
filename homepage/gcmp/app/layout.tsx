@@ -41,7 +41,7 @@ const commitMono = localFont({
   display: "swap",
 });
 
-const metaTags = {
+export const metaTags = {
   title: "garden computing",
   description:
     "Computers are magic. So why do we put up with so much complexity? We believe just a few new ideas can make all the difference.",
@@ -70,6 +70,16 @@ export const metadata: Metadata = {
       },
     ],
   },
+  alternates: {
+    canonical: metaTags.url,
+    types: {
+      "application/rss+xml": `${
+        process.env.VERCEL_URL
+          ? `https://${process.env.VERCEL_URL}`
+          : "http://localhost:3000"
+      }/api/rss`,
+    },
+  },
 };
 
 export default function RootLayout({
@@ -85,7 +95,7 @@ export default function RootLayout({
           commitMono.variable,
           inter.className,
           "min-h-full flex flex-col items-center",
-          "bg-white text-stone-700 dark:text-stone-400 dark:bg-stone-950",
+          "bg-white text-default dark:bg-stone-950",
         ].join(" ")}
       >
         <SpeedInsights />

@@ -6,7 +6,7 @@ import {
   type StorageAdapter as StorageAdapterT,
   type StoredSessionLog,
 } from "cojson";
-import { DBClientInterface } from "./types.js";
+import type { DBClientInterface } from "./types.js";
 
 export class AsyncStorageAdapter implements StorageAdapterT {
   private dbClient: DBClientInterface;

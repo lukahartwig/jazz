@@ -23,7 +23,7 @@ export function ThemeToggle({
       className={clsx(
         className,
         "md:p-1.5 md:rounded-full md:border",
-        "text-stone-400 hover:text-stone-900 dark:text-stone-400 dark:hover:text-white",
+        "text-stone-400 hover:text-stone-900 dark:hover:text-white",
         "md:hover:bg-stone-200 md:dark:hover:bg-stone-900",
         "transition-colors",
       )}

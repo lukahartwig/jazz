@@ -17,6 +17,7 @@ export type JazzContextManagerProps<Acc extends Account> = {
   guestMode?: boolean;
   sync: SyncConfig;
   onLogOut?: () => void;
+  logOutReplacement?: () => void;
   onAnonymousAccountDiscarded?: (anonymousAccount: Acc) => Promise<void>;
   storage?: BaseBrowserContextOptions["storage"];
   AccountSchema?: AccountClass<Acc>;
@@ -26,6 +27,7 @@ export type JazzContextManagerProps<Acc extends Account> = {
 export class JazzBrowserContextManager<
   Acc extends Account,
 > extends JazzContextManager<Acc, JazzContextManagerProps<Acc>> {
+  // TODO: When the storage changes, if the user is changed, update the context
   getKvStore() {
     if (typeof window === "undefined") {
       // To handle running in SSR
@@ -35,24 +37,18 @@ export class JazzBrowserContextManager<
     }
   }
 
-  async createContext(
+  async getNewContext(
     props: JazzContextManagerProps<Acc>,
     authProps?: JazzContextManagerAuthProps,
   ) {
-    let currentContext;
-
-    // We need to store the props here to block the double effect execution
-    // on React. Otherwise when calling propsChanged this.props is undefined.
-    this.props = props;
-
     if (props.guestMode) {
-      currentContext = await createJazzBrowserGuestContext({
+      return createJazzBrowserGuestContext({
         sync: props.sync,
         storage: props.storage,
         authSecretStorage: this.authSecretStorage,
       });
     } else {
-      currentContext = await createJazzBrowserContext<Acc>({
+      return createJazzBrowserContext<Acc>({
         sync: props.sync,
         storage: props.storage,
         AccountSchema: props.AccountSchema,
@@ -62,8 +58,6 @@ export class JazzBrowserContextManager<
         authSecretStorage: this.authSecretStorage,
       });
     }
-
-    this.updateContext(props, currentContext);
   }
 
   propsChanged(props: JazzContextManagerProps<Acc>) {

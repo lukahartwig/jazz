@@ -1,10 +1,19 @@
-import { beforeEach, describe, expect, onTestFinished, test, vi } from "vitest";
+import {
+  assert,
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  onTestFinished,
+  test,
+  vi,
+} from "vitest";
 import { PeerState } from "../PeerState";
 import { CoValueCore } from "../coValueCore";
 import { CO_VALUE_LOADING_CONFIG, CoValueState } from "../coValueState";
 import { RawCoID } from "../ids";
-import { StorageDriver } from "../storage";
 import { Peer } from "../sync";
+import { createTestMetricReader, tearDownTestMetricReader } from "./testUtils";
 
 const initialMaxRetries = CO_VALUE_LOADING_CONFIG.MAX_RETRIES;
 
@@ -16,21 +25,45 @@ function mockMaxRetries(maxRetries: number) {
   });
 }
 
+let metricReader: ReturnType<typeof createTestMetricReader>;
+
 beforeEach(() => {
+  metricReader = createTestMetricReader();
   mockMaxRetries(5);
   vi.clearAllMocks();
 });
 
 const mockStorageDriver = null;
+afterEach(() => {
+  tearDownTestMetricReader();
+});
 
 describe("CoValueState", () => {
   const mockCoValueId = "co_test123" as RawCoID;
 
-  test("should create unknown state", () => {
+  test("should create unknown state", async () => {
     const state = CoValueState.Unknown(mockCoValueId);
 
     expect(state.id).toBe(mockCoValueId);
     expect(state.state.type).toBe("unknown");
+    expect(
+      await metricReader.getMetricValue("jazz.covalues.loaded", {
+        state: "unknown",
+      }),
+    ).toBe(1);
+  });
+
+  test("should create loading state", async () => {
+    const peerIds = ["peer1", "peer2"];
+    const state = CoValueState.LoadingFromPeers(mockCoValueId, peerIds);
+
+    expect(state.id).toBe(mockCoValueId);
+    expect(state.state.type).toBe("loading-from-peers");
+    expect(
+      await metricReader.getMetricValue("jazz.covalues.loaded", {
+        state: "loading-from-peers",
+      }),
+    ).toBe(1);
   });
 
   test("should create available state", async () => {
@@ -38,9 +71,55 @@ describe("CoValueState", () => {
     const state = CoValueState.Available(mockCoValue);
 
     expect(state.id).toBe(mockCoValueId);
-    expect(state.state.type).toBe("available");
-    expect((state.state as any).coValue).toBe(mockCoValue);
+    assert(state.state.type === "available");
+    expect(state.state.coValue).toBe(mockCoValue);
     await expect(state.getCoValue()).resolves.toEqual(mockCoValue);
+    expect(
+      await metricReader.getMetricValue("jazz.covalues.loaded", {
+        state: "available",
+      }),
+    ).toBe(1);
+  });
+
+  test("should handle found action", async () => {
+    const mockCoValue = createMockCoValueCore(mockCoValueId);
+    const state = CoValueState.LoadingFromPeers(mockCoValueId, [
+      "peer1",
+      "peer2",
+    ]);
+
+    expect(
+      await metricReader.getMetricValue("jazz.covalues.loaded", {
+        state: "available",
+      }),
+    ).toBe(undefined);
+    expect(
+      await metricReader.getMetricValue("jazz.covalues.loaded", {
+        state: "loading-from-peers",
+      }),
+    ).toBe(1);
+
+    const stateValuePromise = state.getCoValue();
+
+    state.dispatch({
+      type: "available",
+      coValue: mockCoValue,
+    });
+
+    const result = await state.getCoValue();
+    expect(result).toBe(mockCoValue);
+    await expect(stateValuePromise).resolves.toBe(mockCoValue);
+
+    expect(
+      await metricReader.getMetricValue("jazz.covalues.loaded", {
+        state: "available",
+      }),
+    ).toBe(1);
+    expect(
+      await metricReader.getMetricValue("jazz.covalues.loaded", {
+        state: "loading-from-peers",
+      }),
+    ).toBe(0);
   });
 
   test("should ignore actions when not in loading state", () => {

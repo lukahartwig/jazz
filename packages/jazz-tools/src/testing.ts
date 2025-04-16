@@ -4,6 +4,7 @@ import { PureJSCrypto } from "cojson/dist/crypto/PureJSCrypto";
 import {
   Account,
   AccountClass,
+  AuthCredentials,
   JazzContextManagerAuthProps,
 } from "./exports.js";
 import {
@@ -182,13 +183,14 @@ export class TestJazzContextManager<
     const storage = context.getAuthSecretStorage();
     const node = account._raw.core.node;
 
-    storage.set({
+    const credentials = {
       accountID: account.id,
       accountSecret: node.account.agentSecret,
       secretSeed: SecretSeedMap.get(account.id),
       provider,
-    });
-    storage.isAuthenticated = Boolean(props?.isAuthenticated);
+    } satisfies AuthCredentials;
+
+    storage.set(credentials);
 
     context.updateContext(
       {
@@ -202,8 +204,12 @@ export class TestJazzContextManager<
           node.gracefulShutdown();
         },
         logOut: async () => {
+          await storage.clear();
           node.gracefulShutdown();
         },
+      },
+      {
+        credentials,
       },
     );
 
@@ -231,12 +237,10 @@ export class TestJazzContextManager<
     return context;
   }
 
-  async createContext(
+  async getNewContext(
     props: TestJazzContextManagerProps<Acc>,
     authProps?: JazzContextManagerAuthProps,
   ) {
-    this.props = props;
-
     if (!syncServer.current) {
       throw new Error(
         "You need to setup a test sync server with setupJazzTestSync to use the Auth functions",
@@ -254,7 +258,7 @@ export class TestJazzContextManager<
       AccountSchema: props.AccountSchema,
     });
 
-    this.updateContext(props, {
+    return {
       me: context.account,
       node: context.node,
       done: () => {
@@ -263,11 +267,11 @@ export class TestJazzContextManager<
       logOut: () => {
         return context.logOut();
       },
-    });
+    };
   }
 }
 
-export function linkAccounts(
+export async function linkAccounts(
   a: Account,
   b: Account,
   aRole: "server" | "client" = "server",
@@ -280,6 +284,9 @@ export function linkAccounts(
 
   a._raw.core.node.syncManager.addPeer(aPeer);
   b._raw.core.node.syncManager.addPeer(bPeer);
+
+  await a.waitForAllCoValuesSync();
+  await b.waitForAllCoValuesSync();
 }
 
 export async function setupJazzTestSync() {

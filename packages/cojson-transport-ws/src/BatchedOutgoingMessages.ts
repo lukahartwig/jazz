@@ -1,10 +1,10 @@
-import { SyncMessage } from "cojson";
+import type { SyncMessage } from "cojson";
 import { addMessageToBacklog } from "./serialization.js";
 
 export const MAX_OUTGOING_MESSAGES_CHUNK_BYTES = 25_000;
 
 export class BatchedOutgoingMessages {
-  private backlog: string = "";
+  private backlog = "";
   private timeout: ReturnType<typeof setTimeout> | null = null;
 
   constructor(private send: (messages: string) => void) {}

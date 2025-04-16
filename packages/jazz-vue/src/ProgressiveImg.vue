@@ -11,6 +11,7 @@ interface ImageState {
 function useProgressiveImg(
   image: Ref<ImageDefinition | null | undefined>,
   maxWidth?: number,
+  targetWidth?: number,
 ) {
   const current = ref<ImageState>({});
 
@@ -23,7 +24,10 @@ function useProgressiveImg(
       if (!image.value) return;
 
       const unsub = image.value.subscribe({}, (update) => {
-        const highestRes = update?.highestResAvailable({ maxWidth });
+        const highestRes = update?.highestResAvailable({
+          maxWidth,
+          targetWidth,
+        });
 
         if (highestRes) {
           if (highestRes.res !== lastHighestRes) {

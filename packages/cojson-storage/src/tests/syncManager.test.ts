@@ -1,5 +1,5 @@
 import {
-  Mocked,
+  type Mocked,
   afterEach,
   beforeEach,
   describe,
@@ -8,7 +8,7 @@ import {
   vi,
 } from "vitest";
 
-import {
+import type {
   CojsonInternalTypes,
   OutgoingSyncQueue,
   SessionID,
@@ -16,11 +16,12 @@ import {
 } from "cojson";
 import { SyncManager } from "../syncManager.js";
 import { getDependedOnCoValues } from "../syncUtils.js";
-import { DBClientInterface } from "../types.js";
+import type { DBClientInterface } from "../types.js";
 import { fixtures } from "./fixtureMessages.js";
-import RawCoID = CojsonInternalTypes.RawCoID;
-import NewContentMessage = CojsonInternalTypes.NewContentMessage;
 
+type RawCoID = CojsonInternalTypes.RawCoID;
+type NewContentMessage = CojsonInternalTypes.NewContentMessage;
+type Transaction = CojsonInternalTypes.Transaction;
 vi.mock("../syncUtils");
 
 const coValueIdToLoad = "co_zKwG8NyfZ8GXqcjDHY4NS3SbU2m";
@@ -40,14 +41,16 @@ const incomingContentMessage = fixtures[coValueIdToLoad].getContent({
 
 describe("DB sync manager", () => {
   let syncManager: SyncManager;
-  let queue: OutgoingSyncQueue = {} as unknown as OutgoingSyncQueue;
+  const queue: OutgoingSyncQueue = {} as unknown as OutgoingSyncQueue;
 
   const DBClient = vi.fn();
   DBClient.prototype.getCoValue = vi.fn();
   DBClient.prototype.getCoValueSessions = vi.fn();
+  DBClient.prototype.getSingleCoValueSession = vi.fn();
+  DBClient.prototype.getNewTransactionInSession = vi.fn();
   DBClient.prototype.addSessionUpdate = vi.fn();
   DBClient.prototype.addTransaction = vi.fn();
-  DBClient.prototype.unitOfWork = vi.fn((callback) => Promise.all(callback()));
+  DBClient.prototype.transaction = vi.fn((callback) => callback());
 
   beforeEach(async () => {
     const idbClient = new DBClient() as unknown as Mocked<DBClientInterface>;
@@ -152,11 +155,11 @@ describe("DB sync manager", () => {
         header: true,
         id: coValueIdToLoad,
         sessions: sessionsData.reduce(
-          (acc, sessionRow) => ({
-            ...acc,
-            [sessionRow.sessionID]: sessionRow.lastIdx,
-          }),
-          {},
+          (acc, sessionRow) => {
+            acc[sessionRow.sessionID] = sessionRow.lastIdx;
+            return acc;
+          },
+          {} as Record<string, number>,
         ),
       });
 
@@ -165,15 +168,22 @@ describe("DB sync manager", () => {
         header: coValueHeader,
         id: coValueIdToLoad,
         new: sessionsData.reduce(
-          (acc, sessionRow) => ({
-            ...acc,
-            [sessionRow.sessionID]: {
+          (acc, sessionRow) => {
+            acc[sessionRow.sessionID] = {
               after: expect.any(Number),
               lastSignature: expect.any(String),
               newTransactions: expect.any(Array),
-            },
-          }),
-          {},
+            };
+            return acc;
+          },
+          {} as Record<
+            string,
+            {
+              after: number;
+              lastSignature: string;
+              newTransactions: Transaction[];
+            }
+          >,
         ),
         priority: 0,
       });

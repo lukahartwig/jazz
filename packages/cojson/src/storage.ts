@@ -208,12 +208,7 @@ export class StorageDriver {
   processing = false;
 
   set(core: CoValueCore) {
-    this.updates.push(core);
-
-    if (!this.processing) {
-      this.processing = true;
-      void this.processUpdates();
-    }
+    return this.update(core);
   }
 
   async processUpdates() {

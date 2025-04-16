@@ -1,14 +1,15 @@
-import { ControlledAgent, LocalNode } from "cojson";
+import { ControlledAgent, type CryptoProvider, LocalNode } from "cojson";
 import { WasmCrypto } from "cojson/crypto/WasmCrypto";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { WebSocket } from "ws";
 import { createWebSocketPeer } from "../createWebSocketPeer";
 import { startSyncServer } from "./syncServer";
+import { waitFor } from "./utils";
 
 describe("WebSocket Peer Integration", () => {
   let server: any;
   let syncServerUrl: string;
-  let crypto: WasmCrypto;
+  let crypto: CryptoProvider;
 
   beforeEach(async () => {
     crypto = await WasmCrypto.create();
@@ -127,6 +128,37 @@ describe("WebSocket Peer Integration", () => {
     await new Promise((resolve) => setTimeout(resolve, 200));
 
     expect(disconnectCalled).toBe(true);
+    expect(ws.readyState).toBe(WebSocket.CLOSED);
+  });
+
+  test("should trigger a timeout if the server does not respond", async () => {
+    const clientAgent = crypto.newRandomAgentSecret();
+    const clientNode = new LocalNode(
+      new ControlledAgent(clientAgent, crypto),
+      crypto.newRandomSessionID(crypto.getAgentID(clientAgent)),
+      crypto,
+    );
+
+    const ws = new WebSocket(syncServerUrl);
+    let disconnectCalled = false;
+
+    const peer = createWebSocketPeer({
+      id: "test-client",
+      websocket: ws,
+      role: "server",
+      pingTimeout: 5,
+      onClose: () => {
+        disconnectCalled = true;
+      },
+    });
+
+    clientNode.syncManager.addPeer(peer);
+
+    // Wait for connection to establish and the timeout to kick in
+    await waitFor(() => {
+      expect(disconnectCalled).toBe(true);
+    });
+
     expect(ws.readyState).toBe(WebSocket.CLOSED);
   });
 });

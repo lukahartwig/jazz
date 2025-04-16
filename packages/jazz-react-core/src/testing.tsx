@@ -1,7 +1,7 @@
 import { Account, AnonymousJazzAgent } from "jazz-tools";
 import { TestJazzContextManager } from "jazz-tools/testing";
 import { useCallback, useState, useSyncExternalStore } from "react";
-import { JazzAuthContext, JazzContext } from "./provider.js";
+import { JazzContext, JazzContextManagerContext } from "./provider.js";
 
 export function JazzTestProvider<Acc extends Account>({
   children,
@@ -26,9 +26,9 @@ export function JazzTestProvider<Acc extends Account>({
 
   return (
     <JazzContext.Provider value={value}>
-      <JazzAuthContext.Provider value={contextManager.getAuthSecretStorage()}>
+      <JazzContextManagerContext.Provider value={contextManager}>
         {children}
-      </JazzAuthContext.Provider>
+      </JazzContextManagerContext.Provider>
     </JazzContext.Provider>
   );
 }

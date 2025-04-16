@@ -8,11 +8,19 @@ export enum LogLevel {
   NONE = 4,
 }
 
+type ErrorAttributes = { err: unknown };
+
 export interface LogSystem {
   debug(message: string, attributes?: Record<string, JsonValue>): void;
   info(message: string, attributes?: Record<string, JsonValue>): void;
-  warn(message: string, attributes?: Record<string, JsonValue>): void;
-  error(message: string, attributes?: Record<string, JsonValue>): void;
+  warn(
+    message: string,
+    attributes?: Record<string, JsonValue> | ErrorAttributes,
+  ): void;
+  error(
+    message: string,
+    attributes?: Record<string, JsonValue> | ErrorAttributes,
+  ): void;
 }
 
 // Default console-based logging system
@@ -23,10 +31,16 @@ export class ConsoleLogSystem implements LogSystem {
   info(message: string, attributes?: Record<string, JsonValue>) {
     console.info(message, attributes);
   }
-  warn(message: string, attributes?: Record<string, JsonValue>) {
+  warn(
+    message: string,
+    attributes?: Record<string, JsonValue> | ErrorAttributes,
+  ) {
     console.warn(message, attributes);
   }
-  error(message: string, attributes?: Record<string, JsonValue>) {
+  error(
+    message: string,
+    attributes?: Record<string, JsonValue> | ErrorAttributes,
+  ) {
     console.error(message, attributes);
   }
 }
@@ -63,13 +77,19 @@ export class Logger {
     }
   }
 
-  warn(message: string, attributes?: Record<string, JsonValue>) {
+  warn(
+    message: string,
+    attributes?: Record<string, JsonValue> | ErrorAttributes,
+  ) {
     if (this.level <= LogLevel.WARN) {
       this.logSystem.warn(message, attributes);
     }
   }
 
-  error(message: string, attributes?: Record<string, JsonValue>) {
+  error(
+    message: string,
+    attributes?: Record<string, JsonValue> | ErrorAttributes,
+  ) {
     if (this.level <= LogLevel.ERROR) {
       this.logSystem.error(message, attributes);
     }

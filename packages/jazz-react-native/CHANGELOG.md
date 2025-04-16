@@ -1,5 +1,339 @@
 # jazz-browser
 
+## 0.13.5
+
+### Patch Changes
+
+- Updated dependencies [e090b39]
+- Updated dependencies [fe6f561]
+  - cojson@0.13.5
+  - jazz-tools@0.13.5
+  - cojson-storage@0.13.5
+  - jazz-react-native-core@0.13.5
+
+## 0.13.4
+
+### Patch Changes
+
+- Updated dependencies [3129982]
+  - jazz-react-native-core@0.13.4
+  - jazz-tools@0.13.4
+
+## 0.13.3
+
+### Patch Changes
+
+- Updated dependencies [12f8bfa]
+- Updated dependencies [bd57177]
+  - jazz-tools@0.13.3
+  - jazz-react-native-core@0.13.3
+
+## 0.13.2
+
+### Patch Changes
+
+- Updated dependencies [c551839]
+  - cojson@0.13.2
+  - cojson-storage@0.13.2
+  - jazz-react-native-core@0.13.2
+  - jazz-tools@0.13.2
+
+## 0.13.1
+
+### Patch Changes
+
+- 63a7aa0: Add exports for clerk and crypto to make import shortcuts work everywhere
+
+## 0.13.0
+
+### Minor Changes
+
+- bce3bcc: Introduce jazz-expo and use only vanilla deps for jazz-react-native
+
+  Upgrade guide: https://jazz.tools/docs/react/upgrade/0-13-0
+
+### Patch Changes
+
+- Updated dependencies [a013538]
+- Updated dependencies [bce3bcc]
+- Updated dependencies [afd1374]
+- Updated dependencies [bce3bcc]
+  - cojson@0.13.0
+  - jazz-react-native-core@0.13.0
+  - jazz-tools@0.13.0
+  - cojson-storage@0.13.0
+
+## 0.12.2
+
+### Patch Changes
+
+- Updated dependencies [c2f4827]
+  - cojson@0.12.2
+  - cojson-storage-rn-sqlite@0.12.2
+  - cojson-transport-ws@0.12.2
+  - jazz-react-core@0.12.2
+  - jazz-tools@0.12.2
+  - jazz-react-native-media-images@0.12.2
+
+## 0.12.1
+
+### Patch Changes
+
+- Updated dependencies [5a00fe0]
+  - cojson@0.12.1
+  - cojson-storage-rn-sqlite@0.12.1
+  - cojson-transport-ws@0.12.1
+  - jazz-react-core@0.12.1
+  - jazz-tools@0.12.1
+  - jazz-react-native-media-images@0.12.1
+
+## 0.12.0
+
+### Patch Changes
+
+- Updated dependencies [01523dc]
+- Updated dependencies [4ea87dc]
+- Updated dependencies [1e6da19]
+- Updated dependencies [01523dc]
+- Updated dependencies [b6c6a0a]
+  - jazz-tools@0.12.0
+  - cojson@0.12.0
+  - jazz-react-core@0.12.0
+  - jazz-react-native-media-images@0.12.0
+  - cojson-storage-rn-sqlite@0.12.0
+  - cojson-transport-ws@0.12.0
+
+## 0.11.8
+
+### Patch Changes
+
+- Updated dependencies [6c86c4f]
+- Updated dependencies [9d0c9dc]
+  - cojson@0.11.8
+  - cojson-storage-rn-sqlite@0.11.8
+  - cojson-transport-ws@0.11.8
+  - jazz-react-core@0.11.8
+  - jazz-tools@0.11.8
+  - jazz-react-native-media-images@0.11.8
+
+## 0.11.7
+
+### Patch Changes
+
+- Updated dependencies [a140f55]
+- Updated dependencies [2b94bc8]
+- Updated dependencies [2957362]
+- Updated dependencies [2b0d1b0]
+  - jazz-react-core@0.11.7
+  - jazz-tools@0.11.7
+  - cojson@0.11.7
+  - jazz-react-native-media-images@0.11.7
+  - cojson-storage-rn-sqlite@0.11.7
+  - cojson-transport-ws@0.11.7
+
+## 0.11.6
+
+### Patch Changes
+
+- e7c85b7: Add targetWidth to highestResAvailable to add a way to fetch the next size up
+- Updated dependencies [e7c85b7]
+- Updated dependencies [8ed144e]
+  - jazz-tools@0.11.6
+  - cojson@0.11.6
+  - jazz-react-core@0.11.6
+  - cojson-storage-rn-sqlite@0.11.6
+  - cojson-transport-ws@0.11.6
+
+## 0.11.5
+
+### Patch Changes
+
+- Updated dependencies [60f5b3f]
+  - cojson@0.11.5
+  - cojson-storage-rn-sqlite@0.11.5
+  - cojson-transport-ws@0.11.5
+  - jazz-react-core@0.11.5
+  - jazz-tools@0.11.5
+
+## 0.11.4
+
+### Patch Changes
+
+- Updated dependencies [57a3dbe]
+- Updated dependencies [a717754]
+- Updated dependencies [a91f343]
+- Updated dependencies [7f036c1]
+  - jazz-tools@0.11.4
+  - cojson@0.11.4
+  - jazz-react-core@0.11.4
+  - cojson-storage-rn-sqlite@0.11.4
+  - cojson-transport-ws@0.11.4
+
+## 0.11.3
+
+### Patch Changes
+
+- Updated dependencies [68b0242]
+  - cojson-transport-ws@0.11.3
+  - cojson@0.11.3
+  - cojson-storage-rn-sqlite@0.11.3
+  - jazz-react-core@0.11.3
+  - jazz-tools@0.11.3
+
+## 0.11.2
+
+### Patch Changes
+
+- Updated dependencies [ed0e151]
+- Updated dependencies [6892dc6]
+  - jazz-react-core@0.11.2
+  - jazz-tools@0.11.2
+
+## 0.11.1
+
+### Patch Changes
+
+- Updated dependencies [7b00a81]
+  - cojson-storage-rn-sqlite@0.11.1
+  - jazz-react-core@0.11.1
+
+## 0.11.0
+
+### Patch Changes
+
+- a4713df: Moving to the d.ts files for the exported type definitions
+- Updated dependencies [6a96d8b]
+- Updated dependencies [a35249a]
+- Updated dependencies [b9d194a]
+- Updated dependencies [b9d194a]
+- Updated dependencies [a4713df]
+- Updated dependencies [e22de9f]
+- Updated dependencies [34cbdc3]
+- Updated dependencies [0f67e0a]
+- Updated dependencies [f039e8f]
+- Updated dependencies [e22de9f]
+  - jazz-tools@0.11.0
+  - cojson@0.11.0
+  - cojson-storage-rn-sqlite@0.8.68
+  - cojson-transport-ws@0.11.0
+  - jazz-react-core@0.10.13
+
+## 0.10.15
+
+### Patch Changes
+
+- Updated dependencies [2f99de0]
+- Updated dependencies [f86e278]
+  - jazz-tools@0.10.15
+  - cojson@0.10.15
+  - jazz-react-core@0.10.12
+  - cojson-storage-rn-sqlite@0.8.67
+  - cojson-transport-ws@0.10.15
+
+## 0.10.14
+
+### Patch Changes
+
+- Updated dependencies [75211e3]
+  - jazz-react-core@0.10.11
+  - jazz-tools@0.10.14
+
+## 0.10.13
+
+### Patch Changes
+
+- Updated dependencies [07feedd]
+  - jazz-tools@0.10.13
+  - jazz-react-core@0.10.10
+
+## 0.10.12
+
+### Patch Changes
+
+- Updated dependencies [4612e05]
+  - jazz-react-core@0.10.9
+  - jazz-tools@0.10.12
+
+## 0.10.11
+
+### Patch Changes
+
+- 5a54e4a: Don't export RNQuickCrypto to avoid install errors
+
+## 0.10.10
+
+### Patch Changes
+
+- 3405d8f: read provided kvStore instead of falling back to the default in-memory store
+
+## 0.10.8
+
+### Patch Changes
+
+- Updated dependencies [153dc99]
+- Updated dependencies [2fb6428]
+  - cojson@0.10.8
+  - jazz-tools@0.10.8
+  - cojson-storage-rn-sqlite@0.8.66
+  - cojson-transport-ws@0.10.8
+  - jazz-react-core@0.10.8
+
+## 0.10.7
+
+### Patch Changes
+
+- 1136d9b: Fixed isAuthenticated out-of-sync with the account state during the logOut and authenticate flows
+- Updated dependencies [0f83320]
+- Updated dependencies [012022d]
+- Updated dependencies [1136d9b]
+- Updated dependencies [1e625f3]
+- Updated dependencies [0eed228]
+  - cojson@0.10.7
+  - jazz-react-core@0.10.7
+  - jazz-tools@0.10.7
+  - cojson-storage-rn-sqlite@0.8.65
+  - cojson-transport-ws@0.10.7
+
+## 0.10.6
+
+### Patch Changes
+
+- Updated dependencies [1d71ca1]
+- Updated dependencies [5c76e37]
+- Updated dependencies [ada802b]
+  - jazz-react-core@0.10.6
+  - cojson@0.10.6
+  - jazz-tools@0.10.6
+  - cojson-storage-rn-sqlite@0.8.64
+  - cojson-transport-ws@0.10.6
+
+## 0.10.5
+
+### Patch Changes
+
+- Updated dependencies [59ff77e]
+  - jazz-tools@0.10.5
+  - jazz-react-core@0.10.5
+
+## 0.10.4
+
+### Patch Changes
+
+- Updated dependencies [1af6072]
+  - cojson@0.10.4
+  - cojson-storage-rn-sqlite@0.8.63
+  - cojson-transport-ws@0.10.4
+  - jazz-react-core@0.10.4
+  - jazz-tools@0.10.4
+
+## 0.10.3
+
+### Patch Changes
+
+- Updated dependencies [d8582fc]
+  - jazz-tools@0.10.3
+  - jazz-react-core@0.10.3
+
 ## 0.10.2
 
 ### Patch Changes

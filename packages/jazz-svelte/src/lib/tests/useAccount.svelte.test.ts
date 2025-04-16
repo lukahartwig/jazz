@@ -15,7 +15,7 @@ function setup(options: {
       context: createJazzTestContext({ account: options.account }),
       props: {
         depth: options.depth ?? [],
-        setResult: (value: ReturnType<typeof useAccount>) => {
+        setResult: (value) => {
           result.current = value
         },
       },

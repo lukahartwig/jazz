@@ -2,7 +2,7 @@ import {
   JazzBrowserContextManager,
   JazzContextManagerProps,
 } from "jazz-browser";
-import { JazzAuthContext, JazzContext } from "jazz-react-core";
+import { JazzContext, JazzContextManagerContext } from "jazz-react-core";
 import { Account, JazzContextType } from "jazz-tools";
 import React, { useEffect, useRef } from "react";
 
@@ -25,6 +25,7 @@ export function JazzProvider<Acc extends Account = RegisteredAccount>({
   AccountSchema,
   defaultProfileName,
   onLogOut,
+  logOutReplacement,
   onAnonymousAccountDiscarded,
 }: JazzProviderProps<Acc>) {
   const [contextManager] = React.useState(
@@ -32,9 +33,12 @@ export function JazzProvider<Acc extends Account = RegisteredAccount>({
   );
 
   const onLogOutRefCallback = useRefCallback(onLogOut);
+  const logOutReplacementRefCallback = useRefCallback(logOutReplacement);
   const onAnonymousAccountDiscardedRefCallback = useRefCallback(
     onAnonymousAccountDiscarded,
   );
+  const logoutReplacementActiveRef = useRef(false);
+  logoutReplacementActiveRef.current = Boolean(logOutReplacement);
 
   const value = React.useSyncExternalStore<JazzContextType<Acc> | undefined>(
     React.useCallback(
@@ -46,8 +50,12 @@ export function JazzProvider<Acc extends Account = RegisteredAccount>({
           storage,
           defaultProfileName,
           onLogOut: onLogOutRefCallback,
+          logOutReplacement: logoutReplacementActiveRef.current
+            ? logOutReplacementRefCallback
+            : undefined,
           onAnonymousAccountDiscarded: onAnonymousAccountDiscardedRefCallback,
-        };
+        } satisfies JazzContextManagerProps<Acc>;
+
         if (contextManager.propsChanged(props)) {
           contextManager.createContext(props).catch((error) => {
             console.error("Error creating Jazz browser context:", error);
@@ -74,9 +82,9 @@ export function JazzProvider<Acc extends Account = RegisteredAccount>({
 
   return (
     <JazzContext.Provider value={value}>
-      <JazzAuthContext.Provider value={contextManager.getAuthSecretStorage()}>
+      <JazzContextManagerContext.Provider value={contextManager}>
         {value && children}
-      </JazzAuthContext.Provider>
+      </JazzContextManagerContext.Provider>
     </JazzContext.Provider>
   );
 }

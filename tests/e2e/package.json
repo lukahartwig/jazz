@@ -10,9 +10,9 @@
     "preview": "vite preview",
     "format-and-lint": "biome check .",
     "format-and-lint:fix": "biome check . --write",
-    "test": "playwright test",
-    "sync": "jazz-run sync",
-    "test:ui": "playwright test --ui"
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "sync": "jazz-run sync"
   },
   "dependencies": {
     "cojson": "workspace:*",

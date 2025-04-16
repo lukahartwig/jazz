@@ -1,18 +1,18 @@
-import { unlinkSync } from "fs";
-import { tmpdir } from "os";
-import { join } from "path";
+import { unlinkSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import {
   CoValueCore,
   ControlledAgent,
   LocalNode,
   MAX_RECOMMENDED_TX_SIZE,
-  RawCoID,
-  RawCoMap,
-  StorageAdapter,
+  type RawCoID,
+  type RawCoMap,
+  type StorageAdapter,
 } from "cojson";
+import { cojsonInternals } from "cojson";
+import type { CojsonInternalTypes } from "cojson";
 import { WasmCrypto } from "cojson/crypto/WasmCrypto";
-import { connectedPeers } from "cojson/src/streamUtils.js";
-import { CoValueKnownState, SessionNewContent } from "cojson/src/sync.js";
 import { assert, describe, expect, onTestFinished, test } from "vitest";
 import { loadSQLiteStorageAdapter } from "../storageAdapter";
 
@@ -66,7 +66,7 @@ async function setup() {
     );
 
     // Connect nodes initially
-    const [node1ToNode2Peer, node2ToNode1Peer] = connectedPeers(
+    const [node1ToNode2Peer, node2ToNode1Peer] = cojsonInternals.connectedPeers(
       "node1ToNode2",
       "node2ToNode1",
       {
@@ -239,7 +239,8 @@ describe("SQLiteStorageAdapter", () => {
 
 class TestStorageDriver {
   private storageAdapter: StorageAdapter;
-  private storedStates: Map<RawCoID, CoValueKnownState> = new Map();
+  private storedStates: Map<RawCoID, CojsonInternalTypes.CoValueKnownState> =
+    new Map();
   private node: LocalNode;
 
   constructor(storageAdapter: StorageAdapter, node: LocalNode) {
@@ -268,7 +269,7 @@ class TestStorageDriver {
           );
         }
 
-        const position = parseInt(signatureAt) + 1;
+        const position = Number.parseInt(signatureAt) + 1;
 
         const result = core.tryAddTransactions(
           sessionID,
@@ -323,7 +324,7 @@ class TestStorageDriver {
     for (const piece of newContentPieces) {
       const entries = Object.entries(piece.new) as [
         keyof typeof piece.new,
-        SessionNewContent,
+        CojsonInternalTypes.SessionNewContent,
       ][];
 
       await Promise.all(

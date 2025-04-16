@@ -2,10 +2,10 @@
 
 import { execSync } from "child_process";
 import fs from "fs";
+import path from "path";
 import chalk from "chalk";
 import { Command } from "commander";
 import degit from "degit";
-import gradient from "gradient-string";
 import inquirer from "inquirer";
 import ora from "ora";
 
@@ -18,8 +18,6 @@ import {
 } from "./config.js";
 
 const program = new Command();
-
-const jazzGradient = gradient(["#FF4D4D", "#FF9900", "#FFD700"]);
 
 type PackageManager = "npm" | "yarn" | "pnpm" | "bun" | "deno";
 
@@ -87,14 +85,31 @@ function getPlatformFromTemplateName(template: string) {
   return template.includes("-rn") ? PLATFORM.REACT_NATIVE : PLATFORM.WEB;
 }
 
+// Function to check if the project is inside an existing git repository (monorepo)
+function isInsideGitRepository(projectPath: string): boolean {
+  try {
+    const absolutePath = path.resolve(projectPath);
+
+    // Check if .git exists in the current or any parent directory
+    const result = execSync(`git rev-parse --is-inside-work-tree`, {
+      cwd: absolutePath,
+      stdio: "pipe",
+      encoding: "utf-8",
+    }).trim();
+
+    return result === "true";
+  } catch (error) {
+    // If command fails, we're not in a git repo
+    return false;
+  }
+}
+
 async function scaffoldProject({
   template,
   projectName,
   packageManager,
   apiKey,
 }: ScaffoldOptions): Promise<void> {
-  console.log("\n" + jazzGradient.multiline("Jazz App Creator\n"));
-
   const starterConfig = frameworkToAuthExamples[
     template as FrameworkAuthPair
   ] || {
@@ -141,20 +156,37 @@ async function scaffoldProject({
     const packageJsonPath = `${projectName}/package.json`;
     const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf8"));
 
-    // Replace workspace: dependencies with latest
-    if (packageJson.dependencies) {
-      const latestVersions = await getLatestPackageVersions(
-        packageJson.dependencies,
-      );
+    // Helper function to update workspace dependencies
+    async function updateWorkspaceDependencies(
+      dependencyType: "dependencies" | "devDependencies",
+    ) {
+      if (packageJson[dependencyType]) {
+        const latestVersions = await getLatestPackageVersions(
+          packageJson[dependencyType],
+        );
 
-      Object.entries(packageJson.dependencies).forEach(([pkg, version]) => {
-        if (typeof version === "string" && version.includes("workspace:")) {
-          packageJson.dependencies[pkg] = latestVersions[pkg];
-        }
-      });
+        Object.entries(packageJson[dependencyType]).forEach(
+          ([pkg, version]) => {
+            if (typeof version === "string" && version.includes("workspace:")) {
+              packageJson[dependencyType][pkg] = latestVersions[pkg];
+            }
+          },
+        );
+      }
     }
 
-    packageJson.name = projectName;
+    await Promise.all([
+      updateWorkspaceDependencies("dependencies"),
+      updateWorkspaceDependencies("devDependencies"),
+    ]);
+
+    // If projectName is ".", use the current directory name instead
+    if (projectName === ".") {
+      const currentDir = process.cwd().split("/").pop() || "jazz-app";
+      packageJson.name = currentDir;
+    } else {
+      packageJson.name = projectName;
+    }
     fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
     depsSpinner.succeed(chalk.green("Dependencies updated"));
   } catch (error) {
@@ -243,10 +275,100 @@ module.exports = withNativeWind(config, { input: "./src/global.css" });
     }
   }
 
+  // Step 5: Clone cursor-docs
+  const docsSpinner = ora({
+    text: chalk.blue(`Adding .cursor directory...`),
+    spinner: "dots",
+  }).start();
+
+  try {
+    // Create a temporary directory for cursor-docs
+    const tempDocsDir = `${projectName}-cursor-docs-temp`;
+    const emitter = degit("garden-co/jazz/packages/cursor-docs", {
+      cache: false,
+      force: true,
+      verbose: true,
+    });
+
+    // Clone cursor-docs to temp directory
+    await emitter.clone(tempDocsDir);
+
+    // Copy only the .cursor directory to project root
+    const cursorDirSource = `${tempDocsDir}/.cursor`;
+    const cursorDirTarget = `${projectName}/.cursor`;
+
+    if (fs.existsSync(cursorDirSource)) {
+      fs.cpSync(cursorDirSource, cursorDirTarget, { recursive: true });
+      docsSpinner.succeed(chalk.green(".cursor directory added successfully"));
+    } else {
+      docsSpinner.fail(chalk.red(".cursor directory not found in cursor-docs"));
+    }
+
+    // Clean up temp directory
+    fs.rmSync(tempDocsDir, { recursive: true, force: true });
+  } catch (error) {
+    docsSpinner.fail(chalk.red("Failed to add .cursor directory"));
+    throw error;
+  }
+
+  // Step 6: Git init (conditionally)
+  const gitSpinner = ora({
+    text: chalk.blue("Checking git status..."),
+    spinner: "dots",
+  }).start();
+
+  try {
+    const projectPath = projectName === "." ? "." : projectName;
+
+    if (isInsideGitRepository(projectPath)) {
+      gitSpinner.info(
+        chalk.yellow(
+          "Project is inside an existing git repository (likely a monorepo). Skipping git initialization.",
+        ),
+      );
+    } else {
+      gitSpinner.stop();
+
+      // Ask for confirmation
+      const { confirmGitInit } = await inquirer.prompt([
+        {
+          type: "confirm",
+          name: "confirmGitInit",
+          message: chalk.cyan("Initialize git repository?"),
+          default: true,
+        },
+      ]);
+
+      if (confirmGitInit) {
+        const initSpinner = ora({
+          text: chalk.blue("Initializing git repository..."),
+          spinner: "dots",
+        }).start();
+
+        execSync(
+          `cd "${projectName}" && git init && git add . && git commit -m "Initial commit from create-jazz-app"`,
+          { stdio: "pipe" },
+        );
+
+        initSpinner.succeed(chalk.green("Git repository initialized"));
+      } else {
+        console.log(chalk.yellow("Git initialization skipped"));
+      }
+    }
+  } catch (error) {
+    gitSpinner.fail(chalk.red("Failed to check or initialize git repository"));
+    console.error(error);
+  }
+
   // Final success message
   console.log("\n" + chalk.green.bold("✨ Project setup completed! ✨\n"));
   console.log(chalk.cyan("To get started:"));
-  console.log(chalk.white(`  cd ${chalk.bold(projectName)}`));
+
+  // Skip the cd command if we're already in the project directory
+  if (projectName !== ".") {
+    console.log(chalk.white(`  cd ${chalk.bold(projectName)}`));
+  }
+
   console.log(
     chalk.white(`  ${chalk.bold(`${packageManager} run ${devCommand}`)}\n`),
   );
@@ -255,7 +377,6 @@ module.exports = withNativeWind(config, { input: "./src/global.css" });
 async function promptUser(
   partialOptions: PromptOptions,
 ): Promise<ScaffoldOptions> {
-  console.log("\n" + jazzGradient.multiline("Jazz App Creator\n"));
   console.log(chalk.blue.bold("Let's create your Jazz app! 🎷\n"));
 
   const questions = [];
@@ -300,7 +421,7 @@ async function promptUser(
     questions.push({
       type: "list",
       name: "starter",
-      message: chalk.cyan("Choose a starter:"),
+      message: chalk.cyan("Choose an authentication method:"),
       choices: choices.map(([key, value]) => ({
         name: chalk.white(value.name),
         value: key,
@@ -375,18 +496,28 @@ function validateOptions(options: PromptOptions): options is ScaffoldOptions {
   return true;
 }
 
+const frameworkOptions = frameworks.map((f) => f.name).join(", ");
+
 program
-  .description(chalk.blue("CLI to generate Jazz starter projects"))
-  .option("-f, --framework <framework>", chalk.cyan("Framework to use"))
+  .description(
+    chalk.blue("CLI to generate Jazz projects using starter templates"),
+  )
+  .option(
+    "-f, --framework <framework>",
+    chalk.cyan(`Framework to use (${frameworkOptions})`),
+  )
   .option("-s, --starter <starter>", chalk.cyan("Starter template to use"))
   .option("-e, --example <name>", chalk.cyan("Example project to use"))
-  .option("-n, --project-name <name>", chalk.cyan("Name of the project"))
   .option(
     "-p, --package-manager <manager>",
     chalk.cyan("Package manager to use (npm, yarn, pnpm, bun, deno)"),
   )
   .option("-k, --api-key <key>", chalk.cyan("Jazz Cloud API key"))
-  .action(async (options) => {
+  .argument(
+    "[directory]",
+    "Directory to create the project in (defaults to project name)",
+  )
+  .action(async (directory, options) => {
     try {
       const partialOptions: PromptOptions = {};
 
@@ -396,6 +527,18 @@ program
             "Cannot specify both starter and example. Please choose one.",
           ),
         );
+      }
+
+      // If directory is ".", set it as the project name or use it later
+      if (directory === ".") {
+        // Use current directory name as project name if not specified
+        if (!options.projectName) {
+          const currentDir = process.cwd().split("/").pop() || "jazz-app";
+          partialOptions.projectName = currentDir;
+        }
+      } else if (directory && !options.projectName) {
+        // If directory is provided but not project name, use directory as project name
+        partialOptions.projectName = directory;
       }
 
       if (options.starter)
@@ -410,6 +553,11 @@ program
 
       // Get missing options through prompts
       const scaffoldOptions = await promptUser(partialOptions);
+
+      // If directory is ".", we'll create the project in the current directory
+      if (directory === ".") {
+        scaffoldOptions.projectName = ".";
+      }
 
       // Validate will throw if invalid
       validateOptions(scaffoldOptions);
@@ -426,7 +574,7 @@ program
 
 // Add help text to show available starters
 program.on("--help", () => {
-  console.log("\n" + jazzGradient.multiline("Available starters:\n"));
+  console.log(chalk.blue("\nAvailable starters:\n"));
   Object.entries(frameworkToAuthExamples).forEach(([key, value]) => {
     if (value.repo) {
       // Only show implemented starters
@@ -439,16 +587,20 @@ program.on("--help", () => {
   });
   console.log(chalk.blue("\nExample usage:"));
   console.log(
-    chalk.white(
-      "  create-jazz-app --starter react-demo-auth --project-name my-app --package-manager npm\n",
-    ),
+    chalk.white("npx create-jazz-app@latest my-app --framework react\n"),
+  );
+  console.log(chalk.blue("With example app as a template:"));
+  console.log(
+    chalk.white("npx create-jazz-app@latest my-chat-app --example chat\n"),
   );
   console.log(chalk.blue("With API key:"));
   console.log(
     chalk.white(
-      "  create-jazz-app --starter react-demo-auth --project-name my-app --api-key your-api-key@garden.co\n",
+      "npx create-jazz-app@latest my-app --api-key your-api-key@garden.co\n",
     ),
   );
+  console.log(chalk.blue("Create in current directory:"));
+  console.log(chalk.white("npx create-jazz-app@latest .\n"));
 });
 
 program.parse(process.argv);

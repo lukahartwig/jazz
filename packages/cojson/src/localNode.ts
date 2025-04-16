@@ -246,7 +246,7 @@ export class LocalNode {
 
       return node;
     } catch (e) {
-      logger.error("Error withLoadedAccount: " + (e as Error)?.message);
+      logger.error("Error withLoadedAccount", { err: e });
       throw e;
     }
   }
@@ -287,10 +287,12 @@ export class LocalNode {
       await entry.loadCoValue(this.storageDriver, peers).catch((e) => {
         logger.error("Error loading from peers: " + (e as Error)?.message, {
           id,
+          err: e,
         });
       });
     }
 
+    // TODO: What if the loading fails because in the previous loadCoValueCore call the Peer with the covalue was skipped?
     return entry.getCoValue();
   }
 
@@ -302,6 +304,14 @@ export class LocalNode {
    * @category 3. Low-level
    */
   async load<T extends RawCoValue>(id: CoID<T>): Promise<T | "unavailable"> {
+    if (!id) {
+      throw new Error("Trying to load CoValue with undefined id");
+    }
+
+    if (!id.startsWith("co_z")) {
+      throw new Error(`Trying to load CoValue with invalid id ${id}`);
+    }
+
     const core = await this.loadCoValueCore(id);
 
     if (core === "unavailable") {
@@ -341,9 +351,10 @@ export class LocalNode {
         unsubscribe = coValue.subscribe(callback);
       })
       .catch((e) => {
-        logger.error(
-          "Error subscribing to " + id + ": " + (e as Error)?.message,
-        );
+        logger.error("Subscription error", {
+          id,
+          err: e,
+        });
       });
 
     return () => {
@@ -545,7 +556,7 @@ export class LocalNode {
       } satisfies UnexpectedlyNotAccountError);
     }
 
-    return (coValue.getCurrentContent() as RawAccount).currentAgentID();
+    return ok((coValue.getCurrentContent() as RawAccount).currentAgentID());
   }
 
   resolveAccountAgentAsync(
@@ -588,7 +599,7 @@ export class LocalNode {
         } satisfies UnexpectedlyNotAccountError);
       }
 
-      return (coValue.getCurrentContent() as RawAccount).currentAgentID();
+      return ok((coValue.getCurrentContent() as RawAccount).currentAgentID());
     });
   }
 
@@ -616,9 +627,7 @@ export class LocalNode {
       this.crypto.seal({
         message: readKey.secret,
         from: this.account.currentSealerSecret(),
-        to: this.account
-          .currentSealerID()
-          ._unsafeUnwrap({ withStackTrace: true }),
+        to: this.account.currentSealerID(),
         nOnceMaterial: {
           in: groupCoValue.id,
           tx: groupCoValue.nextTransactionID(),

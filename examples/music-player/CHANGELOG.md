@@ -1,5 +1,284 @@
 # jazz-example-musicplayer
 
+## 0.0.97
+
+### Patch Changes
+
+- Updated dependencies [c320615]
+  - jazz-inspector@0.13.6
+
+## 0.0.96
+
+### Patch Changes
+
+- Updated dependencies [08ae9b2]
+- Updated dependencies [fe6f561]
+  - jazz-inspector@0.13.5
+  - jazz-tools@0.13.5
+  - jazz-react@0.13.5
+
+## 0.0.95
+
+### Patch Changes
+
+- Updated dependencies [3129982]
+  - jazz-react@0.13.4
+  - jazz-tools@0.13.4
+  - jazz-inspector@0.13.4
+
+## 0.0.94
+
+### Patch Changes
+
+- Updated dependencies [12f8bfa]
+- Updated dependencies [bd57177]
+- Updated dependencies [017f6c8]
+  - jazz-tools@0.13.3
+  - jazz-inspector@0.13.3
+  - jazz-react@0.13.3
+
+## 0.0.93
+
+### Patch Changes
+
+- Updated dependencies [ae4be2b]
+  - jazz-inspector@0.13.2
+  - jazz-react@0.13.2
+  - jazz-tools@0.13.2
+
+## 0.0.92
+
+### Patch Changes
+
+- Updated dependencies [2796689]
+- Updated dependencies [afd1374]
+- Updated dependencies [2224ed4]
+  - jazz-inspector@0.13.0
+  - jazz-tools@0.13.0
+  - jazz-react@0.13.0
+
+## 0.0.91
+
+### Patch Changes
+
+- Updated dependencies [8a71835]
+  - jazz-inspector@0.12.2
+  - jazz-react@0.12.2
+  - jazz-tools@0.12.2
+
+## 0.0.90
+
+### Patch Changes
+
+- jazz-inspector@0.12.1
+- jazz-react@0.12.1
+- jazz-tools@0.12.1
+
+## 0.0.89
+
+### Patch Changes
+
+- Updated dependencies [01523dc]
+- Updated dependencies [4ea87dc]
+- Updated dependencies [1e6da19]
+- Updated dependencies [b6c6a0a]
+- Updated dependencies [9a56bb3]
+  - jazz-tools@0.12.0
+  - jazz-inspector@0.12.0
+  - jazz-react@0.12.0
+
+## 0.0.88
+
+### Patch Changes
+
+- Updated dependencies [71b9390]
+  - jazz-inspector@0.11.8
+  - jazz-react@0.11.8
+  - jazz-tools@0.11.8
+
+## 0.0.87
+
+### Patch Changes
+
+- Updated dependencies [2c3761c]
+- Updated dependencies [a140f55]
+- Updated dependencies [4019918]
+- Updated dependencies [2b0d1b0]
+  - jazz-inspector@0.11.7
+  - jazz-tools@0.11.7
+  - jazz-react@0.11.7
+
+## 0.0.86
+
+### Patch Changes
+
+- 1bfa9bb: Removed when="singedUp" from examples apps' Jazz providers. This is a really niche use-case option and can lead to broken-feeling experiences when anonymous users try to load something.
+- Updated dependencies [e7c85b7]
+- Updated dependencies [09f0a98]
+- Updated dependencies [11da4d1]
+  - jazz-react@0.11.6
+  - jazz-tools@0.11.6
+  - jazz-inspector@0.11.6
+
+## 0.0.85
+
+### Patch Changes
+
+- jazz-inspector@0.11.5
+- jazz-react@0.11.5
+- jazz-tools@0.11.5
+
+## 0.0.84
+
+### Patch Changes
+
+- Updated dependencies [d133d47]
+- Updated dependencies [57a3dbe]
+- Updated dependencies [a717754]
+- Updated dependencies [a91f343]
+- Updated dependencies [e902405]
+  - jazz-inspector@0.11.4
+  - jazz-tools@0.11.4
+  - jazz-react@0.11.4
+
+## 0.0.83
+
+### Patch Changes
+
+- jazz-inspector@0.11.3
+- jazz-react@0.11.3
+- jazz-tools@0.11.3
+
+## 0.0.82
+
+### Patch Changes
+
+- Updated dependencies [6892dc6]
+  - jazz-tools@0.11.2
+  - jazz-inspector@0.11.2
+  - jazz-react@0.11.2
+
+## 0.0.81
+
+### Patch Changes
+
+- Updated dependencies [7b00a81]
+  - jazz-inspector@0.11.1
+  - jazz-react@0.11.1
+
+## 0.0.80
+
+### Patch Changes
+
+- Updated dependencies [6a96d8b]
+- Updated dependencies [a35249a]
+- Updated dependencies [b9d194a]
+- Updated dependencies [a4713df]
+- Updated dependencies [34cbdc3]
+- Updated dependencies [b7deb3c]
+- Updated dependencies [f039e8f]
+- Updated dependencies [e22de9f]
+  - jazz-tools@0.11.0
+  - jazz-react@0.11.0
+  - jazz-inspector@0.10.13
+
+## 0.0.79
+
+### Patch Changes
+
+- Updated dependencies [2f99de0]
+  - jazz-tools@0.10.15
+  - jazz-inspector@0.10.12
+  - jazz-react@0.10.15
+
+## 0.0.78
+
+### Patch Changes
+
+- Updated dependencies [75211e3]
+  - jazz-tools@0.10.14
+  - jazz-inspector@0.10.11
+  - jazz-react@0.10.14
+
+## 0.0.77
+
+### Patch Changes
+
+- Updated dependencies [07feedd]
+  - jazz-tools@0.10.13
+  - jazz-inspector@0.10.10
+  - jazz-react@0.10.13
+
+## 0.0.76
+
+### Patch Changes
+
+- Updated dependencies [4612e05]
+  - jazz-tools@0.10.12
+  - jazz-inspector@0.10.9
+  - jazz-react@0.10.12
+
+## 0.0.75
+
+### Patch Changes
+
+- jazz-react@0.10.9
+
+## 0.0.74
+
+### Patch Changes
+
+- Updated dependencies [2fb6428]
+  - jazz-tools@0.10.8
+  - jazz-inspector@0.10.8
+  - jazz-react@0.10.8
+
+## 0.0.73
+
+### Patch Changes
+
+- Updated dependencies [1136d9b]
+- Updated dependencies [0eed228]
+  - jazz-react@0.10.7
+  - jazz-tools@0.10.7
+  - jazz-inspector@0.10.7
+
+## 0.0.72
+
+### Patch Changes
+
+- Updated dependencies [1d71ca1]
+- Updated dependencies [ada802b]
+  - jazz-react@0.10.6
+  - jazz-tools@0.10.6
+  - jazz-inspector@0.10.6
+
+## 0.0.71
+
+### Patch Changes
+
+- Updated dependencies [59ff77e]
+  - jazz-tools@0.10.5
+  - jazz-inspector@0.10.5
+  - jazz-react@0.10.5
+
+## 0.0.70
+
+### Patch Changes
+
+- jazz-inspector@0.10.4
+- jazz-react@0.10.4
+- jazz-tools@0.10.4
+
+## 0.0.69
+
+### Patch Changes
+
+- Updated dependencies [d8582fc]
+  - jazz-tools@0.10.3
+  - jazz-inspector@0.10.3
+  - jazz-react@0.10.3
+
 ## 0.0.68
 
 ### Patch Changes

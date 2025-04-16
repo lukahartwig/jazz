@@ -1,7 +1,9 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+import { Account } from "../coValues/account";
 import { CoMap } from "../coValues/coMap";
 import { Group } from "../coValues/group";
 import { Inbox, InboxSender } from "../coValues/inbox";
+import { Profile } from "../exports";
 import { co } from "../internal";
 import { setupTwoNodes, waitFor } from "./utils";
 
@@ -10,6 +12,28 @@ class Message extends CoMap {
 }
 
 describe("Inbox", () => {
+  describe("Private profile", () => {
+    it("Should throw if the inbox owner profile is private", async () => {
+      class WorkerAccount extends Account {
+        migrate() {
+          this.profile = Profile.create(
+            { name: "Worker" },
+            Group.create({ owner: this }),
+          );
+        }
+      }
+
+      const { clientAccount: sender, serverAccount: receiver } =
+        await setupTwoNodes({
+          ServerAccountSchema: WorkerAccount,
+        });
+
+      await expect(() => InboxSender.load(receiver.id, sender)).rejects.toThrow(
+        "Insufficient permissions to access the inbox, make sure its user profile is publicly readable.",
+      );
+    });
+  });
+
   it("should create inbox and allow message exchange between accounts", async () => {
     const { clientAccount: sender, serverAccount: receiver } =
       await setupTwoNodes();
@@ -122,7 +146,7 @@ describe("Inbox", () => {
     );
     const resultId = await inboxSender.sendMessage(message);
 
-    const result = await Message.load(resultId, receiver, {});
+    const result = await Message.load(resultId, { loadAs: receiver });
     expect(result?.text).toBe("Responded from the inbox");
 
     unsubscribe();
@@ -167,6 +191,8 @@ describe("Inbox", () => {
       },
     );
 
+    const errorLogSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
     const unsubscribe = receiverInbox.subscribe(Message, async () => {
       return Promise.reject(new Error("Failed"));
     });
@@ -179,6 +205,13 @@ describe("Inbox", () => {
     );
 
     unsubscribe();
+
+    expect(errorLogSpy).toHaveBeenCalledWith(
+      "Error processing inbox message",
+      expect.any(Error),
+    );
+
+    errorLogSpy.mockRestore();
   });
 
   it("should mark messages as processed", async () => {
@@ -273,6 +306,7 @@ describe("Inbox", () => {
         owner: Group.create({ owner: sender }),
       },
     );
+    const errorLogSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
     // Setup inbox sender
     const inboxSender = await InboxSender.load(receiver.id, sender);
@@ -295,5 +329,51 @@ describe("Inbox", () => {
     const [failed] = Object.values(receiverInbox.failed.items).flat();
     expect(failed?.value.errors.length).toBe(3);
     unsubscribe();
+
+    expect(errorLogSpy).toHaveBeenCalledWith(
+      "Error processing inbox message",
+      expect.any(Error),
+    );
+
+    errorLogSpy.mockRestore();
+  });
+
+  it("should not break the subscription if the message is unavailable", async () => {
+    const { clientAccount: sender, serverAccount: receiver } =
+      await setupTwoNodes();
+
+    const receiverInbox = await Inbox.load(receiver);
+
+    const inboxSender = await InboxSender.load(receiver.id, sender);
+    inboxSender.messages.push(`co_z123234` as any);
+
+    const spy = vi.fn();
+
+    const errorLogSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    // Subscribe to inbox messages
+    const unsubscribe = receiverInbox.subscribe(
+      Message,
+      async () => {
+        spy();
+      },
+      { retries: 2 },
+    );
+
+    await waitFor(() => {
+      const [failed] = Object.values(receiverInbox.failed.items).flat();
+
+      expect(failed?.value.errors.length).toBe(3);
+    });
+
+    expect(spy).not.toHaveBeenCalled();
+    unsubscribe();
+
+    expect(errorLogSpy).toHaveBeenCalledWith(
+      "Error processing inbox message",
+      expect.any(Error),
+    );
+
+    errorLogSpy.mockRestore();
   });
 });

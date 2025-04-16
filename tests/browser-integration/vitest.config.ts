@@ -7,7 +7,8 @@ export default defineProject({
     browser: {
       enabled: true,
       provider: "playwright",
-      instances: [{ browser: "chromium", headless: true }],
+      headless: true,
+      instances: [{ browser: "chromium" }],
       commands: customCommands,
     },
     testTimeout: process.env.CI ? 60_000 : 10_000,

@@ -114,13 +114,18 @@ export async function createJazzContextFromExistingCredentials<
     peersToLoadFrom: peersToLoadFrom,
     crypto: crypto,
     storageAdapter,
+    migration: async (rawAccount, _node, creationProps) => {
+      const account = new CurrentAccountSchema({
+        fromRaw: rawAccount,
+      }) as Acc;
+      activeAccountContext.set(account);
+
+      await account.applyMigration(creationProps);
+    },
   });
 
   const account = CurrentAccountSchema.fromNode(node);
   activeAccountContext.set(account);
-
-  // Running the migration outside of withLoadedAccount for better error management
-  await account.applyMigration();
 
   return {
     node,
@@ -222,13 +227,10 @@ export async function createJazzContext<Acc extends Account>(options: {
       AccountSchema: options.AccountSchema,
       sessionProvider: options.sessionProvider,
       onLogOut: () => {
-        authSecretStorage.clear();
+        authSecretStorage.clearWithoutNotify();
       },
       storageAdapter: options.storageAdapter,
     });
-
-    // To align the isAuthenticated state with the credentials
-    authSecretStorage.emitUpdate(credentials);
   } else {
     const secretSeed = options.crypto.newRandomSecretSeed();
 
@@ -247,13 +249,13 @@ export async function createJazzContext<Acc extends Account>(options: {
       crypto,
       AccountSchema: options.AccountSchema,
       onLogOut: async () => {
-        await authSecretStorage.clear();
+        await authSecretStorage.clearWithoutNotify();
       },
       storageAdapter: options.storageAdapter,
     });
 
     if (!options.newAccountProps) {
-      await authSecretStorage.set({
+      await authSecretStorage.setWithoutNotify({
         accountID: context.account.id,
         secretSeed,
         accountSecret: context.node.account.agentSecret,

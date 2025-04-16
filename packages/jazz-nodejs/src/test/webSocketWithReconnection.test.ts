@@ -1,6 +1,6 @@
 import { createWebSocketPeer } from "cojson-transport-ws";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
-import { webSocketWithReconnection } from "../webSocketWithReconnection";
+import { webSocketWithReconnection } from "../webSocketWithReconnection.js";
 
 // Mock dependencies
 vi.mock("cojson-transport-ws", () => ({

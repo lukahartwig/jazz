@@ -35,7 +35,7 @@ class TestJazzContextManager<Acc extends Account> extends JazzContextManager<
     AccountSchema?: AccountClass<Acc>;
   }
 > {
-  async createContext(
+  async getNewContext(
     props: JazzContextManagerBaseProps<Acc> & {
       defaultProfileName?: string;
       AccountSchema?: AccountClass<Acc>;
@@ -53,7 +53,7 @@ class TestJazzContextManager<Acc extends Account> extends JazzContextManager<
       AccountSchema: props.AccountSchema,
     });
 
-    this.updateContext(props, {
+    return {
       me: context.account,
       node: context.node,
       done: () => {
@@ -62,7 +62,7 @@ class TestJazzContextManager<Acc extends Account> extends JazzContextManager<
       logOut: async () => {
         await context.logOut();
       },
-    });
+    };
   }
 }
 
@@ -123,6 +123,23 @@ describe("ContextManager", () => {
     expect(getCurrentValue().me.id).toBe(credentials.accountID);
   });
 
+  test("handles race conditions on the context creation", async () => {
+    const account = await createJazzTestAccount();
+
+    manager.createContext({});
+
+    const credentials = {
+      accountID: account.id,
+      accountSecret: account._raw.core.node.account.agentSecret,
+      provider: "test",
+    };
+
+    // Authenticate without waiting for the previous context to be created
+    await manager.authenticate(credentials);
+
+    expect(getCurrentValue().me.id).toBe(credentials.accountID);
+  });
+
   test("calls onLogOut callback when logging out", async () => {
     const onLogOut = vi.fn();
     await manager.createContext({ onLogOut });
@@ -130,6 +147,18 @@ describe("ContextManager", () => {
     await manager.logOut();
 
     expect(onLogOut).toHaveBeenCalled();
+  });
+
+  test("calls logoutReplacement callback instead of the Jazz logout when logging out", async () => {
+    const logOutReplacement = vi.fn();
+    await manager.createContext({ logOutReplacement });
+
+    const context = manager.getCurrentValue();
+
+    await manager.logOut();
+
+    expect(logOutReplacement).toHaveBeenCalled();
+    expect(manager.getCurrentValue()).toBe(context);
   });
 
   test("notifies listeners of context changes", async () => {
@@ -196,6 +225,91 @@ describe("ContextManager", () => {
     expect(onAnonymousAccountDiscarded).not.toHaveBeenCalled();
   });
 
+  test("the migration should be applied correctly on existing accounts", async () => {
+    class AccountRoot extends CoMap {
+      value = co.string;
+    }
+
+    let lastRootId: string | undefined;
+
+    class CustomAccount extends Account {
+      root = co.ref(AccountRoot);
+
+      migrate() {
+        this.root = AccountRoot.create({
+          value: "Hello",
+        });
+        lastRootId = this.root.id;
+      }
+    }
+    const customManager = new TestJazzContextManager<CustomAccount>();
+
+    // Create initial anonymous context
+    await customManager.createContext({
+      AccountSchema: CustomAccount,
+    });
+
+    const account = (
+      customManager.getCurrentValue() as JazzAuthContext<CustomAccount>
+    ).me;
+
+    await customManager.authenticate({
+      accountID: account.id,
+      accountSecret: account._raw.core.node.account.agentSecret,
+      provider: "test",
+    });
+
+    const me = await CustomAccount.getMe().ensureLoaded({
+      resolve: { root: true },
+    });
+
+    expect(me.root.id).toBe(lastRootId);
+  });
+
+  test("the migration should be applied correctly on existing accounts (2)", async () => {
+    class AccountRoot extends CoMap {
+      value = co.number;
+    }
+
+    class CustomAccount extends Account {
+      root = co.ref(AccountRoot);
+
+      async migrate(this: CustomAccount) {
+        if (this.root === undefined) {
+          this.root = AccountRoot.create({
+            value: 1,
+          });
+        } else {
+          const { root } = await this.ensureLoaded({ resolve: { root: true } });
+
+          root.value = 2;
+        }
+      }
+    }
+    const customManager = new TestJazzContextManager<CustomAccount>();
+
+    // Create initial anonymous context
+    await customManager.createContext({
+      AccountSchema: CustomAccount,
+    });
+
+    const account = (
+      customManager.getCurrentValue() as JazzAuthContext<CustomAccount>
+    ).me;
+
+    await customManager.authenticate({
+      accountID: account.id,
+      accountSecret: account._raw.core.node.account.agentSecret,
+      provider: "test",
+    });
+
+    const me = await CustomAccount.getMe().ensureLoaded({
+      resolve: { root: true },
+    });
+
+    expect(me.root.value).toBe(2);
+  });
+
   test("onAnonymousAccountDiscarded should work on transfering data between accounts", async () => {
     class AccountRoot extends CoMap {
       value = co.string;
@@ -218,10 +332,16 @@ describe("ContextManager", () => {
       anonymousAccount: CustomAccount,
     ) => {
       const anonymousAccountWithRoot = await anonymousAccount.ensureLoaded({
-        root: {},
+        resolve: {
+          root: true,
+        },
       });
 
-      const meWithRoot = await CustomAccount.getMe().ensureLoaded({ root: {} });
+      const meWithRoot = await CustomAccount.getMe().ensureLoaded({
+        resolve: {
+          root: true,
+        },
+      });
 
       const rootToTransfer = anonymousAccountWithRoot.root;
 
@@ -249,8 +369,61 @@ describe("ContextManager", () => {
       provider: "test",
     });
 
-    const me = await CustomAccount.getMe().ensureLoaded({ root: {} });
+    const me = await CustomAccount.getMe().ensureLoaded({
+      resolve: {
+        root: true,
+      },
+    });
 
     expect(me.root.transferredRoot?.value).toBe("Hello");
+  });
+
+  test("handles registration of new account", async () => {
+    const onAnonymousAccountDiscarded = vi.fn();
+    await manager.createContext({ onAnonymousAccountDiscarded });
+
+    const secret = Crypto.newRandomAgentSecret();
+    const accountId = await manager.register(secret, { name: "Test User" });
+
+    expect(accountId).toBeDefined();
+    const context = getCurrentValue();
+    expect(context.me.profile?.name).toBe("Test User");
+    expect(context.me.id).toBe(accountId);
+  });
+
+  test("calls onAnonymousAccountDiscarded when registering from anonymous user", async () => {
+    const onAnonymousAccountDiscarded = vi.fn();
+    await manager.createContext({ onAnonymousAccountDiscarded });
+    const anonymousAccount = getCurrentValue().me;
+
+    const secret = Crypto.newRandomAgentSecret();
+    await manager.register(secret, { name: "Test User" });
+
+    expect(onAnonymousAccountDiscarded).toHaveBeenCalledWith(anonymousAccount);
+  });
+
+  test("does not call onAnonymousAccountDiscarded when registering from authenticated user", async () => {
+    const onAnonymousAccountDiscarded = vi.fn();
+    const account = await createJazzTestAccount();
+
+    await manager.getAuthSecretStorage().set({
+      accountID: account.id,
+      accountSecret: account._raw.core.node.account.agentSecret,
+      provider: "test",
+    });
+
+    await manager.createContext({ onAnonymousAccountDiscarded });
+
+    const secret = Crypto.newRandomAgentSecret();
+    await manager.register(secret, { name: "New User" });
+
+    expect(onAnonymousAccountDiscarded).not.toHaveBeenCalled();
+  });
+
+  test("throws error when registering without props", async () => {
+    const secret = Crypto.newRandomAgentSecret();
+    await expect(
+      manager.register(secret, { name: "Test User" }),
+    ).rejects.toThrow("Props required");
   });
 });

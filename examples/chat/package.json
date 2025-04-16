@@ -1,7 +1,7 @@
 {
   "name": "jazz-example-chat",
   "private": true,
-  "version": "0.0.147",
+  "version": "0.0.176",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -9,13 +9,13 @@
     "format-and-lint": "biome check .",
     "format-and-lint:fix": "biome check . --write",
     "preview": "vite preview",
-    "test": "playwright test",
-    "test:ui": "playwright test --ui"
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui"
   },
   "dependencies": {
     "clsx": "^2.0.0",
     "hash-slash": "workspace:*",
-    "jazz-browser-media-images": "workspace:*",
+    "jazz-inspector": "workspace:*",
     "jazz-react": "workspace:*",
     "jazz-tools": "workspace:*",
     "lucide-react": "^0.274.0",

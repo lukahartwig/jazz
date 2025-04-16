@@ -1,11 +1,19 @@
-import { products } from "@/lib/showcase";
+import { products } from "@/content/showcase";
 import { HeroHeader } from "gcmp-design-system/src/app/components/molecules/HeroHeader";
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 
-export const metadata = {
-  title: "Built with Jazz",
-  description: "Great apps by smart people.",
+const title = "Built with Jazz";
+const description = "Great apps by smart people.";
+
+export const metadata: Metadata = {
+  title,
+  description,
+  openGraph: {
+    title,
+    description,
+  },
 };
 
 export default function Page() {
@@ -31,7 +39,7 @@ export default function Page() {
               alt=""
             />
             <div className="space-y-2">
-              <h2 className="font-medium text-stone-900 dark:text-white leading-none">
+              <h2 className="font-medium text-highlight leading-none">
                 {product.name}
               </h2>
               <p className="text-sm">{product.description}</p>

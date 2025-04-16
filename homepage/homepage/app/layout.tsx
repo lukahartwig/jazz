@@ -6,6 +6,7 @@ import localFont from "next/font/local";
 
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { JazzFooter } from "@/components/footer";
+import { marketingCopy } from "@/content/marketingCopy";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 
@@ -40,9 +41,8 @@ const commitMono = localFont({
 });
 
 const metaTags = {
-  title: "Jazz - Build local-first apps",
-  description:
-    "Jazz is an open-source framework for building local-first apps, removing 90% of the backend and infrastructure complexity.",
+  title: `Jazz - ${marketingCopy.headline}`,
+  description: marketingCopy.description,
   url: "https://jazz.tools",
 };
 
@@ -63,13 +63,6 @@ export const metadata: Metadata = {
     description: metaTags.description,
     url: metaTags.url,
     siteName: "Jazz",
-    images: [
-      {
-        url: "/social-image.png",
-        width: 1200,
-        height: 630,
-      },
-    ],
   },
 };
 
@@ -86,7 +79,7 @@ export default function RootLayout({
           commitMono.variable,
           inter.className,
           "min-h-full flex flex-col items-center [&_*]:scroll-mt-[5rem]",
-          "bg-white text-stone-700 dark:text-stone-400 dark:bg-stone-950",
+          "bg-white dark:bg-stone-950 text-default",
         ].join(" ")}
       >
         <SpeedInsights />

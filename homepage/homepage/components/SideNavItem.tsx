@@ -1,6 +1,7 @@
 "use client";
 
 import { clsx } from "clsx";
+import { Icon } from "gcmp-design-system/src/app/components/atoms/Icon";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ReactNode } from "react";
@@ -16,7 +17,7 @@ export function SideNavItem({
 }) {
   const classes = clsx(
     className,
-    "py-1 flex items-center hover:transition-colors",
+    "py-1 px-2 -mx-2 group rounded-md flex items-center  transition-colors",
   );
   const path = usePathname();
 
@@ -26,14 +27,20 @@ export function SideNavItem({
         href={href}
         className={clsx(
           classes,
-          href &&
-            "hover:text-stone-900 dark:hover:text-stone-200 transition-colors hover:transition-none",
-          {
-            "text-stone-900 dark:text-white": path === href,
-          },
+          path === href
+            ? "text-stone-900 font-medium  bg-stone-100 dark:text-white dark:bg-stone-900"
+            : "hover:text-stone-900 dark:hover:text-stone-200",
         )}
       >
         {children}
+
+        {!href.startsWith("/docs") && (
+          <Icon
+            name="arrowRight"
+            size="2xs"
+            className="ml-2 text-stone-500 invisible group-hover:visible"
+          ></Icon>
+        )}
       </Link>
     );
   }

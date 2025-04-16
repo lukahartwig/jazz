@@ -12,6 +12,7 @@ export type AuthCredentials = {
 export type AuthenticateAccountFunction = (
   credentials: AuthCredentials,
 ) => Promise<void>;
+
 export type RegisterAccountFunction = (
   accountSecret: AgentSecret,
   creationProps: { name: string },
@@ -22,16 +23,20 @@ export type JazzAuthContext<Acc extends Account> = {
   me: Acc;
   node: LocalNode;
   authenticate: AuthenticateAccountFunction;
+  register: RegisterAccountFunction;
   logOut: () => Promise<void>;
   done: () => void;
+  isAuthenticated?: boolean;
 };
 
 export type JazzGuestContext = {
   guest: AnonymousJazzAgent;
   node: LocalNode;
   authenticate: AuthenticateAccountFunction;
+  register: RegisterAccountFunction;
   logOut: () => void;
   done: () => void;
+  isAuthenticated?: boolean;
 };
 
 export type JazzContextType<Acc extends Account> =
@@ -52,3 +57,9 @@ export type SyncConfig =
       peer?: `wss://${string}` | `ws://${string}`;
       when: "never";
     };
+
+export interface Register {}
+
+export type RegisteredAccount = Register extends { Account: infer Acc }
+  ? Acc
+  : Account;

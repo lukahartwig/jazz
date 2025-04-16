@@ -9,12 +9,12 @@ export default function ProblemStatementSection() {
     <div className="container grid gap-4 lg:gap-8">
       <SectionHeader
         className="sm:text-center sm:mx-auto"
-        title="Hard things are easy now."
-        slogan=""
+        title={"Powered by the first “flat stack”"}
+        slogan="A perspective shift worth 10,000 hours"
       />
 
-      <div className="grid sm:grid-cols-2 border rounded-lg shadow-sm md:rounded-xl overflow-hidden dark:border-stone-900">
-        <div className="flex flex-col bg-stone-50 relative gap-3 p-4 pb-8 md:p-8 md:gap-5 border-b sm:border-b-0 sm:border-r dark:bg-transparent dark:border-stone-900">
+      <div className="grid sm:grid-cols-2 border rounded-lg shadow-sm md:rounded-xl overflow-hidden">
+        <div className="flex flex-col bg-stone-50 relative gap-3 p-4 pb-8 md:p-8 md:gap-5 border-b sm:border-b-0 sm:border-r dark:bg-transparent">
           <span className="hidden absolute top-0 -right-4 md:-right-6 sm:flex items-center h-full">
             <span className="p-1 md:p-3 bg-stone-200 rounded-full dark:bg-stone-900 dark:text-white">
               <Icon name="arrowRight" />
@@ -26,13 +26,8 @@ export default function ProblemStatementSection() {
             </span>
           </span>
           <Prose>
-            <p className="font-display text-lg md:text-xl font-semibold text-stone-900 dark:text-white">
-              The sad truth is...
-            </p>
-            <p>
-              <strong>
-                Every stack reinvents how users and machines share state.
-              </strong>
+            <p className="font-display text-lg md:text-xl font-semibold text-highlight">
+              Every stack is a re-invention of shared state.
             </p>
           </Prose>
           <div className="relative flex items-center flex-1">
@@ -46,26 +41,20 @@ export default function ProblemStatementSection() {
           <Prose>
             <p>
               For each new app you tackle a{" "}
-              <strong>
-                mess of moving parts, tech choices &amp; deployment woes.
-              </strong>{" "}
-              Your code? <strong>All over the place.</strong>
+              <strong>mess of moving parts and infra worries.</strong> Or, you
+              haven't even tried because "you're not full-stack".
             </p>
             <p>
-              <strong>It’s holding you back</strong> from shipping{" "}
-              <strong>what your app could be.</strong>
+              Want to build a <strong>modern app</strong> with multiplayer or
+              offline-support? <strong>Figma, Notion and Linear</strong> all had
+              to spend <strong>years</strong> on completely custom stacks.
             </p>
           </Prose>
         </div>
         <div className="flex flex-col gap-3 p-4 pt-8 md:p-8 md:gap-5">
           <Prose>
-            <p className="font-display text-lg md:text-xl font-semibold text-stone-900 dark:text-white">
-              The good news is...
-            </p>
-            <p>
-              <strong>
-                There’s a single new abstraction that does the whole job.
-              </strong>
+            <p className="font-display text-lg md:text-xl font-semibold text-highlight">
+              What if we started from shared state?
             </p>
           </Prose>
           <div className="flex items-center flex-1">
@@ -73,13 +62,15 @@ export default function ProblemStatementSection() {
           </div>
           <Prose>
             <p>
-              Jazz gives you <strong>mutable local state</strong> that’s{" "}
-              <strong>instantly synced.</strong> Including binary blobs.{" "}
+              Jazz gives you <strong>local state</strong> that’s{" "}
+              <strong>instantly synced and stored in the cloud.</strong>{" "}
+              Including images and files.{" "}
               <strong>With users &amp; permissions built-in.</strong>
             </p>
             <p>
-              All that’s left is{" "}
-              <strong>building the UX that makes your app special.</strong>
+              With completely <strong>app-independent infra,</strong> you get to
+              focus on <strong>building the app your users want.</strong> You'll
+              notice that <strong>90% of the work is now the UI.</strong>
             </p>
           </Prose>
         </div>

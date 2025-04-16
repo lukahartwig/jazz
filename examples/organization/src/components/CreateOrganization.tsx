@@ -8,7 +8,7 @@ import { OrganizationForm } from "./OrganizationForm.tsx";
 
 export function CreateOrganization() {
   const { me } = useAccount({
-    root: { draftOrganization: {}, organizations: [] },
+    resolve: { root: { draftOrganization: true, organizations: true } },
   });
   const [errors, setErrors] = useState<string[]>([]);
   const navigate = useNavigate();
@@ -23,7 +23,7 @@ export function CreateOrganization() {
       return;
     }
 
-    const group = Group.create({ owner: me });
+    const group = Group.create();
 
     me.root.organizations.push(draft as Organization);
 

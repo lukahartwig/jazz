@@ -5,7 +5,7 @@ import {
   MeterProvider,
   MetricReader,
 } from "@opentelemetry/sdk-metrics";
-import { expect, vi } from "vitest";
+import { expect, onTestFinished, vi } from "vitest";
 import { ControlledAgent } from "../coValues/account.js";
 import { WasmCrypto } from "../crypto/WasmCrypto.js";
 import type { CoID, RawCoValue } from "../exports.js";
@@ -200,6 +200,9 @@ export function newGroupHighLevel() {
 
   const group = node.createGroup();
 
+  onTestFinished(() => {
+    node.gracefulShutdown();
+  });
   return { admin, node, group };
 }
 
@@ -376,8 +379,16 @@ export function tearDownTestMetricReader() {
 }
 
 export function setupSyncServer() {
-  syncServer.current = createTestNode();
-  return syncServer.current;
+  const [admin, session] = randomAnonymousAccountAndSessionID();
+  let node = (syncServer.current = new LocalNode(admin, session, Crypto));
+
+  return {
+    node,
+    restart: () => {
+      node.gracefulShutdown();
+      node = syncServer.current = new LocalNode(admin, session, Crypto);
+    },
+  };
 }
 
 export async function createConnectedTestAgentNode(opts = { connected: true }) {

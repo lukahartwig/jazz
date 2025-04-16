@@ -21,7 +21,7 @@ const features = [
     illustration: (
       <div className="grid gap-6 pt-4">
         <pre className="lg:px-5">
-          <code className="text-xs text-stone-900 dark:text-white lg:text-sm">
+          <code className="text-xs text-highlight lg:text-sm">
             BinaryCoStream.createFromBlob(file);
           </code>
         </pre>
@@ -30,9 +30,9 @@ const features = [
           <Icon
             size="2xl"
             name="file"
-            className="text-blue dark:text-blue-500"
+            className="text-primary"
           />
-          <div className="text-2xl flex-1 text-blue dark:text-blue-500">
+          <div className="text-2xl flex-1 text-primary">
             file.pdf
           </div>
           <Icon size="2xl" name="delete" className="text-stone-500" />
@@ -117,7 +117,7 @@ export function FeaturesSection() {
               {illustration}
             </div>
             <div className="p-4">
-              <h3 className="font-medium text-stone-900 dark:text-white mb-1">
+              <h3 className="font-medium text-highlight mb-1">
                 {title}
               </h3>
               <Prose size="sm">{description}</Prose>
@@ -169,7 +169,7 @@ export function FeaturesSection() {
                   key={feature}
                   className="flex items-center gap-1.5 whitespace-nowrap"
                 >
-                  <span className="text-blue p-1 rounded-full bg-blue-50 dark:text-blue-500 dark:bg-white/10">
+                  <span className="text-primary p-1 rounded-full bg-highlight">
                     <Icon name="check" size="xs" />
                   </span>
                   {feature}

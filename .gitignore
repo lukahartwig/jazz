@@ -7,17 +7,25 @@ docsTmp
 coverage
 .direnv
 
+# Typescript
+**/*.tsbuildinfo
+
 # Next.js
 **/.next
 
 # Vite output
 **/dist
+__screenshots__
 
 # Playwright
 test-results
 
 .husky
 
-.vscode/settings.json
+.vscode/*
+.idea/*
 
 .svelte-kit
+
+.cursorrules
+.windsurfrules

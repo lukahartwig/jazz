@@ -3,7 +3,7 @@
 import { SideNav } from "@/components/SideNav";
 import { SideNavHeader } from "@/components/SideNavHeader";
 import { FrameworkSelect } from "@/components/docs/FrameworkSelect";
-import { docNavigationItems } from "@/lib/docNavigationItems.js";
+import { docNavigationItems } from "@/content/docs/docNavigationItems.js";
 import { useFramework } from "@/lib/use-framework";
 import { clsx } from "clsx";
 
@@ -19,8 +19,8 @@ export function DocNav({ className }: { className?: string }) {
         .map((item) => {
           if (!item.href?.startsWith("/docs")) return item;
 
-          let done =
-            typeof item.done === "number" ? item.done : item.done[framework];
+          const frameworkDone = (item.done as any)[framework] ?? 0;
+          let done = typeof item.done === "number" ? item.done : frameworkDone;
           let href = item.href.replace("/docs", `/docs/${framework}`);
 
           return {

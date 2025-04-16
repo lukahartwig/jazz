@@ -4,16 +4,30 @@ import {
   QueueEntry,
 } from "./PriorityBasedMessageQueue.js";
 import { TryAddTransactionsError } from "./coValueCore.js";
-import { RawCoID } from "./ids.js";
+import { RawCoID, SessionID } from "./ids.js";
 import { logger } from "./logger.js";
 import { CO_VALUE_PRIORITY } from "./priority.js";
 import { Peer, SyncMessage } from "./sync.js";
 
 export class PeerState {
+  private queue: PriorityBasedMessageQueue;
+
+  incomingMessagesProcessingPromise: Promise<void> | undefined;
+  nextPeer: Peer | undefined;
+
   constructor(
     private peer: Peer,
     knownStates: PeerKnownStates | undefined,
   ) {
+    /**
+     * We set as default priority HIGH to handle all the messages without a
+     * priority property as HIGH priority.
+     *
+     * This way we consider all the non-content messsages as HIGH priority.
+     */
+    this.queue = new PriorityBasedMessageQueue(CO_VALUE_PRIORITY.HIGH, {
+      peerRole: peer.role,
+    });
     this.optimisticKnownStates = knownStates?.clone() ?? new PeerKnownStates();
 
     // We assume that exchanges with storage peers are always successful
@@ -76,13 +90,6 @@ export class PeerState {
     return this.peer.role === "server" || this.peer.role === "storage";
   }
 
-  /**
-   * We set as default priority HIGH to handle all the messages without a
-   * priority property as HIGH priority.
-   *
-   * This way we consider all the non-content messsages as HIGH priority.
-   */
-  private queue = new PriorityBasedMessageQueue(CO_VALUE_PRIORITY.HIGH);
   private processing = false;
   public closed = false;
 
@@ -93,7 +100,7 @@ export class PeerState {
 
     this.processing = true;
 
-    let entry: QueueEntry<SyncMessage> | undefined;
+    let entry: QueueEntry | undefined;
     while ((entry = this.queue.pull())) {
       // Awaiting the push to send one message at a time
       // This way when the peer is "under pressure" we can enqueue all
@@ -130,7 +137,7 @@ export class PeerState {
   }
 
   private closeQueue() {
-    let entry: QueueEntry<SyncMessage> | undefined;
+    let entry: QueueEntry | undefined;
     while ((entry = this.queue.pull())) {
       // Using resolve here to avoid unnecessary noise in the logs
       entry.resolve();
@@ -145,5 +152,36 @@ export class PeerState {
     this.closeQueue();
     this.peer.outgoing.close();
     this.closed = true;
+  }
+
+  async processIncomingMessages(callback: (msg: SyncMessage) => Promise<void>) {
+    if (this.closed) {
+      throw new Error("Peer is closed");
+    }
+
+    if (this.incomingMessagesProcessingPromise) {
+      throw new Error("Incoming messages processing already in progress");
+    }
+
+    const processIncomingMessages = async () => {
+      for await (const msg of this.incoming) {
+        if (msg === "Disconnected") {
+          break;
+        }
+        if (msg === "PingTimeout") {
+          logger.error("Ping timeout from peer", {
+            peerId: this.id,
+            peerRole: this.role,
+          });
+          break;
+        }
+
+        await callback(msg);
+      }
+    };
+
+    this.incomingMessagesProcessingPromise = processIncomingMessages();
+
+    return this.incomingMessagesProcessingPromise;
   }
 }

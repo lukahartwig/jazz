@@ -1,4 +1,6 @@
+import { deletePlaylist } from "@/4_actions";
 import { useAccount } from "jazz-react";
+import { Trash2 } from "lucide-react";
 import { useNavigate, useParams } from "react-router";
 import { LocalOnlyTag } from "./LocalOnlyTag";
 
@@ -6,9 +8,7 @@ export function SidePanel() {
   const { playlistId } = useParams();
   const navigate = useNavigate();
   const { me } = useAccount({
-    root: {
-      playlists: [{}],
-    },
+    resolve: { root: { playlists: { $each: true } } },
   });
 
   function handleAllTracksClick(evt: React.MouseEvent<HTMLAnchorElement>) {
@@ -22,6 +22,13 @@ export function SidePanel() {
   ) {
     evt.preventDefault();
     navigate(`/playlist/${playlistId}`);
+  }
+
+  async function handleDeletePlaylist(playlistId: string) {
+    if (confirm("Are you sure you want to delete this playlist?")) {
+      await deletePlaylist(playlistId);
+      navigate(`/`);
+    }
   }
 
   return (
@@ -65,18 +72,28 @@ export function SidePanel() {
             </a>
           </li>
           {me?.root.playlists.map((playlist, index) => (
-            <li key={index}>
+            <li
+              key={index}
+              className={`px-2 py-1 flex transition-all duration-300 rounded items-center justify-between ${
+                playlist.id === playlistId ? "bg-blue-100" : ""
+              }`}
+            >
               <a
                 href="#"
-                className={`block px-2 py-1 text-sm rounded ${
-                  playlist.id === playlistId
-                    ? "bg-blue-100 text-blue-600"
-                    : "hover:bg-blue-100"
-                }`}
+                className={`w-full text-sm`}
                 onClick={(evt) => handlePlaylistClick(evt, playlist.id)}
               >
                 {playlist.title}
               </a>
+              {playlist.id === playlistId && (
+                <button
+                  onClick={() => handleDeletePlaylist(playlist.id)}
+                  className="ml-2 text-red-600 hover:text-red-800 animate-in fade-in scale-in duration-200"
+                  aria-label={`Delete ${playlist.title}`}
+                >
+                  <Trash2 size={16} />
+                </button>
+              )}
             </li>
           ))}
         </ul>

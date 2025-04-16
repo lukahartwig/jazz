@@ -1,3 +1,6 @@
+import { AgentSecret } from "cojson";
+import { Account, ID } from "jazz-tools";
+
 export type MinimalClerkClient = {
   user:
     | {
@@ -21,3 +24,29 @@ export type MinimalClerkClient = {
   signOut: () => Promise<void>;
   addListener: (listener: (data: unknown) => void) => void;
 };
+
+export type ClerkCredentials = {
+  jazzAccountID: ID<Account>;
+  jazzAccountSecret: AgentSecret;
+  jazzAccountSeed?: number[];
+};
+
+/**
+ * Checks if the Clerk user metadata contains the necessary credentials for Jazz auth.
+ * **Note**: It does not validate the credentials, only checks if the necessary fields are present in the metadata object.
+ */
+export function isClerkCredentials(
+  data: NonNullable<MinimalClerkClient["user"]>["unsafeMetadata"] | undefined,
+): data is ClerkCredentials {
+  return !!data && "jazzAccountID" in data && "jazzAccountSecret" in data;
+}
+
+export function isClerkAuthStateEqual(
+  previousUser: MinimalClerkClient["user"] | null | undefined,
+  newUser: MinimalClerkClient["user"] | null | undefined,
+) {
+  const previousCredentials = isClerkCredentials(previousUser?.unsafeMetadata);
+  const newCredentials = isClerkCredentials(newUser?.unsafeMetadata);
+
+  return previousCredentials === newCredentials;
+}

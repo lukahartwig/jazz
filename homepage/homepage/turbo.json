@@ -3,11 +3,12 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build", "build:generate-docs"],
-      "outputs": [".next/**", "!.next/cache/**"]
+      "outputs": [".next/**", "!.next/cache/**"],
+      "env": ["GRAFANA_SERVICE_ACCOUNT"]
     },
     "build:generate-docs": {
       "inputs": ["../../../packages/*/src/**"],
-      "outputs": ["typedoc/**"],
+      "outputs": ["typedoc/**", "public/llms.txt", "public/llms-full.txt"],
       "dependsOn": ["^build"]
     },
     "dev": {

@@ -1,15 +1,22 @@
 import { createWorkerAccount } from "jazz-run/createWorkerAccount";
 import { startSyncServer } from "jazz-run/startSyncServer";
-import { CoMap, Group, InboxSender, co } from "jazz-tools";
+import {
+  Account,
+  AccountClass,
+  CoMap,
+  Group,
+  InboxSender,
+  co,
+} from "jazz-tools";
 import { describe, expect, onTestFinished, test } from "vitest";
-import { startWorker } from "../index";
+import { startWorker } from "../index.js";
 
-async function setup() {
+async function setup<Acc extends Account>(AccountSchema?: AccountClass<Acc>) {
   const { server, port } = await setupSyncServer();
 
   const syncServer = `ws://localhost:${port}`;
 
-  const { worker, done } = await setupWorker(syncServer);
+  const { worker, done } = await setupWorker(syncServer, AccountSchema);
 
   return { worker, done, syncServer, server, port };
 }
@@ -30,7 +37,10 @@ async function setupSyncServer(defaultPort = "0") {
   return { server, port };
 }
 
-async function setupWorker(syncServer: string) {
+async function setupWorker<Acc extends Account>(
+  syncServer: string,
+  AccountSchema?: AccountClass<Acc>,
+) {
   const { accountID, agentSecret } = await createWorkerAccount({
     name: "test-worker",
     peer: syncServer,
@@ -40,6 +50,7 @@ async function setupWorker(syncServer: string) {
     accountID: accountID,
     accountSecret: agentSecret,
     syncServer,
+    AccountSchema,
   });
 }
 
@@ -64,11 +75,65 @@ describe("startWorker integration", () => {
 
     await map.waitForSync();
 
-    const mapOnWorker2 = await TestMap.load(map.id, worker2.worker, {});
+    const mapOnWorker2 = await TestMap.load(map.id, { loadAs: worker2.worker });
 
     expect(mapOnWorker2?.value).toBe("test");
 
     await worker1.done();
+    await worker2.done();
+  });
+
+  test("worker handles successfully the custom account migration", async () => {
+    class AccountRoot extends CoMap {
+      value = co.string;
+    }
+
+    let shouldReloadPreviousAccount = false;
+
+    class CustomAccount extends Account {
+      root = co.ref(AccountRoot);
+
+      migrate() {
+        if (this.root === undefined) {
+          if (shouldReloadPreviousAccount) {
+            throw new Error("Previous account not found");
+          }
+
+          shouldReloadPreviousAccount = true;
+
+          this.root = AccountRoot.create(
+            {
+              value: "test",
+            },
+            this,
+          );
+        }
+      }
+    }
+
+    const worker1 = await setup(CustomAccount);
+
+    const { root } = await worker1.worker.ensureLoaded({
+      resolve: { root: true },
+    });
+
+    expect(root.value).toBe("test");
+
+    await worker1.done();
+
+    const worker2 = await startWorker({
+      accountID: worker1.worker.id,
+      accountSecret: worker1.worker._raw.core.node.account.agentSecret,
+      syncServer: worker1.syncServer,
+      AccountSchema: CustomAccount,
+    });
+
+    const { root: root2 } = await worker2.worker.ensureLoaded({
+      resolve: { root: true },
+    });
+
+    expect(root2.value).toBe("test");
+
     await worker2.done();
   });
 
@@ -89,7 +154,7 @@ describe("startWorker integration", () => {
 
     const worker2 = await setupWorker(worker1.syncServer);
 
-    const mapOnWorker2 = await TestMap.load(map.id, worker2.worker, {});
+    const mapOnWorker2 = await TestMap.load(map.id, { loadAs: worker2.worker });
 
     expect(mapOnWorker2?.value).toBe("test");
 
@@ -124,7 +189,7 @@ describe("startWorker integration", () => {
 
     const resultId = await sender.sendMessage(map);
 
-    const result = await TestMap.load(resultId, worker2.worker, {});
+    const result = await TestMap.load(resultId, { loadAs: worker2.worker });
 
     expect(result?.value).toEqual("Hello! Responded from the inbox");
 
@@ -170,8 +235,10 @@ describe("startWorker integration", () => {
     await map2.waitForSync();
 
     // Verify both old and new values are synced
-    const mapOnWorker2 = await TestMap.load(map.id, worker2.worker, {});
-    const map2OnWorker2 = await TestMap.load(map2.id, worker2.worker, {});
+    const mapOnWorker2 = await TestMap.load(map.id, { loadAs: worker2.worker });
+    const map2OnWorker2 = await TestMap.load(map2.id, {
+      loadAs: worker2.worker,
+    });
 
     expect(mapOnWorker2?.value).toBe("initial value");
     expect(map2OnWorker2?.value).toBe("created while offline");

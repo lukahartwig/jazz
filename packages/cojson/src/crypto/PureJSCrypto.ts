@@ -1,5 +1,4 @@
 import { xsalsa20, xsalsa20_poly1305 } from "@noble/ciphers/salsa";
-import { randomBytes } from "@noble/ciphers/webcrypto/utils";
 import { ed25519, x25519 } from "@noble/curves/ed25519";
 import { blake3 } from "@noble/hashes/blake3";
 import { base58 } from "@scure/base";
@@ -24,21 +23,24 @@ import {
 
 type Blake3State = ReturnType<typeof blake3.create>;
 
+/**
+ * Pure JavaScript implementation of the CryptoProvider interface using noble-curves and noble-ciphers libraries.
+ * This provides a fallback implementation that doesn't require WebAssembly, offering:
+ * - Signing/verifying (Ed25519)
+ * - Encryption/decryption (XSalsa20)
+ * - Sealing/unsealing (X25519 + XSalsa20-Poly1305)
+ * - Hashing (BLAKE3)
+ */
 export class PureJSCrypto extends CryptoProvider<Blake3State> {
   static async create(): Promise<PureJSCrypto> {
     return new PureJSCrypto();
-  }
-
-  randomBytes(length: number): Uint8Array {
-    return randomBytes(length);
   }
 
   emptyBlake3State(): Blake3State {
     return blake3.create({});
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  cloneBlake3State(state: any): Blake3State {
+  cloneBlake3State(state: Blake3State): Blake3State {
     return state.clone();
   }
 
@@ -59,6 +61,14 @@ export class PureJSCrypto extends CryptoProvider<Blake3State> {
 
   blake3DigestForState(state: Blake3State): Uint8Array {
     return state.clone().digest();
+  }
+
+  generateNonce(input: Uint8Array): Uint8Array {
+    return this.blake3HashOnce(input).slice(0, 24);
+  }
+
+  private generateJsonNonce(material: JsonValue): Uint8Array {
+    return this.generateNonce(textEncoder.encode(stableStringify(material)));
   }
 
   newEd25519SigningKey(): Uint8Array {
@@ -109,9 +119,7 @@ export class PureJSCrypto extends CryptoProvider<Blake3State> {
     const keySecretBytes = base58.decode(
       keySecret.substring("keySecret_z".length),
     );
-    const nOnce = this.blake3HashOnce(
-      textEncoder.encode(stableStringify(nOnceMaterial)),
-    ).slice(0, 24);
+    const nOnce = this.generateJsonNonce(nOnceMaterial);
 
     const plaintext = textEncoder.encode(stableStringify(value));
     const ciphertext = xsalsa20(keySecretBytes, nOnce, plaintext);
@@ -126,9 +134,7 @@ export class PureJSCrypto extends CryptoProvider<Blake3State> {
     const keySecretBytes = base58.decode(
       keySecret.substring("keySecret_z".length),
     );
-    const nOnce = this.blake3HashOnce(
-      textEncoder.encode(stableStringify(nOnceMaterial)),
-    ).slice(0, 24);
+    const nOnce = this.generateJsonNonce(nOnceMaterial);
 
     const ciphertext = base64URLtoBytes(
       encrypted.substring("encrypted_U".length),
@@ -149,9 +155,7 @@ export class PureJSCrypto extends CryptoProvider<Blake3State> {
     to: SealerID;
     nOnceMaterial: { in: RawCoID; tx: TransactionID };
   }): Sealed<T> {
-    const nOnce = this.blake3HashOnce(
-      textEncoder.encode(stableStringify(nOnceMaterial)),
-    ).slice(0, 24);
+    const nOnce = this.generateJsonNonce(nOnceMaterial);
 
     const sealerPub = base58.decode(to.substring("sealer_z".length));
 
@@ -174,9 +178,7 @@ export class PureJSCrypto extends CryptoProvider<Blake3State> {
     from: SealerID,
     nOnceMaterial: { in: RawCoID; tx: TransactionID },
   ): T | undefined {
-    const nOnce = this.blake3HashOnce(
-      textEncoder.encode(stableStringify(nOnceMaterial)),
-    ).slice(0, 24);
+    const nOnce = this.generateJsonNonce(nOnceMaterial);
 
     const sealerPriv = base58.decode(sealer.substring("sealerSecret_z".length));
 
@@ -193,9 +195,7 @@ export class PureJSCrypto extends CryptoProvider<Blake3State> {
     try {
       return JSON.parse(textDecoder.decode(plaintext));
     } catch (e) {
-      logger.error(
-        "Failed to decrypt/parse sealed message: " + (e as Error)?.message,
-      );
+      logger.error("Failed to decrypt/parse sealed message", { err: e });
       return undefined;
     }
   }

@@ -13,12 +13,13 @@ import { usePathname } from "next/navigation";
 import { ComponentType, ReactNode, useEffect, useState } from "react";
 import { isActive } from "../../utils/nav";
 import { Icon } from "../atoms/Icon";
+import type { IconName } from "../atoms/Icon";
 import { BreadCrumb } from "../molecules/Breadcrumb";
 import { SocialLinks, SocialLinksProps } from "./SocialLinks";
 
 type NavItemProps = {
   href: string;
-  icon?: string;
+  icon?: IconName;
   title: string;
   firstOnRight?: boolean;
   newTab?: boolean;
@@ -38,7 +39,7 @@ type NavProps = {
 export type NavSection = {
   name: string;
   content: ReactNode;
-  icon: string;
+  icon: IconName;
 };
 
 function NavItem({
@@ -67,9 +68,9 @@ function NavItem({
       <NavLink
         className={clsx(
           className,
-          "text-sm px-2 lg:px-4 py-3 ",
+          "text-sm px-2 lg:px-4 py-3",
           firstOnRight && "ml-auto",
-          active ? "text-stone-900 dark:text-white" : "",
+          active ? "text-highlight" : "",
         )}
         {...item}
       >
@@ -83,7 +84,7 @@ function NavItem({
       <PopoverButton
         className={clsx(
           "flex items-center gap-1.5 text-sm px-2 lg:px-4 py-3 max-sm:w-full hover:text-stone-900 dark:hover:text-white transition-colors hover:transition-none focus-visible:outline-none",
-          active ? "text-stone-900 dark:text-white" : "",
+          active ? "text-highlight" : "",
         )}
       >
         <span>{title}</span>
@@ -112,9 +113,7 @@ function NavItem({
                   />
                 )}
                 <div className="grid gap-1.5 mt-px">
-                  <p className="text-sm font-medium text-stone-900 dark:text-white">
-                    {title}
-                  </p>
+                  <p className="text-sm font-medium text-highlight">{title}</p>
                   <p className="text-sm leading-relaxed">{description}</p>
                 </div>
               </CloseButton>
@@ -134,7 +133,11 @@ export function MobileNav({
   sections,
   themeToggle: ThemeToggle,
 }: NavProps) {
-  const primarySection = {
+  const primarySection: {
+    name: string;
+    icon: IconName;
+    content: ReactNode;
+  } = {
     name: "Menu",
     icon: "menu",
     content: (
@@ -246,7 +249,7 @@ export function MobileNav({
                   type="button"
                   className={clsx(
                     "flex items-center gap-1 px-2 py-1 text-sm rounded-md whitespace-nowrap",
-                    "text-stone-900 dark:text-white",
+                    "text-highlight",
                     {
                       "bg-stone-100 dark:bg-stone-900": active === section.name,
                     },
@@ -254,7 +257,7 @@ export function MobileNav({
                   onClick={() => toggle(section.name)}
                   key={section.name}
                 >
-                  <Icon name={section.icon} size="xs" />
+                  {section.icon && <Icon name={section.icon} size="xs" />}
                   {section.name}
                 </button>
               ),
@@ -292,7 +295,7 @@ function NavLink({
     >
       {children}
       {newTab ? (
-        <span className="inline-block text-stone-300 dark:text-stone-700 relative -top-0.5 -left-0.5 -mr-2">
+        <span className="inline-block text-muted relative -top-0.5 -left-0.5 -mr-2">
           ⌝
         </span>
       ) : (

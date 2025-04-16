@@ -2,6 +2,7 @@ import {
   AgentSecret,
   CoID,
   CryptoProvider,
+  Everyone,
   InviteSecret,
   LocalNode,
   Peer,
@@ -9,6 +10,7 @@ import {
   RawCoMap,
   RawCoValue,
   RawControlledAccount,
+  Role,
   SessionID,
   cojsonInternals,
 } from "cojson";
@@ -18,24 +20,28 @@ import {
   type CoValue,
   CoValueBase,
   CoValueClass,
-  DeeplyLoaded,
-  DepthsIn,
   ID,
-  MembersSym,
   Ref,
   type RefEncoded,
   RefIfCoValue,
+  RefsToResolve,
+  RefsToResolveStrict,
+  Resolved,
   type Schema,
   SchemaInit,
+  SubscribeListenerOptions,
+  SubscribeRestArgs,
   ensureCoValueLoaded,
   inspect,
   loadCoValue,
   loadCoValueWithoutMe,
+  parseSubscribeRestArgs,
   subscribeToCoValueWithoutMe,
   subscribeToExistingCoValue,
   subscriptionsScopes,
 } from "../internal.js";
 import { coValuesCache } from "../lib/cache.js";
+import { RegisteredAccount } from "../types.js";
 import { type CoMap } from "./coMap.js";
 import { type Group } from "./group.js";
 import { createInboxRoot } from "./inbox.js";
@@ -168,11 +174,62 @@ export class Account extends CoValueBase implements CoValue {
     }
   }
 
+  getRoleOf(member: Everyone | ID<Account> | "me") {
+    if (member === "me") {
+      return this.isMe ? "admin" : undefined;
+    }
+
+    if (member === this.id) {
+      return "admin";
+    }
+
+    return undefined;
+  }
+
+  getParentGroups(): Array<Group> {
+    return [];
+  }
+
+  get members(): Array<{
+    id: ID<RegisteredAccount> | "everyone";
+    role: Role;
+    ref: Ref<RegisteredAccount> | undefined;
+    account: RegisteredAccount | null | undefined;
+  }> {
+    const ref = new Ref<RegisteredAccount>(this.id, this._loadedAs, {
+      ref: () => this.constructor as typeof Account,
+      optional: false,
+    });
+
+    return [{ id: this.id, role: "admin", ref, account: this }];
+  }
+
+  canRead(value: CoValue) {
+    const role = value._owner.getRoleOf(this.id);
+
+    return (
+      role === "admin" ||
+      role === "writer" ||
+      role === "reader" ||
+      role === "writeOnly"
+    );
+  }
+
+  canWrite(value: CoValue) {
+    const role = value._owner.getRoleOf(this.id);
+
+    return role === "admin" || role === "writer" || role === "writeOnly";
+  }
+
+  canAdmin(value: CoValue) {
+    return value._owner.getRoleOf(this.id) === "admin";
+  }
+
   async acceptInvite<V extends CoValue>(
     valueID: ID<V>,
     inviteSecret: InviteSecret,
     coValueClass: CoValueClass<V>,
-  ) {
+  ): Promise<Resolved<V, true> | null> {
     if (!this.isLocalNodeOwner) {
       throw new Error("Only a controlled account can accept invites");
     }
@@ -182,8 +239,9 @@ export class Account extends CoValueBase implements CoValue {
       inviteSecret,
     );
 
-    return loadCoValue(coValueClass, valueID, this as Account, []);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return loadCoValue(coValueClass, valueID, {
+      loadAs: this,
+    });
   }
 
   /** @private */
@@ -230,11 +288,15 @@ export class Account extends CoValueBase implements CoValue {
 
     as._raw.core.node.syncManager.addPeer(connectedPeers[1]);
 
-    return this.create<A>({
+    const account = await this.create<A>({
       creationProps: options.creationProps,
       crypto: as._raw.core.node.crypto,
       peersToLoadFrom: [connectedPeers[0]],
     });
+
+    await account.waitForAllCoValuesSync();
+
+    return account;
   }
 
   static fromNode<A extends Account>(
@@ -259,13 +321,20 @@ export class Account extends CoValueBase implements CoValue {
   }
 
   async applyMigration(creationProps?: AccountCreationProps) {
-    if (creationProps) {
+    await this.migrate(creationProps);
+
+    // if the user has not defined a profile themselves, we create one
+    if (this.profile === undefined && creationProps) {
       const profileGroup = RegisteredSchemas["Group"].create({ owner: this });
-      profileGroup.addMember("everyone", "reader");
-      this.profile = Profile.create(
-        { name: creationProps.name },
-        { owner: profileGroup },
-      );
+
+      this.profile = Profile.create({ name: creationProps.name }, profileGroup);
+      this.profile._owner.addMember("everyone", "reader");
+    } else if (this.profile && creationProps) {
+      if (this.profile._owner._type !== "Group") {
+        throw new Error("Profile must be owned by a Group", {
+          cause: `The profile of the account "${this.id}" was created with an Account as owner, which is not allowed.`,
+        });
+      }
     }
 
     const node = this._raw.core.node;
@@ -278,8 +347,6 @@ export class Account extends CoValueBase implements CoValue {
       profile.set("inbox", inboxRoot.id);
       profile.set("inboxInvite", inboxRoot.inviteLink);
     }
-
-    await this.migrate(creationProps);
   }
 
   // Placeholder method for subclasses to override
@@ -288,73 +355,62 @@ export class Account extends CoValueBase implements CoValue {
   }
 
   /** @category Subscription & Loading */
-  static load<A extends Account, Depth>(
+  static load<A extends Account, const R extends RefsToResolve<A> = true>(
     this: CoValueClass<A>,
     id: ID<A>,
-    depth: Depth & DepthsIn<A>,
-  ): Promise<DeeplyLoaded<A, Depth> | undefined>;
-  static load<A extends Account, Depth>(
-    this: CoValueClass<A>,
-    id: ID<A>,
-    as: Account,
-    depth: Depth & DepthsIn<A>,
-  ): Promise<DeeplyLoaded<A, Depth> | undefined>;
-  static load<A extends Account, Depth>(
-    this: CoValueClass<A>,
-    id: ID<A>,
-    asOrDepth: Account | (Depth & DepthsIn<A>),
-    depth?: Depth & DepthsIn<A>,
-  ): Promise<DeeplyLoaded<A, Depth> | undefined> {
-    return loadCoValueWithoutMe(this, id, asOrDepth, depth);
+    options?: {
+      resolve?: RefsToResolveStrict<A, R>;
+      loadAs?: Account | AnonymousJazzAgent;
+    },
+  ): Promise<Resolved<A, R> | null> {
+    return loadCoValueWithoutMe(this, id, options);
   }
 
   /** @category Subscription & Loading */
-  static subscribe<A extends Account, Depth>(
+  static subscribe<A extends Account, const R extends RefsToResolve<A> = true>(
     this: CoValueClass<A>,
     id: ID<A>,
-    depth: Depth & DepthsIn<A>,
-    listener: (value: DeeplyLoaded<A, Depth>) => void,
+    listener: (value: Resolved<A, R>, unsubscribe: () => void) => void,
   ): () => void;
-  static subscribe<A extends Account, Depth>(
+  static subscribe<A extends Account, const R extends RefsToResolve<A> = true>(
     this: CoValueClass<A>,
     id: ID<A>,
-    as: Account,
-    depth: Depth & DepthsIn<A>,
-    listener: (value: DeeplyLoaded<A, Depth>) => void,
+    options: SubscribeListenerOptions<A, R>,
+    listener: (value: Resolved<A, R>, unsubscribe: () => void) => void,
   ): () => void;
-  static subscribe<A extends Account, Depth>(
+  static subscribe<A extends Account, const R extends RefsToResolve<A>>(
     this: CoValueClass<A>,
     id: ID<A>,
-    asOrDepth: Account | (Depth & DepthsIn<A>),
-    depthOrListener:
-      | (Depth & DepthsIn<A>)
-      | ((value: DeeplyLoaded<A, Depth>) => void),
-    listener?: (value: DeeplyLoaded<A, Depth>) => void,
+    ...args: SubscribeRestArgs<A, R>
   ): () => void {
-    return subscribeToCoValueWithoutMe<A, Depth>(
-      this,
-      id,
-      asOrDepth,
-      depthOrListener,
-      listener!,
-    );
+    const { options, listener } = parseSubscribeRestArgs(args);
+    return subscribeToCoValueWithoutMe<A, R>(this, id, options, listener);
   }
 
   /** @category Subscription & Loading */
-  ensureLoaded<A extends Account, Depth>(
+  ensureLoaded<A extends Account, const R extends RefsToResolve<A>>(
     this: A,
-    depth: Depth & DepthsIn<A>,
-  ): Promise<DeeplyLoaded<A, Depth>> {
-    return ensureCoValueLoaded(this, depth);
+    options: { resolve: RefsToResolveStrict<A, R> },
+  ): Promise<Resolved<A, R>> {
+    return ensureCoValueLoaded(this, options);
   }
 
   /** @category Subscription & Loading */
-  subscribe<A extends Account, Depth>(
+  subscribe<A extends Account, const R extends RefsToResolve<A>>(
     this: A,
-    depth: Depth & DepthsIn<A>,
-    listener: (value: DeeplyLoaded<A, Depth>) => void,
+    listener: (value: Resolved<A, R>, unsubscribe: () => void) => void,
+  ): () => void;
+  subscribe<A extends Account, const R extends RefsToResolve<A>>(
+    this: A,
+    options: { resolve?: RefsToResolveStrict<A, R> },
+    listener: (value: Resolved<A, R>, unsubscribe: () => void) => void,
+  ): () => void;
+  subscribe<A extends Account, const R extends RefsToResolve<A>>(
+    this: A,
+    ...args: SubscribeRestArgs<A, R>
   ): () => void {
-    return subscribeToExistingCoValue(this, depth, listener);
+    const { options, listener } = parseSubscribeRestArgs(args);
+    return subscribeToExistingCoValue(this, options, listener);
   }
 
   /**
@@ -400,7 +456,7 @@ export const AccountAndGroupProxyHandler: ProxyHandler<Account | Group> = {
   },
   set(target, key, value, receiver) {
     if (
-      (key === "profile" || key === "root" || key === MembersSym) &&
+      (key === "profile" || key === "root") &&
       typeof value === "object" &&
       SchemaInit in value
     ) {
@@ -433,7 +489,7 @@ export const AccountAndGroupProxyHandler: ProxyHandler<Account | Group> = {
   },
   defineProperty(target, key, descriptor) {
     if (
-      (key === "profile" || key === "root" || key === MembersSym) &&
+      (key === "profile" || key === "root") &&
       typeof descriptor.value === "object" &&
       SchemaInit in descriptor.value
     ) {

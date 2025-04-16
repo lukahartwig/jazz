@@ -1,12 +1,12 @@
-import Database, { Database as DatabaseT } from "better-sqlite3";
+import Database, { type Database as DatabaseT } from "better-sqlite3";
 import {
-  IncomingSyncStream,
-  OutgoingSyncQueue,
-  Peer,
+  type IncomingSyncStream,
+  type OutgoingSyncQueue,
+  type Peer,
   cojsonInternals,
   logger,
 } from "cojson";
-import { SyncManager, TransactionRow } from "cojson-storage";
+import { SyncManager, type TransactionRow } from "cojson-storage";
 import { SQLiteClient } from "./sqliteClient.js";
 
 export class SQLiteNode {
@@ -41,21 +41,16 @@ export class SQLiteNode {
             await new Promise((resolve) => setTimeout(resolve, 0));
           }
         } catch (e) {
-          logger.error(
-            `Error reading from localNode, handling msg\n\n${JSON.stringify(
-              msg,
-              (k, v) =>
-                k === "changes" || k === "encryptedChanges"
-                  ? v.slice(0, 20) + "..."
-                  : v,
-            )}`,
-          );
+          logger.error("Error reading from localNode, handling msg", {
+            msg,
+            err: e,
+          });
         }
       }
     };
 
     processMessages().catch((e) =>
-      logger.error("Error in processMessages in sqlite", e),
+      logger.error("Error in processMessages in sqlite", { err: e }),
     );
   }
 
@@ -93,7 +88,7 @@ export class SQLiteNode {
   }
 }
 
-export function openDatabase(filename: string) {
+export function openDatabase(filename: string): DatabaseT {
   const db = Database(filename);
   db.pragma("journal_mode = WAL");
 
@@ -123,7 +118,7 @@ export function openDatabase(filename: string) {
     ).run();
 
     db.prepare(
-      `CREATE INDEX IF NOT EXISTS sessionsByCoValue ON sessions (coValue);`,
+      "CREATE INDEX IF NOT EXISTS sessionsByCoValue ON sessions (coValue);",
     ).run();
 
     db.prepare(
@@ -135,7 +130,7 @@ export function openDatabase(filename: string) {
     ).run();
 
     db.prepare(
-      `CREATE INDEX IF NOT EXISTS coValuesByID ON coValues (id);`,
+      "CREATE INDEX IF NOT EXISTS coValuesByID ON coValues (id);",
     ).run();
 
     db.pragma("user_version = 1");
@@ -144,17 +139,17 @@ export function openDatabase(filename: string) {
   if (oldVersion <= 1) {
     // fix embarrassing off-by-one error for transaction indices
     const txs = db
-      .prepare(`SELECT * FROM transactions`)
+      .prepare("SELECT * FROM transactions")
       .all() as TransactionRow[];
 
     for (const tx of txs) {
-      db.prepare(`DELETE FROM transactions WHERE ses = ? AND idx = ?`).run(
+      db.prepare("DELETE FROM transactions WHERE ses = ? AND idx = ?").run(
         tx.ses,
         tx.idx,
       );
       tx.idx -= 1;
       db.prepare(
-        `INSERT INTO transactions (ses, idx, tx) VALUES (?, ?, ?)`,
+        "INSERT INTO transactions (ses, idx, tx) VALUES (?, ?, ?)",
       ).run(tx.ses, tx.idx, tx.tx);
     }
 
@@ -172,7 +167,7 @@ export function openDatabase(filename: string) {
     ).run();
 
     db.prepare(
-      `ALTER TABLE sessions ADD COLUMN bytesSinceLastSignature INTEGER;`,
+      "ALTER TABLE sessions ADD COLUMN bytesSinceLastSignature INTEGER;",
     ).run();
 
     db.pragma("user_version = 3");

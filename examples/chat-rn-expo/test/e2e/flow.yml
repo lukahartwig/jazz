@@ -1,0 +1,50 @@
+appId: com.jazz.chatrn
+---
+- launchApp
+
+# # handle Expo screens (for local dev)
+# - assertVisible: "Continue"
+# - tapOn: "Continue"
+# - assertVisible: "Reload"
+# - tapOn: "Reload"
+
+# login
+- assertVisible: "Anonymous user"
+- runFlow:
+    label: "Erase existing username"
+    file: erase_text.yml
+    env:
+      id: "username-input"
+- inputText: "boorad"
+- assertVisible: "boorad"
+
+# start new chat
+- tapOn: "Start new chat"
+- assertVisible: "Share"
+- assertVisible: "Jazz Chat"
+- assertVisible: "Logout"
+
+# send a message
+- tapOn:
+    id: "message-input"
+- inputText: "bro, low key, it do be like that tho"
+- tapOn:
+    id: "send-button"
+- assertVisible: "bro, low key, it do be like that tho"
+
+# get invite code
+- tapOn: "Share"
+- assertVisible: "Copied to clipboard"
+- tapOn:  "OK"
+# this assert doesn't work.  maestro.copiedText only populates from `copyTextFrom`
+# - assertTrue: ${maestro.copiedText.startsWith("co_z")}
+
+# logout
+- tapOn: "Logout"
+- assertVisible: "Anonymous user"
+# This doesn't work on CI, maybe because Android has a different alert dialog
+# - tapOn: "Join chat"
+# - inputText: "co_zFs6KFyhxPw4xtw83tcEMzeHUNv" # Use a static id because maestro doesn't have access to the system clipboard
+# - pressKey: "enter"
+# - assertVisible: "boorad"
+# - assertVisible: "bro, low key, it do be like that tho"

@@ -27,9 +27,11 @@ export async function uploadMusicTracks(
   isExampleTrack: boolean = false,
 ) {
   const { root } = await MusicaAccount.getMe().ensureLoaded({
-    root: {
-      rootPlaylist: {
-        tracks: [],
+    resolve: {
+      root: {
+        rootPlaylist: {
+          tracks: true,
+        },
       },
     },
   });
@@ -65,8 +67,10 @@ export async function uploadMusicTracks(
 
 export async function createNewPlaylist() {
   const { root } = await MusicaAccount.getMe().ensureLoaded({
-    root: {
-      playlists: [],
+    resolve: {
+      root: {
+        playlists: true,
+      },
     },
   });
 
@@ -112,34 +116,31 @@ export async function addTrackToPlaylist(
     playlist.tracks?.push(track);
     return;
   }
+}
 
-  /**
-   * Since musicTracks are created as private values (see uploadMusicTracks)
-   * to make them shareable as part of the playlist we are cloning them
-   * and setting the playlist group as owner of the clone
-   *
-   * Doing this for backwards compatibility for when the Group inheritance wasn't possible
-   */
-  const blob = await FileStream.loadAsBlob(track._refs.file.id);
-  const waveform = await MusicTrackWaveform.load(track._refs.waveform.id, {});
-
-  if (!blob || !waveform) return;
-
-  const trackClone = MusicTrack.create(
-    {
-      file: await FileStream.createFromBlob(blob, playlist._owner),
-      duration: track.duration,
-      waveform: MusicTrackWaveform.create(
-        { data: waveform.data },
-        playlist._owner,
-      ),
-      title: track.title,
-      sourceTrack: track,
-    },
-    playlist._owner,
+export async function removeTrackFromPlaylist(
+  playlist: Playlist,
+  track: MusicTrack,
+) {
+  const notAdded = !playlist.tracks?.some(
+    (t) => t?.id === track.id || t?._refs.sourceTrack?.id === track.id,
   );
 
-  playlist.tracks?.push(trackClone);
+  if (notAdded) return;
+
+  if (track._owner._type === "Group" && playlist._owner._type === "Group") {
+    const trackGroup = track._owner;
+    await trackGroup.revokeExtend(playlist._owner);
+
+    const index =
+      playlist.tracks?.findIndex(
+        (t) => t?.id === track.id || t?._refs.sourceTrack?.id === track.id,
+      ) ?? -1;
+    if (index > -1) {
+      playlist.tracks?.splice(index, 1);
+    }
+    return;
+  }
 }
 
 export async function updatePlaylistTitle(playlist: Playlist, title: string) {
@@ -152,9 +153,11 @@ export async function updateMusicTrackTitle(track: MusicTrack, title: string) {
 
 export async function updateActivePlaylist(playlist?: Playlist) {
   const { root } = await MusicaAccount.getMe().ensureLoaded({
-    root: {
-      activePlaylist: {},
-      rootPlaylist: {},
+    resolve: {
+      root: {
+        activePlaylist: true,
+        rootPlaylist: true,
+      },
     },
   });
 
@@ -163,7 +166,9 @@ export async function updateActivePlaylist(playlist?: Playlist) {
 
 export async function updateActiveTrack(track: MusicTrack) {
   const { root } = await MusicaAccount.getMe().ensureLoaded({
-    root: {},
+    resolve: {
+      root: {},
+    },
   });
 
   root.activeTrack = track;
@@ -173,17 +178,23 @@ export async function onAnonymousAccountDiscarded(
   anonymousAccount: MusicaAccount,
 ) {
   const { root: anonymousAccountRoot } = await anonymousAccount.ensureLoaded({
-    root: {
-      rootPlaylist: {
-        tracks: [{}],
+    resolve: {
+      root: {
+        rootPlaylist: {
+          tracks: {
+            $each: true,
+          },
+        },
       },
     },
   });
 
   const me = await MusicaAccount.getMe().ensureLoaded({
-    root: {
-      rootPlaylist: {
-        tracks: [],
+    resolve: {
+      root: {
+        rootPlaylist: {
+          tracks: true,
+        },
       },
     },
   });
@@ -195,5 +206,20 @@ export async function onAnonymousAccountDiscarded(
     trackGroup.addMember(me, "admin");
 
     me.root.rootPlaylist.tracks.push(track);
+  }
+}
+
+export async function deletePlaylist(playlistId: string) {
+  const { root } = await MusicaAccount.getMe().ensureLoaded({
+    resolve: {
+      root: {
+        playlists: true,
+      },
+    },
+  });
+
+  const index = root.playlists.findIndex((p) => p?.id === playlistId);
+  if (index > -1) {
+    root.playlists.splice(index, 1);
   }
 }

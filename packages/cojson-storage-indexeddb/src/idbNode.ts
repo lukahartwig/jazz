@@ -33,18 +33,7 @@ export class IDBNode {
           }
           await this.syncManager.handleSyncMessage(msg);
         } catch (e) {
-          console.error(
-            new Error(
-              `Error reading from localNode, handling msg\n\n${JSON.stringify(
-                msg,
-                (k, v) =>
-                  k === "changes" || k === "encryptedChanges"
-                    ? `${v.slice(0, 20)}...`
-                    : v,
-              )}`,
-              { cause: e },
-            ),
-          );
+          console.error(e);
         }
       }
     };

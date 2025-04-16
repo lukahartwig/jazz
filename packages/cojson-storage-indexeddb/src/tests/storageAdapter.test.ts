@@ -7,9 +7,9 @@ import {
   type RawCoMap,
   type StorageAdapter,
 } from "cojson";
+import { cojsonInternals } from "cojson";
+import type { CojsonInternalTypes } from "cojson";
 import { WasmCrypto } from "cojson/crypto/WasmCrypto";
-import { connectedPeers } from "cojson/src/streamUtils.js";
-import type { CoValueKnownState, SessionNewContent } from "cojson/src/sync.js";
 import { assert, describe, expect, test } from "vitest";
 import { internal_setDatabaseName } from "../idbNode.js";
 import { loadIDBStorageAdapter } from "../storageAdapter";
@@ -46,7 +46,7 @@ async function setup() {
       crypto,
     );
 
-    const [node1ToNode2Peer, node2ToNode1Peer] = connectedPeers(
+    const [node1ToNode2Peer, node2ToNode1Peer] = cojsonInternals.connectedPeers(
       "node1ToNode2",
       "node2ToNode1",
       {
@@ -196,6 +196,8 @@ describe("IDBStorageAdapter", () => {
     map.set("count", 2);
     map.set("count", 3);
 
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
     const node2 = await LocalNode.withLoadedAccount({
       accountID: accountID,
       accountSecret: node.account.agentSecret,
@@ -214,7 +216,8 @@ describe("IDBStorageAdapter", () => {
 
 class TestStorageDriver {
   private storageAdapter: StorageAdapter;
-  private storedStates: Map<RawCoID, CoValueKnownState> = new Map();
+  private storedStates: Map<RawCoID, CojsonInternalTypes.CoValueKnownState> =
+    new Map();
   private node: LocalNode;
 
   constructor(storageAdapter: StorageAdapter, node: LocalNode) {
@@ -298,7 +301,7 @@ class TestStorageDriver {
     for (const piece of newContentPieces) {
       const entries = Object.entries(piece.new) as [
         keyof typeof piece.new,
-        SessionNewContent,
+        CojsonInternalTypes.SessionNewContent,
       ][];
 
       for (const [sessionID, sessionNewContent] of entries) {

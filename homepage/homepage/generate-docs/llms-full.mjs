@@ -1,12 +1,10 @@
 import { promises as fs } from "fs";
 import path from "path";
-import { Deserializer, ReflectionKind } from "typedoc";
-import { DOC_SECTIONS, PACKAGES } from "./utils/config.mjs";
-import {
-  getPackageDescription,
-  loadTypedocFiles,
-  writeDocsFile,
-} from "./utils/index.mjs";
+import { join } from "path";
+import { readFile, readdir } from "fs/promises";
+import { Deserializer } from "typedoc";
+import { DOC_SECTIONS } from "./utils/config.mjs";
+import { loadTypedocFiles, writeDocsFile } from "./utils/index.mjs";
 
 function formatType(type) {
   if (!type) return "unknown";
@@ -208,10 +206,7 @@ async function readMdxContent(url) {
   try {
     // Special case for the introduction
     if (url === "/docs") {
-      const introPath = path.join(
-        process.cwd(),
-        "components/docs/docs-intro.mdx",
-      );
+      const introPath = path.join(process.cwd(), "content/docs/index.mdx");
       try {
         const content = await fs.readFile(introPath, "utf8");
         // Remove imports and exports
@@ -229,7 +224,7 @@ async function readMdxContent(url) {
     const relativePath = url.replace(/^\/docs\/?/, "");
 
     // Base directory for docs
-    const baseDir = path.join(process.cwd(), "app/docs/[framework]/[...slug]");
+    const baseDir = path.join(process.cwd(), "content/docs");
 
     // If it's a directory, try to read all framework variants
     const fullPath = path.join(baseDir, relativePath);
@@ -300,7 +295,6 @@ async function generateDetailedDocs(docs) {
     for (const page of section.pages) {
       output.push(`#### ${page.title}\n`);
       const content = await readMdxContent(page.url);
-      console.log(content);
       if (content) {
         // If the content contains framework-specific implementations, they're already properly formatted
         // Otherwise, just add the content directly
@@ -498,7 +492,90 @@ async function generateDetailedDocs(docs) {
     "- [Examples](https://jazz.tools/examples): Code examples and tutorials\n",
   );
 
-  await writeDocsFile("llms-full.txt", output.join("\n"));
+  const outputWithExamples = [...output];
+  await readMusicExample(outputWithExamples);
+
+  await writeDocsFile("llms.txt", output.join("\n"));
+  await writeDocsFile("llms-full.txt", outputWithExamples.join("\n"));
+}
+
+/**
+ * @typedef {Object} FileContent
+ * @property {string} filepath - The relative path to the file
+ * @property {string} content - The content of the file
+ */
+
+/**
+ * Recursively loads all files from a directory and its subdirectories
+ * @param {string} directoryPath - The path to the directory to load
+ * @param {Object} options - Optional configuration
+ * @param {string[]} options.exclude - File patterns to exclude (e.g., ['*.md', '*.git'])
+ * @param {string} options.encoding - File encoding (default: 'utf-8')
+ * @returns {Promise<FileContent[]>} Array of filepath/content pairs
+ */
+async function loadDirectoryContent(directoryPath, options = {}) {
+  const { exclude = [], encoding = "utf-8" } = options;
+
+  async function processDirectory(currentPath) {
+    const results = [];
+
+    try {
+      const entries = await readdir(currentPath, { withFileTypes: true });
+
+      for (const entry of entries) {
+        const fullPath = join(currentPath, entry.name);
+
+        if (entry.isDirectory()) {
+          // Recursively process subdirectories
+          const subDirResults = await processDirectory(fullPath);
+          results.push(...subDirResults);
+        } else if (entry.isFile()) {
+          // Check if file should be excluded
+          const shouldExclude = exclude.some((pattern) => {
+            if (pattern.startsWith("*.")) {
+              const extension = pattern.slice(1);
+              return entry.name.endsWith(extension);
+            }
+            return entry.name === pattern;
+          });
+
+          if (!shouldExclude) {
+            try {
+              const content = await readFile(fullPath, { encoding });
+              results.push({
+                filepath: fullPath,
+                content: content,
+              });
+            } catch (error) {
+              console.error(`Error reading file ${fullPath}:`, error);
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error(`Error reading directory ${currentPath}:`, error);
+    }
+
+    return results;
+  }
+
+  try {
+    return await processDirectory(directoryPath);
+  } catch (error) {
+    throw new Error(`Failed to load directory content: ${error.message}`);
+  }
+}
+
+async function readMusicExample(output) {
+  const files = await loadDirectoryContent(
+    path.join(process.cwd(), "../../examples/music-player/src"),
+  );
+
+  output.push("## Music Example\n\n");
+  for (const file of files) {
+    output.push(`### ${file.filepath}\n`);
+    output.push(`\`\`\`ts\n${file.content}\n\`\`\`\n`);
+  }
 }
 
 // Main execution

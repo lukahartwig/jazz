@@ -1,14 +1,14 @@
-import { SyncMessage } from "cojson";
+import type { SyncMessage } from "cojson";
 import type { Channel } from "queueueue";
-import { Mocked, describe, expect, test, vi } from "vitest";
+import { type Mocked, describe, expect, test, vi } from "vitest";
 import { MAX_OUTGOING_MESSAGES_CHUNK_BYTES } from "../BatchedOutgoingMessages.js";
 import {
   BUFFER_LIMIT,
   BUFFER_LIMIT_POLLING_INTERVAL,
-  CreateWebSocketPeerOpts,
+  type CreateWebSocketPeerOpts,
   createWebSocketPeer,
 } from "../createWebSocketPeer.js";
-import { AnyWebSocket } from "../types.js";
+import type { AnyWebSocket } from "../types.js";
 
 function setup(opts: Partial<CreateWebSocketPeerOpts> = {}) {
   const listeners = new Map<string, (event: MessageEvent) => void>();
@@ -126,7 +126,7 @@ describe("createWebSocketPeer", () => {
       action: "content",
       id: "co_zlow",
       new: {},
-      priority: 1,
+      priority: 6,
     };
 
     void peer.outgoing.push(message1);
@@ -214,7 +214,7 @@ describe("createWebSocketPeer", () => {
         action: "content",
         id: "co_zlow",
         new: {},
-        priority: 1,
+        priority: 6,
       };
 
       void peer.outgoing.push(message1);
@@ -243,7 +243,7 @@ describe("createWebSocketPeer", () => {
         action: "content",
         id: "co_zlow",
         new: {},
-        priority: 1,
+        priority: 6,
       };
 
       void peer.outgoing.push(message1);
@@ -269,7 +269,7 @@ describe("createWebSocketPeer", () => {
         action: "content",
         id: "co_zlow",
         new: {},
-        priority: 1,
+        priority: 6,
       };
 
       const stream: SyncMessage[] = [];
@@ -316,7 +316,7 @@ describe("createWebSocketPeer", () => {
         action: "content",
         id: "co_zlow",
         new: {},
-        priority: 1,
+        priority: 6,
       };
 
       const stream: SyncMessage[] = [];
@@ -365,7 +365,7 @@ describe("createWebSocketPeer", () => {
         action: "content",
         id: "co_zlow",
         new: {},
-        priority: 1,
+        priority: 6,
       };
 
       void peer.outgoing.push(message1);
@@ -411,7 +411,7 @@ describe("createWebSocketPeer", () => {
         action: "content",
         id: "co_zlow",
         new: {},
-        priority: 1,
+        priority: 6,
       };
 
       void peer.outgoing.push(message1);
@@ -450,7 +450,7 @@ describe("createWebSocketPeer", () => {
         action: "content",
         id: "co_zlow",
         new: {},
-        priority: 1,
+        priority: 6,
       };
 
       void peer.outgoing.push(message1);
@@ -472,6 +472,7 @@ describe("createWebSocketPeer", () => {
   });
 });
 
+// biome-ignore lint/suspicious/noConfusingVoidType: Test helper
 function waitFor(callback: () => boolean | void) {
   return new Promise<void>((resolve, reject) => {
     const checkPassed = () => {
