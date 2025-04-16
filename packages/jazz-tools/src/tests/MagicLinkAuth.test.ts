@@ -10,7 +10,6 @@ import {
   MagicLinkAuthHandleAsConsumer,
   MagicLinkAuthHandleAsProvider,
 } from "../auth/MagicLinkAuth";
-import * as utils from "../auth/MagicLinkAuth/utils";
 import {
   Account,
   AuthSecretStorage,
@@ -18,7 +17,7 @@ import {
   InMemoryKVStore,
   KvStoreContext,
 } from "../exports";
-import { createJazzTestAccount, linkAccounts } from "../testing";
+import { createJazzTestAccount } from "../testing";
 import { waitFor } from "./utils";
 
 // Initialize KV store for tests
