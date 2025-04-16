@@ -5,9 +5,9 @@ import {
   cojsonInternals,
 } from "cojson";
 import { Account } from "../../coValues/account.js";
+import type { ID } from "../../internal.js";
 import type { MagicLinkAuthTransfer } from "./MagicLinkAuth.js";
 import type { MagicLinkAuthOptions } from "./types.js";
-import type { ID } from "../../internal.js";
 
 /**
  * Create a temporary agent to keep the transfer secret isolated from persistent accounts.

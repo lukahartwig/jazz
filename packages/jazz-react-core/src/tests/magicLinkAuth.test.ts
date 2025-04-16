@@ -1,9 +1,9 @@
 // @vitest-environment happy-dom
 
-import { describe, expect, it, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import {
-  useCreateMagicLinkAuthAsProvider,
   useCreateMagicLinkAuthAsConsumer,
+  useCreateMagicLinkAuthAsProvider,
   useHandleMagicLinkAuthAsConsumer,
   useHandleMagicLinkAuthAsProvider,
 } from "../auth/MagicLinkAuth.js";
@@ -12,7 +12,7 @@ import {
   createJazzTestGuest,
   setupJazzTestSync,
 } from "../testing";
-import { renderHook, act, waitFor } from "./testUtils";
+import { act, renderHook, waitFor } from "./testUtils";
 
 beforeEach(async () => {
   await setupJazzTestSync();
