@@ -1,6 +1,6 @@
 {
   "$schema": "https://turbo.build/schema.json",
-  "globalEnv": ["APP_NAME"],
+  "globalEnv": ["APP_NAME", "JAZZ_PROJECT_NAME"],
   "remoteCache": {},
   "tasks": {
     "build": {

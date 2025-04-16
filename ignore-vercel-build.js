@@ -1,10 +1,10 @@
 import { execSync } from "child_process";
 
-const currentAppName = process.env.APP_NAME;
+const currentAppName = process.env.JAZZ_PROJECT_NAME || process.env.APP_NAME;
 
 try {
   // In Vercel CI, we need to use the remote cache and filter for the current app
-  const turboCommand = `pnpm turbo run build --dry=json --filter="...[origin/main]"`;
+  const turboCommand = `pnpm turbo run build --dry=json --filter=...`;
   const turboOutput = execSync(turboCommand).toString();
 
   const affectedPackages = JSON.parse(turboOutput).packages;
