@@ -114,7 +114,7 @@ export function useHandleMagicLinkAuthAsConsumer(
 ) {
   const context = useJazzContext();
   const authSecretStorage = useAuthSecretStorage();
-  const hasRunRef = useRef(false);
+  const urlRef = useRef<string | undefined>();
 
   const magicLinkAuth = useMemo(() => {
     return new MagicLinkAuthHandleAsConsumer(
@@ -135,8 +135,10 @@ export function useHandleMagicLinkAuthAsConsumer(
   );
 
   useEffect(() => {
-    if (hasRunRef.current) return;
-    hasRunRef.current = true;
+    if (!magicLinkAuth.checkValidUrl(url)) return;
+
+    if (urlRef.current === url) return;
+    urlRef.current = url;
 
     magicLinkAuth.handleFlow(url);
 
@@ -161,7 +163,7 @@ export function useHandleMagicLinkAuthAsProvider(
 ) {
   const context = useJazzContext();
   const authSecretStorage = useAuthSecretStorage();
-  const hasRunRef = useRef(false);
+  const urlRef = useRef<string | undefined>();
 
   const magicLinkAuth = useMemo(() => {
     return new MagicLinkAuthHandleAsProvider(
@@ -182,8 +184,10 @@ export function useHandleMagicLinkAuthAsProvider(
   );
 
   useEffect(() => {
-    if (hasRunRef.current) return;
-    hasRunRef.current = true;
+    if (!magicLinkAuth.checkValidUrl(url)) return;
+
+    if (urlRef.current === url) return;
+    urlRef.current = url;
 
     magicLinkAuth.handleFlow(url);
 
