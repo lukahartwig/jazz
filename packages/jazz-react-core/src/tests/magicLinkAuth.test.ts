@@ -129,7 +129,10 @@ describe("MagicLinkAuth", () => {
       const account = await createJazzTestAccount({});
       const { result: handleAsProvider } = renderHook(
         () =>
-          useHandleMagicLinkAuthAsProvider(window.location.origin, "test-link"),
+          useHandleMagicLinkAuthAsProvider(
+            window.location.origin,
+            "invalid-link-gets-ignored",
+          ),
         { account },
       );
       expect(handleAsProvider.current.status).toBe("idle");
@@ -186,7 +189,10 @@ describe("MagicLinkAuth", () => {
 
     it("initializes with idle state", async () => {
       const { result: handleAsConsumer } = renderHook(() =>
-        useHandleMagicLinkAuthAsConsumer(window.location.origin, "test-link"),
+        useHandleMagicLinkAuthAsConsumer(
+          window.location.origin,
+          "invalid-link-gets-ignored",
+        ),
       );
       expect(handleAsConsumer.current.status).toBe("idle");
       expect(handleAsConsumer.current.sendConfirmationCode).toBeNull();
