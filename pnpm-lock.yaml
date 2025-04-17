@@ -131,10 +131,10 @@ importers:
         specifier: ^3.4.17
         version: 3.4.17(ts-node@10.9.2(@swc/core@1.10.1(@swc/helpers@0.5.15))(@types/node@22.10.2)(typescript@5.6.2))
       typescript:
-        specifier: 'catalog:'
+        specifier: 5.6.2
         version: 5.6.2
       vite:
-        specifier: 'catalog:'
+        specifier: 6.0.11
         version: 6.0.11(@types/node@22.10.2)(jiti@2.4.2)(lightningcss@1.29.1)(terser@5.37.0)(yaml@2.6.1)
 
   examples/chat-rn:
@@ -270,7 +270,7 @@ importers:
         specifier: 18.3.1
         version: 18.3.1(react@18.3.1)
       typescript:
-        specifier: 'catalog:'
+        specifier: 5.6.2
         version: 5.6.2
 
   examples/chat-rn-expo:
@@ -370,7 +370,7 @@ importers:
         specifier: ^3.4.17
         version: 3.4.17(ts-node@10.9.2(@swc/core@1.10.1(@swc/helpers@0.5.15))(@types/node@22.10.2)(typescript@5.6.2))
       typescript:
-        specifier: 'catalog:'
+        specifier: 5.6.2
         version: 5.6.2
 
   examples/chat-rn-expo-clerk:
@@ -524,7 +524,7 @@ importers:
         specifier: ^3.4.17
         version: 3.4.17(ts-node@10.9.2(@swc/core@1.10.1(@swc/helpers@0.5.15))(@types/node@22.10.2)(typescript@5.6.2))
       typescript:
-        specifier: 'catalog:'
+        specifier: 5.6.2
         version: 5.6.2
 
   examples/chat-vue:
@@ -579,10 +579,10 @@ importers:
         specifier: ^3.4.17
         version: 3.4.17(ts-node@10.9.2(@swc/core@1.10.1(@swc/helpers@0.5.15))(@types/node@22.10.2)(typescript@5.6.2))
       typescript:
-        specifier: 'catalog:'
+        specifier: 5.6.2
         version: 5.6.2
       vite:
-        specifier: 'catalog:'
+        specifier: 6.0.11
         version: 6.0.11(@types/node@22.10.2)(jiti@2.4.2)(lightningcss@1.29.1)(terser@5.37.0)(yaml@2.6.1)
       vite-plugin-vue-devtools:
         specifier: ^7.4.6
@@ -613,7 +613,7 @@ importers:
         version: 18.3.1(react@18.3.1)
     devDependencies:
       '@biomejs/biome':
-        specifier: 'catalog:'
+        specifier: 1.9.4
         version: 1.9.4
       '@playwright/test':
         specifier: ^1.50.1
@@ -631,10 +631,10 @@ importers:
         specifier: ^15.11.0
         version: 15.14.0
       typescript:
-        specifier: 'catalog:'
+        specifier: 5.6.2
         version: 5.6.2
       vite:
-        specifier: 'catalog:'
+        specifier: 6.0.11
         version: 6.0.11(@types/node@22.10.2)(jiti@2.4.2)(lightningcss@1.29.1)(terser@5.37.0)(yaml@2.6.1)
 
   examples/file-share-svelte:
@@ -704,13 +704,13 @@ importers:
         specifier: ^3.4.17
         version: 3.4.17(ts-node@10.9.2(@swc/core@1.10.1(@swc/helpers@0.5.15))(@types/node@22.10.2)(typescript@5.6.2))
       typescript:
-        specifier: 'catalog:'
+        specifier: 5.6.2
         version: 5.6.2
       typescript-eslint:
         specifier: ^8.0.0
         version: 8.18.1(eslint@9.17.0(jiti@2.4.2))(typescript@5.6.2)
       vite:
-        specifier: 'catalog:'
+        specifier: 6.0.11
         version: 6.0.11(@types/node@22.10.2)(jiti@2.4.2)(lightningcss@1.29.1)(terser@5.37.0)(yaml@2.6.1)
 
   examples/filestream:
@@ -732,7 +732,7 @@ importers:
         version: 18.3.1(react@18.3.1)
     devDependencies:
       '@biomejs/biome':
-        specifier: 'catalog:'
+        specifier: 1.9.4
         version: 1.9.4
       '@types/react':
         specifier: ^18.3.12
@@ -759,10 +759,10 @@ importers:
         specifier: ^3.4.17
         version: 3.4.17(ts-node@10.9.2(@swc/core@1.10.1(@swc/helpers@0.5.15))(@types/node@22.10.2)(typescript@5.6.2))
       typescript:
-        specifier: 'catalog:'
+        specifier: 5.6.2
         version: 5.6.2
       vite:
-        specifier: 'catalog:'
+        specifier: 6.0.11
         version: 6.0.11(@types/node@22.10.2)(jiti@2.4.2)(lightningcss@1.29.1)(terser@5.37.0)(yaml@2.6.1)
 
   examples/form:
@@ -784,7 +784,7 @@ importers:
         version: 18.3.1(react@18.3.1)
     devDependencies:
       '@biomejs/biome':
-        specifier: 'catalog:'
+        specifier: 1.9.4
         version: 1.9.4
       '@playwright/test':
         specifier: ^1.50.1
@@ -817,10 +817,10 @@ importers:
         specifier: ^3.4.17
         version: 3.4.17(ts-node@10.9.2(@swc/core@1.10.1(@swc/helpers@0.5.15))(@types/node@22.10.2)(typescript@5.6.2))
       typescript:
-        specifier: 'catalog:'
+        specifier: 5.6.2
         version: 5.6.2
       vite:
-        specifier: 'catalog:'
+        specifier: 6.0.11
         version: 6.0.11(@types/node@22.10.2)(jiti@2.4.2)(lightningcss@1.29.1)(terser@5.37.0)(yaml@2.6.1)
 
   examples/image-upload:
@@ -839,7 +839,7 @@ importers:
         version: 18.3.1(react@18.3.1)
     devDependencies:
       '@biomejs/biome':
-        specifier: 'catalog:'
+        specifier: 1.9.4
         version: 1.9.4
       '@types/react':
         specifier: ^18.3.12
@@ -863,10 +863,10 @@ importers:
         specifier: ^3.4.17
         version: 3.4.17(ts-node@10.9.2(@swc/core@1.10.1(@swc/helpers@0.5.15))(@types/node@22.10.2)(typescript@5.6.2))
       typescript:
-        specifier: 'catalog:'
+        specifier: 5.6.2
         version: 5.6.2
       vite:
-        specifier: 'catalog:'
+        specifier: 6.0.11
         version: 6.0.11(@types/node@22.10.2)(jiti@2.4.2)(lightningcss@1.29.1)(terser@5.37.0)(yaml@2.6.1)
 
   examples/inspector:
@@ -924,10 +924,10 @@ importers:
         specifier: ^3.4.17
         version: 3.4.17(ts-node@10.9.2(@swc/core@1.10.1(@swc/helpers@0.5.15))(@types/node@22.10.2)(typescript@5.6.2))
       typescript:
-        specifier: 'catalog:'
+        specifier: 5.6.2
         version: 5.6.2
       vite:
-        specifier: 'catalog:'
+        specifier: 6.0.11
         version: 6.0.11(@types/node@22.10.2)(jiti@2.4.2)(lightningcss@1.29.1)(terser@5.37.0)(yaml@2.6.1)
 
   examples/multi-cursors:
@@ -949,7 +949,7 @@ importers:
         version: 18.3.1(react@18.3.1)
     devDependencies:
       '@biomejs/biome':
-        specifier: 'catalog:'
+        specifier: 1.9.4
         version: 1.9.4
       '@types/react':
         specifier: ^18.3.12
@@ -976,13 +976,13 @@ importers:
         specifier: ^3.4.17
         version: 3.4.17(ts-node@10.9.2(@swc/core@1.10.1(@swc/helpers@0.5.15))(@types/node@22.10.2)(typescript@5.6.2))
       typescript:
-        specifier: 'catalog:'
+        specifier: 5.6.2
         version: 5.6.2
       vite:
-        specifier: 'catalog:'
+        specifier: 6.0.11
         version: 6.0.11(@types/node@22.10.2)(jiti@2.4.2)(lightningcss@1.29.1)(terser@5.37.0)(yaml@2.6.1)
       vitest:
-        specifier: 'catalog:'
+        specifier: 3.1.1
         version: 3.1.1(@types/node@22.10.2)(@vitest/browser@3.1.1)(@vitest/ui@3.1.1)(happy-dom@17.4.4)(jiti@2.4.2)(jsdom@25.0.1)(lightningcss@1.29.1)(msw@2.7.0(@types/node@22.10.2)(typescript@5.6.2))(terser@5.37.0)(yaml@2.6.1)
 
   examples/multiauth:
@@ -1007,7 +1007,7 @@ importers:
         version: 18.3.1(react@18.3.1)
     devDependencies:
       '@biomejs/biome':
-        specifier: 'catalog:'
+        specifier: 1.9.4
         version: 1.9.4
       '@types/react':
         specifier: ^18.3.12
@@ -1022,10 +1022,10 @@ importers:
         specifier: ^15.11.0
         version: 15.14.0
       typescript:
-        specifier: 'catalog:'
+        specifier: 5.6.2
         version: 5.6.2
       vite:
-        specifier: 'catalog:'
+        specifier: 6.0.11
         version: 6.0.11(@types/node@22.10.2)(jiti@2.4.2)(lightningcss@1.29.1)(terser@5.37.0)(yaml@2.6.1)
 
   examples/music-player:
@@ -1107,10 +1107,10 @@ importers:
         specifier: ^3.4.17
         version: 3.4.17(ts-node@10.9.2(@swc/core@1.10.1(@swc/helpers@0.5.15))(@types/node@22.10.2)(typescript@5.6.2))
       typescript:
-        specifier: 'catalog:'
+        specifier: 5.6.2
         version: 5.6.2
       vite:
-        specifier: 'catalog:'
+        specifier: 6.0.11
         version: 6.0.11(@types/node@22.10.2)(jiti@2.4.2)(lightningcss@1.29.1)(terser@5.37.0)(yaml@2.6.1)
 
   examples/organization:
@@ -1138,7 +1138,7 @@ importers:
         version: 6.28.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
     devDependencies:
       '@biomejs/biome':
-        specifier: 'catalog:'
+        specifier: 1.9.4
         version: 1.9.4
       '@tailwindcss/forms':
         specifier: ^0.5.9
@@ -1165,10 +1165,10 @@ importers:
         specifier: ^3.4.17
         version: 3.4.17(ts-node@10.9.2(@swc/core@1.10.1(@swc/helpers@0.5.15))(@types/node@22.10.2)(typescript@5.6.2))
       typescript:
-        specifier: 'catalog:'
+        specifier: 5.6.2
         version: 5.6.2
       vite:
-        specifier: 'catalog:'
+        specifier: 6.0.11
         version: 6.0.11(@types/node@22.10.2)(jiti@2.4.2)(lightningcss@1.29.1)(terser@5.37.0)(yaml@2.6.1)
 
   examples/passkey:
@@ -1187,7 +1187,7 @@ importers:
         version: 18.3.1(react@18.3.1)
     devDependencies:
       '@biomejs/biome':
-        specifier: 'catalog:'
+        specifier: 1.9.4
         version: 1.9.4
       '@types/react':
         specifier: ^18.3.12
@@ -1202,10 +1202,10 @@ importers:
         specifier: ^15.11.0
         version: 15.14.0
       typescript:
-        specifier: 'catalog:'
+        specifier: 5.6.2
         version: 5.6.2
       vite:
-        specifier: 'catalog:'
+        specifier: 6.0.11
         version: 6.0.11(@types/node@22.10.2)(jiti@2.4.2)(lightningcss@1.29.1)(terser@5.37.0)(yaml@2.6.1)
 
   examples/passkey-svelte:
@@ -1251,13 +1251,13 @@ importers:
         specifier: ^4.0.0
         version: 4.1.1(picomatch@4.0.2)(svelte@5.15.0)(typescript@5.6.2)
       typescript:
-        specifier: 'catalog:'
+        specifier: 5.6.2
         version: 5.6.2
       typescript-eslint:
         specifier: ^8.0.0
         version: 8.18.1(eslint@9.17.0(jiti@2.4.2))(typescript@5.6.2)
       vite:
-        specifier: 'catalog:'
+        specifier: 6.0.11
         version: 6.0.11(@types/node@22.10.2)(jiti@2.4.2)(lightningcss@1.29.1)(terser@5.37.0)(yaml@2.6.1)
 
   examples/passphrase:
@@ -1276,7 +1276,7 @@ importers:
         version: 18.3.1(react@18.3.1)
     devDependencies:
       '@biomejs/biome':
-        specifier: 'catalog:'
+        specifier: 1.9.4
         version: 1.9.4
       '@types/react':
         specifier: ^18.3.12
@@ -1291,10 +1291,10 @@ importers:
         specifier: ^15.11.0
         version: 15.14.0
       typescript:
-        specifier: 'catalog:'
+        specifier: 5.6.2
         version: 5.6.2
       vite:
-        specifier: 'catalog:'
+        specifier: 6.0.11
         version: 6.0.11(@types/node@22.10.2)(jiti@2.4.2)(lightningcss@1.29.1)(terser@5.37.0)(yaml@2.6.1)
 
   examples/password-manager:
@@ -1340,10 +1340,10 @@ importers:
         specifier: ^3.4.17
         version: 3.4.17(ts-node@10.9.2(@swc/core@1.10.1(@swc/helpers@0.5.15))(@types/node@22.10.2)(typescript@5.6.2))
       typescript:
-        specifier: 'catalog:'
+        specifier: 5.6.2
         version: 5.6.2
       vite:
-        specifier: 'catalog:'
+        specifier: 6.0.11
         version: 6.0.11(@types/node@22.10.2)(jiti@2.4.2)(lightningcss@1.29.1)(terser@5.37.0)(yaml@2.6.1)
 
   examples/pets:
@@ -1431,10 +1431,10 @@ importers:
         specifier: ^3.4.17
         version: 3.4.17(ts-node@10.9.2(@swc/core@1.10.1(@swc/helpers@0.5.15))(@types/node@22.10.2)(typescript@5.6.2))
       typescript:
-        specifier: 'catalog:'
+        specifier: 5.6.2
         version: 5.6.2
       vite:
-        specifier: 'catalog:'
+        specifier: 6.0.11
         version: 6.0.11(@types/node@22.10.2)(jiti@2.4.2)(lightningcss@1.29.1)(terser@5.37.0)(yaml@2.6.1)
       vite-plugin-top-level-await:
         specifier: ^1.4.4
@@ -1459,7 +1459,7 @@ importers:
         version: 18.3.1(react@18.3.1)
     devDependencies:
       '@biomejs/biome':
-        specifier: 'catalog:'
+        specifier: 1.9.4
         version: 1.9.4
       '@types/react':
         specifier: ^18.3.12
@@ -1474,10 +1474,10 @@ importers:
         specifier: ^15.11.0
         version: 15.14.0
       typescript:
-        specifier: 'catalog:'
+        specifier: 5.6.2
         version: 5.6.2
       vite:
-        specifier: 'catalog:'
+        specifier: 6.0.11
         version: 6.0.11(@types/node@22.10.2)(jiti@2.4.2)(lightningcss@1.29.1)(terser@5.37.0)(yaml@2.6.1)
 
   examples/todo:
@@ -1553,10 +1553,10 @@ importers:
         specifier: ^3.4.17
         version: 3.4.17(ts-node@10.9.2(@swc/core@1.10.1(@swc/helpers@0.5.15))(@types/node@22.10.2)(typescript@5.6.2))
       typescript:
-        specifier: 'catalog:'
+        specifier: 5.6.2
         version: 5.6.2
       vite:
-        specifier: 'catalog:'
+        specifier: 6.0.11
         version: 6.0.11(@types/node@22.10.2)(jiti@2.4.2)(lightningcss@1.29.1)(terser@5.37.0)(yaml@2.6.1)
 
   examples/todo-vue:
@@ -1611,10 +1611,10 @@ importers:
         specifier: ^3.4.17
         version: 3.4.17(ts-node@10.9.2(@swc/core@1.10.1(@swc/helpers@0.5.15))(@types/node@22.10.2)(typescript@5.6.2))
       typescript:
-        specifier: 'catalog:'
+        specifier: 5.6.2
         version: 5.6.2
       vite:
-        specifier: 'catalog:'
+        specifier: 6.0.11
         version: 6.0.11(@types/node@22.10.2)(jiti@2.4.2)(lightningcss@1.29.1)(terser@5.37.0)(yaml@2.6.1)
       vite-plugin-vue-devtools:
         specifier: ^7.4.6
@@ -1648,7 +1648,7 @@ importers:
         version: 3.4.17(ts-node@10.9.2(@swc/core@1.10.1(@swc/helpers@0.5.15))(@types/node@22.10.2)(typescript@5.6.2))
     devDependencies:
       '@biomejs/biome':
-        specifier: 'catalog:'
+        specifier: 1.9.4
         version: 1.9.4
       '@types/react':
         specifier: ^18.3.12
@@ -1663,10 +1663,10 @@ importers:
         specifier: ^15.11.0
         version: 15.14.0
       typescript:
-        specifier: 'catalog:'
+        specifier: 5.6.2
         version: 5.6.2
       vite:
-        specifier: 'catalog:'
+        specifier: 6.0.11
         version: 6.0.11(@types/node@22.10.2)(jiti@2.4.2)(lightningcss@1.29.1)(terser@5.37.0)(yaml@2.6.1)
 
   packages/cojson:
@@ -1867,13 +1867,13 @@ importers:
       pica:
         specifier: ^9.0.1
         version: 9.0.1
-      typescript:
-        specifier: 'catalog:'
-        version: 5.6.2
     devDependencies:
       '@types/pica':
         specifier: ^9.0.4
         version: 9.0.4
+      typescript:
+        specifier: 'catalog:'
+        version: 5.6.2
 
   packages/jazz-expo:
     dependencies:

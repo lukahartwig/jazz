@@ -4,44 +4,42 @@ import { WasmCrypto } from "../crypto/WasmCrypto";
 import { LocalNode } from "../localNode";
 import { toSimplifiedMessages } from "./messagesTestUtils";
 import {
-  connectNodeToSyncServer,
+  SyncMessagesLog,
   createTestNode,
   randomAnonymousAccountAndSessionID,
-  setupSyncServer,
+  setupTestNode,
   waitFor,
 } from "./testUtils";
 
 const Crypto = await WasmCrypto.create();
 
-let jazzCloud = setupSyncServer();
+let jazzCloud = setupTestNode({ isSyncServer: true });
 
 beforeEach(async () => {
-  jazzCloud = setupSyncServer();
+  SyncMessagesLog.clear();
+  jazzCloud = setupTestNode({ isSyncServer: true });
 });
 
 describe("peer reconciliation", () => {
   test("handle new peer connections", async () => {
-    const node = createTestNode();
+    const client = setupTestNode();
 
-    const group = node.createGroup();
+    const group = client.node.createGroup();
     const map = group.createMap();
 
     map.set("hello", "world", "trusting");
 
-    const { messages } = connectNodeToSyncServer(node, true);
+    client.connectToSyncServer();
 
     await new Promise((resolve) => setTimeout(resolve, 100));
 
     await map.core.waitForSync();
 
     expect(
-      toSimplifiedMessages(
-        {
-          Group: group.core,
-          Map: map.core,
-        },
-        messages,
-      ),
+      SyncMessagesLog.getMessages({
+        Group: group.core,
+        Map: map.core,
+      }),
     ).toMatchInlineSnapshot(`
       [
         "client -> server | LOAD Group sessions: header/3",
@@ -57,23 +55,24 @@ describe("peer reconciliation", () => {
   });
 
   test("handle peer reconnections", async () => {
-    const node = createTestNode();
+    const client = setupTestNode();
 
-    const group = node.createGroup();
+    const group = client.node.createGroup();
 
     const map = group.createMap();
 
     map.set("hello", "world", "trusting");
 
-    connectNodeToSyncServer(node, true);
+    const { peerState } = client.connectToSyncServer();
 
     await map.core.waitForSync();
 
-    node.syncManager.getPeers()[0]?.gracefulShutdown();
+    peerState.gracefulShutdown();
 
     map.set("hello", "updated", "trusting");
 
-    const { messages } = connectNodeToSyncServer(node, true);
+    SyncMessagesLog.clear();
+    client.connectToSyncServer();
 
     await map.core.waitForSync();
 
@@ -86,13 +85,10 @@ describe("peer reconciliation", () => {
     ).toEqual("updated");
 
     expect(
-      toSimplifiedMessages(
-        {
-          Group: group.core,
-          Map: map.core,
-        },
-        messages,
-      ),
+      SyncMessagesLog.getMessages({
+        Group: group.core,
+        Map: map.core,
+      }),
     ).toMatchInlineSnapshot(`
       [
         "client -> server | LOAD Group sessions: header/3",
@@ -106,26 +102,24 @@ describe("peer reconciliation", () => {
   });
 
   test("correctly handle concurrent peer reconnections", async () => {
-    const [admin, session] = randomAnonymousAccountAndSessionID();
-    const node = new LocalNode(admin, session, Crypto);
+    const client = setupTestNode();
 
-    const group = node.createGroup();
+    const group = client.node.createGroup();
     const map = group.createMap();
 
     map.set("hello", "world", "trusting");
 
-    connectNodeToSyncServer(node, true);
+    const { peerState } = client.connectToSyncServer();
 
     await map.core.waitForSync();
 
-    node.syncManager.getPeers()[0]?.gracefulShutdown();
+    peerState.gracefulShutdown();
 
     map.set("hello", "updated", "trusting");
 
-    const { nodeToServerPeer: stalePeer, messages: stalePeerMessages } =
-      connectNodeToSyncServer(node, true);
-    const { nodeToServerPeer: latestPeer, messages: latestPeerMessages } =
-      connectNodeToSyncServer(node, true);
+    SyncMessagesLog.clear();
+    const { peer } = client.connectToSyncServer();
+    const { peer: latestPeer } = client.connectToSyncServer();
 
     await map.core.waitForSync();
 
@@ -137,7 +131,7 @@ describe("peer reconciliation", () => {
       expectMap(mapOnSyncServer.core.getCurrentContent()).get("hello"),
     ).toEqual("updated");
 
-    expect(stalePeer.outgoing).toMatchObject({
+    expect(peer.outgoing).toMatchObject({
       closed: true,
     });
 
@@ -145,16 +139,11 @@ describe("peer reconciliation", () => {
       closed: false,
     });
 
-    expect(stalePeerMessages).toEqual([]);
-
     expect(
-      toSimplifiedMessages(
-        {
-          Group: group.core,
-          Map: map.core,
-        },
-        latestPeerMessages,
-      ),
+      SyncMessagesLog.getMessages({
+        Group: group.core,
+        Map: map.core,
+      }),
     ).toMatchInlineSnapshot(`
       [
         "client -> server | LOAD Group sessions: header/3",
@@ -168,20 +157,21 @@ describe("peer reconciliation", () => {
   });
 
   test.skip("handle peer reconnections with data loss", async () => {
-    const node = createTestNode();
+    const client = setupTestNode();
 
-    const group = node.createGroup();
+    const group = client.node.createGroup();
     const map = group.createMap();
 
     map.set("hello", "world", "trusting");
 
-    connectNodeToSyncServer(node, true);
+    client.connectToSyncServer();
 
     await map.core.waitForSync();
 
     jazzCloud.restart();
 
-    const { messages } = connectNodeToSyncServer(node, true);
+    SyncMessagesLog.clear();
+    client.connectToSyncServer();
     const mapOnSyncServer = jazzCloud.node.coValuesStore.get(map.id);
 
     await waitFor(() => {
@@ -191,13 +181,10 @@ describe("peer reconciliation", () => {
     assert(mapOnSyncServer.isAvailable());
 
     expect(
-      toSimplifiedMessages(
-        {
-          Group: group.core,
-          Map: map.core,
-        },
-        messages,
-      ),
+      SyncMessagesLog.getMessages({
+        Group: group.core,
+        Map: map.core,
+      }),
     ).toMatchInlineSnapshot(`
       [
         "client -> LOAD Group sessions: header/3",

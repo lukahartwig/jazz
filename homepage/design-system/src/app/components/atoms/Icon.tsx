@@ -4,6 +4,8 @@ import {
   ArrowRightIcon,
   BookTextIcon,
   BoxIcon,
+  BracesIcon,
+  Brackets,
   CheckIcon,
   ChevronDown,
   ChevronRight,
@@ -38,6 +40,8 @@ import {
   WifiOffIcon,
   XIcon,
 } from "lucide-react";
+
+import { GcmpIcons } from "./icons";
 
 const icons = {
   arrowDown: ArrowDownIcon,
@@ -77,6 +81,12 @@ const icons = {
   zip: FolderArchiveIcon,
   warning: AlertTriangleIcon,
   info: InfoIcon,
+  cofeed: GcmpIcons.IconCoFeed,
+  corecord: GcmpIcons.IconCoRecord,
+  comap: BracesIcon,
+  colist: Brackets,
+  user: UserIcon,
+  group: UsersIcon,
 };
 
 // copied from tailwind line height https://tailwindcss.com/docs/font-size

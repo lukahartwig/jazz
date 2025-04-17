@@ -3,22 +3,24 @@ import { beforeEach, describe, expect, test } from "vitest";
 import { expectMap } from "../coValue";
 import { toSimplifiedMessages } from "./messagesTestUtils";
 import {
-  connectNodeToSyncServer,
-  createConnectedTestAgentNode,
+  SyncMessagesLog,
   loadCoValueOrFail,
-  setupSyncServer,
+  setupTestNode,
   waitFor,
 } from "./testUtils";
 
-let jazzCloud = setupSyncServer();
+let jazzCloud = setupTestNode({ isSyncServer: true });
 
 beforeEach(async () => {
-  jazzCloud = setupSyncServer();
+  SyncMessagesLog.clear();
+  jazzCloud = setupTestNode({ isSyncServer: true });
 });
 
-describe("sync protocol", () => {
+describe("loading coValues from server", () => {
   test("coValue loading", async () => {
-    const { node: client, messages } = await createConnectedTestAgentNode();
+    const { node: client } = setupTestNode({
+      connected: true,
+    });
 
     const group = jazzCloud.node.createGroup();
     const map = group.createMap();
@@ -28,13 +30,10 @@ describe("sync protocol", () => {
     expect(mapOnClient.get("hello")).toEqual("world");
 
     expect(
-      toSimplifiedMessages(
-        {
-          Group: group.core,
-          Map: map.core,
-        },
-        messages,
-      ),
+      SyncMessagesLog.getMessages({
+        Group: group.core,
+        Map: map.core,
+      }),
     ).toMatchInlineSnapshot(`
       [
         "client -> server | LOAD Map sessions: empty",
@@ -47,7 +46,9 @@ describe("sync protocol", () => {
   });
 
   test("coValue with parent groups loading", async () => {
-    const { node: client, messages } = await createConnectedTestAgentNode();
+    const client = setupTestNode({
+      connected: true,
+    });
 
     const group = jazzCloud.node.createGroup();
     const parentGroup = jazzCloud.node.createGroup();
@@ -58,18 +59,15 @@ describe("sync protocol", () => {
     const map = group.createMap();
     map.set("hello", "world");
 
-    const mapOnClient = await loadCoValueOrFail(client, map.id);
+    const mapOnClient = await loadCoValueOrFail(client.node, map.id);
     expect(mapOnClient.get("hello")).toEqual("world");
 
     expect(
-      toSimplifiedMessages(
-        {
-          ParentGroup: parentGroup.core,
-          Group: group.core,
-          Map: map.core,
-        },
-        messages,
-      ),
+      SyncMessagesLog.getMessages({
+        ParentGroup: parentGroup.core,
+        Group: group.core,
+        Map: map.core,
+      }),
     ).toMatchInlineSnapshot(`
       [
         "client -> server | LOAD Map sessions: empty",
@@ -84,33 +82,35 @@ describe("sync protocol", () => {
   });
 
   test("updating a coValue while offline", async () => {
-    const { node: client } = await createConnectedTestAgentNode();
+    const client = setupTestNode({
+      connected: false,
+    });
+
+    const { peerState } = client.connectToSyncServer();
 
     const group = jazzCloud.node.createGroup();
     const map = group.createMap();
     map.set("hello", "world", "trusting");
 
-    const mapOnClient = await loadCoValueOrFail(client, map.id);
+    const mapOnClient = await loadCoValueOrFail(client.node, map.id);
     expect(mapOnClient.get("hello")).toEqual("world");
 
-    client.syncManager.getPeers()[0]?.gracefulShutdown();
+    peerState.gracefulShutdown();
 
     map.set("hello", "updated", "trusting");
 
-    const { messages } = connectNodeToSyncServer(client, true);
+    SyncMessagesLog.clear();
+    client.connectToSyncServer();
 
     await map.core.waitForSync();
 
     expect(mapOnClient.get("hello")).toEqual("updated");
 
     expect(
-      toSimplifiedMessages(
-        {
-          Group: group.core,
-          Map: map.core,
-        },
-        messages,
-      ),
+      SyncMessagesLog.getMessages({
+        Group: group.core,
+        Map: map.core,
+      }),
     ).toMatchInlineSnapshot(`
       [
         "client -> server | LOAD Group sessions: header/3",
@@ -123,7 +123,9 @@ describe("sync protocol", () => {
   });
 
   test("updating a coValue on both sides while offline", async () => {
-    const { node: client } = await createConnectedTestAgentNode();
+    const client = setupTestNode({});
+
+    const { peerState } = client.connectToSyncServer();
 
     const group = jazzCloud.node.createGroup();
     group.addMember("everyone", "writer");
@@ -133,14 +135,15 @@ describe("sync protocol", () => {
       fromClient: "initial",
     });
 
-    const mapOnClient = await loadCoValueOrFail(client, map.id);
+    const mapOnClient = await loadCoValueOrFail(client.node, map.id);
 
-    client.syncManager.getPeers()[0]?.gracefulShutdown();
+    peerState.gracefulShutdown();
 
     map.set("fromServer", "updated", "trusting");
     mapOnClient.set("fromClient", "updated", "trusting");
 
-    const { messages } = connectNodeToSyncServer(client, true);
+    SyncMessagesLog.clear();
+    client.connectToSyncServer();
 
     await map.core.waitForSync();
     await mapOnClient.core.waitForSync();
@@ -148,13 +151,10 @@ describe("sync protocol", () => {
     expect(mapOnClient.get("fromServer")).toEqual("updated");
     expect(mapOnClient.get("fromClient")).toEqual("updated");
     expect(
-      toSimplifiedMessages(
-        {
-          Group: group.core,
-          Map: map.core,
-        },
-        messages,
-      ),
+      SyncMessagesLog.getMessages({
+        Group: group.core,
+        Map: map.core,
+      }),
     ).toMatchInlineSnapshot(`
       [
         "client -> server | LOAD Group sessions: header/5",
@@ -169,7 +169,9 @@ describe("sync protocol", () => {
   });
 
   test("wrong optimistic known state should be corrected", async () => {
-    const { node: client, messages } = await createConnectedTestAgentNode();
+    const client = setupTestNode({
+      connected: true,
+    });
 
     const group = jazzCloud.node.createGroup();
     group.addMember("everyone", "writer");
@@ -180,28 +182,25 @@ describe("sync protocol", () => {
     });
 
     // Load the coValue on the client
-    await loadCoValueOrFail(client, map.id);
+    await loadCoValueOrFail(client.node, map.id);
 
     // Forcefully delete the coValue from the client (simulating some data loss)
-    client.coValuesStore.coValues.delete(map.id);
+    client.node.coValuesStore.coValues.delete(map.id);
 
     map.set("fromServer", "updated", "trusting");
 
     await waitFor(() => {
       const coValue = expectMap(
-        client.expectCoValueLoaded(map.id).getCurrentContent(),
+        client.node.expectCoValueLoaded(map.id).getCurrentContent(),
       );
       expect(coValue.get("fromServer")).toEqual("updated");
     });
 
     expect(
-      toSimplifiedMessages(
-        {
-          Group: group.core,
-          Map: map.core,
-        },
-        messages,
-      ),
+      SyncMessagesLog.getMessages({
+        Group: group.core,
+        Map: map.core,
+      }),
     ).toMatchInlineSnapshot(`
       [
         "client -> server | LOAD Map sessions: empty",
@@ -229,20 +228,19 @@ describe("sync protocol", () => {
     // Makes the CoValues unavailable on the server
     jazzCloud.restart();
 
-    const { node: client, messages } = await createConnectedTestAgentNode();
+    const client = setupTestNode({
+      connected: true,
+    });
 
     // Load the coValue on the client
-    const value = await client.load(map.id);
+    const value = await client.node.load(map.id);
     expect(value).toEqual("unavailable");
 
     expect(
-      toSimplifiedMessages(
-        {
-          Group: group.core,
-          Map: map.core,
-        },
-        messages,
-      ),
+      SyncMessagesLog.getMessages({
+        Group: group.core,
+        Map: map.core,
+      }),
     ).toMatchInlineSnapshot(`
       [
         "client -> server | LOAD Map sessions: empty",
@@ -271,20 +269,19 @@ describe("sync protocol", () => {
       largeMap.set(key, value, "trusting");
     }
 
-    const { node: client, messages } = await createConnectedTestAgentNode();
+    const client = setupTestNode({
+      connected: true,
+    });
 
-    await loadCoValueOrFail(client, largeMap.id);
+    await loadCoValueOrFail(client.node, largeMap.id);
 
     await largeMap.core.waitForSync();
 
     expect(
-      toSimplifiedMessages(
-        {
-          Group: group.core,
-          Map: largeMap.core,
-        },
-        messages,
-      ),
+      SyncMessagesLog.getMessages({
+        Group: group.core,
+        Map: largeMap.core,
+      }),
     ).toMatchInlineSnapshot(`
       [
         "client -> server | LOAD Map sessions: empty",

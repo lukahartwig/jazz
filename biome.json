@@ -13,8 +13,7 @@
       "**/android/**",
       "packages/jazz-svelte/**",
       "examples/*svelte*/**",
-      "homepage/homepage/**",
-      "**/package.json"
+      "homepage/homepage/**"
     ]
   },
   "formatter": {

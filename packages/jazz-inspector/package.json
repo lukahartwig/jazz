@@ -4,10 +4,7 @@
   "type": "module",
   "main": "./dist/app.js",
   "types": "./dist/app.d.ts",
-  "files": [
-    "dist/**",
-    "src"
-  ],
+  "files": ["dist/**", "src"],
   "scripts": {
     "dev": "rm -rf ./dist && tsc --emitDeclarationOnly --watch & vite build --watch",
     "build": "rm -rf ./dist && tsc --sourceMap --declaration --outDir dist",
