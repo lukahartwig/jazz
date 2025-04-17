@@ -18,6 +18,9 @@ export class CoValueState {
     | { type: "errored"; error: TryAddTransactionsError }
   >();
 
+  private peersToRequestFrom = new Map<PeerID, PeerState>();
+  loading = false;
+
   core: CoValueCore | null = null;
   id: RawCoID;
 
@@ -37,20 +40,29 @@ export class CoValueState {
   }
 
   private notifyListeners() {
+    this.loadFromNextPeer();
+
     for (const listener of this.listeners) {
       listener(this);
     }
   }
 
   async getCoValue() {
+    if (this.core) {
+      return this.core;
+    }
+
     if (this.isDefinitelyUnavailable()) {
       return "unavailable";
     }
 
-    return new Promise<CoValueCore>((resolve) => {
+    return new Promise<CoValueCore | "unavailable">((resolve) => {
       const listener = (state: CoValueState) => {
         if (state.core) {
           resolve(state.core);
+          this.removeListener(listener);
+        } else if (this.isDefinitelyUnavailable()) {
+          resolve("unavailable");
           this.removeListener(listener);
         }
       };
@@ -60,69 +72,70 @@ export class CoValueState {
   }
 
   async loadFromPeers(peers: PeerState[]) {
-    const loadAttempt = async (peersToLoadFrom: PeerState[]) => {
-      const peersToActuallyLoadFrom = [];
-      for (const peer of peersToLoadFrom) {
-        const currentState = this.peers.get(peer.id);
-
-        if (currentState?.type === "available") {
-          continue;
-        }
-
-        if (currentState?.type === "errored") {
-          continue;
-        }
-
-        if (currentState?.type === "pending") {
-          continue;
-        }
-
-        if (currentState?.type === "unavailable") {
-          if (peer.shouldRetryUnavailableCoValues()) {
-            this.peers.set(peer.id, { type: "pending" });
-            peersToActuallyLoadFrom.push(peer);
-          }
-
-          continue;
-        }
-
-        if (!currentState || currentState?.type === "unknown") {
-          this.peers.set(peer.id, { type: "pending" });
-          peersToActuallyLoadFrom.push(peer);
-        }
-      }
-
-      for (const peer of peersToActuallyLoadFrom) {
-        peer
-          .pushOutgoingMessage({
-            action: "load",
-            ...(this.core ? this.core.knownState() : emptyKnownState(this.id)),
-          })
-          .catch((err) => {
-            logger.warn(`Failed to push load message to peer ${peer.id}`, {
-              err,
-            });
-          });
-      }
-    };
-
-    await loadAttempt(peers);
-
-    // Retry loading from peers that have the retry flag enabled
-    const peersWithRetry = peers.filter((p) =>
-      p.shouldRetryUnavailableCoValues(),
-    );
-
-    if (peersWithRetry.length > 0) {
-      // We want to exit early if the coValue becomes available in between the retries
-      await Promise.race([
-        this.getCoValue(), // TODO: avoid leaving hanging promise?
-        runWithRetry(
-          () => loadAttempt(peersWithRetry),
-          CO_VALUE_LOADING_CONFIG.MAX_RETRIES,
-        ),
-      ]);
+    for (const peer of peers) {
+      this.peersToRequestFrom.set(peer.id, peer);
     }
+
+    this.loadFromNextPeer();
+  }
+
+  private loadFromNextPeer() {
+    if (this.isLoading() || this.peersToRequestFrom.size === 0) {
+      return;
+    }
+
+    // TODO: Load the peers with the same priority in parallel
+    let selectedPeer: PeerState | undefined;
+
+    for (const peer of this.peersToRequestFrom.values()) {
+      const currentState = this.peers.get(peer.id);
+
+      switch (currentState?.type) {
+        case "available":
+        case "errored":
+        case "pending":
+          this.peersToRequestFrom.delete(peer.id);
+          continue;
+
+        case "unavailable":
+        case "unknown":
+        default:
+          if (
+            !peer.shouldRetryUnavailableCoValues() &&
+            currentState?.type === "unavailable"
+          ) {
+            this.peersToRequestFrom.delete(peer.id);
+          } else if (
+            !selectedPeer ||
+            (peer.priority ?? 0) > (selectedPeer.priority ?? 0)
+          ) {
+            selectedPeer = peer;
+          }
+          break;
+      }
+    }
+
+    if (!selectedPeer) {
+      return;
+    }
+
+    this.peersToRequestFrom.delete(selectedPeer.id);
+    this.peers.set(selectedPeer.id, { type: "pending" });
+
+    const knownState = this.core
+      ? this.core.knownState()
+      : emptyKnownState(this.id);
+
+    selectedPeer
+      .pushOutgoingMessage({
+        action: "load",
+        ...knownState,
+      })
+      .catch((err) => {
+        logger.warn(`Failed to push load message to peer ${selectedPeer.id}`, {
+          err,
+        });
+      });
   }
 
   markNotFoundInPeer(peerId: PeerID) {
@@ -149,6 +162,10 @@ export class CoValueState {
   }
 
   isUnknown() {
+    if (this.core) {
+      return false;
+    }
+
     return this.peers.values().every((p) => p.type === "unknown");
   }
 
@@ -157,6 +174,10 @@ export class CoValueState {
   }
 
   isDefinitelyUnavailable() {
+    if (this.core) {
+      return false;
+    }
+
     return (
       this.peers
         .values()
