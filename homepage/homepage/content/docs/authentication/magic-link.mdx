@@ -1,9 +1,165 @@
 export const metadata = { title: "Magic Link Authentication" };
 
+import { CodeGroup, ContentByFramework } from "@/components/forMdx";
+
 # Magic Link Authentication
 
 Magic Links can be used to transfer authentication from one device to another, for example using a QR code.
 
-We refer to the device that is already authenticated as the **provider** and the one that wants to authenticate as the **consumer**. In our examples, **desktop** is the device that displays the QR code, and **mobile** is the device that scans it.
+## How it works
 
-Transferring authentication is supported in both directions: the **desktop** device can act as the provider while the **mobile** device acts as the consumer and vice versa.
+Magic Link auth supports two flows, where "desktop" refers to the device that displays the QR code, and "mobile" refers to the device that scans it:
+
+- **Mobile to Desktop**: Mobile scans the QR code to authenticate the desktop device
+- **Desktop to Mobile**: Mobile scans the QR to authenticate itself
+
+Once the QR code has been scanned, the already-authenticated device (provider) shows a 6-digit code that the user should enter on the device trying to authenticate (consumer).
+
+If the code is correct, the provider reveals the secret, and the consumer uses it to authenticate.
+
+## Key benefits
+
+- **Portable**: Apps using passkey auth for example can use magic links to authenticate devices where the passkey is not available
+- **User-friendly**: Users familiar with WhatsApp, Discord, etc. already know how this works
+
+## Implementation
+
+### Mobile to Desktop
+
+We start by creating a link on the **desktop** device using `useCreateMagicLinkAuth` in `"authenticate-current-device"` mode:
+
+<ContentByFramework framework="react">
+<CodeGroup>
+```tsx twoslash
+import { useCreateMagicLinkAuth } from "jazz-react";
+import { useState } from "react";
+
+// ---cut---
+function CreateMagicLinkAsConsumer() {
+  const [link, setLink] = useState<string | undefined>();
+
+  const { status, createLink, sendConfirmationCode } = useCreateMagicLinkAuth({
+    mode: "authenticate-current-device",
+  });
+
+  // Handle depending on status...
+}
+```
+</CodeGroup>
+
+For each `status` value, we should display:
+
+- `idle`: A button to call `createLink`
+- `waitingForProvider`: The link as a QR code, e.g. using [`qrcode`](https://www.npmjs.com/package/qrcode)
+- `confirmationCodeRequired`: Confirmation code input calling `sendConfirmationCode` on submit
+- `confirmationCodePending`: A loading indicator or message
+- `authorized`: A success message – we're logged in!
+- `confirmationCodeIncorrect`: An "incorrect code" message
+- `error`: A "something went wrong" message
+- `cancelled`: A "login cancelled" message
+
+On the **mobile** side, we need to host a page at `/magic-link-handler-provider`, or provide an alternative handler path to the hooks using the `providerHandlerPath` option.
+
+This is the page we'll land on when the QR code is scanned, and can handle the magic link using the `useHandleMagicLinkAuth` hook in `"share-local-credentials"` mode:
+
+<CodeGroup>
+```tsx twoslash
+import { useHandleMagicLinkAuth } from "jazz-react";
+
+// ---cut---
+function HandleMagicLinkAsProvider() {
+  const { status, confirmationCode } = useHandleMagicLinkAuth({
+    mode: "share-local-credentials",
+  });
+
+  // Handle depending on status...
+}
+```
+</CodeGroup>
+
+For each `status` value, we should display:
+
+- `idle`: A loading indicator
+- `confirmationCodeGenerated`: The confirmation code
+- `authorized`: A success message – the device has been logged in!
+- `confirmationCodeIncorrect`: An "incorrect code" message
+- `error`: A "something went wrong" message
+- `cancelled`: A "login cancelled" message
+
+### Desktop to Mobile
+
+This is similar to the **Mobile to Desktop** flow, but the roles are reversed: `useCreateMagicLinkAuth` on the **desktop** device should be used in `"share-local-credentials"` mode, and `useHandleMagicLinkAuth` on the **mobile** device should be used in `"authenticate-current-device"` mode.
+
+On the **desktop** device:
+
+<CodeGroup>
+```tsx twoslash
+import { useCreateMagicLinkAuth } from "jazz-react";
+
+// ---cut---
+function CreateMagicLinkAsProvider() {
+  const { status, confirmationCode } = useCreateMagicLinkAuth({
+    mode: "share-local-credentials",
+  });
+
+  // Handle depending on status...
+}
+```
+</CodeGroup>
+
+For each `status` value, we should display:
+
+- `idle`: A button to call `createLink`
+- `waitingForConsumer`: The link as a QR code, e.g. using [`qrcode`](https://www.npmjs.com/package/qrcode)
+- `confirmationCodeGenerated`: The confirmation code
+- `confirmationCodeCorrect`: A success message
+- `authorized`: A success message – the device has been logged in!
+- `confirmationCodeIncorrect`: An "incorrect code" message
+- `error`: A "something went wrong" message
+- `cancelled`: A "login cancelled" message
+
+On the **mobile** device we need to host a page at `/magic-link-handler-consumer`, or provide an alternative handler path to the hooks using the `consumerHandlerPath` option.
+
+This is the page we'll land on when the QR code is scanned, and can handle the magic link using the `useHandleMagicLinkAuth` hook in `"authenticate-current-device"` mode:
+
+<CodeGroup>
+```tsx twoslash
+import { useHandleMagicLinkAuth } from "jazz-react";
+
+// ---cut---
+function HandleMagicLinkAsConsumer() {
+  const { status, sendConfirmationCode } = useHandleMagicLinkAuth({
+    mode: "authenticate-current-device",
+  });
+
+  // Handle depending on status...
+}
+```
+</CodeGroup>
+
+For each `status` value, we should display:
+
+- `idle`: A loading indicator
+- `confirmationCodeRequired`: Confirmation code input calling `sendConfirmationCode` on submit
+- `confirmationCodePending`: A loading indicator or message
+- `authorized`: A success message – we're logged in!
+- `confirmationCodeIncorrect`: An "incorrect code" message
+- `error`: A "something went wrong" message
+
+</ContentByFramework>
+
+## Examples
+
+You can try Magic Link authentication using our [magic link example](https://magic-link.jazz.tools/).
+
+## When to use Magic Links
+
+Magic Link authentication is ideal when:
+
+- You need a fallback authentication method alongside passkeys
+- Your app is designed to be used on mobile devices
+
+## Limitations and considerations
+
+- **No revocation**: Once the secret has been shared with the consumer device, it cannot be revoked
+- **Requires a camera**: The Magic Link handler needs to have a camera to scan the QR code, or another way to securely receive and load the link
