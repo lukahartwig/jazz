@@ -10,7 +10,13 @@ export interface MagicLinkAuthOptions {
    * @returns The generated confirmation code.
    */
   confirmationCodeFn: (crypto: CryptoProvider) => string | Promise<string>;
+  /**
+   * The path to the consumer handler.
+   */
   consumerHandlerPath: string;
+  /**
+   * The path to the provider handler.
+   */
   providerHandlerPath: string;
 }
 
