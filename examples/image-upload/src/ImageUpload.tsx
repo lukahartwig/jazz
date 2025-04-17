@@ -81,16 +81,24 @@ export default function ImageUpload() {
   }
 
   return (
-    <div className="flex flex-col gap-3">
-      <label htmlFor="image">Image</label>
-      <input
-        id="image"
-        name="image"
-        ref={inputRef}
-        type="file"
-        accept="image/png, image/jpeg, image/gif, image/bmp"
-        onChange={onImageChange}
-      />
+    <div className="flex flex-col gap-3 justify-center items-center">
+      <form className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
+        <label
+          className="block text-gray-700 text-sm font-bold mb-2"
+          htmlFor="image"
+        >
+          Image
+        </label>
+        <input
+          id="image"
+          name="image"
+          ref={inputRef}
+          type="file"
+          accept="image/png, image/jpeg, image/gif, image/bmp"
+          onChange={onImageChange}
+          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+        />
+      </form>
     </div>
   );
 }
