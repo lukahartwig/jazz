@@ -11,7 +11,7 @@ interface CreateMagicLinkAsConsumerProps {
 export function CreateMagicLinkAsConsumer({
   onLoggedIn,
 }: CreateMagicLinkAsConsumerProps) {
-  const [link, setLink] = useState<string | null>(null);
+  const [link, setLink] = useState<string | undefined>();
 
   const { status, createLink, sendConfirmationCode } = useCreateMagicLinkAuth({
     mode: "authenticate-current-device",
@@ -56,6 +56,10 @@ export function CreateMagicLinkAsConsumer({
     return <p>Confirming...</p>;
   }
 
+  if (status === "authorized") {
+    return <p>Logged in!</p>;
+  }
+
   if (status === "confirmationCodeIncorrect") {
     return (
       <div className="flex flex-col items-center gap-4">
@@ -66,10 +70,6 @@ export function CreateMagicLinkAsConsumer({
         </Button>
       </div>
     );
-  }
-
-  if (status === "authorized") {
-    return <p>Logged in!</p>;
   }
 
   if (status === "error") {

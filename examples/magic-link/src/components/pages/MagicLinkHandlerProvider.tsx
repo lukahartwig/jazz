@@ -33,6 +33,14 @@ function MagicLinkHandlerProvider() {
     );
   }
 
+  if (status === "authorized") {
+    return (
+      <BackToHomepageContainer>
+        Your device has been logged in!
+      </BackToHomepageContainer>
+    );
+  }
+
   if (status === "confirmationCodeIncorrect") {
     return (
       <div className="flex flex-col gap-4">
@@ -42,18 +50,14 @@ function MagicLinkHandlerProvider() {
     );
   }
 
-  if (status === "authorized") {
-    return (
-      <BackToHomepageContainer>
-        Your device has been logged in!
-      </BackToHomepageContainer>
-    );
-  }
-
   if (status === "error") {
     return (
       <BackToHomepageContainer>Something went wrong</BackToHomepageContainer>
     );
+  }
+
+  if (status === "cancelled") {
+    return <BackToHomepageContainer>Login cancelled</BackToHomepageContainer>;
   }
 
   return null;

@@ -4,7 +4,7 @@ import { Button } from "./Button";
 import { QRCodeContainer } from "./QRCodeContainer";
 
 export function CreateMagicLinkAsProvider() {
-  const [link, setLink] = useState<string | null>(null);
+  const [link, setLink] = useState<string | undefined>();
 
   const { status, createLink, confirmationCode } = useCreateMagicLinkAuth({
     mode: "share-local-credentials",
@@ -47,6 +47,8 @@ export function CreateMagicLinkAsProvider() {
     return <p>Confirmed! Logging in...</p>;
   }
 
+  if (status === "authorized") return <p>Your device has been logged in!</p>;
+
   if (status === "confirmationCodeIncorrect") {
     return (
       <div className="flex flex-col gap-4">
@@ -59,14 +61,24 @@ export function CreateMagicLinkAsProvider() {
     );
   }
 
-  if (status === "authorized") return <p>Your device has been logged in!</p>;
-
   if (status === "error") {
     return (
       <div className="flex flex-col gap-4">
         <p>Something went wrong</p>
 
         <button onClick={onCreateLink}>Try again</button>
+      </div>
+    );
+  }
+
+  if (status === "cancelled") {
+    return (
+      <div className="flex flex-col gap-4">
+        <p>Login cancelled</p>
+
+        <Button color="primary" onClick={onCreateLink}>
+          Start again
+        </Button>
       </div>
     );
   }

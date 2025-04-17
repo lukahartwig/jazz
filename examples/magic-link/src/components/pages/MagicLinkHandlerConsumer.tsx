@@ -43,6 +43,10 @@ function MagicLinkHandlerConsumer() {
     return <p>Confirming...</p>;
   }
 
+  if (status === "authorized") {
+    return <BackToHomepageContainer>Logged in!</BackToHomepageContainer>;
+  }
+
   if (status === "confirmationCodeIncorrect") {
     return (
       <div className="flex flex-col gap-4">
@@ -52,14 +56,14 @@ function MagicLinkHandlerConsumer() {
     );
   }
 
-  if (status === "authorized") {
-    return <BackToHomepageContainer>Logged in!</BackToHomepageContainer>;
-  }
-
   if (status === "error") {
     return (
       <BackToHomepageContainer>Something went wrong</BackToHomepageContainer>
     );
+  }
+
+  if (status === "cancelled") {
+    return <BackToHomepageContainer>Login cancelled</BackToHomepageContainer>;
   }
 
   return null;
