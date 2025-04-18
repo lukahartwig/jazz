@@ -238,6 +238,9 @@ importers:
       hast-util-to-string:
         specifier: ^3.0.1
         version: 3.0.1
+      jazz-auth-cloudauth:
+        specifier: link:../../packages/jazz-auth-cloudauth
+        version: link:../../packages/jazz-auth-cloudauth
       jazz-browser:
         specifier: link:../../packages/jazz-browser
         version: link:../../packages/jazz-browser
@@ -256,6 +259,9 @@ importers:
       jazz-react-auth-clerk:
         specifier: link:../../packages/jazz-react-auth-clerk
         version: link:../../packages/jazz-react-auth-clerk
+      jazz-react-auth-cloudauth:
+        specifier: link:../../packages/jazz-react-auth-cloudauth
+        version: link:../../packages/jazz-react-auth-cloudauth
       jazz-react-native:
         specifier: link:../../packages/jazz-react-native
         version: link:../../packages/jazz-react-native

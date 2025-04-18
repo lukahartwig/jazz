@@ -1,0 +1,216 @@
+export const metadata = { title: "Jazz Cloud Authentication" };
+
+import { CodeGroup, ContentByFramework } from "@/components/forMdx";
+
+# Jazz Cloud Authentication
+
+The [Jazz Cloud](/cloud) platform provides a comprehensive solution for user management. This integration allows users to sign up or sign in through your Jazz application, using authentication infrastructure managed by us.
+
+## How it works
+
+### Developer
+
+To integrate Jazz Cloud Authentication into your application, follow these steps:
+
+1. Register your application in the [Jazz Cloud Dashboard](https://dashboard.jazz.tools/).
+  - The application will be assigned an authentication URL for every environment, including your application's development environment and an optional production environment.
+2. Add the authentication client to your application.
+3. Implement the UI for your application's supported authentication methods.
+
+Emails sent to users when they sign up, reset their password, or verify their email address can be customised in the Jazz Cloud Dashboard to match your application's branding and messaging.
+
+### User
+
+When using Jazz Cloud Authentication, users:
+
+1. Sign up or sign in through your Jazz application.
+2. Jazz Cloud securely stores the user's account keys and provides a seamless authentication experience.
+3. When logging in, Jazz retrieves the user's account keys from Jazz Cloud.
+4. Users can work offline with full Jazz functionality.
+
+This authentication method is not fully local-first, as it relies on a connection to Jazz Cloud to authenticate and retrieve account keys.
+
+## Key benefits
+
+- **Multi-tenancy**: Authentication separated across application environments.
+- **Developer-friendly**: Easy integration and setup.
+- **Methods supported**: Email & password and OAuth providers supported out-of-the-box.
+- **User-friendly**: Standard authentication flows users already know.
+
+## Implementation
+
+<ContentByFramework framework="vanilla">
+We offer Jazz Cloud Authentication integration through our package: [`jazz-auth-cloudauth`](https://npmjs.com/package/jazz-auth-cloudauth).
+
+<CodeGroup>
+```tsx twoslash
+const authUrl = "https://auth.jazz.tools/exampleApiKey/api/auth/";
+const userName = "Firstname Lastname";
+const userEmail = "user@example.com";
+const userPassword = "12345678";
+const userNewPassword = "asdfghjk";
+const userPasswordResetToken = "examplePasswordResetToken";
+const authenticate = async () => {};
+import { AuthSecretStorage } from "jazz-tools";
+const authSecretStorage = new AuthSecretStorage();
+// ---cut---
+import {
+  CloudAuth,
+  newAuthClient,
+} from "jazz-auth-cloudauth";
+
+// …
+
+const authClient = newAuthClient(authUrl);
+const auth = new CloudAuth(authenticate, authSecretStorage, authClient);
+
+// …
+
+// Signing up with email & password
+await authClient.signUp.email({
+  name: userName,
+  email: userEmail,
+  password: userPassword,
+}, {
+  onSuccess: async () => {
+    await auth.signIn();
+  }
+});
+
+// …
+
+// Signing in with email & password
+await authClient.signIn.email({
+  email: userEmail,
+  password: userPassword
+}, {
+  onSuccess: async () => {
+    await auth.logIn();
+  }
+});
+
+// …
+
+// Sending password reset email
+await authClient.forgetPassword({
+  email: userEmail,
+  redirectTo: "/reset-password"
+});
+
+// …
+
+// Resetting password
+await authClient.resetPassword({
+  newPassword: userNewPassword,
+  token: userPasswordResetToken
+});
+
+// …
+
+// Sending verification email
+await authClient.sendVerificationEmail({
+  email: userEmail,
+  callbackURL: "/"
+});
+```
+
+</CodeGroup>
+</ContentByFramework>
+
+<ContentByFramework framework="react">
+We offer Jazz Cloud Authentication integration through our package: [`jazz-react-auth-cloudauth`](https://npmjs.com/package/jazz-react-auth-cloudauth).
+
+The package provides a `useCloudAuth` hook for managing authentication state.
+
+<CodeGroup>
+```tsx twoslash
+import * as React from "react";
+const authUrl = "https://auth.jazz.tools/exampleApiKey/api/auth/";
+const userName = "Firstname Lastname";
+const userEmail = "user@example.com";
+const userPassword = "12345678";
+const userNewPassword = "asdfghjk";
+const userPasswordResetToken = "examplePasswordResetToken";
+// ---cut---
+import { useCloudAuth } from "jazz-react-auth-cloudauth";
+
+// …
+
+const auth = useCloudAuth(authUrl);
+
+// …
+
+// Signing up with email & password
+await auth.authClient.signUp.email({
+  name: userName,
+  email: userEmail,
+  password: userPassword,
+}, {
+  onSuccess: async () => {
+    await auth.signIn();
+  }
+});
+
+// …
+
+// Signing in with email & password
+await auth.authClient.signIn.email({
+  email: userEmail,
+  password: userPassword
+}, {
+  onSuccess: async () => {
+    await auth.logIn();
+  }
+});
+
+// …
+
+// Sending password reset email
+await auth.authClient.forgetPassword({
+  email: userEmail,
+  redirectTo: "/reset-password"
+});
+
+// …
+
+// Resetting password
+await auth.authClient.resetPassword({
+  newPassword: userNewPassword,
+  token: userPasswordResetToken
+});
+
+// …
+
+// Sending verification email
+await auth.authClient.sendVerificationEmail({
+  email: userEmail,
+  callbackURL: "/"
+});
+```
+
+</CodeGroup>
+</ContentByFramework>
+
+## Examples
+
+You can explore Jazz applications using Jazz Cloud Authentication integration in our [example projects](/docs/examples).
+
+## When to use Jazz Cloud
+
+Jazz Cloud Authentication is appropriate when:
+
+- You want a traditional & seamless authentication experience for your users.
+- You do not want to manage user accounts yourself.
+- You want multi-tenant authentication across application environments.
+- Your application would benefit from email & password authentication, with password resets and email verification.
+- Your application would benefit from social sign-on, such as through Google or GitHub.
+- You want to avoid users managing their own account keys.
+
+## Limitations and considerations
+
+- **Online requirement**: Internet connectivity is required when authenticating.
+- **Platform support**: Jazz Cloud Authentication is not supported in applications using React Native.
+
+## Additional resources
+
+- [Better Auth documentation](https://www.better-auth.com/docs/introduction)

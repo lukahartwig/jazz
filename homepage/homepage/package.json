@@ -45,6 +45,8 @@
     "jazz-react-auth-clerk": "link:../../packages/jazz-react-auth-clerk",
     "jazz-react-native": "link:../../packages/jazz-react-native",
     "jazz-tools": "link:../../packages/jazz-tools",
+    "jazz-react-auth-cloudauth": "link:../../packages/jazz-react-auth-cloudauth",
+    "jazz-auth-cloudauth": "link:../../packages/jazz-auth-cloudauth",
     "lucide-react": "^0.436.0",
     "mdast-util-from-markdown": "^2.0.0",
     "mdast-util-mdx": "^3.0.0",

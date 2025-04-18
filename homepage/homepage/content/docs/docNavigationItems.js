@@ -249,6 +249,22 @@ export const docNavigationItems = [
         done: 100,
       },
       {
+        name: "Jazz Cloud",
+        href: "/docs/authentication/jazz-cloud",
+        done: {
+          react: 100,
+          vanilla: 100,
+        },
+      },
+      {
+        name: "Self-Hosting",
+        href: "/docs/authentication/self-hosting",
+        done: {
+          react: 100,
+          vanilla: 100,
+        },
+      },
+      {
         name: "Writing your own",
         href: "/docs/authentication/writing-your-own",
         done: 0,

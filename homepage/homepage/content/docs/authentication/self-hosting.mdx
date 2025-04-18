@@ -1,0 +1,209 @@
+export const metadata = { title: "Self-Hosted Authentication" };
+
+import { CodeGroup, ContentByFramework } from "@/components/forMdx";
+
+# Self-Hosted Authentication
+
+Jazz can be integrated with [Better Auth](https://www.better-auth.com/) to provide authentication methods to users. This integration allows users to sign up or sign in through your Jazz application, using authentication infrastructure managed by you.
+
+## How it works
+
+When using self-hosted authentication, users:
+
+1. Sign up or sign in through your Jazz application.
+2. Your application's authentication server stores the user's account keys and provides a traditional authentication experience.
+3. When logging in, Jazz retrieves the user's account keys from your authentication server.
+4. Users can work offline with full Jazz functionality.
+
+This authentication method is not fully local-first, as it relies on a connection to your authentication server to authenticate and retrieve account keys.
+
+## Key benefits
+
+- **Hosted on your infrastructure**: Secret management and control over user data becomes your responsibility.
+- **Many authentication methods**: Adding support for email & password and OAuth providers is straightforward.
+- **User-friendly**: Standard authentication flows users already know.
+
+## Implementation
+
+<ContentByFramework framework="vanilla">
+We offer Better Auth integration through our package: [`jazz-auth-cloudauth`](https://npmjs.com/package/jazz-auth-cloudauth).
+
+<CodeGroup>
+```tsx twoslash
+const authUrl = "http://localhost:3000/api/auth/";
+const userName = "Firstname Lastname";
+const userEmail = "user@example.com";
+const userPassword = "12345678";
+const userNewPassword = "asdfghjk";
+const userPasswordResetToken = "examplePasswordResetToken";
+const authenticate = async () => {};
+import { AuthSecretStorage } from "jazz-tools";
+const authSecretStorage = new AuthSecretStorage();
+// ---cut---
+import {
+  CloudAuth,
+  newAuthClient,
+} from "jazz-auth-cloudauth";
+
+// …
+
+const authClient = newAuthClient(authUrl);
+const auth = new CloudAuth(authenticate, authSecretStorage, authClient);
+
+// …
+
+// Signing up with email & password
+await authClient.signUp.email({
+  name: userName,
+  email: userEmail,
+  password: userPassword,
+}, {
+  onSuccess: async () => {
+    await auth.signIn();
+  }
+});
+
+// …
+
+// Signing in with email & password
+await authClient.signIn.email({
+  email: userEmail,
+  password: userPassword
+}, {
+  onSuccess: async () => {
+    await auth.logIn();
+  }
+});
+
+// …
+
+// Sending password reset email
+await authClient.forgetPassword({
+  email: userEmail,
+  redirectTo: "/reset-password"
+});
+
+// …
+
+// Resetting password
+await authClient.resetPassword({
+  newPassword: userNewPassword,
+  token: userPasswordResetToken
+});
+
+// …
+
+// Sending verification email
+await authClient.sendVerificationEmail({
+  email: userEmail,
+  callbackURL: "/"
+});
+```
+
+</CodeGroup>
+</ContentByFramework>
+
+<ContentByFramework framework="react">
+We offer Better Auth integration through our package: [`jazz-react-auth-cloudauth`](https://npmjs.com/package/jazz-react-auth-cloudauth).
+
+The package provides a `useCloudAuth` hook for managing authentication state.
+
+<CodeGroup>
+```tsx twoslash
+import * as React from "react";
+const authUrl = "https://auth.jazz.tools/exampleApiKey/api/auth/";
+const userName = "Firstname Lastname";
+const userEmail = "user@example.com";
+const userPassword = "12345678";
+const userNewPassword = "asdfghjk";
+const userPasswordResetToken = "examplePasswordResetToken";
+// ---cut---
+import { useCloudAuth } from "jazz-react-auth-cloudauth";
+
+// …
+
+const auth = useCloudAuth(authUrl);
+
+// …
+
+// Signing up with email & password
+await auth.authClient.signUp.email({
+  name: userName,
+  email: userEmail,
+  password: userPassword,
+}, {
+  onSuccess: async () => {
+    await auth.signIn();
+  }
+});
+
+// …
+
+// Signing in with email & password
+await auth.authClient.signIn.email({
+  email: userEmail,
+  password: userPassword
+}, {
+  onSuccess: async () => {
+    await auth.logIn();
+  }
+});
+
+// …
+
+// Sending password reset email
+await auth.authClient.forgetPassword({
+  email: userEmail,
+  redirectTo: "/reset-password"
+});
+
+// …
+
+// Resetting password
+await auth.authClient.resetPassword({
+  newPassword: userNewPassword,
+  token: userPasswordResetToken
+});
+
+// …
+
+// Sending verification email
+await auth.authClient.sendVerificationEmail({
+  email: userEmail,
+  callbackURL: "/"
+});
+```
+
+</CodeGroup>
+</ContentByFramework>
+
+{/* <ContentByFramework framework="react-native-expo">
+  See [the Better Auth documentation on adding Expo support to your client & server](https://www.better-auth.com/docs/integrations/expo).
+</ContentByFramework> */}
+
+## Examples
+
+You can explore Jazz applications using self-hosted authentication in our [example projects](/docs/examples).
+
+## When to use self-hosted authentication
+
+Self-hosted authentication is appropriate when:
+
+- You want a traditional & seamless authentication experience for your users.
+- You want control over your application's authentication infrastructure.
+- Your application would benefit from email & password authentication, with password resets and email verification.
+- Your application would benefit from social sign-on, such as through Google or GitHub.
+- You want to avoid users managing their own account keys.
+- You want to configure your authentication server's hooks, database, and methods.
+
+## Limitations and considerations
+
+- **Online requirement**: Internet connectivity is required when authenticating.
+- **Third-party dependency**: Your authentication server will depend on the Better Auth library.
+{/* - **Platform support**: Adding support for Expo applications is your responsibility. */}
+- **Platform support**: Better Auth integration is not supported in applications using React Native.
+- **Configuration**: You will need to configure your authentication methods, server framework, and database.
+
+## Additional resources
+
+- [Better Auth documentation](https://www.better-auth.com/docs/introduction)
