@@ -1,37 +1,110 @@
 import { Organization, Request } from "@/schema";
 import { useAccount } from "jazz-react";
-import { useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 interface RequestButtonProps {
   organization: Organization;
 }
 
 export function RequestButton({ organization }: RequestButtonProps) {
-  const { me } = useAccount();
-  console.log(organization);
+  const { me } = useAccount({
+    resolve: { root: { requests: { requests: true } } },
+  });
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [hasRequested, setHasRequested] = useState(false);
+
+  // Check if user has already requested access
+  useEffect(() => {
+    if (me && organization.requests) {
+      const userRequest = Object.values(organization.requests).find(
+        (request) => request?.account?.id === me.id,
+      );
+      setHasRequested(!!userRequest);
+    }
+  }, [me, organization.requests]);
+
   const requestAccess = useCallback(() => {
-    if (!me?.root?.requests?.requests) return;
+    console.log("Request button clicked");
+    console.log("Me:", me);
+    console.log("Organization:", organization);
+    console.log("Organization requests:", organization.requests);
+    console.log("Me root requests:", me?.root?.requests);
 
-    const request = Request.create(
-      {
-        account: me,
-        organization,
-        status: "pending",
-        requestedAt: new Date(),
-      },
-      { owner: me },
-    );
+    if (!me) {
+      setError("You must be logged in to request access");
+      return;
+    }
 
-    // Add to global requests
-    me.root.requests.requests[request.id] = request;
+    if (!me.root?.requests?.requests) {
+      setError("Could not access requests container");
+      return;
+    }
 
-    // Add to organization Requests
-    if (organization.requests) {
-      organization.requests[request.id] = request;
+    if (!organization._owner) {
+      setError("Organization has no owner");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      console.log("Creating request...");
+      // Create the request with the organization's owner as the owner
+      const request = Request.create(
+        {
+          account: me,
+          organization,
+          status: "pending",
+          requestedAt: new Date(),
+        },
+        { owner: organization._owner },
+      );
+      console.log("Request created:", request);
+
+      // Add to organization's requests
+      if (organization.requests) {
+        console.log("Adding to organization requests...");
+        organization.requests[request.id] = request;
+        console.log("Organization requests after add:", organization.requests);
+      } else {
+        console.log("Organization has no requests container");
+      }
+
+      // Add to global requests
+      console.log("Adding to global requests...");
+      me.root.requests.requests[request.id] = request;
+      console.log("Global requests after add:", me.root.requests.requests);
+
+      setHasRequested(true);
+      setError(null);
+    } catch (err) {
+      console.error("Error creating request:", err);
+      setError(
+        `Failed to create request: ${err instanceof Error ? err.message : "Unknown error"}`,
+      );
+    } finally {
+      setIsLoading(false);
     }
   }, [me, organization]);
 
   return (
-    <button onClick={requestAccess}>Request Invite to Organization</button>
+    <div>
+      <button
+        onClick={requestAccess}
+        disabled={isLoading || hasRequested}
+        className={`px-3 py-1 ${
+          isLoading || hasRequested
+            ? "bg-gray-400 cursor-not-allowed"
+            : "bg-blue-500 hover:bg-blue-600"
+        } text-white rounded`}
+      >
+        {isLoading
+          ? "Creating request..."
+          : hasRequested
+            ? "Invite requested"
+            : "Request Invite to Organization"}
+      </button>
+      {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
+    </div>
   );
 }

@@ -131,6 +131,15 @@ export class JazzAccount extends Account {
       requestsGroup.addMember("everyone", "writer");
       requestsGroup.extend(adminsGroup);
 
+      // Initialize the requests container
+      const requests = RequestsToJoin.create(
+        {
+          writeOnlyInvite: "",
+          requests: RequestsList.create({}, { owner: requestsGroup }),
+        },
+        { owner: requestsGroup },
+      );
+
       const organizations = ListOfOrganizations.create(
         [
           Organization.create(
@@ -157,18 +166,11 @@ export class JazzAccount extends Account {
         { owner: this },
       );
 
-      const requestsToJoin = RequestsToJoin.create(
-        {
-          writeOnlyInvite: "",
-          requests: RequestsList.create({}, { owner: requestsGroup }),
-        },
-        { owner: requestsGroup },
-      );
-
       this.root = JazzAccountRoot.create(
         {
-          draftOrganization,
           organizations,
+          draftOrganization,
+          requests,
         },
         { owner: this },
       );

@@ -32,7 +32,7 @@ export function Requests({ organization }: RequestsProps) {
       request.status = approved ? "approved" : "rejected";
 
       if (approved) {
-        // Add the requester as a reader to the organization's group
+        // Add the requester as a writer to the organization's group
         const organizationGroup = organization._owner.castAs(Group);
         const requester = request._owner.castAs(Account);
 
@@ -49,7 +49,7 @@ export function Requests({ organization }: RequestsProps) {
     [organization],
   );
 
-  // Filter requests for this organization
+  // Get all requests for this organization
   const organizationRequests = Object.entries(organization.requests || {})
     .map(([_, request]) => request)
     .filter(

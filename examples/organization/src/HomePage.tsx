@@ -21,9 +21,12 @@ export function HomePage() {
         </div>
         <div className="divide-y">
           {me.root.organizations.length > 0 ? (
-            me.root.organizations.map((project) =>
+            me.root.organizations.map((project, index) =>
               project ? (
-                <div className="flex justify-content: space-evenly">
+                <div
+                  className="flex justify-content: space-evenly"
+                  key={`project-${index}-${project.name}`}
+                >
                   <a
                     key={project.id}
                     className="px-4 py-5 sm:px-6 font-medium block"
