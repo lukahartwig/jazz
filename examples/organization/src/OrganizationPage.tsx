@@ -6,6 +6,7 @@ import { CreateProject } from "./components/CreateProject.tsx";
 import { Heading } from "./components/Heading.tsx";
 import { InviteLink } from "./components/InviteLink.tsx";
 import { OrganizationMembers } from "./components/OrganizationMembers.tsx";
+import { Requests } from "./components/Requests.tsx";
 import { Organization } from "./schema.ts";
 
 export function OrganizationPage() {
@@ -18,6 +19,9 @@ export function OrganizationPage() {
 
   if (!organization) return <p>Loading organization...</p>;
 
+  // Get the admin role from the main group
+  const isAdmin = organization.mainGroup?.myRole() === "admin";
+
   return (
     <Layout>
       <div className="grid gap-8">
@@ -28,9 +32,7 @@ export function OrganizationPage() {
             <div className="flex justify-between items-center">
               <h2>Members</h2>
 
-              {organization._owner?.myRole() === "admin" && (
-                <InviteLink organization={organization} />
-              )}
+              {isAdmin && <InviteLink organization={organization} />}
             </div>
           </div>
           <div className="divide-y">
@@ -65,7 +67,14 @@ export function OrganizationPage() {
           </div>
         </div>
 
-        <div></div>
+        {isAdmin && (
+          <div className="rounded-lg border shadow-sm bg-white dark:bg-stone-925">
+            <div className="border-b px-4 py-5 sm:px-6">
+              <h2>Invite Requests</h2>
+              <Requests organization={organization} />
+            </div>
+          </div>
+        )}
       </div>
     </Layout>
   );

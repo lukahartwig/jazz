@@ -2,6 +2,7 @@ import { useAccount } from "jazz-react";
 import { Layout } from "./Layout.tsx";
 import { CreateOrganization } from "./components/CreateOrganization.tsx";
 import { Heading } from "./components/Heading.tsx";
+import { RequestButton } from "./components/RequestInviteButton.tsx";
 
 export function HomePage() {
   const { me } = useAccount({
@@ -22,13 +23,18 @@ export function HomePage() {
           {me.root.organizations.length > 0 ? (
             me.root.organizations.map((project) =>
               project ? (
-                <a
-                  key={project.id}
-                  className="px-4 py-5 sm:px-6 font-medium block"
-                  href={`/#/organizations/${project.id}`}
-                >
-                  <strong>{project.name}</strong>
-                </a>
+                <div className="flex justify-content: space-evenly">
+                  <a
+                    key={project.id}
+                    className="px-4 py-5 sm:px-6 font-medium block"
+                    href={`/#/organizations/${project.id}`}
+                  >
+                    <strong>{project.name}</strong>
+                  </a>
+                  {project.name !== "Your projects" ? (
+                    <RequestButton organization={project} />
+                  ) : null}
+                </div>
               ) : null,
             )
           ) : (
