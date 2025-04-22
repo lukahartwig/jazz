@@ -1,5 +1,6 @@
-import { Organization, Request } from "@/schema";
-import { useAccount } from "jazz-react";
+import { Organization, Request, RequestsList } from "@/schema";
+import { useAccount, useCoState } from "jazz-react";
+import { ID } from "jazz-tools";
 import { useCallback, useEffect, useState } from "react";
 
 interface RequestButtonProps {
@@ -14,21 +15,26 @@ export function RequestButton({ organization }: RequestButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [hasRequested, setHasRequested] = useState(false);
 
+  // Get the organization's requests using useCoState
+  const orgRequests = useCoState(RequestsList, organization.requests?.id, {
+    resolve: true,
+  });
+
   // Check if user has already requested access
   useEffect(() => {
-    if (me && organization.requests) {
-      const userRequest = Object.values(organization.requests).find(
+    if (me && orgRequests) {
+      const userRequest = Object.values(orgRequests).find(
         (request) => request?.account?.id === me.id,
       );
       setHasRequested(!!userRequest);
     }
-  }, [me, organization.requests]);
+  }, [me, orgRequests]);
 
   const requestAccess = useCallback(() => {
     console.log("Request button clicked");
     console.log("Me:", me);
     console.log("Organization:", organization);
-    console.log("Organization requests:", organization.requests);
+    console.log("Organization requests:", orgRequests);
     console.log("Me root requests:", me?.root?.requests);
 
     if (!me) {
@@ -62,17 +68,18 @@ export function RequestButton({ organization }: RequestButtonProps) {
       console.log("Request created:", request);
 
       // Add to organization's requests
-      if (organization.requests) {
+      if (orgRequests) {
         console.log("Adding to organization requests...");
-        organization.requests[request.id] = request;
-        console.log("Organization requests after add:", organization.requests);
+        orgRequests[request.id] = request;
+        console.log("Organization requests after add:", orgRequests);
       } else {
         console.log("Organization has no requests container");
       }
 
       // Add to global requests
       console.log("Adding to global requests...");
-      me.root.requests.requests[request.id] = request;
+      const globalRequests = me.root.requests.requests as RequestsList;
+      globalRequests[request.id] = request;
       console.log("Global requests after add:", me.root.requests.requests);
 
       setHasRequested(true);
@@ -85,14 +92,14 @@ export function RequestButton({ organization }: RequestButtonProps) {
     } finally {
       setIsLoading(false);
     }
-  }, [me, organization]);
+  }, [me, organization, orgRequests]);
 
   return (
     <div>
       <button
         onClick={requestAccess}
         disabled={isLoading || hasRequested}
-        className={`px-3 py-1 ${
+        className={`px-3 py-1 mx-6 ${
           isLoading || hasRequested
             ? "bg-gray-400 cursor-not-allowed"
             : "bg-blue-500 hover:bg-blue-600"

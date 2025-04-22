@@ -24,7 +24,7 @@ export function HomePage() {
             me.root.organizations.map((project, index) =>
               project ? (
                 <div
-                  className="flex justify-content: space-evenly"
+                  className="flex justify-between items-center"
                   key={`project-${index}-${project.name}`}
                 >
                   <a
