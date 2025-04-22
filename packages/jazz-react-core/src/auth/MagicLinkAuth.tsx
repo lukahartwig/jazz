@@ -1,12 +1,12 @@
 import {
   MagicLinkAuth,
-  MagicLinkAuthConsumerOptions,
-  MagicLinkAuthCreateAsConsumer,
-  MagicLinkAuthCreateAsProvider,
-  MagicLinkAuthHandleAsConsumer,
-  MagicLinkAuthHandleAsProvider,
+  MagicLinkAuthAsTargetOptions,
+  MagicLinkAuthCreateAsTarget,
+  MagicLinkAuthCreateAsSource,
+  MagicLinkAuthHandleAsTarget,
+  MagicLinkAuthHandleAsSource,
   MagicLinkAuthOptions,
-  MagicLinkAuthProviderOptions,
+  MagicLinkAuthAsSourceOptions,
 } from "jazz-tools";
 import {
   useCallback,
@@ -19,24 +19,24 @@ import { useAuthSecretStorage, useJazzContext } from "../hooks.js";
 
 const DEFAULT_EXPIRE_IN_MS = 15 * 60 * 1000;
 
-export type UseMagicLinkAuthAsProviderOptions = MagicLinkAuthOptions &
-  MagicLinkAuthProviderOptions;
+export type UseMagicLinkAuthAsSourceOptions = MagicLinkAuthOptions &
+  MagicLinkAuthAsSourceOptions;
 
-export type UseMagicLinkAuthAsConsumerOptions = MagicLinkAuthOptions &
-  MagicLinkAuthConsumerOptions;
+export type UseMagicLinkAuthAsTargetOptions = MagicLinkAuthOptions &
+  MagicLinkAuthAsTargetOptions;
 
-export function useCreateMagicLinkAuthAsProvider(
+export function useCreateMagicLinkAuthAsSource(
   origin: string,
   {
     expireInMs = DEFAULT_EXPIRE_IN_MS,
     ...options
-  }: Partial<UseMagicLinkAuthAsProviderOptions> = {},
+  }: Partial<UseMagicLinkAuthAsSourceOptions> = {},
 ) {
   const context = useJazzContext();
   const authSecretStorage = useAuthSecretStorage();
 
   const magicLinkAuth = useMemo(() => {
-    return new MagicLinkAuthCreateAsProvider(
+    return new MagicLinkAuthCreateAsSource(
       new MagicLinkAuth(
         context.node.crypto,
         context.authenticate,
@@ -63,19 +63,19 @@ export function useCreateMagicLinkAuthAsProvider(
   } as const;
 }
 
-export function useCreateMagicLinkAuthAsConsumer(
+export function useCreateMagicLinkAuthAsTarget(
   origin: string,
   {
     handlerTimeout = 30 * 1000,
     onLoggedIn,
     ...options
-  }: Partial<UseMagicLinkAuthAsConsumerOptions> = {},
+  }: Partial<UseMagicLinkAuthAsTargetOptions> = {},
 ) {
   const context = useJazzContext();
   const authSecretStorage = useAuthSecretStorage();
 
   const magicLinkAuth = useMemo(() => {
-    return new MagicLinkAuthCreateAsConsumer(
+    return new MagicLinkAuthCreateAsTarget(
       new MagicLinkAuth(
         context.node.crypto,
         context.authenticate,
@@ -103,21 +103,21 @@ export function useCreateMagicLinkAuthAsConsumer(
   } as const;
 }
 
-export function useHandleMagicLinkAuthAsConsumer(
+export function useHandleMagicLinkAuthAsTarget(
   origin: string,
   url: string,
   {
     handlerTimeout = 30 * 1000,
     onLoggedIn,
     ...options
-  }: Partial<UseMagicLinkAuthAsConsumerOptions> = {},
+  }: Partial<UseMagicLinkAuthAsTargetOptions> = {},
 ) {
   const context = useJazzContext();
   const authSecretStorage = useAuthSecretStorage();
   const urlRef = useRef<string | undefined>();
 
   const magicLinkAuth = useMemo(() => {
-    return new MagicLinkAuthHandleAsConsumer(
+    return new MagicLinkAuthHandleAsTarget(
       new MagicLinkAuth(
         context.node.crypto,
         context.authenticate,
@@ -153,20 +153,20 @@ export function useHandleMagicLinkAuthAsConsumer(
   } as const;
 }
 
-export function useHandleMagicLinkAuthAsProvider(
+export function useHandleMagicLinkAuthAsSource(
   origin: string,
   url: string,
   {
     expireInMs = DEFAULT_EXPIRE_IN_MS,
     ...options
-  }: Partial<UseMagicLinkAuthAsProviderOptions> = {},
+  }: Partial<UseMagicLinkAuthAsSourceOptions> = {},
 ) {
   const context = useJazzContext();
   const authSecretStorage = useAuthSecretStorage();
   const urlRef = useRef<string | undefined>();
 
   const magicLinkAuth = useMemo(() => {
-    return new MagicLinkAuthHandleAsProvider(
+    return new MagicLinkAuthHandleAsSource(
       new MagicLinkAuth(
         context.node.crypto,
         context.authenticate,

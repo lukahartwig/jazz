@@ -2,20 +2,20 @@ import { useHandleMagicLinkAuth } from "jazz-react";
 import { BackToHomepageContainer } from "../BackToHomepageContainer";
 import { ConfirmationCodeInput } from "../ConfirmationCodeInput";
 
-export default function MagicLinkHandlerConsumerPage() {
+export default function MagicLinkHandlerTargetPage() {
   return (
     <main className="container flex flex-col items-center gap-4 px-4 py-8 text-center">
-      <h1 className="text-xl">Magic Link Auth Consumer Handler</h1>
-      <MagicLinkHandlerConsumer />
+      <h1 className="text-xl">Magic Link Auth Target Handler</h1>
+      <MagicLinkHandlerTarget />
     </main>
   );
 }
 
-function MagicLinkHandlerConsumer() {
+function MagicLinkHandlerTarget() {
   const { status, sendConfirmationCode } = useHandleMagicLinkAuth({
-    mode: "authenticate-current-device",
-    consumerHandlerPath: "/#/magic-link-handler-consumer",
-    providerHandlerPath: "/#/magic-link-handler-provider",
+    as: "target",
+    targetHandlerPath: "/#/magic-link-handler-target",
+    sourceHandlerPath: "/#/magic-link-handler-source",
     onLoggedIn: () => {
       console.log("logged in!");
     },

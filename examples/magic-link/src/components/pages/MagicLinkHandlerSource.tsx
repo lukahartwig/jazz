@@ -1,20 +1,20 @@
 import { useHandleMagicLinkAuth } from "jazz-react";
 import { BackToHomepageContainer } from "../BackToHomepageContainer";
 
-export default function MagicLinkHandlerProviderPage() {
+export default function MagicLinkHandlerSourcePage() {
   return (
     <main className="container flex flex-col items-center gap-4 px-4 py-8 text-center">
-      <h1 className="text-xl">Magic Link Auth Provider Handler</h1>
-      <MagicLinkHandlerProvider />
+      <h1 className="text-xl">Magic Link Auth Source Handler</h1>
+      <MagicLinkHandlerSource />
     </main>
   );
 }
 
-function MagicLinkHandlerProvider() {
+function MagicLinkHandlerSource() {
   const { status, confirmationCode } = useHandleMagicLinkAuth({
-    mode: "share-local-credentials",
-    consumerHandlerPath: "/#/magic-link-handler-consumer",
-    providerHandlerPath: "/#/magic-link-handler-provider",
+    as: "source",
+    targetHandlerPath: "/#/magic-link-handler-target",
+    sourceHandlerPath: "/#/magic-link-handler-source",
   });
 
   if (status === "idle") {

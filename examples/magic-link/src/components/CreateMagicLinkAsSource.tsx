@@ -3,13 +3,13 @@ import { useState } from "react";
 import { Button } from "./Button";
 import { QRCodeContainer } from "./QRCodeContainer";
 
-export function CreateMagicLinkAsProvider() {
+export function CreateMagicLinkAsSource() {
   const [link, setLink] = useState<string | undefined>();
 
   const { status, createLink, confirmationCode } = useCreateMagicLinkAuth({
-    mode: "share-local-credentials",
-    consumerHandlerPath: "/#/magic-link-handler-consumer",
-    providerHandlerPath: "/#/magic-link-handler-provider",
+    as: "source",
+    targetHandlerPath: "/#/magic-link-handler-target",
+    sourceHandlerPath: "/#/magic-link-handler-source",
   });
 
   const onCreateLink = () => createLink().then(setLink);
@@ -22,7 +22,7 @@ export function CreateMagicLinkAsProvider() {
     );
   }
 
-  if (status === "waitingForConsumer") {
+  if (status === "waitingForHandler") {
     return (
       <div className="flex flex-col items-center gap-4">
         <p>Scan QR code to get your mobile device logged in</p>

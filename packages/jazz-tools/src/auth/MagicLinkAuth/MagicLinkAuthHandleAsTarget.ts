@@ -1,40 +1,43 @@
 import { waitForCoValueCondition } from "../../internal.js";
 import { MagicLinkAuth, MagicLinkAuthTransfer } from "./MagicLinkAuth.js";
-import { MagicLinkAuthProviderOptions } from "./types.js";
+import { MagicLinkAuthAsTargetOptions } from "./types.js";
 import { shutdownTransferAccount } from "./utils.js";
 
-export type MagicLinkAuthHandleAsProviderStatus =
+export type MagicLinkAuthHandleAsTargetStatus =
   | "idle"
-  | "confirmationCodeGenerated"
+  | "confirmationCodeRequired"
+  | "confirmationCodePending"
   | "confirmationCodeIncorrect"
   | "authorized"
   | "error"
   | "cancelled";
 
-export class MagicLinkAuthHandleAsProvider {
+export class MagicLinkAuthHandleAsTarget {
   constructor(
     private magicLinkAuth: MagicLinkAuth,
-    options?: MagicLinkAuthProviderOptions,
+    options?: MagicLinkAuthAsTargetOptions,
   ) {
     this.options = { ...defaultOptions, ...options };
   }
 
-  private options: MagicLinkAuthProviderOptions;
+  private options: MagicLinkAuthAsTargetOptions;
   private abortController: AbortController | null = null;
 
   public authState: {
-    status: MagicLinkAuthHandleAsProviderStatus;
-    confirmationCode: string | undefined;
+    status: MagicLinkAuthHandleAsTargetStatus;
+    sendConfirmationCode: null | ((code: string) => void);
   } = {
     status: "idle",
-    confirmationCode: undefined,
+    sendConfirmationCode: null,
   };
 
-  private set status(status: MagicLinkAuthHandleAsProviderStatus) {
+  private set status(status: MagicLinkAuthHandleAsTargetStatus) {
     this.authState = { ...this.authState, status };
   }
-  private set confirmationCode(confirmationCode: string | undefined) {
-    this.authState = { ...this.authState, confirmationCode };
+  private set sendConfirmationCode(sendConfirmationCode:
+    | null
+    | ((code: string) => void)) {
+    this.authState = { ...this.authState, sendConfirmationCode };
   }
 
   public async handleFlow(url: string) {
@@ -44,42 +47,38 @@ export class MagicLinkAuthHandleAsProvider {
     let transfer: MagicLinkAuthTransfer | undefined;
 
     try {
-      transfer = await this.magicLinkAuth.acceptTransferUrl(url, "provider");
+      transfer = await this.magicLinkAuth.acceptTransferUrl(url, "target");
 
-      // Generate and set confirmation code
-      const code = await this.magicLinkAuth.createConfirmationCode();
-      this.confirmationCode = code;
-      this.status = "confirmationCodeGenerated";
+      this.status = "confirmationCodeRequired";
       this.notify();
 
-      // Wait for confirmation code input
+      const code = await new Promise<string>((resolve, reject) => {
+        this.sendConfirmationCode = (code: string) => resolve(code);
+        signal.addEventListener("abort", () => reject(new Error("Aborted")));
+      });
+
+      transfer.confirmationCodeInput = code;
+      this.status = "confirmationCodePending";
+      this.notify();
+
+      // Wait for source device to reject or confirm and reveal the secret
       transfer = await waitForCoValueCondition(
         transfer,
-        { abortSignal: signal },
-        (t) => Boolean(t.confirmationCodeInput),
-        this.options.expireInMs,
+        { resolve: {}, abortSignal: signal },
+        (t) => t.status === "incorrectCode" || Boolean(t.secret),
+        this.options.handlerTimeout,
       );
 
-      // Check if the confirmation code is correct
-      if (transfer.confirmationCodeInput !== code) {
-        transfer.status = "incorrectCode";
-        await transfer.waitForSync();
+      if (transfer.status === "incorrectCode") {
         this.status = "confirmationCodeIncorrect";
         this.notify();
         return;
       }
 
-      // Reveal the secret to the transfer
-      await this.magicLinkAuth.revealSecretToTransfer(transfer);
-
-      // Wait for the transfer to be authorized and update the status
-      await waitForCoValueCondition(
-        transfer,
-        { abortSignal: signal },
-        (t) => t.status === "authorized",
-      );
+      await this.magicLinkAuth.logInViaTransfer(transfer);
       this.status = "authorized";
       this.notify();
+      this.options.onLoggedIn?.();
     } catch (error) {
       if (error instanceof Error && error.message.startsWith("Aborted")) {
         this.status = "cancelled";
@@ -99,7 +98,7 @@ export class MagicLinkAuthHandleAsProvider {
   }
 
   public checkValidUrl(url: string) {
-    return this.magicLinkAuth.checkValidUrl(url, "provider");
+    return this.magicLinkAuth.checkValidUrl(url, "target");
   }
 
   listeners = new Set<() => void>();
@@ -110,6 +109,7 @@ export class MagicLinkAuthHandleAsProvider {
       this.listeners.delete(callback);
     };
   };
+
   notify() {
     for (const listener of this.listeners) {
       listener();
@@ -117,6 +117,6 @@ export class MagicLinkAuthHandleAsProvider {
   }
 }
 
-const defaultOptions: MagicLinkAuthProviderOptions = {
-  expireInMs: 15 * 60 * 1000,
+const defaultOptions: MagicLinkAuthAsTargetOptions = {
+  handlerTimeout: 30 * 1000,
 };

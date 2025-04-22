@@ -72,12 +72,12 @@ export {
   MagicLinkAuth,
   MagicLinkAuthTransfer,
   type MagicLinkAuthOptions,
-  MagicLinkAuthCreateAsProvider,
-  MagicLinkAuthCreateAsConsumer,
-  MagicLinkAuthHandleAsConsumer,
-  MagicLinkAuthHandleAsProvider,
-  type MagicLinkAuthConsumerOptions,
-  type MagicLinkAuthProviderOptions,
+  MagicLinkAuthCreateAsSource,
+  MagicLinkAuthCreateAsTarget,
+  MagicLinkAuthHandleAsTarget,
+  MagicLinkAuthHandleAsSource,
+  type MagicLinkAuthAsTargetOptions,
+  type MagicLinkAuthAsSourceOptions,
 } from "./auth/MagicLinkAuth/index.js";
 
 export {

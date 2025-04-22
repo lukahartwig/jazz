@@ -13,17 +13,17 @@ export interface MagicLinkAuthOptions {
   /**
    * The path to the consumer handler.
    */
-  consumerHandlerPath: string;
+  targetHandlerPath: string;
   /**
    * The path to the provider handler.
    */
-  providerHandlerPath: string;
+  sourceHandlerPath: string;
 }
 
 /**
  * Options for MagicLinkAuth consumer classes.
  */
-export interface MagicLinkAuthConsumerOptions {
+export interface MagicLinkAuthAsTargetOptions {
   /**
    * The timeout for the consumer handler.
    */
@@ -37,7 +37,7 @@ export interface MagicLinkAuthConsumerOptions {
 /**
  * Options for MagicLinkAuth provider classes.
  */
-export interface MagicLinkAuthProviderOptions {
+export interface MagicLinkAuthAsSourceOptions {
   /**
    * The expiration time for the provider.
    */

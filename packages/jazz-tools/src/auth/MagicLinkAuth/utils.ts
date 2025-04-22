@@ -82,6 +82,6 @@ export function shutdownTransferAccount(
 
 export const defaultOptions: MagicLinkAuthOptions = {
   confirmationCodeFn: defaultConfirmationCodeFn,
-  consumerHandlerPath: "/magic-link-handler-consumer",
-  providerHandlerPath: "/magic-link-handler-provider",
+  targetHandlerPath: "/magic-link-handler-target",
+  sourceHandlerPath: "/magic-link-handler-source",
 };

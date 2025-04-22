@@ -4,19 +4,19 @@ import { Button } from "./Button";
 import { ConfirmationCodeInput } from "./ConfirmationCodeInput";
 import { QRCodeContainer } from "./QRCodeContainer";
 
-interface CreateMagicLinkAsConsumerProps {
+interface CreateMagicLinkAsTargetProps {
   onLoggedIn: () => void;
 }
 
-export function CreateMagicLinkAsConsumer({
+export function CreateMagicLinkAsTarget({
   onLoggedIn,
-}: CreateMagicLinkAsConsumerProps) {
+}: CreateMagicLinkAsTargetProps) {
   const [link, setLink] = useState<string | undefined>();
 
   const { status, createLink, sendConfirmationCode } = useCreateMagicLinkAuth({
-    mode: "authenticate-current-device",
-    consumerHandlerPath: "/#/magic-link-handler-consumer",
-    providerHandlerPath: "/#/magic-link-handler-provider",
+    as: "target",
+    targetHandlerPath: "/#/magic-link-handler-target",
+    sourceHandlerPath: "/#/magic-link-handler-source",
     onLoggedIn,
   });
 
@@ -30,7 +30,7 @@ export function CreateMagicLinkAsConsumer({
     );
   }
 
-  if (status === "waitingForProvider") {
+  if (status === "waitingForHandler") {
     return (
       <div className="flex flex-col items-center gap-4">
         <p>Scan QR code to log in</p>

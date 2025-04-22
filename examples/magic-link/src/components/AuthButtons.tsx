@@ -5,8 +5,8 @@ import { useState } from "react";
 import { APPLICATION_NAME } from "../main";
 import { Button } from "./Button";
 import { Card } from "./Card";
-import { CreateMagicLinkAsConsumer } from "./CreateMagicLinkAsConsumer";
-import { CreateMagicLinkAsProvider } from "./CreateMagicLinkAsProvider";
+import { CreateMagicLinkAsTarget } from "./CreateMagicLinkAsTarget";
+import { CreateMagicLinkAsSource } from "./CreateMagicLinkAsSource";
 
 export function AuthButtons() {
   const { logOut } = useAccount();
@@ -35,7 +35,7 @@ export function AuthButtons() {
 
         {magicLinkFlow ? (
           <Card className="w-full">
-            <CreateMagicLinkAsProvider />
+            <CreateMagicLinkAsSource />
           </Card>
         ) : null}
       </div>
@@ -58,7 +58,7 @@ export function AuthButtons() {
 
       {magicLinkFlow ? (
         <Card className="w-full">
-          <CreateMagicLinkAsConsumer
+          <CreateMagicLinkAsTarget
             onLoggedIn={() => {
               console.log("logged in!");
               setMagicLinkFlow(false);

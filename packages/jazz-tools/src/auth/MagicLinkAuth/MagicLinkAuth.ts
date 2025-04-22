@@ -51,15 +51,15 @@ export class MagicLinkAuth {
 
   /**
    * Creates a magic link URL for authentication.
-   * @param targetHandler - Specifies whether the link should be handled by consumer or provider.
+   * @param handler - Specifies whether the link should be handled by consumer or provider.
    * @param transfer - The MagicLinkAuthTransfer to create the link for.
    * @returns A URL that can be displayed as a QR code to be scanned by the handler.
    */
   public createLink(
-    targetHandler: "consumer" | "provider",
+    handler: "source" | "target",
     transfer: MagicLinkAuthTransfer,
   ) {
-    let handlerUrl = this.origin + this.options[`${targetHandler}HandlerPath`];
+    let handlerUrl = this.origin + this.options[`${handler}HandlerPath`];
 
     let transferCore = transfer._raw.core;
     while (transferCore.header.ruleset.type === "ownedByGroup") {
@@ -144,15 +144,12 @@ export class MagicLinkAuth {
   /**
    * Accept a transfer from a URL.
    * @param url - The URL to accept the transfer from.
-   * @param targetHandler - Specifies whether the URL is for consumer or provider.
+   * @param handler - Specifies whether the URL is for consumer or provider.
    * @returns The accepted MagicLinkAuthTransfer.
    */
-  public async acceptTransferUrl(
-    url: string,
-    targetHandler: "consumer" | "provider",
-  ) {
+  public async acceptTransferUrl(url: string, handler: "source" | "target") {
     const { transferId, inviteSecret } = parseTransferUrl(
-      this.options[`${targetHandler}HandlerPath`],
+      this.options[`${handler}HandlerPath`],
       url,
     );
 
@@ -173,12 +170,12 @@ export class MagicLinkAuth {
   /**
    * Check if a URL is a valid transfer URL.
    * @param url - The URL to check.
-   * @param targetHandler - Specifies whether the URL is for consumer or provider.
+   * @param handler - Specifies whether the URL is for source or target.
    * @returns True if the URL is a valid transfer URL, false otherwise.
    */
-  public checkValidUrl(url: string, targetHandler: "consumer" | "provider") {
+  public checkValidUrl(url: string, handler: "source" | "target") {
     try {
-      parseTransferUrl(this.options[`${targetHandler}HandlerPath`], url);
+      parseTransferUrl(this.options[`${handler}HandlerPath`], url);
       return true;
     } catch (error) {
       return false;

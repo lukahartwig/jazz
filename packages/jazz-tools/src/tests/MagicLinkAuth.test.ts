@@ -5,10 +5,10 @@ import { PureJSCrypto } from "cojson/crypto/PureJSCrypto";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   MagicLinkAuth,
-  MagicLinkAuthCreateAsConsumer,
-  MagicLinkAuthCreateAsProvider,
-  MagicLinkAuthHandleAsConsumer,
-  MagicLinkAuthHandleAsProvider,
+  MagicLinkAuthCreateAsTarget,
+  MagicLinkAuthCreateAsSource,
+  MagicLinkAuthHandleAsTarget,
+  MagicLinkAuthHandleAsSource,
 } from "../auth/MagicLinkAuth";
 import {
   Account,
@@ -130,14 +130,14 @@ describe("MagicLinkAuth", () => {
 
   describe("MagicLinkAuthCreateAsConsumer", () => {
     it("should initialize", () => {
-      const createAsConsumer = new MagicLinkAuthCreateAsConsumer(magicLinkAuth);
+      const createAsConsumer = new MagicLinkAuthCreateAsTarget(magicLinkAuth);
 
       expect(createAsConsumer.authState.status).toEqual("idle");
       expect(createAsConsumer.authState.sendConfirmationCode).toBeUndefined();
     });
 
     it("should cancel flow", async () => {
-      const createAsConsumer = new MagicLinkAuthCreateAsConsumer(magicLinkAuth);
+      const createAsConsumer = new MagicLinkAuthCreateAsTarget(magicLinkAuth);
       await createAsConsumer.createLink();
 
       createAsConsumer.cancelFlow();
@@ -150,7 +150,7 @@ describe("MagicLinkAuth", () => {
 
   describe("MagicLinkAuthHandleAsProvider", () => {
     it("should initialize", () => {
-      const handleAsProvider = new MagicLinkAuthHandleAsProvider(magicLinkAuth);
+      const handleAsProvider = new MagicLinkAuthHandleAsSource(magicLinkAuth);
 
       expect(handleAsProvider.authState.status).toEqual("idle");
       expect(handleAsProvider.authState.confirmationCode).toBeUndefined();
@@ -158,11 +158,11 @@ describe("MagicLinkAuth", () => {
 
     it("should cancel flow", async () => {
       // Create the link as consumer
-      const createAsConsumer = new MagicLinkAuthCreateAsConsumer(magicLinkAuth);
+      const createAsConsumer = new MagicLinkAuthCreateAsTarget(magicLinkAuth);
       const link = await createAsConsumer.createLink();
 
       // Handle the flow as provider
-      const handleAsProvider = new MagicLinkAuthHandleAsProvider(magicLinkAuth);
+      const handleAsProvider = new MagicLinkAuthHandleAsSource(magicLinkAuth);
       handleAsProvider.handleFlow(link);
 
       setTimeout(() => {
@@ -176,15 +176,15 @@ describe("MagicLinkAuth", () => {
 
     it("should handle the flow", async () => {
       // Create the link as consumer
-      const createAsConsumer = new MagicLinkAuthCreateAsConsumer(magicLinkAuth);
+      const createAsConsumer = new MagicLinkAuthCreateAsTarget(magicLinkAuth);
       const link = await createAsConsumer.createLink();
       expect(link).toMatch(
-        /^http:\/\/localhost:3000\/magic-link-handler-provider\/co_[^/]+\/inviteSecret_[^/]+$/,
+        /^http:\/\/localhost:3000\/magic-link-handler-source\/co_[^/]+\/inviteSecret_[^/]+$/,
       );
-      expect(createAsConsumer.authState.status).toEqual("waitingForProvider");
+      expect(createAsConsumer.authState.status).toEqual("waitingForHandler");
 
       // Handle the flow as provider
-      const handleAsProvider = new MagicLinkAuthHandleAsProvider(magicLinkAuth);
+      const handleAsProvider = new MagicLinkAuthHandleAsSource(magicLinkAuth);
       handleAsProvider.handleFlow(link);
       await waitFor(() => {
         expect(createAsConsumer.authState.status).toEqual(
@@ -219,14 +219,14 @@ describe("MagicLinkAuth", () => {
 
   describe("MagicLinkAuthCreateAsProvider", () => {
     it("should initialize", () => {
-      const createAsProvider = new MagicLinkAuthCreateAsProvider(magicLinkAuth);
+      const createAsProvider = new MagicLinkAuthCreateAsSource(magicLinkAuth);
 
       expect(createAsProvider.authState.status).toEqual("idle");
       expect(createAsProvider.authState.confirmationCode).toBeUndefined();
     });
 
     it("should cancel flow", async () => {
-      const createAsProvider = new MagicLinkAuthCreateAsProvider(magicLinkAuth);
+      const createAsProvider = new MagicLinkAuthCreateAsSource(magicLinkAuth);
       await createAsProvider.createLink();
 
       setTimeout(() => {
@@ -241,7 +241,7 @@ describe("MagicLinkAuth", () => {
 
   describe("MagicLinkAuthHandleAsConsumer", () => {
     it("should initialize", () => {
-      const handleAsConsumer = new MagicLinkAuthHandleAsConsumer(magicLinkAuth);
+      const handleAsConsumer = new MagicLinkAuthHandleAsTarget(magicLinkAuth);
 
       expect(handleAsConsumer.authState.status).toEqual("idle");
       expect(handleAsConsumer.authState.sendConfirmationCode).toBeNull();
@@ -249,11 +249,11 @@ describe("MagicLinkAuth", () => {
 
     it("should cancel flow", async () => {
       // Create the link as provider
-      const createAsProvider = new MagicLinkAuthCreateAsProvider(magicLinkAuth);
+      const createAsProvider = new MagicLinkAuthCreateAsSource(magicLinkAuth);
       const link = await createAsProvider.createLink();
 
       // Handle the flow as consumer
-      const handleAsConsumer = new MagicLinkAuthHandleAsConsumer(magicLinkAuth);
+      const handleAsConsumer = new MagicLinkAuthHandleAsTarget(magicLinkAuth);
       handleAsConsumer.handleFlow(link);
 
       // Cancel the flow
@@ -268,15 +268,15 @@ describe("MagicLinkAuth", () => {
 
     it("should handle the flow", async () => {
       // Create the link as provider
-      const createAsProvider = new MagicLinkAuthCreateAsProvider(magicLinkAuth);
+      const createAsProvider = new MagicLinkAuthCreateAsSource(magicLinkAuth);
       const link = await createAsProvider.createLink();
       expect(link).toMatch(
-        /^http:\/\/localhost:3000\/magic-link-handler-consumer\/co_[^/]+\/inviteSecret_[^/]+$/,
+        /^http:\/\/localhost:3000\/magic-link-handler-target\/co_[^/]+\/inviteSecret_[^/]+$/,
       );
-      expect(createAsProvider.authState.status).toEqual("waitingForConsumer");
+      expect(createAsProvider.authState.status).toEqual("waitingForHandler");
 
       // Handle the flow as consumer
-      const handleAsConsumer = new MagicLinkAuthHandleAsConsumer(magicLinkAuth);
+      const handleAsConsumer = new MagicLinkAuthHandleAsTarget(magicLinkAuth);
       handleAsConsumer.handleFlow(link);
       await waitFor(() => {
         expect(createAsProvider.authState.status).toEqual(

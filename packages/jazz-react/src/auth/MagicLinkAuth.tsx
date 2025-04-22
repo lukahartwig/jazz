@@ -1,80 +1,80 @@
 import {
-  type UseMagicLinkAuthAsConsumerOptions,
-  type UseMagicLinkAuthAsProviderOptions,
-  useCreateMagicLinkAuthAsConsumer,
-  useCreateMagicLinkAuthAsProvider,
-  useHandleMagicLinkAuthAsConsumer,
-  useHandleMagicLinkAuthAsProvider,
+  type UseMagicLinkAuthAsTargetOptions,
+  type UseMagicLinkAuthAsSourceOptions,
+  useCreateMagicLinkAuthAsTarget,
+  useCreateMagicLinkAuthAsSource,
+  useHandleMagicLinkAuthAsTarget,
+  useHandleMagicLinkAuthAsSource,
 } from "jazz-react-core";
 import { useRef } from "react";
 
 export function useCreateMagicLinkAuth(
   options: {
-    mode: "share-local-credentials";
-  } & Partial<UseMagicLinkAuthAsProviderOptions>,
-): ReturnType<typeof useCreateMagicLinkAuthAsProvider>;
+    as: "source";
+  } & Partial<UseMagicLinkAuthAsSourceOptions>,
+): ReturnType<typeof useCreateMagicLinkAuthAsSource>;
 export function useCreateMagicLinkAuth(
   options: {
-    mode: "authenticate-current-device";
-  } & Partial<UseMagicLinkAuthAsConsumerOptions>,
-): ReturnType<typeof useCreateMagicLinkAuthAsConsumer>;
+    as: "target";
+  } & Partial<UseMagicLinkAuthAsTargetOptions>,
+): ReturnType<typeof useCreateMagicLinkAuthAsTarget>;
 export function useCreateMagicLinkAuth({
-  mode,
+  as: mode,
   ...options
 }:
   | ({
-      mode: "share-local-credentials";
-    } & Partial<UseMagicLinkAuthAsProviderOptions>)
+      as: "source";
+    } & Partial<UseMagicLinkAuthAsSourceOptions>)
   | ({
-      mode: "authenticate-current-device";
-    } & Partial<UseMagicLinkAuthAsConsumerOptions>)) {
+      as: "target";
+    } & Partial<UseMagicLinkAuthAsTargetOptions>)) {
   const initialMode = useRef(mode);
 
   if (initialMode.current !== mode) {
     console.warn("useCreateMagicLinkAuth mode cannot be changed once mounted.");
   }
 
-  if (initialMode.current === "share-local-credentials") {
-    return useCreateMagicLinkAuthAsProvider(window.location.origin, options);
+  if (initialMode.current === "source") {
+    return useCreateMagicLinkAuthAsSource(window.location.origin, options);
   } else {
-    return useCreateMagicLinkAuthAsConsumer(window.location.origin, options);
+    return useCreateMagicLinkAuthAsTarget(window.location.origin, options);
   }
 }
 
 export function useHandleMagicLinkAuth(
   options: {
-    mode: "share-local-credentials";
-  } & Partial<UseMagicLinkAuthAsProviderOptions>,
-): ReturnType<typeof useHandleMagicLinkAuthAsProvider>;
+    as: "source";
+  } & Partial<UseMagicLinkAuthAsSourceOptions>,
+): ReturnType<typeof useHandleMagicLinkAuthAsSource>;
 export function useHandleMagicLinkAuth(
   options: {
-    mode: "authenticate-current-device";
-  } & Partial<UseMagicLinkAuthAsConsumerOptions>,
-): ReturnType<typeof useHandleMagicLinkAuthAsConsumer>;
+    as: "target";
+  } & Partial<UseMagicLinkAuthAsTargetOptions>,
+): ReturnType<typeof useHandleMagicLinkAuthAsTarget>;
 export function useHandleMagicLinkAuth({
-  mode,
+  as: mode,
   ...options
 }:
   | ({
-      mode: "share-local-credentials";
-    } & Partial<UseMagicLinkAuthAsProviderOptions>)
+      as: "source";
+    } & Partial<UseMagicLinkAuthAsSourceOptions>)
   | ({
-      mode: "authenticate-current-device";
-    } & Partial<UseMagicLinkAuthAsConsumerOptions>)) {
+      as: "target";
+    } & Partial<UseMagicLinkAuthAsTargetOptions>)) {
   const initialMode = useRef(mode);
 
   if (initialMode.current !== mode) {
     console.warn("useHandleMagicLinkAuth mode cannot be changed once mounted.");
   }
 
-  if (initialMode.current === "share-local-credentials") {
-    return useHandleMagicLinkAuthAsProvider(
+  if (initialMode.current === "source") {
+    return useHandleMagicLinkAuthAsSource(
       window.location.origin,
       window.location.href,
       options,
     );
   } else {
-    return useHandleMagicLinkAuthAsConsumer(
+    return useHandleMagicLinkAuthAsTarget(
       window.location.origin,
       window.location.href,
       options,

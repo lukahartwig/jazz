@@ -2,10 +2,10 @@
 
 import { beforeEach, describe, expect, it } from "vitest";
 import {
-  useCreateMagicLinkAuthAsConsumer,
-  useCreateMagicLinkAuthAsProvider,
-  useHandleMagicLinkAuthAsConsumer,
-  useHandleMagicLinkAuthAsProvider,
+  useCreateMagicLinkAuthAsTarget,
+  useCreateMagicLinkAuthAsSource,
+  useHandleMagicLinkAuthAsTarget,
+  useHandleMagicLinkAuthAsSource,
 } from "../auth/MagicLinkAuth.js";
 import {
   createJazzTestAccount,
@@ -29,7 +29,7 @@ describe("MagicLinkAuth", () => {
 
       expect(() =>
         renderHook(
-          () => useCreateMagicLinkAuthAsProvider(window.location.origin),
+          () => useCreateMagicLinkAuthAsSource(window.location.origin),
           { account: guestAccount },
         ),
       ).toThrowError("Magic Link Auth is not supported in guest mode");
@@ -39,7 +39,7 @@ describe("MagicLinkAuth", () => {
       const account = await createJazzTestAccount({});
 
       const { result: createAsProvider } = renderHook(
-        () => useCreateMagicLinkAuthAsProvider(window.location.origin),
+        () => useCreateMagicLinkAuthAsSource(window.location.origin),
         { account },
       );
 
@@ -52,7 +52,7 @@ describe("MagicLinkAuth", () => {
     it("can create a magic link and cancel flow", async () => {
       const account = await createJazzTestAccount({});
       const { result: createAsProvider } = renderHook(
-        () => useCreateMagicLinkAuthAsProvider(window.location.origin),
+        () => useCreateMagicLinkAuthAsSource(window.location.origin),
         { account },
       );
       let link = "";
@@ -60,9 +60,9 @@ describe("MagicLinkAuth", () => {
         link = await createAsProvider.current.createLink();
       });
       expect(link).toMatch(
-        /^http:\/\/localhost:3000\/magic-link-handler-consumer\/co_[^/]+\/inviteSecret_[^/]+$/,
+        /^http:\/\/localhost:3000\/magic-link-handler-target\/co_[^/]+\/inviteSecret_[^/]+$/,
       );
-      expect(createAsProvider.current.status).toBe("waitingForConsumer");
+      expect(createAsProvider.current.status).toBe("waitingForHandler");
       act(() => {
         createAsProvider.current.cancelFlow();
       });
@@ -81,7 +81,7 @@ describe("MagicLinkAuth", () => {
       const guestAccount = await createJazzTestGuest();
       expect(() =>
         renderHook(
-          () => useCreateMagicLinkAuthAsConsumer(window.location.origin),
+          () => useCreateMagicLinkAuthAsTarget(window.location.origin),
           { account: guestAccount },
         ),
       ).toThrowError("Magic Link Auth is not supported in guest mode");
@@ -89,7 +89,7 @@ describe("MagicLinkAuth", () => {
 
     it("initializes with idle state", async () => {
       const { result: createAsConsumer } = renderHook(() =>
-        useCreateMagicLinkAuthAsConsumer(window.location.origin),
+        useCreateMagicLinkAuthAsTarget(window.location.origin),
       );
       expect(createAsConsumer.current.status).toBe("idle");
       expect(createAsConsumer.current.createLink).toBeTypeOf("function");
@@ -100,7 +100,7 @@ describe("MagicLinkAuth", () => {
     it("can create a magic link and cancel flow", async () => {
       const account = await createJazzTestAccount({});
       const { result: createAsConsumer } = renderHook(
-        () => useCreateMagicLinkAuthAsConsumer(window.location.origin),
+        () => useCreateMagicLinkAuthAsTarget(window.location.origin),
         { account },
       );
       let link = "";
@@ -108,9 +108,9 @@ describe("MagicLinkAuth", () => {
         link = await createAsConsumer.current.createLink();
       });
       expect(link).toMatch(
-        /^http:\/\/localhost:3000\/magic-link-handler-provider\/co_[^/]+\/inviteSecret_[^/]+$/,
+        /^http:\/\/localhost:3000\/magic-link-handler-source\/co_[^/]+\/inviteSecret_[^/]+$/,
       );
-      expect(createAsConsumer.current.status).toBe("waitingForProvider");
+      expect(createAsConsumer.current.status).toBe("waitingForHandler");
       act(() => {
         createAsConsumer.current.cancelFlow();
       });
@@ -129,7 +129,7 @@ describe("MagicLinkAuth", () => {
       const account = await createJazzTestAccount({});
       const { result: handleAsProvider } = renderHook(
         () =>
-          useHandleMagicLinkAuthAsProvider(
+          useHandleMagicLinkAuthAsSource(
             window.location.origin,
             "invalid-link-gets-ignored",
           ),
@@ -142,20 +142,20 @@ describe("MagicLinkAuth", () => {
     it("handles the flow", async () => {
       // Create consumer
       const { result: createAsConsumer } = renderHook(() =>
-        useCreateMagicLinkAuthAsConsumer(window.location.origin),
+        useCreateMagicLinkAuthAsTarget(window.location.origin),
       );
       let link = "";
       await act(async () => {
         link = await createAsConsumer.current.createLink();
       });
       await waitFor(() => {
-        expect(createAsConsumer.current.status).toBe("waitingForProvider");
+        expect(createAsConsumer.current.status).toBe("waitingForHandler");
       });
 
       // Create provider
       const account = await createJazzTestAccount({});
       const { result: handleAsProvider } = renderHook(
-        () => useHandleMagicLinkAuthAsProvider(window.location.origin, link),
+        () => useHandleMagicLinkAuthAsSource(window.location.origin, link),
         { account },
       );
 
@@ -189,7 +189,7 @@ describe("MagicLinkAuth", () => {
 
     it("initializes with idle state", async () => {
       const { result: handleAsConsumer } = renderHook(() =>
-        useHandleMagicLinkAuthAsConsumer(
+        useHandleMagicLinkAuthAsTarget(
           window.location.origin,
           "invalid-link-gets-ignored",
         ),
@@ -201,20 +201,20 @@ describe("MagicLinkAuth", () => {
     it("handles the flow", async () => {
       // Create consumer
       const { result: createAsConsumer } = renderHook(() =>
-        useCreateMagicLinkAuthAsConsumer(window.location.origin),
+        useCreateMagicLinkAuthAsTarget(window.location.origin),
       );
       let link = "";
       await act(async () => {
         link = await createAsConsumer.current.createLink();
       });
       await waitFor(() => {
-        expect(createAsConsumer.current.status).toBe("waitingForProvider");
+        expect(createAsConsumer.current.status).toBe("waitingForHandler");
       });
 
       // Create provider
       const account = await createJazzTestAccount({});
       const { result: handleAsProvider } = renderHook(
-        () => useHandleMagicLinkAuthAsProvider(window.location.origin, link),
+        () => useHandleMagicLinkAuthAsSource(window.location.origin, link),
         { account },
       );
 
