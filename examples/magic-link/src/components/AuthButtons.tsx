@@ -34,7 +34,7 @@ export function AuthButtons() {
         </div>
 
         {magicLinkFlow ? (
-          <Card className="w-full">
+          <Card className="w-full flex flex-col gap-4 items-center text-center">
             <CreateMagicLinkAsSource />
           </Card>
         ) : null}
@@ -57,7 +57,7 @@ export function AuthButtons() {
       </div>
 
       {magicLinkFlow ? (
-        <Card className="w-full">
+        <Card className="w-full flex flex-col gap-4 items-center text-center">
           <CreateMagicLinkAsTarget
             onLoggedIn={() => {
               console.log("logged in!");

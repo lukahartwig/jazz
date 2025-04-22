@@ -32,23 +32,23 @@ export function CreateMagicLinkAsTarget({
 
   if (status === "waitingForHandler") {
     return (
-      <div className="flex flex-col items-center gap-4">
+      <>
         <p>Scan QR code to log in</p>
 
         {link ? <QRCodeContainer url={link} /> : null}
-      </div>
+      </>
     );
   }
 
   if (status === "confirmationCodeRequired") {
     return (
-      <div className="flex flex-col items-center gap-4">
+      <>
         <p>Enter the confirmation code displayed on your other device</p>
 
         {sendConfirmationCode ? (
           <ConfirmationCodeInput onSubmit={sendConfirmationCode} />
         ) : null}
-      </div>
+      </>
     );
   }
 
@@ -62,33 +62,33 @@ export function CreateMagicLinkAsTarget({
 
   if (status === "confirmationCodeIncorrect") {
     return (
-      <div className="flex flex-col items-center gap-4">
+      <>
         <p>Incorrect confirmation code!</p>
 
         <Button color="primary" onClick={onCreateLink}>
-          Start again
+          Try again
         </Button>
-      </div>
+      </>
     );
   }
 
   if (status === "error") {
     return (
-      <div className="flex flex-col items-center gap-4">
+      <>
         <p>Something went wrong</p>
 
-        <button onClick={onCreateLink}>Try again</button>
-      </div>
+        <Button onClick={onCreateLink}>Try again</Button>
+      </>
     );
   }
 
   if (status === "cancelled") {
     return (
-      <div className="flex flex-col items-center gap-4">
+      <>
         <p>Cancelled</p>
 
         <Button onClick={onCreateLink}>Try again</Button>
-      </div>
+      </>
     );
   }
 

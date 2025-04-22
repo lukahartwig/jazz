@@ -5,12 +5,12 @@ export default function MagicLinkHandlerSourcePage() {
   return (
     <main className="container flex flex-col items-center gap-4 px-4 py-8 text-center">
       <h1 className="text-xl">Magic Link Auth Source Handler</h1>
-      <MagicLinkHandlerSource />
+      <HandleMagicLinkAsSource />
     </main>
   );
 }
 
-function MagicLinkHandlerSource() {
+function HandleMagicLinkAsSource() {
   const { status, confirmationCode } = useHandleMagicLinkAuth({
     as: "source",
     targetHandlerPath: "/#/magic-link-handler-target",
@@ -23,13 +23,13 @@ function MagicLinkHandlerSource() {
 
   if (status === "confirmationCodeGenerated") {
     return (
-      <div className="flex flex-col items-center gap-2">
+      <>
         <p>Confirmation code:</p>
         <p className="font-medium text-3xl tracking-widest">
           {confirmationCode ?? "empty"}
         </p>
         <p className="text-red-600">Never share this code with anyone!</p>
-      </div>
+      </>
     );
   }
 
@@ -43,10 +43,10 @@ function MagicLinkHandlerSource() {
 
   if (status === "confirmationCodeIncorrect") {
     return (
-      <div className="flex flex-col gap-4">
+      <>
         <p>Incorrect confirmation code</p>
         <p>Please try again</p>
-      </div>
+      </>
     );
   }
 

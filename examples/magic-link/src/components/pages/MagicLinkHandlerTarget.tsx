@@ -6,12 +6,12 @@ export default function MagicLinkHandlerTargetPage() {
   return (
     <main className="container flex flex-col items-center gap-4 px-4 py-8 text-center">
       <h1 className="text-xl">Magic Link Auth Target Handler</h1>
-      <MagicLinkHandlerTarget />
+      <HandleMagicLinkAsTarget />
     </main>
   );
 }
 
-function MagicLinkHandlerTarget() {
+function HandleMagicLinkAsTarget() {
   const { status, sendConfirmationCode } = useHandleMagicLinkAuth({
     as: "target",
     targetHandlerPath: "/#/magic-link-handler-target",
@@ -27,15 +27,13 @@ function MagicLinkHandlerTarget() {
 
   if (status === "confirmationCodeRequired") {
     return (
-      <div className="flex flex-col items-center gap-4">
+      <>
         <p>Enter the confirmation code displayed on your other device</p>
 
         {sendConfirmationCode ? (
-          <ConfirmationCodeInput
-            onSubmit={(code) => sendConfirmationCode(code)}
-          />
+          <ConfirmationCodeInput onSubmit={sendConfirmationCode} />
         ) : null}
-      </div>
+      </>
     );
   }
 
@@ -49,10 +47,10 @@ function MagicLinkHandlerTarget() {
 
   if (status === "confirmationCodeIncorrect") {
     return (
-      <div className="flex flex-col gap-4">
+      <>
         <p>Incorrect confirmation code!</p>
         <p>Please try again</p>
-      </div>
+      </>
     );
   }
 

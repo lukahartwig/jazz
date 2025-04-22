@@ -24,22 +24,23 @@ export function CreateMagicLinkAsSource() {
 
   if (status === "waitingForHandler") {
     return (
-      <div className="flex flex-col items-center gap-4">
+      <>
         <p>Scan QR code to get your mobile device logged in</p>
 
         {link ? <QRCodeContainer url={link} /> : null}
-      </div>
+      </>
     );
   }
 
   if (status === "confirmationCodeGenerated") {
     return (
-      <div className="flex flex-col items-center gap-2">
+      <>
         <p>Confirmation code:</p>
+
         <p className="font-medium text-3xl tracking-widest">
           {confirmationCode ?? "empty"}
         </p>
-      </div>
+      </>
     );
   }
 
@@ -47,39 +48,41 @@ export function CreateMagicLinkAsSource() {
     return <p>Confirmed! Logging in...</p>;
   }
 
-  if (status === "authorized") return <p>Your device has been logged in!</p>;
+  if (status === "authorized") {
+    return <p>Your device has been logged in!</p>;
+  }
 
   if (status === "confirmationCodeIncorrect") {
     return (
-      <div className="flex flex-col gap-4">
+      <>
         <p>Incorrect confirmation code</p>
 
         <Button color="primary" onClick={onCreateLink}>
-          Start again
+          Try again
         </Button>
-      </div>
+      </>
     );
   }
 
   if (status === "error") {
     return (
-      <div className="flex flex-col gap-4">
+      <>
         <p>Something went wrong</p>
 
-        <button onClick={onCreateLink}>Try again</button>
-      </div>
+        <Button onClick={onCreateLink}>Try again</Button>
+      </>
     );
   }
 
   if (status === "cancelled") {
     return (
-      <div className="flex flex-col gap-4">
+      <>
         <p>Login cancelled</p>
 
         <Button color="primary" onClick={onCreateLink}>
-          Start again
+          Try again
         </Button>
-      </div>
+      </>
     );
   }
 
