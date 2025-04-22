@@ -1,5 +1,21 @@
 # jazz-inspector
 
+## 0.13.7
+
+### Patch Changes
+
+- 22b5c4f: show current account's role when inspecting a covalue
+- 31ea2ef: show inboxInvite as string
+- 4530c4a: improve preview of Account types
+- Updated dependencies [bc3d7bb]
+- Updated dependencies [4e9aae1]
+- Updated dependencies [21c935c]
+- Updated dependencies [aa1c80e]
+- Updated dependencies [13074be]
+  - jazz-tools@0.13.7
+  - cojson@0.13.7
+  - jazz-react-core@0.13.7
+
 ## 0.13.6
 
 ### Patch Changes

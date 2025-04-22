@@ -19,6 +19,9 @@ export default function DocsLayout({
   navIcon?: IconName;
   tocItems?: TocEntry[];
 }) {
+  const tableOfContentsItems =
+    tocItems?.length && tocItems[0].children ? tocItems[0].children : [];
+
   const navSections: NavSection[] = [
     {
       name: navName || "Docs",
@@ -28,7 +31,7 @@ export default function DocsLayout({
     {
       name: "Outline",
       content: tocItems?.length && (
-        <TableOfContents className="text-sm" items={tocItems} />
+        <TableOfContents className="text-sm" items={tableOfContentsItems} />
       ),
       icon: "tableOfContents",
     },
@@ -42,7 +45,7 @@ export default function DocsLayout({
         <>
           <TableOfContents
             className="pl-3 py-8 shrink-0 text-sm sticky align-start top-[61px] w-[16rem] h-[calc(100vh-61px)] overflow-y-auto hidden lg:block"
-            items={tocItems}
+            items={tableOfContentsItems}
           />
         </>
       )}
