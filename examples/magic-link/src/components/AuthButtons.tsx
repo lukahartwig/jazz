@@ -5,8 +5,8 @@ import { useState } from "react";
 import { APPLICATION_NAME } from "../main";
 import { Button } from "./Button";
 import { Card } from "./Card";
-import { CreateMagicLinkAsTarget } from "./CreateMagicLinkAsTarget";
 import { CreateMagicLinkAsSource } from "./CreateMagicLinkAsSource";
+import { CreateMagicLinkAsTarget } from "./CreateMagicLinkAsTarget";
 
 export function AuthButtons() {
   const { logOut } = useAccount();

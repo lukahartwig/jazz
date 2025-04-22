@@ -1,10 +1,10 @@
 import {
-  type UseMagicLinkAuthAsTargetOptions,
   type UseMagicLinkAuthAsSourceOptions,
-  useCreateMagicLinkAuthAsTarget,
+  type UseMagicLinkAuthAsTargetOptions,
   useCreateMagicLinkAuthAsSource,
-  useHandleMagicLinkAuthAsTarget,
+  useCreateMagicLinkAuthAsTarget,
   useHandleMagicLinkAuthAsSource,
+  useHandleMagicLinkAuthAsTarget,
 } from "jazz-react-core";
 import { useRef } from "react";
 

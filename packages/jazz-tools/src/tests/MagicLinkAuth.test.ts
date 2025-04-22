@@ -5,10 +5,10 @@ import { PureJSCrypto } from "cojson/crypto/PureJSCrypto";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   MagicLinkAuth,
-  MagicLinkAuthCreateAsTarget,
   MagicLinkAuthCreateAsSource,
-  MagicLinkAuthHandleAsTarget,
+  MagicLinkAuthCreateAsTarget,
   MagicLinkAuthHandleAsSource,
+  MagicLinkAuthHandleAsTarget,
 } from "../auth/MagicLinkAuth";
 import {
   Account,

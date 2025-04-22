@@ -1,12 +1,12 @@
 import {
   MagicLinkAuth,
-  MagicLinkAuthAsTargetOptions,
-  MagicLinkAuthCreateAsTarget,
-  MagicLinkAuthCreateAsSource,
-  MagicLinkAuthHandleAsTarget,
-  MagicLinkAuthHandleAsSource,
-  MagicLinkAuthOptions,
   MagicLinkAuthAsSourceOptions,
+  MagicLinkAuthAsTargetOptions,
+  MagicLinkAuthCreateAsSource,
+  MagicLinkAuthCreateAsTarget,
+  MagicLinkAuthHandleAsSource,
+  MagicLinkAuthHandleAsTarget,
+  MagicLinkAuthOptions,
 } from "jazz-tools";
 import {
   useCallback,

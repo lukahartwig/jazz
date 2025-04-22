@@ -1,7 +1,7 @@
 import { Route, Routes } from "react-router";
 import HomePage from "./components/pages/HomePage.tsx";
-import MagicLinkHandlerTargetPage from "./components/pages/MagicLinkHandlerTarget.tsx";
 import MagicLinkHandlerSourcePage from "./components/pages/MagicLinkHandlerSource.tsx";
+import MagicLinkHandlerTargetPage from "./components/pages/MagicLinkHandlerTarget.tsx";
 
 function App() {
   return (

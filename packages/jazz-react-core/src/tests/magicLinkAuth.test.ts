@@ -2,10 +2,10 @@
 
 import { beforeEach, describe, expect, it } from "vitest";
 import {
-  useCreateMagicLinkAuthAsTarget,
   useCreateMagicLinkAuthAsSource,
-  useHandleMagicLinkAuthAsTarget,
+  useCreateMagicLinkAuthAsTarget,
   useHandleMagicLinkAuthAsSource,
+  useHandleMagicLinkAuthAsTarget,
 } from "../auth/MagicLinkAuth.js";
 import {
   createJazzTestAccount,
