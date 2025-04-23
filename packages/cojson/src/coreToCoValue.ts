@@ -23,7 +23,11 @@ export function coreToCoValue(
           return new RawAccount(core);
         }
       } else {
-        return new RawGroup(core, options);
+        const group = new RawGroup(core, options);
+
+        RawGroup.migrate(group);
+
+        return group;
       }
     } else {
       return new RawCoMap(core);

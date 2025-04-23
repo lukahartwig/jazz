@@ -1,7 +1,13 @@
 import { base58 } from "@scure/base";
 import { CoID } from "../coValue.js";
 import { CoValueUniqueness } from "../coValueCore.js";
-import { Encrypted, KeyID, KeySecret, Sealed } from "../crypto/crypto.js";
+import {
+  AgentSecret,
+  Encrypted,
+  KeyID,
+  KeySecret,
+  Sealed,
+} from "../crypto/crypto.js";
 import {
   AgentID,
   ChildGroupReference,
@@ -43,6 +49,10 @@ export type GroupShape = {
   [EVERYONE]?: Role;
   readKey?: KeyID;
   [writeKeyFor: `writeKeyFor_${RawAccountID | AgentID}`]: KeyID;
+  agent_id: AgentID;
+  [
+    agentSecretFor: `agent_secret_for_${RawAccountID | AgentID}`
+  ]: Sealed<AgentSecret>;
   [revelationFor: `${KeyID}_for_${RawAccountID | AgentID}`]: Sealed<KeySecret>;
   [revelationFor: `${KeyID}_for_${Everyone}`]: KeySecret;
   [oldKeyForNewKey: `${KeyID}_for_${KeyID}`]: Encrypted<
@@ -77,6 +87,22 @@ export type GroupShape = {
 export class RawGroup<
   Meta extends JsonObject | null = JsonObject | null,
 > extends RawCoMap<GroupShape, Meta> {
+  static migrate(group: RawGroup<any>) {
+    if (group.myRole() === "admin") {
+      const agentID = group.get("agent_id");
+
+      if (!agentID) {
+        const node = group.core.node;
+        const agentSecret = node.crypto.newRandomAgentSecret();
+        const agentID = node.crypto.getAgentID(agentSecret);
+
+        group.set("agent_id", agentID, "trusting");
+        group.revealAgentSecretToMembers(agentSecret);
+        // TODO: Re-encrypt writeOnly keys and parent/child keys
+      }
+    }
+  }
+
   /**
    * Returns the current role of a given account.
    *
@@ -322,6 +348,7 @@ export class RawGroup<
       this.internalCreateWriteOnlyKeyForMember(memberKey, agent);
     } else {
       const currentReadKey = this.core.getCurrentReadKey();
+      // TODO: Get current agent secret and reveal it to the new member
 
       if (!currentReadKey.secret) {
         throw new Error("Can't add member without read key secret");
@@ -353,6 +380,43 @@ export class RawGroup<
     }
   }
 
+  revealAgentSecretToMembers(agentSecret: AgentSecret) {
+    for (const otherMemberKey of this.getMemberKeys()) {
+      const memberRole = this.get(otherMemberKey);
+
+      if (
+        memberRole === "reader" ||
+        memberRole === "writer" ||
+        memberRole === "admin" ||
+        memberRole === "readerInvite" ||
+        memberRole === "writerInvite" ||
+        memberRole === "adminInvite"
+      ) {
+        const otherMemberAgent = this.core.node
+          .resolveAccountAgent(
+            otherMemberKey,
+            "Expected member agent to be loaded",
+          )
+          ._unsafeUnwrap({ withStackTrace: true });
+
+        // TODO: Store as part of the readKey?
+        this.set(
+          `agent_secret_for_${otherMemberKey}`,
+          this.core.crypto.seal({
+            message: agentSecret,
+            from: this.core.node.account.currentSealerSecret(),
+            to: this.core.crypto.getAgentSealerID(otherMemberAgent),
+            nOnceMaterial: {
+              in: this.id,
+              tx: this.core.nextTransactionID(),
+            },
+          }),
+          "trusting",
+        );
+      }
+    }
+  }
+
   internalCreateWriteOnlyKeyForMember(
     memberKey: RawAccountID | AgentID,
     agent: AgentID,
@@ -367,6 +431,8 @@ export class RawGroup<
       writeKeyForNewMember.id,
       writeKeyForNewMember.secret,
     );
+
+    // TODO: Use the new agent key to reveal the writeOnly key to the group members
 
     for (const otherMemberKey of this.getMemberKeys()) {
       const memberRole = this.get(otherMemberKey);
@@ -473,6 +539,7 @@ export class RawGroup<
 
   /** @internal */
   rotateReadKey(removedMemberKey?: RawAccountID | AgentID | "everyone") {
+    // TODO: Rotate the agent id and secret
     const memberKeys = this.getMemberKeys().filter(
       (key) => key !== removedMemberKey,
     );
