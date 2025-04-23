@@ -109,7 +109,6 @@ export class CoValueCore {
   _cachedKnownState?: CoValueKnownState;
   _cachedDependentOn?: RawCoID[];
   _cachedNewContentSinceEmpty?: NewContentMessage[] | undefined;
-  _currentAsyncAddTransaction?: Promise<void>;
 
   constructor(
     header: CoValueHeader,
