@@ -69,7 +69,15 @@ export class MagicLinkAuth {
     const group = cojsonInternals.expectGroup(transferCore.getCurrentContent());
     const inviteSecret = group.createInvite("writer");
 
-    return handlerUrl + `/${transfer.id}/${inviteSecret}`;
+    const url = handlerUrl + `/${transfer.id}/${inviteSecret}`;
+
+    if (!url.includes("#")) {
+      console.warn(
+        "MagicLinkAuth: URL does not include # - consider using a hash fragment to avoid leaking the transfer secret",
+      );
+    }
+
+    return url;
   }
 
   /**
