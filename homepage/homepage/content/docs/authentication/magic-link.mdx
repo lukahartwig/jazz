@@ -8,7 +8,7 @@ Magic Links can be used to transfer authentication from one device to another, f
 
 ## How it works
 
-Magic Link auth supports two flows, where "desktop" refers to the device that displays the QR code, and "mobile" refers to the device that scans it:
+Magic Link auth supports two flows, where **Desktop** refers to the device that creates and displays the QR code, and **Mobile** refers to the device that scans and handles it:
 
 - **Mobile to Desktop**: Mobile scans the QR code to authenticate the desktop device
 - **Desktop to Mobile**: Mobile scans the QR to authenticate itself
@@ -26,126 +26,291 @@ If the confirmation code is correct, the source device reveals the secret, and t
 
 ### Mobile to Desktop
 
-We start by creating a link on the **desktop** device using `useCreateMagicLinkAuth` in `"authenticate-current-device"` mode:
+We start by creating a link on the **Desktop** device using `useCreateMagicLinkAuth` as `target`, and handling the flow's `status`:
 
 <ContentByFramework framework="react">
 <CodeGroup>
 ```tsx twoslash
 import { useCreateMagicLinkAuth } from "jazz-react";
-import { useState } from "react";
+import React, { useState } from "react";
+interface CreateMagicLinkAsTargetProps {
+  onLoggedIn: () => void;
+}
+const QRCode = (_: { url: string }) => (<></>)
+const ConfirmationCodeForm = (_: { onSubmit: (code: string) => void}) => (<></>)
+
 
 // ---cut---
-function CreateMagicLinkAsTarget() {
+export function CreateMagicLinkAsTarget({
+  onLoggedIn,
+}: CreateMagicLinkAsTargetProps) {
   const [link, setLink] = useState<string | undefined>();
 
   const { status, createLink, sendConfirmationCode } = useCreateMagicLinkAuth({
     as: "target",
+    onLoggedIn,
   });
 
-  // Handle depending on status...
+  const onCreateLink = () => createLink().then(setLink);
+
+  if (status === "idle") {
+    return (
+      <button onClick={onCreateLink}>
+        Create QR code
+      </button>
+    );
+  }
+
+  if (status === "waitingForHandler") {
+    return (
+      <>
+        <p>Scan QR code to log in</p>
+        {link ? <QRCode url={link} /> : null}
+      </>
+    );
+  }
+
+  if (status === "confirmationCodeRequired") {
+    return (
+      <>
+        <p>Enter the confirmation code displayed on your other device</p>
+        {sendConfirmationCode ? (
+          <ConfirmationCodeForm onSubmit={sendConfirmationCode} />
+        ) : null}
+      </>
+    );
+  }
+
+  if (status === "confirmationCodePending") {
+    return <p>Confirming...</p>;
+  }
+
+  if (status === "authorized") {
+    return <p>Logged in!</p>;
+  }
+
+  if (status === "confirmationCodeIncorrect") {
+    return (
+      <>
+        <p>Incorrect confirmation code!</p>
+        <button onClick={onCreateLink}>Try again</button>
+      </>
+    );
+  }
+
+  if (status === "error") {
+    return (
+      <>
+        <p>Something went wrong</p>
+        <button onClick={onCreateLink}>Try again</button>
+      </>
+    );
+  }
+
+  if (status === "cancelled") {
+    return (
+      <>
+        <p>Cancelled</p>
+        <button onClick={onCreateLink}>Try again</button>
+      </>
+    );
+  }
 }
 ```
 </CodeGroup>
 
-For each `status` value, we should display:
+On the **Mobile** side, we need to host a page at `/magic-link-handler-source`, or provide an alternative handler path to the hooks using the `sourceHandlerPath` option.
 
-- `idle`: A button to call `createLink`
-- `waitingForHandler`: The link as a QR code, e.g. using [`qrcode`](https://www.npmjs.com/package/qrcode)
-- `confirmationCodeRequired`: Confirmation code input calling `sendConfirmationCode` on submit
-- `confirmationCodePending`: A loading indicator or message
-- `authorized`: A success message – we're logged in!
-- `confirmationCodeIncorrect`: An "incorrect code" message
-- `error`: A "something went wrong" message
-- `cancelled`: A "login cancelled" message
-
-On the **mobile** side, we need to host a page at `/magic-link-handler-source`, or provide an alternative handler path to the hooks using the `sourceHandlerPath` option.
-
-This is the page we'll land on when the QR code is scanned, and can handle the magic link using the `useHandleMagicLinkAuth` hook in `"share-local-credentials"` mode:
+This is the page we'll land on when the QR code is scanned, handling the magic link with the `useHandleMagicLinkAuth` hook as `source`, and using `status` to display the current state:
 
 <CodeGroup>
 ```tsx twoslash
+import React from "react";
 import { useHandleMagicLinkAuth } from "jazz-react";
 
 // ---cut---
-function HandleMagicLinkAsSource() {
+export function HandleMagicLinkAsSource() {
   const { status, confirmationCode } = useHandleMagicLinkAuth({
     as: "source",
   });
 
-  // Handle depending on status...
+  if (status === "idle") {
+    return <p>Loading...</p>;
+  }
+
+  if (status === "confirmationCodeGenerated") {
+    return (
+      <p>Confirmation code: {confirmationCode}</p>
+    );
+  }
+
+  if (status === "authorized") {
+    return (
+      <p>Your device has been logged in!</p>
+    );
+  }
+
+  if (status === "confirmationCodeIncorrect") {
+    return (
+      <p>Incorrect confirmation code - please try again</p>
+    );
+  }
+
+  if (status === "error") {
+    return (
+      <p>Something went wrong</p>
+    );
+  }
+
+  if (status === "cancelled") {
+    return <p>Login cancelled</p>;
+  }
 }
 ```
 </CodeGroup>
-
-For each `status` value, we should display:
-
-- `idle`: A loading indicator
-- `confirmationCodeGenerated`: The confirmation code
-- `authorized`: A success message – the device has been logged in!
-- `confirmationCodeIncorrect`: An "incorrect code" message
-- `error`: A "something went wrong" message
-- `cancelled`: A "login cancelled" message
 
 ### Desktop to Mobile
 
-This is similar to the **Mobile to Desktop** flow, but the roles are reversed: `useCreateMagicLinkAuth` on the **desktop** device should be used in `"share-local-credentials"` mode, and `useHandleMagicLinkAuth` on the **mobile** device should be used in `"authenticate-current-device"` mode.
+This is similar to the **Mobile to Desktop** flow, but the roles are reversed: `useCreateMagicLinkAuth` on the **Desktop** device should be used as `source`, and `useHandleMagicLinkAuth` on the **Mobile** device should be used as `target`.
 
-On the **desktop** device:
+On the **Desktop** device:
 
 <CodeGroup>
 ```tsx twoslash
+import React, { useState } from "react";
 import { useCreateMagicLinkAuth } from "jazz-react";
+const QRCode = (_: { url: string }) => (<></>)
 
 // ---cut---
-function CreateMagicLinkAsSource() {
-  const { status, confirmationCode } = useCreateMagicLinkAuth({
+export function CreateMagicLinkAsSource() {
+  const [link, setLink] = useState<string | undefined>();
+
+  const { status, createLink, confirmationCode } = useCreateMagicLinkAuth({
     as: "source",
   });
 
-  // Handle depending on status...
+  const onCreateLink = () => createLink().then(setLink);
+
+  if (status === "idle") {
+    return (
+      <button color="primary" onClick={onCreateLink}>
+        Create QR code
+      </button>
+    );
+  }
+
+  if (status === "waitingForHandler") {
+    return (
+      <>
+        <p>Scan QR code to get your device logged in</p>
+        {link ? <QRCode url={link} /> : null}
+      </>
+    );
+  }
+
+  if (status === "confirmationCodeGenerated") {
+    return <p>Confirmation code: {confirmationCode}</p>;
+  }
+
+  if (status === "confirmationCodeCorrect") {
+    return <p>Confirmed! Logging in...</p>;
+  }
+
+  if (status === "authorized") {
+    return <p>Your device has been logged in!</p>;
+  }
+
+  if (status === "confirmationCodeIncorrect") {
+    return (
+      <>
+        <p>Incorrect confirmation code</p>
+        <button onClick={onCreateLink}>Try again</button>
+      </>
+    );
+  }
+
+  if (status === "error") {
+    return (
+      <>
+        <p>Something went wrong</p>
+        <button onClick={onCreateLink}>Try again</button>
+      </>
+    );
+  }
+
+  if (status === "cancelled") {
+    return (
+      <>
+        <p>Login cancelled</p>
+        <button onClick={onCreateLink}>Try again</button>
+      </>
+    );
+  }
 }
 ```
 </CodeGroup>
 
-For each `status` value, we should display:
+On the **Mobile** device we need to host a page at `/magic-link-handler-target`, or provide an alternative handler path to the hooks using the `targetHandlerPath` option.
 
-- `idle`: A button to call `createLink`
-- `waitingForHandler`: The link as a QR code, e.g. using [`qrcode`](https://www.npmjs.com/package/qrcode)
-- `confirmationCodeGenerated`: The confirmation code
-- `confirmationCodeCorrect`: A success message
-- `authorized`: A success message – the device has been logged in!
-- `confirmationCodeIncorrect`: An "incorrect code" message
-- `error`: A "something went wrong" message
-- `cancelled`: A "login cancelled" message
-
-On the **mobile** device we need to host a page at `/magic-link-handler-target`, or provide an alternative handler path to the hooks using the `targetHandlerPath` option.
-
-This is the page we'll land on when the QR code is scanned, and can handle the magic link using the `useHandleMagicLinkAuth` hook in `"authenticate-current-device"` mode:
+This is the page we'll land on when the QR code is scanned, handling the magic link with the `useHandleMagicLinkAuth` hook as `target`, and using `status` to display the current state:
 
 <CodeGroup>
 ```tsx twoslash
+import React from "react";
 import { useHandleMagicLinkAuth } from "jazz-react";
+const ConfirmationCodeForm = (_: { onSubmit: (code: string) => void}) => (<></>)
 
 // ---cut---
-function HandleMagicLinkAsTarget() {
+export function HandleMagicLinkAsTarget() {
   const { status, sendConfirmationCode } = useHandleMagicLinkAuth({
     as: "target",
+    targetHandlerPath: "/#/magic-link-handler-target",
+    sourceHandlerPath: "/#/magic-link-handler-source",
+    onLoggedIn: () => {
+      console.log("logged in!");
+    },
   });
 
-  // Handle depending on status...
+  if (status === "idle") {
+    return <p>Loading...</p>;
+  }
+
+  if (status === "confirmationCodeRequired") {
+    return (
+      <>
+        <p>Enter the confirmation code displayed on your other device</p>
+
+        {sendConfirmationCode ? (
+          <ConfirmationCodeForm onSubmit={sendConfirmationCode} />
+        ) : null}
+      </>
+    );
+  }
+
+  if (status === "confirmationCodePending") {
+    return <p>Confirming...</p>;
+  }
+
+  if (status === "authorized") {
+    return <p>Logged in!</p>;
+  }
+
+  if (status === "confirmationCodeIncorrect") {
+    return (
+      <p>Incorrect confirmation code - please try again</p>
+    );
+  }
+
+  if (status === "error") {
+    return <p>Something went wrong</p>;
+  }
+
+  if (status === "cancelled") {
+    return <p>Login cancelled</p>;
+  }
 }
 ```
 </CodeGroup>
-
-For each `status` value, we should display:
-
-- `idle`: A loading indicator
-- `confirmationCodeRequired`: Confirmation code input calling `sendConfirmationCode` on submit
-- `confirmationCodePending`: A loading indicator or message
-- `authorized`: A success message – we're logged in!
-- `confirmationCodeIncorrect`: An "incorrect code" message
-- `error`: A "something went wrong" message
-
 </ContentByFramework>
 
 ## Examples
@@ -162,4 +327,4 @@ Magic Link authentication is ideal when:
 ## Limitations and considerations
 
 - **No revocation**: Once the secret has been shared with the target device, it cannot be revoked
-- **Requires a camera**: The Magic Link handler needs to have a camera to scan the QR code, or another way to securely receive and load the link
+- **Requires a camera**: The Magic Link handler needs to have a camera to scan the QR code, or another way to get the link

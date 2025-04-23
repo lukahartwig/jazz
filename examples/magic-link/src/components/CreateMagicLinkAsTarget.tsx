@@ -1,8 +1,8 @@
 import { useCreateMagicLinkAuth } from "jazz-react";
 import { useState } from "react";
 import { Button } from "./Button";
-import { ConfirmationCodeInput } from "./ConfirmationCodeInput";
-import { QRCodeContainer } from "./QRCodeContainer";
+import { ConfirmationCodeForm } from "./ConfirmationCodeForm";
+import { QRCode } from "./QRCode";
 
 interface CreateMagicLinkAsTargetProps {
   onLoggedIn: () => void;
@@ -35,7 +35,7 @@ export function CreateMagicLinkAsTarget({
       <>
         <p>Scan QR code to log in</p>
 
-        {link ? <QRCodeContainer url={link} /> : null}
+        {link ? <QRCode url={link} /> : null}
       </>
     );
   }
@@ -46,7 +46,7 @@ export function CreateMagicLinkAsTarget({
         <p>Enter the confirmation code displayed on your other device</p>
 
         {sendConfirmationCode ? (
-          <ConfirmationCodeInput onSubmit={sendConfirmationCode} />
+          <ConfirmationCodeForm onSubmit={sendConfirmationCode} />
         ) : null}
       </>
     );

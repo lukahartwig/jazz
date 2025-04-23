@@ -1,19 +1,19 @@
 "use client";
 
-import QRCode from "qrcode";
+import QRCodeGenerator from "qrcode";
 import { useEffect, useState } from "react";
 import { Button } from "./Button";
 
-interface QRCodeContainerProps {
+interface QRCodeProps {
   url: string;
 }
 
-export function QRCodeContainer({ url }: QRCodeContainerProps) {
+export function QRCode({ url }: QRCodeProps) {
   const [qr, setQr] = useState<string>();
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    QRCode.toDataURL(url)
+    QRCodeGenerator.toDataURL(url)
       .then(setQr)
       .catch((error) => console.error(error));
   }, [url]);

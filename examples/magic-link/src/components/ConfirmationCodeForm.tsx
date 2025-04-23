@@ -5,10 +5,9 @@ interface ConfirmationCodeInputProps {
   onSubmit: (code: string) => void;
 }
 
-export function ConfirmationCodeInput({
-  onSubmit,
-}: ConfirmationCodeInputProps) {
+export function ConfirmationCodeForm({ onSubmit }: ConfirmationCodeInputProps) {
   const [value, setValue] = useState("");
+
   return (
     <OTPInput
       autoFocus

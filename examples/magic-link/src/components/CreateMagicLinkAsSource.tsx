@@ -1,7 +1,7 @@
 import { useCreateMagicLinkAuth } from "jazz-react";
 import { useState } from "react";
 import { Button } from "./Button";
-import { QRCodeContainer } from "./QRCodeContainer";
+import { QRCode } from "./QRCode";
 
 export function CreateMagicLinkAsSource() {
   const [link, setLink] = useState<string | undefined>();
@@ -27,7 +27,7 @@ export function CreateMagicLinkAsSource() {
       <>
         <p>Scan QR code to get your mobile device logged in</p>
 
-        {link ? <QRCodeContainer url={link} /> : null}
+        {link ? <QRCode url={link} /> : null}
       </>
     );
   }

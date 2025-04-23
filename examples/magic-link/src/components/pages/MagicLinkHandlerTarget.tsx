@@ -1,6 +1,6 @@
 import { useHandleMagicLinkAuth } from "jazz-react";
 import { BackToHomepageContainer } from "../BackToHomepageContainer";
-import { ConfirmationCodeInput } from "../ConfirmationCodeInput";
+import { ConfirmationCodeForm } from "../ConfirmationCodeForm";
 
 export default function MagicLinkHandlerTargetPage() {
   return (
@@ -31,7 +31,7 @@ function HandleMagicLinkAsTarget() {
         <p>Enter the confirmation code displayed on your other device</p>
 
         {sendConfirmationCode ? (
-          <ConfirmationCodeInput onSubmit={sendConfirmationCode} />
+          <ConfirmationCodeForm onSubmit={sendConfirmationCode} />
         ) : null}
       </>
     );
