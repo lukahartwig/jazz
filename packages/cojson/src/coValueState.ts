@@ -24,7 +24,8 @@ export class CoValueState {
   core: CoValueCore | null = null;
   id: RawCoID;
 
-  private listeners: Set<(state: CoValueState) => void> = new Set();
+  private listeners: Set<(state: CoValueState, unsub: () => void) => void> =
+    new Set();
   private counter: UpDownCounter;
 
   constructor(id: RawCoID) {
@@ -69,18 +70,17 @@ export class CoValueState {
     return !!this.core;
   }
 
-  addListener(listener: (state: CoValueState) => void) {
+  addListener(listener: (state: CoValueState, unsub: () => void) => void) {
+    const unsub = () => this.listeners.delete(listener);
     this.listeners.add(listener);
-    listener(this);
-  }
+    listener(this, unsub);
 
-  removeListener(listener: (state: CoValueState) => void) {
-    this.listeners.delete(listener);
+    return unsub;
   }
 
   private notifyListeners() {
     for (const listener of this.listeners) {
-      listener(this);
+      listener(this, () => this.listeners.delete(listener));
     }
   }
 
@@ -90,14 +90,12 @@ export class CoValueState {
     }
 
     return new Promise<CoValueCore>((resolve) => {
-      const listener = (state: CoValueState) => {
+      this.addListener((state: CoValueState, unsub: () => void) => {
         if (state.core) {
           resolve(state.core);
-          this.removeListener(listener);
+          unsub();
         }
-      };
-
-      this.addListener(listener);
+      });
     });
   }
 
@@ -175,7 +173,7 @@ export class CoValueState {
           const timeout = setTimeout(markNotFound, timeoutDuration);
           const removeCloseListener = peer.addCloseListener(markNotFound);
 
-          const listener = (state: CoValueState) => {
+          this.addListener((state: CoValueState, unsub) => {
             const peerState = state.peers.get(peer.id);
             if (
               state.isAvailable() || // might have become available from another peer e.g. through handleNewContent
@@ -183,14 +181,12 @@ export class CoValueState {
               peerState?.type === "errored" ||
               peerState?.type === "unavailable"
             ) {
-              state.removeListener(listener);
+              unsub();
               removeCloseListener();
               clearTimeout(timeout);
               resolve();
             }
-          };
-
-          this.addListener(listener);
+          });
         });
 
         await waitingForPeer;
@@ -210,14 +206,12 @@ export class CoValueState {
 
     if (peersWithRetry.length > 0) {
       const waitingForCoValue = new Promise<void>((resolve) => {
-        const listener = (state: CoValueState) => {
+        this.addListener((state: CoValueState, unsub) => {
           if (state.isAvailable()) {
+            unsub();
             resolve();
-            this.removeListener(listener);
           }
-        };
-
-        this.addListener(listener);
+        });
       });
 
       // We want to exit early if the coValue becomes available in between the retries
