@@ -1,5 +1,19 @@
 # jazz-auth-clerk
 
+## 0.13.9
+
+### Patch Changes
+
+- Updated dependencies [a6cf01f]
+  - jazz-tools@0.13.9
+  - jazz-browser@0.13.9
+
+## 0.13.8
+
+### Patch Changes
+
+- de19a6d: Consider the user as changed when clerk.user changes from null to non-null
+
 ## 0.13.7
 
 ### Patch Changes

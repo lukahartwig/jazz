@@ -1,5 +1,11 @@
 # jazz-tools
 
+## 0.13.9
+
+### Patch Changes
+
+- a6cf01f: Handle null values on CoList when using $each: true
+
 ## 0.13.7
 
 ### Patch Changes

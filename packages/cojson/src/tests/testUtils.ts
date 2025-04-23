@@ -472,13 +472,13 @@ export function setupTestNode(
     connectToSyncServer();
   }
 
-  return {
+  const ctx = {
     node,
     connectToSyncServer,
     addStoragePeer,
     restart: () => {
       node.gracefulShutdown();
-      node = new LocalNode(admin, session, Crypto);
+      ctx.node = node = new LocalNode(admin, session, Crypto);
 
       if (opts.isSyncServer) {
         syncServer.current = node;
@@ -487,6 +487,8 @@ export function setupTestNode(
       return node;
     },
   };
+
+  return ctx;
 }
 
 export async function setupTestAccount(
