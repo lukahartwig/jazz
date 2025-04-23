@@ -1,5 +1,37 @@
 # jazz-example-inspector
 
+## 0.0.129
+
+### Patch Changes
+
+- Updated dependencies [f837cfe]
+  - cojson@0.13.10
+  - cojson-transport-ws@0.13.10
+  - jazz-inspector@0.13.10
+
+## 0.0.128
+
+### Patch Changes
+
+- jazz-inspector@0.13.9
+
+## 0.0.127
+
+### Patch Changes
+
+- 4530c4a: improve preview of Account types
+- Updated dependencies [22b5c4f]
+- Updated dependencies [31ea2ef]
+- Updated dependencies [4530c4a]
+- Updated dependencies [bc3d7bb]
+- Updated dependencies [4e9aae1]
+- Updated dependencies [21c935c]
+- Updated dependencies [aa1c80e]
+- Updated dependencies [13074be]
+  - jazz-inspector@0.13.7
+  - cojson@0.13.7
+  - cojson-transport-ws@0.13.7
+
 ## 0.0.126
 
 ### Patch Changes

@@ -1,7 +1,7 @@
 {
   "name": "form",
   "private": true,
-  "version": "0.1.16",
+  "version": "0.1.19",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -18,7 +18,7 @@
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
-    "@biomejs/biome": "catalog:",
+    "@biomejs/biome": "1.9.4",
     "@playwright/test": "^1.50.1",
     "@tailwindcss/forms": "^0.5.9",
     "@types/react": "^18.3.12",
@@ -29,7 +29,7 @@
     "is-ci": "^3.0.1",
     "postcss": "^8.4.27",
     "tailwindcss": "^3.4.17",
-    "typescript": "catalog:",
-    "vite": "catalog:"
+    "typescript": "5.6.2",
+    "vite": "6.0.11"
   }
 }

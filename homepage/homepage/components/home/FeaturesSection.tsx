@@ -27,14 +27,8 @@ const features = [
         </pre>
 
         <div className="w-full bg-white rounded-md py-3 px-3 flex gap-4 items-center border rounded-xl shadow-lg shadow-stone-500/10 dark:bg-stone-925">
-          <Icon
-            size="2xl"
-            name="file"
-            className="text-primary"
-          />
-          <div className="text-2xl flex-1 text-primary">
-            file.pdf
-          </div>
+          <Icon size="2xl" name="file" className="text-primary" />
+          <div className="text-2xl flex-1 text-primary">file.pdf</div>
           <Icon size="2xl" name="delete" className="text-stone-500" />
         </div>
       </div>
@@ -117,9 +111,7 @@ export function FeaturesSection() {
               {illustration}
             </div>
             <div className="p-4">
-              <h3 className="font-medium text-highlight mb-1">
-                {title}
-              </h3>
+              <h3 className="font-medium text-highlight mb-1">{title}</h3>
               <Prose size="sm">{description}</Prose>
             </div>
           </Card>

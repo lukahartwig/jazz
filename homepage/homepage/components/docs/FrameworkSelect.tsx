@@ -67,11 +67,7 @@ export function FrameworkSelect() {
         variant="secondary"
       >
         {frameworks[selectedFramework].label}
-        <Icon
-          name="chevronDown"
-          size="sm"
-          className="text-muted"
-        />
+        <Icon name="chevronDown" size="sm" className="text-muted" />
       </DropdownButton>
       <DropdownMenu className="w-[--button-width] z-50" anchor="bottom start">
         {Object.entries(frameworks).map(([key, framework]) => (

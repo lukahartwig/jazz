@@ -11,13 +11,14 @@ import clsx from "clsx";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ComponentType, ReactNode, useEffect, useState } from "react";
+import React from "react";
 import { isActive } from "../../utils/nav";
 import { Icon } from "../atoms/Icon";
 import type { IconName } from "../atoms/Icon";
 import { BreadCrumb } from "../molecules/Breadcrumb";
 import { SocialLinks, SocialLinksProps } from "./SocialLinks";
 
-type NavItemProps = {
+export type NavItemProps = {
   href: string;
   icon?: IconName;
   title: string;
@@ -34,6 +35,7 @@ type NavProps = {
   socials?: SocialLinksProps;
   themeToggle: ComponentType<{ className?: string }>;
   sections?: NavSection[];
+  hideMobileNav?: boolean;
 };
 
 export type NavSection = {
@@ -128,11 +130,13 @@ function NavItem({
 export function MobileNav({
   mainLogo,
   items,
-  cta,
   socials,
   sections,
   themeToggle: ThemeToggle,
-}: NavProps) {
+  navBarClassName,
+}: NavProps & {
+  navBarClassName?: string;
+}) {
   const primarySection: {
     name: string;
     icon: IconName;
@@ -183,9 +187,15 @@ export function MobileNav({
   };
 
   const navSections = [primarySection, ...(sections || [])];
+
   return (
     <>
-      <div className="md:hidden px-4 flex items-center self-stretch dark:text-white">
+      <div
+        className={clsx(
+          "md:hidden px-4 flex items-center self-stretch dark:text-white",
+          navBarClassName,
+        )}
+      >
         <NavLinkLogo prominent href="/" className="mr-auto">
           {mainLogo}
         </NavLinkLogo>
@@ -215,13 +225,9 @@ export function MobileNav({
         className={clsx(
           "md:hidden bg-white border fixed z-50",
           "dark:bg-stone-925",
-
-          {
-            "rounded-lg right-6 left-6 bottom-6 sm:max-w-lg sm:w-full shadow-md sm:left-1/2 sm:-translate-x-1/2 ":
-              !!active,
-            "rounded-full shadow-sm left-1/2 -translate-x-1/2  bottom-7":
-              !active,
-          },
+          active
+            ? "rounded-lg right-6 left-6 bottom-6 sm:max-w-lg sm:w-full shadow-md sm:left-1/2 sm:-translate-x-1/2 "
+            : "rounded-full shadow-sm left-1/2 -translate-x-1/2  bottom-7",
         )}
       >
         {active && (
@@ -232,7 +238,11 @@ export function MobileNav({
             )}
           >
             {navSections.map((section) =>
-              section.name == active ? section.content : null,
+              section.name == active ? (
+                <React.Fragment key={section.name}>
+                  {section.content}
+                </React.Fragment>
+              ) : null,
             )}
           </div>
         )}
@@ -335,7 +345,7 @@ function NavLinkLogo({
 }
 
 export function Nav(props: NavProps) {
-  const { mainLogo, items, cta } = props;
+  const { mainLogo, items, cta, hideMobileNav } = props;
   return (
     <>
       <div className="w-full border-b py-2 sticky top-0 z-50 bg-white dark:bg-stone-950 hidden md:block">
@@ -362,7 +372,7 @@ export function Nav(props: NavProps) {
           {cta}
         </PopoverGroup>
       </div>
-      <MobileNav {...props} />
+      {!hideMobileNav && <MobileNav {...props} />}
     </>
   );
 }

@@ -1,13 +1,13 @@
 "use client";
 
-import { SideNav } from "@/components/SideNav";
-import { SideNavHeader } from "@/components/SideNavHeader";
+import { SideNav, SideNavBody, SideNavHeader } from "@/components/SideNav";
+import { SideNavSection } from "@/components/SideNavSection";
 import { FrameworkSelect } from "@/components/docs/FrameworkSelect";
 import { docNavigationItems } from "@/content/docs/docNavigationItems.js";
 import { useFramework } from "@/lib/use-framework";
-import { clsx } from "clsx";
+import React from "react";
 
-export function DocNav({ className }: { className?: string }) {
+export function DocNav() {
   const framework = useFramework();
   const items = docNavigationItems.map((headerItem) => {
     return {
@@ -33,14 +33,16 @@ export function DocNav({ className }: { className?: string }) {
   });
 
   return (
-    <SideNav
-      items={items}
-      className={clsx(className)}
-      footer={
-        <SideNavHeader href="/api-reference">API Reference</SideNavHeader>
-      }
-    >
+    <SideNav>
       <FrameworkSelect />
+
+      <SideNavBody>
+        {items.map((item) => (
+          <SideNavSection item={item} key={item.name} />
+        ))}
+
+        <SideNavHeader href="/api-reference">API Reference</SideNavHeader>
+      </SideNavBody>
     </SideNav>
   );
 }

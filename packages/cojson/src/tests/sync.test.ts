@@ -20,24 +20,27 @@ import { connectedPeers, newQueuePair } from "../streamUtils.js";
 import type { LoadMessage, SyncMessage } from "../sync.js";
 import {
   blockMessageTypeOnOutgoingPeer,
-  connectNodeToSyncServer,
   connectTwoPeers,
-  createConnectedTestNode,
   createTestMetricReader,
   createTestNode,
   loadCoValueOrFail,
   randomAnonymousAccountAndSessionID,
-  setupSyncServer,
+  setupTestAccount,
+  setupTestNode,
   tearDownTestMetricReader,
   waitFor,
 } from "./testUtils.js";
 
 const Crypto = await WasmCrypto.create();
 
-let jazzCloud = setupSyncServer();
+let jazzCloud = setupTestNode({
+  isSyncServer: true,
+});
 
 beforeEach(async () => {
-  jazzCloud = setupSyncServer();
+  jazzCloud = setupTestNode({
+    isSyncServer: true,
+  });
 });
 
 test("If we add a peer, but it never subscribes to a coValue, it won't get any messages", async () => {
@@ -75,14 +78,18 @@ test("If we add a peer, but it never subscribes to a coValue, it won't get any m
 });
 
 test("Can sync a coValue through a server to another client", async () => {
-  const { node: client1 } = await createConnectedTestNode();
+  const { node: client1 } = await setupTestAccount({
+    connected: true,
+  });
 
   const group = client1.createGroup();
 
   const map = group.createMap();
   map.set("hello", "world", "trusting");
 
-  const { node: client2 } = await createConnectedTestNode();
+  const { node: client2 } = await setupTestAccount({
+    connected: true,
+  });
 
   const mapOnClient2 = await loadCoValueOrFail(client2, map.id);
 
@@ -90,7 +97,9 @@ test("Can sync a coValue through a server to another client", async () => {
 });
 
 test("Can sync a coValue with private transactions through a server to another client", async () => {
-  const { node: client1 } = await createConnectedTestNode();
+  const { node: client1 } = await setupTestAccount({
+    connected: true,
+  });
 
   const group = client1.createGroup();
 
@@ -98,7 +107,9 @@ test("Can sync a coValue with private transactions through a server to another c
   map.set("hello", "world", "private");
   group.addMember("everyone", "reader");
 
-  const { node: client2 } = await createConnectedTestNode();
+  const { node: client2 } = await setupTestAccount({
+    connected: true,
+  });
 
   const mapOnClient2 = await loadCoValueOrFail(client2, map.id);
 
@@ -106,52 +117,47 @@ test("Can sync a coValue with private transactions through a server to another c
 });
 
 test("should keep the peer state when the peer closes", async () => {
-  const client = createTestNode();
+  const client = setupTestNode();
 
-  const { nodeToServerPeer, serverToNodePeer } =
-    connectNodeToSyncServer(client);
+  const { peer, peerState } = client.connectToSyncServer();
 
   const group = jazzCloud.node.createGroup();
   const map = group.createMap();
   map.set("hello", "world", "trusting");
 
-  await client.loadCoValueCore(map.core.id);
+  await client.node.loadCoValueCore(map.core.id);
 
-  const syncManager = client.syncManager;
-  const peerState = syncManager.peers[nodeToServerPeer.id];
+  const syncManager = client.node.syncManager;
 
   // @ts-expect-error Simulating a peer closing, leveraging the direct connection between the client/server peers
-  await serverToNodePeer.outgoing.push("Disconnected");
+  await peer.outgoing.push("Disconnected");
 
   await waitFor(() => peerState?.closed);
 
-  expect(syncManager.peers[nodeToServerPeer.id]).not.toBeUndefined();
+  expect(syncManager.peers[peer.id]).not.toBeUndefined();
 });
 
 test("should delete the peer state when the peer closes if deletePeerStateOnClose is true", async () => {
-  const client = createTestNode();
+  const client = setupTestNode();
 
-  const { nodeToServerPeer, serverToNodePeer } =
-    connectNodeToSyncServer(client);
+  const { peer, peerState } = client.connectToSyncServer();
 
-  nodeToServerPeer.deletePeerStateOnClose = true;
+  peer.deletePeerStateOnClose = true;
 
   const group = jazzCloud.node.createGroup();
   const map = group.createMap();
   map.set("hello", "world", "trusting");
 
-  await client.loadCoValueCore(map.core.id);
+  await client.node.loadCoValueCore(map.core.id);
 
-  const syncManager = client.syncManager;
-
-  const peerState = syncManager.peers[nodeToServerPeer.id];
+  const syncManager = client.node.syncManager;
 
   // @ts-expect-error Simulating a peer closing, leveraging the direct connection between the client/server peers
-  await serverToNodePeer.outgoing.push("Disconnected");
+  await peer.outgoing.push("Disconnected");
 
   await waitFor(() => peerState?.closed);
 
-  expect(syncManager.peers[nodeToServerPeer.id]).toBeUndefined();
+  expect(syncManager.peers[peer.id]).toBeUndefined();
 });
 
 describe("sync - extra tests", () => {
@@ -558,7 +564,9 @@ test("a value created on one node can be loaded on anotehr node even if not dire
 
 describe("SyncManager - knownStates vs optimisticKnownStates", () => {
   test("knownStates and optimisticKnownStates are the same when the coValue is fully synced", async () => {
-    const { node: client } = await createConnectedTestNode();
+    const { node: client } = await setupTestAccount({
+      connected: true,
+    });
 
     // Create test data
     const group = client.createGroup();
@@ -585,16 +593,18 @@ describe("SyncManager - knownStates vs optimisticKnownStates", () => {
   });
 
   test("optimisticKnownStates is updated as new transactions are sent, while knownStates only when the updates are acknowledged", async () => {
-    const { node: client, nodeToServerPeer } = await createConnectedTestNode();
+    const client = await setupTestAccount();
+
+    const { peer, peerState } = client.connectToSyncServer();
 
     // Create test data and sync the first change
     // We want that both the nodes know about the coValue so we can test
     // the content acknowledgement flow.
-    const group = client.createGroup();
+    const group = client.node.createGroup();
     const map = group.createMap();
     map.set("key1", "value1", "trusting");
 
-    await client.syncManager.actuallySyncCoValue(map.core);
+    await client.node.syncManager.actuallySyncCoValue(map.core);
     await map.core.waitForSync();
 
     // Block the content messages
@@ -602,16 +612,12 @@ describe("SyncManager - knownStates vs optimisticKnownStates", () => {
     // optimisticKnownStates is updated when the content messages are sent,
     // while knownStates is only updated when we receive the "known" messages
     // that are acknowledging the receipt of the content messages
-    const outgoing = blockMessageTypeOnOutgoingPeer(
-      nodeToServerPeer,
-      "content",
-    );
+    const outgoing = blockMessageTypeOnOutgoingPeer(peer, "content");
 
     map.set("key2", "value2", "trusting");
 
-    await client.syncManager.actuallySyncCoValue(map.core);
+    await client.node.syncManager.actuallySyncCoValue(map.core);
 
-    const peerState = client.syncManager.peers[nodeToServerPeer.id]!;
     expect(peerState.optimisticKnownStates.get(map.core.id)).not.toEqual(
       peerState.knownStates.get(map.core.id),
     );
@@ -632,36 +638,32 @@ describe("SyncManager - knownStates vs optimisticKnownStates", () => {
 
 describe("SyncManager.addPeer", () => {
   test("new peer gets a copy of previous peer's knownStates when replacing it", async () => {
-    const { node: client } = await createConnectedTestNode();
+    const client = await setupTestAccount();
+
+    const { peerState: firstPeerState, getCurrentPeerState } =
+      client.connectToSyncServer();
 
     // Create test data
-    const group = client.createGroup();
+    const group = client.node.createGroup();
     const map = group.createMap();
     map.set("key1", "value1", "trusting");
 
-    await client.syncManager.actuallySyncCoValue(map.core);
+    await client.node.syncManager.actuallySyncCoValue(map.core);
 
     // Wait for initial sync
     await map.core.waitForSync();
-
-    const firstPeerState = client.syncManager.getPeers()[0]!;
 
     // Store the initial known states
     const initialKnownStates = firstPeerState.knownStates;
 
     // Create new connection with same ID
-    const [secondPeer] = connectedPeers(firstPeerState.id, "unusedPeer", {
-      peer1role: "server",
-      peer2role: "client",
-    });
+    client.connectToSyncServer();
 
-    // Add new peer with same ID
-    await client.syncManager.addPeer(secondPeer);
-
-    const newPeerState = client.syncManager.getPeers()[0]!;
+    // Wait for the new peer to be added
+    await waitFor(() => expect(getCurrentPeerState()).not.toBe(firstPeerState));
 
     // Verify that the new peer has a copy of the previous known states
-    const newPeerKnownStates = newPeerState.knownStates;
+    const newPeerKnownStates = getCurrentPeerState().knownStates;
 
     expect(newPeerKnownStates).not.toBe(initialKnownStates); // Should be a different instance
     expect(newPeerKnownStates.get(map.core.id)).toEqual(
@@ -670,14 +672,16 @@ describe("SyncManager.addPeer", () => {
   });
 
   test("new peer with new ID starts with empty knownStates", async () => {
-    const { node: client } = await createConnectedTestNode();
+    const client = await setupTestAccount({
+      connected: true,
+    });
 
     // Create test data
-    const group = client.createGroup();
+    const group = client.node.createGroup();
     const map = group.createMap();
     map.set("key1", "value1", "trusting");
 
-    await client.syncManager.actuallySyncCoValue(map.core);
+    await client.node.syncManager.actuallySyncCoValue(map.core);
 
     // Wait for initial sync
     await map.core.waitForSync();
@@ -689,66 +693,69 @@ describe("SyncManager.addPeer", () => {
     });
 
     // Add new peer with different ID
-    client.syncManager.addPeer(brandNewPeer);
+    client.node.syncManager.addPeer(brandNewPeer);
 
     // Verify that the new peer starts with empty known states
     const newPeerKnownStates =
-      client.syncManager.peers["brandNewPeer"]!.knownStates;
+      client.node.syncManager.peers["brandNewPeer"]!.knownStates;
     expect(newPeerKnownStates.get(map.core.id)).toBe(undefined);
   });
 
   test("when adding a peer with the same ID as a previous peer, the previous peer is closed", async () => {
-    const { node: client } = await createConnectedTestNode();
+    const client = await setupTestAccount({});
+
+    const { peerState: firstPeerState } = client.connectToSyncServer();
 
     // Store reference to first peer
-    const firstPeer = client.syncManager.getPeers()[0]!;
-    const closeSpy = vi.spyOn(firstPeer, "gracefulShutdown");
+    const closeSpy = vi.spyOn(firstPeerState, "gracefulShutdown");
 
     // Create and add replacement peer
-    const [secondPeer] = connectedPeers(firstPeer.id, "unusedPeer", {
+    const [secondPeer] = connectedPeers(firstPeerState.id, "unusedPeer", {
       peer1role: "server",
       peer2role: "client",
     });
 
-    client.syncManager.addPeer(secondPeer);
+    client.node.syncManager.addPeer(secondPeer);
 
     // Verify thet the first peer had ben closed correctly
     expect(closeSpy).toHaveBeenCalled();
-    expect(firstPeer.closed).toBe(true);
+    expect(firstPeerState.closed).toBe(true);
   });
 
   test("when adding a peer with the same ID as a previous peer and the previous peer is closed, do not attempt to close it again", async () => {
-    const { node: client } = await createConnectedTestNode();
+    const client = await setupTestAccount({
+      connected: true,
+    });
 
     // Store reference to first peer
-    const firstPeer = client.syncManager.getPeers()[0]!;
+    const { peerState: firstPeerState } = client.connectToSyncServer();
 
-    firstPeer.gracefulShutdown();
-    const closeSpy = vi.spyOn(firstPeer, "gracefulShutdown");
+    firstPeerState.gracefulShutdown();
+    const closeSpy = vi.spyOn(firstPeerState, "gracefulShutdown");
 
     // Create and add replacement peer
-    const [secondPeer] = connectedPeers(firstPeer.id, "unusedPeer", {
+    const [secondPeer] = connectedPeers(firstPeerState.id, "unusedPeer", {
       peer1role: "server",
       peer2role: "client",
     });
 
-    client.syncManager.addPeer(secondPeer);
+    client.node.syncManager.addPeer(secondPeer);
 
     // Verify thet the first peer had not been closed again
     expect(closeSpy).not.toHaveBeenCalled();
-    expect(firstPeer.closed).toBe(true);
+    expect(firstPeerState.closed).toBe(true);
   });
 
   test("when adding a server peer the local coValues should be sent to it", async () => {
-    const { node: client, addServerPeer } = await createConnectedTestNode({
+    const client = await setupTestAccount({
       connected: false,
     });
 
-    const group = client.createGroup();
+    const group = client.node.createGroup();
     const map = group.createMap();
     map.set("key1", "value1", "trusting");
 
-    addServerPeer();
+    client.connectToSyncServer();
 
     await map.core.waitForSync();
 
@@ -760,28 +767,38 @@ describe("SyncManager.addPeer", () => {
 
 describe("loadCoValueCore with retry", () => {
   test("should load the value if available on the server", async () => {
-    const { node: client } = await createConnectedTestNode();
-    const { node: anotherClient } = await createConnectedTestNode();
+    const client = await setupTestAccount({
+      connected: true,
+    });
 
-    const group = anotherClient.createGroup();
+    const anotherClient = await setupTestAccount({
+      connected: true,
+    });
+
+    const group = anotherClient.node.createGroup();
     const map = group.createMap();
     map.set("key1", "value1", "trusting");
 
-    const promise = client.loadCoValueCore(map.id);
+    const promise = client.node.loadCoValueCore(map.id);
 
     await expect(promise).resolves.not.toBe("unavailable");
   });
 
   test("should handle correctly two subsequent loads", async () => {
-    const { node: client } = await createConnectedTestNode();
-    const { node: anotherClient } = await createConnectedTestNode();
+    const client = await setupTestAccount({
+      connected: true,
+    });
 
-    const group = anotherClient.createGroup();
+    const anotherClient = await setupTestAccount({
+      connected: true,
+    });
+
+    const group = anotherClient.node.createGroup();
     const map = group.createMap();
     map.set("key1", "value1", "trusting");
 
-    const promise1 = client.loadCoValueCore(map.id);
-    const promise2 = client.loadCoValueCore(map.id);
+    const promise1 = client.node.loadCoValueCore(map.id);
+    const promise2 = client.node.loadCoValueCore(map.id);
 
     await expect(promise1).resolves.not.toBe("unavailable");
     await expect(promise2).resolves.not.toBe("unavailable");
@@ -829,56 +846,58 @@ describe("loadCoValueCore with retry", () => {
 
 describe("waitForSyncWithPeer", () => {
   test("should resolve when the coValue is fully uploaded into the peer", async () => {
-    const { node: client } = await createConnectedTestNode();
+    const client = await setupTestAccount();
+
+    const { peerState } = client.connectToSyncServer();
 
     // Create test data
-    const group = client.createGroup();
+    const group = client.node.createGroup();
     const map = group.createMap();
     map.set("key1", "value1", "trusting");
 
-    await client.syncManager.actuallySyncCoValue(map.core);
-
-    const peer = client.syncManager.getPeers()[0];
-
-    if (!peer) {
-      throw new Error("No peer found");
-    }
+    await client.node.syncManager.actuallySyncCoValue(map.core);
 
     await expect(
-      client.syncManager.waitForSyncWithPeer(peer.id, map.core.id, 100),
+      client.node.syncManager.waitForSyncWithPeer(
+        peerState.id,
+        map.core.id,
+        100,
+      ),
     ).resolves.toBe(true);
   });
 
   test("should not resolve when the coValue is not synced", async () => {
-    const { node: client } = await createConnectedTestNode();
+    const client = await setupTestAccount();
 
-    const peer = client.syncManager.getPeers()[0];
-
-    if (!peer) {
-      throw new Error("No peer found");
-    }
+    const { peerState } = client.connectToSyncServer();
 
     // Create test data
-    const group = client.createGroup();
+    const group = client.node.createGroup();
     const map = group.createMap();
     map.set("key1", "value1", "trusting");
 
-    vi.spyOn(peer, "pushOutgoingMessage").mockImplementation(async () => {
+    vi.spyOn(peerState, "pushOutgoingMessage").mockImplementation(async () => {
       return Promise.resolve();
     });
 
-    await client.syncManager.actuallySyncCoValue(map.core);
+    await client.node.syncManager.actuallySyncCoValue(map.core);
 
     await expect(
-      client.syncManager.waitForSyncWithPeer(peer.id, map.core.id, 100),
+      client.node.syncManager.waitForSyncWithPeer(
+        peerState.id,
+        map.core.id,
+        100,
+      ),
     ).rejects.toThrow("Timeout");
   });
 });
 
 test("Should not crash when syncing an unknown coValue type", async () => {
-  const { node: client } = await createConnectedTestNode();
+  const client = await setupTestAccount({
+    connected: true,
+  });
 
-  const coValue = client.createCoValue({
+  const coValue = client.node.createCoValue({
     type: "ooops" as any,
     ruleset: { type: "unsafeAllowAll" },
     meta: null,
@@ -887,10 +906,12 @@ test("Should not crash when syncing an unknown coValue type", async () => {
 
   await coValue.waitForSync();
 
-  const { node: anotherClient } = await createConnectedTestNode();
+  const anotherClient = await setupTestAccount({
+    connected: true,
+  });
 
   const coValueOnTheOtherNode = await loadCoValueOrFail(
-    anotherClient,
+    anotherClient.node,
     coValue.getCurrentContent().id,
   );
   expect(coValueOnTheOtherNode.id).toBe(coValue.id);
@@ -1000,19 +1021,19 @@ function groupStateEx(group: RawGroup) {
 
 describe("LocalNode.load", () => {
   test("should throw error when trying to load with undefined ID", async () => {
-    const { node } = await createConnectedTestNode();
+    const client = await setupTestAccount();
 
     // @ts-expect-error Testing with undefined ID
-    await expect(node.load(undefined)).rejects.toThrow(
+    await expect(client.node.load(undefined)).rejects.toThrow(
       "Trying to load CoValue with undefined id",
     );
   });
 
   test("should throw error when trying to load with invalid ID format", async () => {
-    const { node } = await createConnectedTestNode();
+    const client = await setupTestAccount();
 
     // @ts-expect-error Testing with invalid ID format
-    await expect(node.load("invalid_id")).rejects.toThrow(
+    await expect(client.node.load("invalid_id")).rejects.toThrow(
       "Trying to load CoValue with invalid id invalid_id",
     );
   });
@@ -1020,8 +1041,9 @@ describe("LocalNode.load", () => {
 
 describe("SyncManager.handleSyncMessage", () => {
   test("should ignore messages with undefined ID", async () => {
-    const { node: client } = await createConnectedTestNode();
-    const peer = client.syncManager.getPeers()[0]!;
+    const client = await setupTestAccount();
+
+    const { peerState } = client.connectToSyncServer();
 
     // Create an invalid message with undefined ID
     const invalidMessage = {
@@ -1031,16 +1053,17 @@ describe("SyncManager.handleSyncMessage", () => {
       sessions: {},
     } as unknown as LoadMessage;
 
-    await client.syncManager.handleSyncMessage(invalidMessage, peer);
+    await client.node.syncManager.handleSyncMessage(invalidMessage, peerState);
 
     // Verify that no state changes occurred
-    expect(peer.knownStates.has(invalidMessage.id)).toBe(false);
-    expect(peer.optimisticKnownStates.has(invalidMessage.id)).toBe(false);
+    expect(peerState.knownStates.has(invalidMessage.id)).toBe(false);
+    expect(peerState.optimisticKnownStates.has(invalidMessage.id)).toBe(false);
   });
 
   test("should ignore messages with invalid ID format", async () => {
-    const { node: client } = await createConnectedTestNode();
-    const peer = client.syncManager.getPeers()[0]!;
+    const client = await setupTestAccount();
+
+    const { peerState } = client.connectToSyncServer();
 
     // Create an invalid message with wrong ID format
     const invalidMessage = {
@@ -1050,20 +1073,21 @@ describe("SyncManager.handleSyncMessage", () => {
       sessions: {},
     } as unknown as LoadMessage;
 
-    await client.syncManager.handleSyncMessage(invalidMessage, peer);
+    await client.node.syncManager.handleSyncMessage(invalidMessage, peerState);
 
     // Verify that no state changes occurred
-    expect(peer.knownStates.has(invalidMessage.id)).toBe(false);
-    expect(peer.optimisticKnownStates.has(invalidMessage.id)).toBe(false);
+    expect(peerState.knownStates.has(invalidMessage.id)).toBe(false);
+    expect(peerState.optimisticKnownStates.has(invalidMessage.id)).toBe(false);
   });
 
   test("should ignore messages for errored coValues", async () => {
-    const { node: client } = await createConnectedTestNode();
-    const peer = client.syncManager.getPeers()[0]!;
+    const client = await setupTestAccount();
+
+    const { peerState } = client.connectToSyncServer();
 
     // Add a coValue to the errored set
     const erroredId = "co_z123" as const;
-    peer.erroredCoValues.set(
+    peerState.erroredCoValues.set(
       erroredId,
       new Error("Test error") as unknown as TryAddTransactionsError,
     );
@@ -1075,17 +1099,19 @@ describe("SyncManager.handleSyncMessage", () => {
       sessions: {},
     } satisfies LoadMessage;
 
-    await client.syncManager.handleSyncMessage(message, peer);
+    await client.node.syncManager.handleSyncMessage(message, peerState);
 
     // Verify that no state changes occurred
-    expect(peer.knownStates.has(message.id)).toBe(false);
-    expect(peer.optimisticKnownStates.has(message.id)).toBe(false);
+    expect(peerState.knownStates.has(message.id)).toBe(false);
+    expect(peerState.optimisticKnownStates.has(message.id)).toBe(false);
   });
 
   test("should process valid messages", async () => {
-    const { node: client } = await createConnectedTestNode();
-    const group = client.createGroup();
-    const peer = client.syncManager.getPeers()[0]!;
+    const client = await setupTestAccount();
+
+    const { peerState } = client.connectToSyncServer();
+
+    const group = client.node.createGroup();
 
     const validMessage = {
       action: "load" as const,
@@ -1094,9 +1120,9 @@ describe("SyncManager.handleSyncMessage", () => {
       sessions: {},
     };
 
-    await client.syncManager.handleSyncMessage(validMessage, peer);
+    await client.node.syncManager.handleSyncMessage(validMessage, peerState);
 
     // Verify that the message was processed
-    expect(peer.knownStates.has(group.id)).toBe(true);
+    expect(peerState.knownStates.has(group.id)).toBe(true);
   });
 });

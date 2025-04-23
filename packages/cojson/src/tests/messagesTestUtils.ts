@@ -1,5 +1,10 @@
 import { CoValueCore } from "../exports";
-import { CoValueKnownState, NewContentMessage, SyncMessage } from "../sync";
+import {
+  CoValueKnownState,
+  NewContentMessage,
+  Peer,
+  SyncMessage,
+} from "../sync";
 
 function simplifySessions(msg: CoValueKnownState) {
   const count = Object.values(msg.sessions).reduce(
@@ -27,7 +32,8 @@ function simplifyNewContent(content: NewContentMessage["new"]) {
 export function toSimplifiedMessages(
   coValues: Record<string, CoValueCore>,
   messages: {
-    from: "client" | "server";
+    from: string;
+    to: string;
     msg: SyncMessage;
   }[],
 ) {
@@ -41,26 +47,27 @@ export function toSimplifiedMessages(
     return `unknown/${id}`;
   }
 
-  function toDebugString(from: "client" | "server", msg: SyncMessage) {
+  function toDebugString(from: string, to: string, msg: SyncMessage) {
     switch (msg.action) {
       case "known":
-        return `${from} -> KNOWN ${msg.isCorrection ? "CORRECTION " : ""}${getCoValue(msg.id)} sessions: ${simplifySessions(msg)}`;
+        return `${from} -> ${to} | KNOWN ${msg.isCorrection ? "CORRECTION " : ""}${getCoValue(msg.id)} sessions: ${simplifySessions(msg)}`;
       case "load":
-        return `${from} -> LOAD ${getCoValue(msg.id)} sessions: ${simplifySessions(msg)}`;
+        return `${from} -> ${to} | LOAD ${getCoValue(msg.id)} sessions: ${simplifySessions(msg)}`;
       case "done":
-        return `${from} -> DONE ${getCoValue(msg.id)}`;
+        return `${from} -> ${to} | DONE ${getCoValue(msg.id)}`;
       case "content":
-        return `${from} -> CONTENT ${getCoValue(msg.id)} header: ${Boolean(msg.header)} new: ${simplifyNewContent(msg.new)}`;
+        return `${from} -> ${to} | CONTENT ${getCoValue(msg.id)} header: ${Boolean(msg.header)} new: ${simplifyNewContent(msg.new)}`;
     }
   }
 
-  return messages.map((m) => toDebugString(m.from, m.msg));
+  return messages.map((m) => toDebugString(m.from, m.to, m.msg));
 }
 
 export function debugMessages(
   coValues: Record<string, CoValueCore>,
   messages: {
-    from: "client" | "server";
+    from: string;
+    to: string;
     msg: SyncMessage;
   }[],
 ) {

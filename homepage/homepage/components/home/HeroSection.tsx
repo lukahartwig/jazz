@@ -55,7 +55,9 @@ export function HeroSection() {
       <div className="flex flex-col justify-center gap-5 lg:col-span-2 lg:gap-8">
         <Kicker>Toolkit for backendless apps</Kicker>
         <H1>
-          <span className="inline-block text-highlight">{marketingCopy.headline}</span>
+          <span className="inline-block text-highlight">
+            {marketingCopy.headline}
+          </span>
         </H1>
 
         <Prose size="lg" className="text-pretty max-w-2xl dark:text-stone-200">

@@ -1,7 +1,7 @@
 {
   "name": "organization",
   "private": true,
-  "version": "0.0.68",
+  "version": "0.0.71",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -20,7 +20,7 @@
     "react-router-dom": "^6.16.0"
   },
   "devDependencies": {
-    "@biomejs/biome": "catalog:",
+    "@biomejs/biome": "1.9.4",
     "@tailwindcss/forms": "^0.5.9",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
@@ -29,7 +29,7 @@
     "globals": "^15.11.0",
     "postcss": "^8.4.27",
     "tailwindcss": "^3.4.17",
-    "typescript": "catalog:",
-    "vite": "catalog:"
+    "typescript": "5.6.2",
+    "vite": "6.0.11"
   }
 }

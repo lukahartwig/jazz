@@ -1,5 +1,21 @@
 # cojson
 
+## 0.13.10
+
+### Patch Changes
+
+- f837cfe: Fix fatal errors happening when loading a CoValueCore without having the dependencies
+
+## 0.13.7
+
+### Patch Changes
+
+- bc3d7bb: Allow to assign the writeOnly role to everyone
+- 4e9aae1: Remove risky awaits from handleSyncMessage code path
+- 21c935c: Improved the management of peer reconnection and optimized the sync messages
+- aa1c80e: feat: add transactions size histogram & loaded covalues gauges
+- 13074be: Skip loading from closed peers as early as possible
+
 ## 0.13.5
 
 ### Patch Changes

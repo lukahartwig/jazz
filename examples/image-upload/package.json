@@ -1,7 +1,7 @@
 {
   "name": "image-upload",
   "private": true,
-  "version": "0.0.72",
+  "version": "0.0.75",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -17,13 +17,13 @@
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
-    "@biomejs/biome": "catalog:",
+    "@biomejs/biome": "1.9.4",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^4.3.3",
     "globals": "^15.11.0",
-    "typescript": "catalog:",
-    "vite": "catalog:",
+    "typescript": "5.6.2",
+    "vite": "6.0.11",
     "autoprefixer": "^10.4.20",
     "postcss": "^8.4.27",
     "tailwindcss": "^3.4.17"

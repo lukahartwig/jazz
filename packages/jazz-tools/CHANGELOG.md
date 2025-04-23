@@ -1,5 +1,30 @@
 # jazz-tools
 
+## 0.13.10
+
+### Patch Changes
+
+- Updated dependencies [f837cfe]
+  - cojson@0.13.10
+
+## 0.13.9
+
+### Patch Changes
+
+- a6cf01f: Handle null values on CoList when using $each: true
+
+## 0.13.7
+
+### Patch Changes
+
+- bc3d7bb: Allow to assign the writeOnly role to everyone
+- Updated dependencies [bc3d7bb]
+- Updated dependencies [4e9aae1]
+- Updated dependencies [21c935c]
+- Updated dependencies [aa1c80e]
+- Updated dependencies [13074be]
+  - cojson@0.13.7
+
 ## 0.13.5
 
 ### Patch Changes
