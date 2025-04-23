@@ -1,6 +1,5 @@
 import { Organization, Request, RequestsList } from "@/schema";
 import { useAccount, useCoState } from "jazz-react";
-import { ID } from "jazz-tools";
 import { useCallback, useEffect, useState } from "react";
 
 interface RequestButtonProps {
@@ -11,6 +10,9 @@ export function RequestButton({ organization }: RequestButtonProps) {
   const { me } = useAccount({
     resolve: { root: { requests: { requests: true } } },
   });
+
+  const isAdmin = organization.mainGroup?.myRole() === "admin";
+
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [hasRequested, setHasRequested] = useState(false);
@@ -31,12 +33,6 @@ export function RequestButton({ organization }: RequestButtonProps) {
   }, [me, orgRequests]);
 
   const requestAccess = useCallback(() => {
-    console.log("Request button clicked");
-    console.log("Me:", me);
-    console.log("Organization:", organization);
-    console.log("Organization requests:", orgRequests);
-    console.log("Me root requests:", me?.root?.requests);
-
     if (!me) {
       setError("You must be logged in to request access");
       return;
@@ -65,23 +61,17 @@ export function RequestButton({ organization }: RequestButtonProps) {
         },
         { owner: organization._owner },
       );
-      console.log("Request created:", request);
 
       // Add to organization's requests
       if (orgRequests) {
-        console.log("Adding to organization requests...");
         orgRequests[request.id] = request;
-        console.log("Organization requests after add:", orgRequests);
       } else {
         console.log("Organization has no requests container");
       }
 
       // Add to global requests
-      console.log("Adding to global requests...");
       const globalRequests = me.root.requests.requests as RequestsList;
       globalRequests[request.id] = request;
-      console.log("Global requests after add:", me.root.requests.requests);
-
       setHasRequested(true);
       setError(null);
     } catch (err) {
@@ -96,6 +86,11 @@ export function RequestButton({ organization }: RequestButtonProps) {
 
   return (
     <div>
+      {/* {isAdmin ? (
+        <div className="px-3 py-1 mx-6"> 
+          Organization Admin
+          </div>
+        ) : ( */}
       <button
         onClick={requestAccess}
         disabled={isLoading || hasRequested}
@@ -111,6 +106,7 @@ export function RequestButton({ organization }: RequestButtonProps) {
             ? "Invite requested"
             : "Request Invite to Organization"}
       </button>
+      {/* )} */}
       {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
     </div>
   );
