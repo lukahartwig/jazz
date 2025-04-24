@@ -132,5 +132,5 @@ export class MagicLinkAuthCreateAsTarget {
 }
 
 const defaultOptions: MagicLinkAuthAsTargetOptions = {
-  handlerTimeout: 30 * 1000,
+  handlerTimeout: 15 * 60 * 1000,
 };

@@ -1628,6 +1628,9 @@ importers:
       clsx:
         specifier: ^2.0.0
         version: 2.1.1
+      input-otp:
+        specifier: ^1.4.2
+        version: 1.4.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       jazz-react:
         specifier: workspace:*
         version: link:../../packages/jazz-react
@@ -26263,7 +26266,7 @@ snapshots:
   terser@5.37.0:
     dependencies:
       '@jridgewell/source-map': 0.3.6
-      acorn: 8.14.0
+      acorn: 8.14.1
       commander: 2.20.3
       source-map-support: 0.5.21
 

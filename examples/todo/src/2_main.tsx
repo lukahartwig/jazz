@@ -6,12 +6,7 @@ import {
 } from "react-router-dom";
 import "./index.css";
 
-import {
-  JazzProvider,
-  PassphraseAuthBasicUI,
-  useAcceptInvite,
-  useAccount,
-} from "jazz-react";
+import { JazzProvider, useAcceptInvite, useAccount } from "jazz-react";
 
 import React from "react";
 import { TodoAccount, TodoProject } from "./1_schema.ts";
@@ -23,7 +18,8 @@ import {
   ThemeProvider,
   TitleAndLogo,
 } from "./basicComponents/index.ts";
-import { wordlist } from "./wordlist.ts";
+import { MagicLinkHandlerPage } from "./components/Auth/MagicLinkHandlerPage.tsx";
+import { PasskeyAndMagicLinkAuth } from "./components/Auth/PasskeyAndMagicLinkAuth.tsx";
 
 /**
  * Walkthrough: The top-level provider `<JazzProvider/>`
@@ -45,9 +41,7 @@ function JazzAndAuth({ children }: { children: React.ReactNode }) {
       }}
       AccountSchema={TodoAccount}
     >
-      <PassphraseAuthBasicUI appName={appName} wordlist={wordlist}>
-        {children}
-      </PassphraseAuthBasicUI>
+      <PasskeyAndMagicLinkAuth>{children}</PasskeyAndMagicLinkAuth>
     </JazzProvider>
   );
 }
@@ -94,6 +88,10 @@ export default function App() {
     {
       path: "/invite/*",
       element: <p>Accepting invite...</p>,
+    },
+    {
+      path: "/magic-link-handler-source/:x/:y",
+      element: <MagicLinkHandlerPage />,
     },
   ]);
 
