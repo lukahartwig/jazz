@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { ErrorResponse } from "resend";
-import { subscribe } from "../../../actions/resend";
+import { subscribe } from "../../actions/resend";
 import { Button } from "../atoms/Button";
 import { Icon } from "../atoms/Icon";
 import { Input } from "../molecules/Input";

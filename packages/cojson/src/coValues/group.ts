@@ -186,8 +186,8 @@ export class RawGroup<
       const child = store.get(id);
 
       if (
-        child.state.type === "unknown" ||
-        child.state.type === "unavailable"
+        child.highLevelState === "unknown" ||
+        child.highLevelState === "unavailable"
       ) {
         child.loadFromPeers(peers).catch(() => {
           logger.error(`Failed to load child group ${id}`);

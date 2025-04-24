@@ -1,5 +1,31 @@
 # jazz-example-chat
 
+## 0.0.182
+
+### Patch Changes
+
+- jazz-inspector@0.13.13
+- jazz-react@0.13.13
+- jazz-tools@0.13.13
+
+## 0.0.181
+
+### Patch Changes
+
+- Updated dependencies [4547525]
+  - jazz-tools@0.13.12
+  - jazz-inspector@0.13.12
+  - jazz-react@0.13.12
+
+## 0.0.180
+
+### Patch Changes
+
+- Updated dependencies [17273a6]
+  - jazz-tools@0.13.11
+  - jazz-inspector@0.13.11
+  - jazz-react@0.13.11
+
 ## 0.0.179
 
 ### Patch Changes

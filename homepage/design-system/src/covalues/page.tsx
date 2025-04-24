@@ -1,9 +1,9 @@
 "use client";
 
+import { CoFeedVisualizer } from "@components/atoms/covalues/CoFeeds";
+import { CoListVisualizer } from "@components/atoms/covalues/CoList";
+import { CoMapVisualizer } from "@components/atoms/covalues/CoMap";
 import { CoFeed } from "jazz-tools";
-import { CoFeedVisualizer } from "../components/atoms/covalues/CoFeeds";
-import { CoListVisualizer } from "../components/atoms/covalues/CoList";
-import { CoMapVisualizer } from "../components/atoms/covalues/CoMap";
 import { ListOfPeople, Person, PersonFeed } from "./schema";
 
 export default function Playground() {

@@ -1,5 +1,42 @@
 # jazz-browser
 
+## 0.13.13
+
+### Patch Changes
+
+- Updated dependencies [ec9cb40]
+  - cojson@0.13.13
+  - cojson-storage@0.13.13
+  - cojson-transport-ws@0.13.13
+  - jazz-react-core@0.13.13
+  - jazz-tools@0.13.13
+
+## 0.13.12
+
+### Patch Changes
+
+- Updated dependencies [4547525]
+- Updated dependencies [65719f2]
+  - jazz-tools@0.13.12
+  - cojson@0.13.12
+  - jazz-react-core@0.13.12
+  - cojson-storage@0.13.12
+  - cojson-transport-ws@0.13.12
+
+## 0.13.11
+
+### Patch Changes
+
+- Updated dependencies [17273a6]
+- Updated dependencies [3396ed4]
+- Updated dependencies [17273a6]
+- Updated dependencies [267ea4c]
+  - cojson@0.13.11
+  - jazz-tools@0.13.11
+  - cojson-storage@0.13.11
+  - cojson-transport-ws@0.13.11
+  - jazz-react-core@0.13.11
+
 ## 0.13.10
 
 ### Patch Changes

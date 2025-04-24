@@ -136,8 +136,8 @@ export class CoValueCore {
       const groupId = header.ruleset.group;
       const entry = this.node.coValuesStore.get(groupId);
 
-      if (entry.state.type === "available") {
-        this.groupInvalidationSubscription = entry.state.coValue.subscribe(
+      if (entry.isAvailable()) {
+        this.groupInvalidationSubscription = entry.core.subscribe(
           (_groupUpdate) => {
             this._cachedContent = undefined;
             this.notifyUpdate("immediate");

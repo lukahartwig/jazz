@@ -1,7 +1,7 @@
 "use client";
 
 import { clsx } from "clsx";
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Icon } from "../atoms/Icon";
 
 // TODO: add tabs feature, and remove CodeExampleTabs
@@ -84,9 +84,25 @@ export function CodeGroup({
 }) {
   const textRef = useRef<HTMLPreElement | null>(null);
   const [code, setCode] = useState<string>();
+
+  const filterText = (node: Node): string => {
+    if (
+      node instanceof Element &&
+      (node.classList.contains("twoslash-popup-container") ||
+        node.classList.contains("twoslash-completion-cursor"))
+    ) {
+      return "";
+    }
+    if (node.nodeType === Node.TEXT_NODE) {
+      return node.textContent ?? "";
+    }
+
+    return Array.from(node.childNodes).map(filterText).join("");
+  };
+
   useEffect(() => {
     if (textRef.current) {
-      setCode(textRef.current.innerText);
+      setCode(filterText(textRef.current));
     }
   }, [children]);
 

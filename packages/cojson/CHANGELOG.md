@@ -1,5 +1,26 @@
 # cojson
 
+## 0.13.13
+
+### Patch Changes
+
+- ec9cb40: Remove .every() call on iterator to fix compat issues with React Native
+
+## 0.13.12
+
+### Patch Changes
+
+- 65719f2: Simplified CoValue loading state management
+
+## 0.13.11
+
+### Patch Changes
+
+- 17273a6: Adds locale support to Segmenter for CoPlainText
+  Adds insertAfter to CoPlainText
+- 3396ed4: Simplify unknown value management on handleNewContent
+- 267ea4c: Fix max recursion error happening on large colists
+
 ## 0.13.10
 
 ### Patch Changes
