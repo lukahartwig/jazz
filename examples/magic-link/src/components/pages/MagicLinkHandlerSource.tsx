@@ -17,48 +17,46 @@ function HandleMagicLinkAsSource() {
     sourceHandlerPath: "/#/magic-link-handler-source",
   });
 
-  if (status === "idle") {
-    return <p>Loading...</p>;
-  }
+  switch (status) {
+    case "idle":
+      return <p>Loading...</p>;
 
-  if (status === "confirmationCodeGenerated") {
-    return (
-      <>
-        <p>Confirmation code:</p>
-        <p className="font-medium text-3xl tracking-widest">
-          {confirmationCode ?? "empty"}
-        </p>
-        <p className="text-red-600">Never share this code with anyone!</p>
-      </>
-    );
-  }
+    case "confirmationCodeGenerated":
+      return (
+        <>
+          <p>Confirmation code:</p>
+          <p className="font-medium text-3xl tracking-widest">
+            {confirmationCode ?? "empty"}
+          </p>
+          <p className="text-red-600">Never share this code with anyone!</p>
+        </>
+      );
 
-  if (status === "authorized") {
-    return (
-      <BackToHomepageContainer>
-        Your device has been logged in!
-      </BackToHomepageContainer>
-    );
-  }
+    case "authorized":
+      return (
+        <BackToHomepageContainer>
+          Your device has been logged in!
+        </BackToHomepageContainer>
+      );
 
-  if (status === "confirmationCodeIncorrect") {
-    return (
-      <>
-        <p>Incorrect confirmation code</p>
-        <p>Please try again</p>
-      </>
-    );
-  }
+    case "confirmationCodeIncorrect":
+      return (
+        <>
+          <p>Incorrect confirmation code</p>
+          <p>Please try again</p>
+        </>
+      );
 
-  if (status === "error") {
-    return (
-      <BackToHomepageContainer>Something went wrong</BackToHomepageContainer>
-    );
-  }
+    case "error":
+      return (
+        <BackToHomepageContainer>Something went wrong</BackToHomepageContainer>
+      );
 
-  if (status === "cancelled") {
-    return <BackToHomepageContainer>Login cancelled</BackToHomepageContainer>;
-  }
+    case "cancelled":
+      return <BackToHomepageContainer>Login cancelled</BackToHomepageContainer>;
 
-  return null;
+    default:
+      const check: never = status;
+      if (check) throw new Error(`Unhandled status: ${check}`);
+  }
 }

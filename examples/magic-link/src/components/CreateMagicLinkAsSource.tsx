@@ -14,76 +14,74 @@ export function CreateMagicLinkAsSource() {
 
   const onCreateLink = () => createLink().then(setLink);
 
-  if (status === "idle") {
-    return (
-      <Button color="primary" onClick={onCreateLink}>
-        Create QR code
-      </Button>
-    );
-  }
-
-  if (status === "waitingForHandler") {
-    return (
-      <>
-        <p>Scan QR code to get your mobile device logged in</p>
-
-        {link ? <QRCode url={link} /> : null}
-      </>
-    );
-  }
-
-  if (status === "confirmationCodeGenerated") {
-    return (
-      <>
-        <p>Confirmation code:</p>
-
-        <p className="font-medium text-3xl tracking-widest">
-          {confirmationCode ?? "empty"}
-        </p>
-      </>
-    );
-  }
-
-  if (status === "confirmationCodeCorrect") {
-    return <p>Confirmed! Logging in...</p>;
-  }
-
-  if (status === "authorized") {
-    return <p>Your device has been logged in!</p>;
-  }
-
-  if (status === "confirmationCodeIncorrect") {
-    return (
-      <>
-        <p>Incorrect confirmation code</p>
-
+  switch (status) {
+    case "idle":
+      return (
         <Button color="primary" onClick={onCreateLink}>
-          Try again
+          Create QR code
         </Button>
-      </>
-    );
-  }
+      );
 
-  if (status === "error") {
-    return (
-      <>
-        <p>Something went wrong</p>
+    case "waitingForHandler":
+      return (
+        <>
+          <p>Scan QR code to get your mobile device logged in</p>
 
-        <Button onClick={onCreateLink}>Try again</Button>
-      </>
-    );
-  }
+          {link ? <QRCode url={link} /> : null}
+        </>
+      );
 
-  if (status === "cancelled") {
-    return (
-      <>
-        <p>Login cancelled</p>
+    case "confirmationCodeGenerated":
+      return (
+        <>
+          <p>Confirmation code:</p>
 
-        <Button color="primary" onClick={onCreateLink}>
-          Try again
-        </Button>
-      </>
-    );
+          <p className="font-medium text-3xl tracking-widest">
+            {confirmationCode ?? "empty"}
+          </p>
+        </>
+      );
+
+    case "confirmationCodeCorrect":
+      return <p>Confirmed! Logging in...</p>;
+
+    case "authorized":
+      return <p>Your device has been logged in!</p>;
+
+    case "confirmationCodeIncorrect":
+      return (
+        <>
+          <p>Incorrect confirmation code</p>
+
+          <Button color="primary" onClick={onCreateLink}>
+            Try again
+          </Button>
+        </>
+      );
+
+    case "error":
+      return (
+        <>
+          <p>Something went wrong</p>
+
+          <Button onClick={onCreateLink}>Try again</Button>
+        </>
+      );
+
+    case "cancelled":
+      return (
+        <>
+          <p>Login cancelled</p>
+
+          <Button color="primary" onClick={onCreateLink}>
+            Try again
+          </Button>
+        </>
+      );
+
+    default:
+      const check: never = status;
+      if (check) throw new Error(`Unhandled status: ${check}`);
   }
 
   return null;

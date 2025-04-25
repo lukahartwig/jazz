@@ -25,65 +25,63 @@ export function MagicLinkHandler() {
     navigate("/");
   };
 
-  if (status === "idle") {
-    return <p>Loading...</p>;
-  }
+  switch (status) {
+    case "idle":
+      return <p>Loading...</p>;
 
-  if (status === "confirmationCodeGenerated") {
-    return (
-      <>
-        <p>Enter this code on your other device</p>
-        <p className="font-medium text-3xl tracking-widest text-center">
-          {confirmationCode ?? "empty"}
-        </p>
-        <p className="text-red-500">Never share this code with anyone!</p>
-      </>
-    );
-  }
+    case "confirmationCodeGenerated":
+      return (
+        <>
+          <p>Enter this code on your other device</p>
+          <p className="font-medium text-3xl tracking-widest text-center">
+            {confirmationCode ?? "empty"}
+          </p>
+          <p className="text-red-500">Never share this code with anyone!</p>
+        </>
+      );
 
-  if (status === "authorized") {
-    return (
-      <>
-        <p>Your device has been logged in! 🚀</p>
-        <Button onClick={handleBackToHome} className="w-full">
-          Back to home
-        </Button>
-      </>
-    );
-  }
+    case "authorized":
+      return (
+        <>
+          <p>Your device has been logged in! 🚀</p>
+          <Button onClick={handleBackToHome} className="w-full">
+            Back to home
+          </Button>
+        </>
+      );
 
-  if (status === "confirmationCodeIncorrect") {
-    return (
-      <>
-        <p>The confirmation code was incorrect - please try again</p>
-        <Button onClick={handleBackToHome} className="w-full">
-          Back to home
-        </Button>
-      </>
-    );
-  }
+    case "confirmationCodeIncorrect":
+      return (
+        <>
+          <p>The confirmation code was incorrect - please try again</p>
+          <Button onClick={handleBackToHome} className="w-full">
+            Back to home
+          </Button>
+        </>
+      );
 
-  if (status === "error") {
-    return (
-      <>
-        <p>Oops! Something went wrong</p>
-        <Button onClick={handleBackToHome} className="w-full">
-          Back to home
-        </Button>
-      </>
-    );
-  }
+    case "error":
+      return (
+        <>
+          <p>Oops! Something went wrong</p>
+          <Button onClick={handleBackToHome} className="w-full">
+            Back to home
+          </Button>
+        </>
+      );
 
-  if (status === "cancelled") {
-    return (
-      <>
-        <p>The login process was cancelled</p>
-        <Button onClick={handleBackToHome} className="w-full">
-          Back to home
-        </Button>
-      </>
-    );
-  }
+    case "cancelled":
+      return (
+        <>
+          <p>The login process was cancelled</p>
+          <Button onClick={handleBackToHome} className="w-full">
+            Back to home
+          </Button>
+        </>
+      );
 
-  return null;
+    default:
+      const check: never = status;
+      if (check) throw new Error(`Unhandled status: ${check}`);
+  }
 }
