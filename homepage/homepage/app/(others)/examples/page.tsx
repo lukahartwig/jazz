@@ -255,14 +255,14 @@ const ReactionsIllustration = () => (
 
 const MultiCursorIllustration = () => (
   <div className="flex bg-stone-100 h-full flex-col items-center justify-center dark:bg-transparent p-4">
-    <div className=" bg-white md:aspect-[3/2] flex flex-col rounded-md shadow-xl shadow-stone-400/20 dark:shadow-none">
+    <div className=" bg-white min-w-64 md:aspect-[3/2] flex flex-col rounded-md shadow-xl shadow-stone-400/20 dark:shadow-none">
       <div className="w-full py-2 flex items-center gap-1.5 px-2 border-b dark:border-b-stone-200">
         <span className="rounded-full size-2 bg-stone-200"></span>
         <span className="rounded-full size-2 bg-stone-200"></span>
         <span className="rounded-full size-2 bg-stone-200"></span>
       </div>
 
-      <div className="h-full mx-auto flex flex-col justify-center p-12 sm:p-16">
+      <div className="h-full mx-auto flex flex-col justify-center p-12">
         <div className="inline-block relative px-1 ring-1 ring-blue-400">
           <div className="absolute size-2 bg-white border border-blue-400 -left-1 -top-1"></div>
           <div className="absolute size-2 bg-white border border-blue-400 -right-1 -top-1"></div>
@@ -280,6 +280,21 @@ const MultiCursorIllustration = () => (
             <span className="text-xs">Sebastian</span>
           </div>
         </div>
+      </div>
+    </div>
+  </div>
+);
+
+const CoTextIllustration = () => (
+  <div className="flex bg-stone-100 h-full flex-col items-center justify-center dark:bg-transparent p-4">
+    <div className=" bg-white md:aspect-[3/2] min-w-64 flex flex-col rounded-md shadow-xl shadow-stone-400/20 dark:shadow-none">
+      <div className="flex gap-2 p-3 border-b">
+        <Icon name="bold" size="xs"/>
+        <Icon name="italic" size="xs"/>
+        <Icon name="code" size="xs"/>
+      </div>
+      <div className="py-2 px-3 text-xl text-stone-800">
+        <em>Hello</em>, <strong>world!</strong>
       </div>
     </div>
   </div>
@@ -434,8 +449,18 @@ const reactExamples: Example[] = [
       "Track user presence on a canvas with multiple cursors and out of bounds indicators.",
     tech: [tech.react],
     features: [features.coFeed],
-    demoUrl: "https://jazz-multi-cursors.vercel.app",
+    demoUrl: "https://multi-cursors-demo.jazz.tools",
     illustration: <MultiCursorIllustration />,
+  },
+  {
+    name: "Collaborative rich text",
+    slug: "richtext",
+    description:
+      "Handle multiple users editing the same text, integrated with a ProseMirror editor for rich text.",
+    tech: [tech.react],
+    features: [features.coRichText],
+    demoUrl: "https://richtext-demo.jazz.tools",
+    illustration: <CoTextIllustration />,
   },
   {
     name: "Rate my pet",
@@ -566,7 +591,6 @@ const vueExamples: Example[] = [
     description: "A todo list where you can collaborate with invited guests.",
     tech: [tech.vue],
     features: [features.inviteLink],
-    demoUrl: "https://todo-demo.jazz.tools",
     illustration: (
       <div className="h-full w-full bg-cover bg-[url('/todo.jpg')] bg-left-bottom"></div>
     ),
