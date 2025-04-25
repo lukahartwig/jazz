@@ -14,7 +14,7 @@ import { useEffect, useMemo } from "react";
 /**
  * @category Auth Providers
  */
-export function useCloudAuth(baseUrl: string): {
+export function useCloudAuth(...props: Parameters<typeof newAuthClient>): {
   readonly state: "signedIn" | "anonymous";
   readonly logIn: () => Promise<void>;
   readonly signIn: () => Promise<void>;
@@ -22,7 +22,7 @@ export function useCloudAuth(baseUrl: string): {
 } {
   const context = useJazzContext();
   const authSecretStorage = useAuthSecretStorage();
-  const authClient: AuthClient = newAuthClient(baseUrl);
+  const authClient: AuthClient = newAuthClient(...props);
 
   if ("guest" in context) {
     throw new Error("Cloud auth is not supported in guest mode");

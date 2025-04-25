@@ -1,33 +1,44 @@
-import { createAuthClient } from "better-auth/client";
+import {
+  type BetterAuthClientPlugin,
+  createAuthClient,
+} from "better-auth/client";
 import { inferAdditionalFields } from "better-auth/client/plugins";
 import { jazzClientPlugin } from "jazz-betterauth-client-plugin";
 import {
   Account,
-  AuthCredentials,
-  AuthSecretStorage,
-  AuthenticateAccountFunction,
+  type AuthCredentials,
+  type AuthSecretStorage,
+  type AuthenticateAccountFunction,
 } from "jazz-tools";
-import { AuthSetPayload } from "jazz-tools/dist/auth/AuthSecretStorage.js";
+import type { AuthSetPayload } from "jazz-tools/dist/auth/AuthSecretStorage.js";
 
-export const newAuthClient = (baseUrl: string) =>
-  createAuthClient({
-    baseURL: baseUrl,
-    plugins: [
-      jazzClientPlugin(),
-      inferAdditionalFields({
-        user: {
-          encryptedCredentials: {
-            type: "string",
-            required: false,
-          },
-          salt: {
-            type: "string",
-            required: false,
-          },
+export const newAuthClient = (
+  baseUrl: string,
+  plugins?: BetterAuthClientPlugin[],
+) => {
+  const requiredPlugins = [
+    jazzClientPlugin(),
+    inferAdditionalFields({
+      user: {
+        encryptedCredentials: {
+          type: "string",
+          required: false,
         },
-      }),
-    ],
+        salt: {
+          type: "string",
+          required: false,
+        },
+      },
+    }),
+  ];
+  const allPlugins = plugins
+    ? [...plugins, ...requiredPlugins]
+    : requiredPlugins;
+  return createAuthClient({
+    baseURL: baseUrl,
+    plugins: allPlugins,
   });
+};
 
 export type AuthClient = ReturnType<typeof newAuthClient>;
 export type Session = AuthClient["$Infer"]["Session"];
