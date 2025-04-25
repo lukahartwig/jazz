@@ -13,9 +13,11 @@ Magic Link auth supports two flows, where **Desktop** refers to the device that 
 - **Mobile to Desktop**: Mobile scans the QR code to authenticate the desktop device
 - **Desktop to Mobile**: Mobile scans the QR to authenticate itself
 
-Once the QR code has been scanned, the already-authenticated device (source) shows a 6-digit code that the user should enter on the device trying to authenticate (target).
+Once the QR code has been scanned, the already-authenticated `source` device shows a 6-digit code that the user should enter on the `target` device trying to authenticate.
 
 If the confirmation code is correct, the source device reveals the secret, and the target device uses it to authenticate.
+
+You can pick a flow that suits your use case, or use both!
 
 ## Key benefits
 
@@ -24,11 +26,11 @@ If the confirmation code is correct, the source device reveals the secret, and t
 
 ## Implementation
 
+<ContentByFramework framework="react">
 ### Mobile to Desktop
 
 We start by creating a link on the **Desktop** device using `useCreateMagicLinkAuth` as `target`, and handling the flow's `status`:
 
-<ContentByFramework framework="react">
 <CodeGroup>
 ```tsx twoslash
 import { useCreateMagicLinkAuth } from "jazz-react";
@@ -51,73 +53,12 @@ export function CreateMagicLinkAsTarget({
     onLoggedIn,
   });
 
-  const onCreateLink = () => createLink().then(setLink);
-
-  if (status === "idle") {
-    return (
-      <button onClick={onCreateLink}>
-        Create QR code
-      </button>
-    );
-  }
-
-  if (status === "waitingForHandler") {
-    return (
-      <>
-        <p>Scan QR code to log in</p>
-        {link ? <QRCode url={link} /> : null}
-      </>
-    );
-  }
-
-  if (status === "confirmationCodeRequired") {
-    return (
-      <>
-        <p>Enter the confirmation code displayed on your other device</p>
-        {sendConfirmationCode ? (
-          <ConfirmationCodeForm onSubmit={sendConfirmationCode} />
-        ) : null}
-      </>
-    );
-  }
-
-  if (status === "confirmationCodePending") {
-    return <p>Confirming...</p>;
-  }
-
-  if (status === "authorized") {
-    return <p>Logged in!</p>;
-  }
-
-  if (status === "confirmationCodeIncorrect") {
-    return (
-      <>
-        <p>Incorrect confirmation code!</p>
-        <button onClick={onCreateLink}>Try again</button>
-      </>
-    );
-  }
-
-  if (status === "error") {
-    return (
-      <>
-        <p>Something went wrong</p>
-        <button onClick={onCreateLink}>Try again</button>
-      </>
-    );
-  }
-
-  if (status === "cancelled") {
-    return (
-      <>
-        <p>Cancelled</p>
-        <button onClick={onCreateLink}>Try again</button>
-      </>
-    );
-  }
+  // Handle the status
 }
 ```
 </CodeGroup>
+
+[Full example](https://github.com/garden-co/jazz/blob/main/examples/magic-link/src/components/CreateMagicLinkAsTarget.tsx)
 
 On the **Mobile** side, we need to host a page at `/magic-link-handler-source`, or provide an alternative handler path to the hooks using the `sourceHandlerPath` option.
 
@@ -134,40 +75,12 @@ export function HandleMagicLinkAsSource() {
     as: "source",
   });
 
-  if (status === "idle") {
-    return <p>Loading...</p>;
-  }
-
-  if (status === "confirmationCodeGenerated") {
-    return (
-      <p>Confirmation code: {confirmationCode}</p>
-    );
-  }
-
-  if (status === "authorized") {
-    return (
-      <p>Your device has been logged in!</p>
-    );
-  }
-
-  if (status === "confirmationCodeIncorrect") {
-    return (
-      <p>Incorrect confirmation code - please try again</p>
-    );
-  }
-
-  if (status === "error") {
-    return (
-      <p>Something went wrong</p>
-    );
-  }
-
-  if (status === "cancelled") {
-    return <p>Login cancelled</p>;
-  }
+  // Handle the status
 }
 ```
 </CodeGroup>
+
+[Full example](https://github.com/garden-co/jazz/blob/main/examples/magic-link/src/components/pages/MagicLinkHandlerSource.tsx)
 
 ### Desktop to Mobile
 
@@ -189,66 +102,12 @@ export function CreateMagicLinkAsSource() {
     as: "source",
   });
 
-  const onCreateLink = () => createLink().then(setLink);
-
-  if (status === "idle") {
-    return (
-      <button color="primary" onClick={onCreateLink}>
-        Create QR code
-      </button>
-    );
-  }
-
-  if (status === "waitingForHandler") {
-    return (
-      <>
-        <p>Scan QR code to get your device logged in</p>
-        {link ? <QRCode url={link} /> : null}
-      </>
-    );
-  }
-
-  if (status === "confirmationCodeGenerated") {
-    return <p>Confirmation code: {confirmationCode}</p>;
-  }
-
-  if (status === "confirmationCodeCorrect") {
-    return <p>Confirmed! Logging in...</p>;
-  }
-
-  if (status === "authorized") {
-    return <p>Your device has been logged in!</p>;
-  }
-
-  if (status === "confirmationCodeIncorrect") {
-    return (
-      <>
-        <p>Incorrect confirmation code</p>
-        <button onClick={onCreateLink}>Try again</button>
-      </>
-    );
-  }
-
-  if (status === "error") {
-    return (
-      <>
-        <p>Something went wrong</p>
-        <button onClick={onCreateLink}>Try again</button>
-      </>
-    );
-  }
-
-  if (status === "cancelled") {
-    return (
-      <>
-        <p>Login cancelled</p>
-        <button onClick={onCreateLink}>Try again</button>
-      </>
-    );
-  }
+  // Handle the status
 }
 ```
 </CodeGroup>
+
+[Full example](https://github.com/garden-co/jazz/blob/main/examples/magic-link/src/components/CreateMagicLinkAsSource.tsx)
 
 On the **Mobile** device we need to host a page at `/magic-link-handler-target`, or provide an alternative handler path to the hooks using the `targetHandlerPath` option.
 
@@ -271,46 +130,12 @@ export function HandleMagicLinkAsTarget() {
     },
   });
 
-  if (status === "idle") {
-    return <p>Loading...</p>;
-  }
-
-  if (status === "confirmationCodeRequired") {
-    return (
-      <>
-        <p>Enter the confirmation code displayed on your other device</p>
-
-        {sendConfirmationCode ? (
-          <ConfirmationCodeForm onSubmit={sendConfirmationCode} />
-        ) : null}
-      </>
-    );
-  }
-
-  if (status === "confirmationCodePending") {
-    return <p>Confirming...</p>;
-  }
-
-  if (status === "authorized") {
-    return <p>Logged in!</p>;
-  }
-
-  if (status === "confirmationCodeIncorrect") {
-    return (
-      <p>Incorrect confirmation code - please try again</p>
-    );
-  }
-
-  if (status === "error") {
-    return <p>Something went wrong</p>;
-  }
-
-  if (status === "cancelled") {
-    return <p>Login cancelled</p>;
-  }
+  // Handle the status
 }
 ```
 </CodeGroup>
+
+[Full example](https://github.com/garden-co/jazz/blob/main/examples/magic-link/src/components/pages/MagicLinkHandlerTarget.tsx)
 </ContentByFramework>
 
 ## Examples
