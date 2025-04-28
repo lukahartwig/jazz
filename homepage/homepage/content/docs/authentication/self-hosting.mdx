@@ -177,9 +177,81 @@ await auth.authClient.sendVerificationEmail({
 </CodeGroup>
 </ContentByFramework>
 
-{/* <ContentByFramework framework="react-native-expo">
-  See [the Better Auth documentation on adding Expo support to your client & server](https://www.better-auth.com/docs/integrations/expo).
-</ContentByFramework> */}
+<ContentByFramework framework="react-native-expo">
+See [the Better Auth documentation on adding Expo support to your client & server](https://www.better-auth.com/docs/integrations/expo).
+
+We offer Better Auth integration through our package: [`jazz-react-auth-cloudauth`](https://npmjs.com/package/jazz-react-auth-cloudauth).
+
+The package provides a `useCloudAuth` hook for managing authentication state.
+
+<CodeGroup>
+```tsx twoslash
+import * as React from "react";
+const authUrl = "https://auth.jazz.tools/exampleApiKey/api/auth/";
+const userName = "Firstname Lastname";
+const userEmail = "user@example.com";
+const userPassword = "12345678";
+const userNewPassword = "asdfghjk";
+const userPasswordResetToken = "examplePasswordResetToken";
+// ---cut---
+import { useCloudAuth } from "jazz-react-auth-cloudauth";
+
+// …
+
+const auth = useCloudAuth(authUrl);
+
+// …
+
+// Signing up with email & password
+await auth.authClient.signUp.email({
+  name: userName,
+  email: userEmail,
+  password: userPassword,
+}, {
+  onSuccess: async () => {
+    await auth.signIn();
+  }
+});
+
+// …
+
+// Signing in with email & password
+await auth.authClient.signIn.email({
+  email: userEmail,
+  password: userPassword
+}, {
+  onSuccess: async () => {
+    await auth.logIn();
+  }
+});
+
+// …
+
+// Sending password reset email
+await auth.authClient.forgetPassword({
+  email: userEmail,
+  redirectTo: "/reset-password"
+});
+
+// …
+
+// Resetting password
+await auth.authClient.resetPassword({
+  newPassword: userNewPassword,
+  token: userPasswordResetToken
+});
+
+// …
+
+// Sending verification email
+await auth.authClient.sendVerificationEmail({
+  email: userEmail,
+  callbackURL: "/"
+});
+```
+
+</CodeGroup>
+</ContentByFramework>
 
 ## Examples
 
@@ -200,7 +272,7 @@ Self-hosted authentication is appropriate when:
 
 - **Online requirement**: Internet connectivity is required when authenticating.
 - **Third-party dependency**: Your authentication server will depend on the Better Auth library.
-{/* - **Platform support**: Adding support for Expo applications is your responsibility. */}
+- **Platform support**: Adding support for Expo applications is your responsibility.
 - **Platform support**: Better Auth integration is not supported in applications using React Native.
 - **Configuration**: You will need to configure your authentication methods, server framework, and database.
 

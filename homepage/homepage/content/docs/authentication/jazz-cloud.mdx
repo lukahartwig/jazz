@@ -13,7 +13,7 @@ The [Jazz Cloud](/cloud) platform provides a comprehensive solution for user man
 To integrate Jazz Cloud Authentication into your application, follow these steps:
 
 1. Register your application in the [Jazz Cloud Dashboard](https://dashboard.jazz.tools/).
-  - The application will be assigned an authentication URL for every environment, including your application's development environment and an optional production environment.
+  - The application will be assigned an authentication URL for every environment; this URL must be supplied to the authentication client.
 2. Add the authentication client to your application.
 3. Implement the UI for your application's supported authentication methods.
 
@@ -137,6 +137,88 @@ import { useCloudAuth } from "jazz-react-auth-cloudauth";
 // …
 
 const auth = useCloudAuth(authUrl);
+
+// …
+
+// Signing up with email & password
+await auth.authClient.signUp.email({
+  name: userName,
+  email: userEmail,
+  password: userPassword,
+}, {
+  onSuccess: async () => {
+    await auth.signIn();
+  }
+});
+
+// …
+
+// Signing in with email & password
+await auth.authClient.signIn.email({
+  email: userEmail,
+  password: userPassword
+}, {
+  onSuccess: async () => {
+    await auth.logIn();
+  }
+});
+
+// …
+
+// Sending password reset email
+await auth.authClient.forgetPassword({
+  email: userEmail,
+  redirectTo: "/reset-password"
+});
+
+// …
+
+// Resetting password
+await auth.authClient.resetPassword({
+  newPassword: userNewPassword,
+  token: userPasswordResetToken
+});
+
+// …
+
+// Sending verification email
+await auth.authClient.sendVerificationEmail({
+  email: userEmail,
+  callbackURL: "/"
+});
+```
+
+</CodeGroup>
+</ContentByFramework>
+
+<ContentByFramework framework="react-native-expo">
+We offer Jazz Cloud Authentication integration through our package: [`jazz-react-auth-cloudauth`](https://npmjs.com/package/jazz-react-auth-cloudauth).
+
+The package provides a `useCloudAuth` hook for managing authentication state.
+
+<CodeGroup>
+```tsx twoslash
+import * as React from "react";
+const authUrl = "https://auth.jazz.tools/exampleApiKey/api/auth/";
+const userName = "Firstname Lastname";
+const userEmail = "user@example.com";
+const userPassword = "12345678";
+const userNewPassword = "asdfghjk";
+const userPasswordResetToken = "examplePasswordResetToken";
+// ---cut---
+import { expoClient } from "@better-auth/expo/client";
+import * as SecureStore from "expo-secure-store";
+import { useCloudAuth } from "jazz-react-auth-cloudauth";
+
+// …
+
+const auth = useCloudAuth(authUrl, [
+  expoClient({
+      scheme: "myapp",
+      storagePrefix: "myapp",
+      storage: SecureStore,
+  })
+]);
 
 // …
 
