@@ -6,11 +6,11 @@ import { ReactNativeLogo } from "@/components/icons/ReactNativeLogo";
 import { SvelteLogo } from "@/components/icons/SvelteLogo";
 import { VueLogo } from "@/components/icons/VueLogo";
 import { Example, features, tech } from "@/content/example";
-import { clsx } from "clsx";
 import { H2 } from "@garden-co/design-system/src/components/atoms/Headings";
 import { Icon } from "@garden-co/design-system/src/components/atoms/Icon";
 import { GappedGrid } from "@garden-co/design-system/src/components/molecules/GappedGrid";
 import { HeroHeader } from "@garden-co/design-system/src/components/molecules/HeroHeader";
+import { clsx } from "clsx";
 import type { Metadata } from "next";
 
 const title = "Examples";
@@ -198,6 +198,12 @@ const MusicIllustration = () => (
   </div>
 );
 
+const JazzPaperScissorsIllustration = () => (
+  <div className="flex flex-col items-center justify-center h-full p-8 text-4xl">
+    ✊ ✋ ✌️
+  </div>
+);
+
 const ImageUploadIllustration = () => (
   <div className="flex flex-col items-center justify-center h-full p-8">
     <div className="p-3 w-[12rem] h-[8rem] border border-dashed border-blue dark:border-blue-500 rounded-lg flex gap-2 flex-col items-center justify-center">
@@ -269,7 +275,7 @@ const MultiCursorIllustration = () => (
           <div className="absolute size-2 bg-white border border-blue-400 -left-1 -bottom-1"></div>
           <div className="absolute size-2 bg-white border border-blue-400 -right-1 -bottom-1"></div>
 
-          <span className="text-lg font-semibold md:text-2xl md:font-bold text-stone-800 ">
+          <span className="text-lg font-semibold md:text-2xl md:font-bold text-stone-800">
             Hello, world!
           </span>
           <div className="absolute -top-10 right-4 text-rose-600 flex items-end gap-1">
@@ -289,9 +295,9 @@ const CoTextIllustration = () => (
   <div className="flex bg-stone-100 h-full flex-col items-center justify-center dark:bg-transparent p-4">
     <div className=" bg-white md:aspect-[3/2] min-w-64 flex flex-col rounded-md shadow-xl shadow-stone-400/20 dark:shadow-none">
       <div className="flex gap-2 p-3 border-b">
-        <Icon name="bold" size="xs"/>
-        <Icon name="italic" size="xs"/>
-        <Icon name="code" size="xs"/>
+        <Icon name="bold" size="xs" />
+        <Icon name="italic" size="xs" />
+        <Icon name="code" size="xs" />
       </div>
       <div className="py-2 px-3 text-xl text-stone-800">
         <em>Hello</em>, <strong>world!</strong>
@@ -501,6 +507,15 @@ const reactExamples: Example[] = [
     features: [features.fileUpload],
     demoUrl: "https://music-demo.jazz.tools",
     illustration: <MusicIllustration />,
+  },
+  {
+    name: "Jazz paper scissors",
+    slug: "jazz-paper-scissors",
+    description:
+      "A game that shows how to communicate with other accounts through the experimental Inbox API.",
+    tech: [tech.react],
+    features: [features.serverWorker, features.inbox],
+    illustration: <JazzPaperScissorsIllustration />,
   },
   {
     name: "Clerk",

@@ -27,4 +27,6 @@ export const features = {
   inviteLink: "Invite link",
   coFeed: "CoFeed",
   coRichText: "CoRichText",
+  serverWorker: "Server worker",
+  inbox: "Inbox",
 };
