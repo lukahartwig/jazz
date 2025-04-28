@@ -118,9 +118,9 @@ test("should sync and load data from storage", async () => {
       "client -> LOAD Map sessions: empty",
       "storage -> KNOWN Group sessions: header/3",
       "storage -> CONTENT Group header: true new: After: 0 New: 3",
-      "client -> KNOWN Group sessions: header/3",
       "storage -> KNOWN Map sessions: header/1",
       "storage -> CONTENT Map header: true new: After: 0 New: 1",
+      "client -> KNOWN Group sessions: header/3",
       "client -> KNOWN Map sessions: header/1",
     ]
   `);
@@ -205,12 +205,12 @@ test("should load dependencies correctly (group inheritance)", async () => {
       "client -> LOAD Map sessions: empty",
       "storage -> KNOWN ParentGroup sessions: header/4",
       "storage -> CONTENT ParentGroup header: true new: After: 0 New: 4",
-      "client -> KNOWN ParentGroup sessions: header/4",
       "storage -> KNOWN Group sessions: header/5",
       "storage -> CONTENT Group header: true new: After: 0 New: 5",
-      "client -> KNOWN Group sessions: header/5",
+      "client -> KNOWN ParentGroup sessions: header/4",
       "storage -> KNOWN Map sessions: header/1",
       "storage -> CONTENT Map header: true new: After: 0 New: 1",
+      "client -> KNOWN Group sessions: header/5",
       "client -> KNOWN Map sessions: header/1",
     ]
   `);
@@ -312,9 +312,9 @@ test("should recover from data loss", async () => {
       "client -> LOAD Map sessions: empty",
       "storage -> KNOWN Group sessions: header/3",
       "storage -> CONTENT Group header: true new: After: 0 New: 3",
-      "client -> KNOWN Group sessions: header/3",
       "storage -> KNOWN Map sessions: header/4",
       "storage -> CONTENT Map header: true new: After: 0 New: 4",
+      "client -> KNOWN Group sessions: header/3",
       "client -> KNOWN Map sessions: header/4",
     ]
   `);

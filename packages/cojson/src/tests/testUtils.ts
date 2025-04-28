@@ -295,6 +295,7 @@ export function blockMessageTypeOnOutgoingPeer(
   });
 
   return {
+    blockedMessages,
     sendBlockedMessages: async () => {
       for (const msg of blockedMessages) {
         await push.call(peer.outgoing, msg);

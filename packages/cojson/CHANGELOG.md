@@ -1,5 +1,11 @@
 # cojson
 
+## 0.13.14
+
+### Patch Changes
+
+- 5c2c7d4: Make the incoming messages handling in the sync manager syncronous
+
 ## 0.13.13
 
 ### Patch Changes

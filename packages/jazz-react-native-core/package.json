@@ -1,7 +1,7 @@
 {
   "name": "jazz-react-native-core",
   "type": "module",
-  "version": "0.13.13",
+  "version": "0.13.14",
   "license": "MIT",
   "main": "./dist/index.js",
   "module": "./dist/index.js",

@@ -1,18 +1,7 @@
 import { assert, beforeEach, describe, expect, test } from "vitest";
 import { expectMap } from "../coValue";
 import { WasmCrypto } from "../crypto/WasmCrypto";
-import { CoValueCore, RawCoMap } from "../exports";
-import { LocalNode } from "../localNode";
-import { toSimplifiedMessages } from "./messagesTestUtils";
-import {
-  SyncMessagesLog,
-  createTestNode,
-  randomAnonymousAccountAndSessionID,
-  setupTestNode,
-  waitFor,
-} from "./testUtils";
-
-const Crypto = await WasmCrypto.create();
+import { SyncMessagesLog, setupTestNode, waitFor } from "./testUtils";
 
 let jazzCloud = setupTestNode({ isSyncServer: true });
 
@@ -32,8 +21,6 @@ describe("peer reconciliation", () => {
 
     client.connectToSyncServer();
 
-    await new Promise((resolve) => setTimeout(resolve, 100));
-
     await map.core.waitForSync();
 
     expect(
@@ -44,12 +31,12 @@ describe("peer reconciliation", () => {
     ).toMatchInlineSnapshot(`
       [
         "client -> server | LOAD Group sessions: header/3",
-        "server -> client | KNOWN Group sessions: empty",
         "client -> server | LOAD Map sessions: header/1",
-        "server -> client | KNOWN Map sessions: empty",
+        "server -> client | KNOWN Group sessions: empty",
         "client -> server | CONTENT Group header: true new: After: 0 New: 3",
-        "server -> client | KNOWN Group sessions: header/3",
+        "server -> client | KNOWN Map sessions: empty",
         "client -> server | CONTENT Map header: true new: After: 0 New: 1",
+        "server -> client | KNOWN Group sessions: header/3",
         "server -> client | KNOWN Map sessions: header/1",
       ]
     `);
@@ -93,10 +80,10 @@ describe("peer reconciliation", () => {
     ).toMatchInlineSnapshot(`
       [
         "client -> server | LOAD Group sessions: header/3",
-        "server -> client | KNOWN Group sessions: header/3",
         "client -> server | LOAD Map sessions: header/2",
-        "server -> client | KNOWN Map sessions: header/1",
+        "server -> client | KNOWN Group sessions: header/3",
         "client -> server | CONTENT Map header: false new: After: 1 New: 1",
+        "server -> client | KNOWN Map sessions: header/1",
         "server -> client | KNOWN Map sessions: header/2",
       ]
     `);
@@ -148,10 +135,11 @@ describe("peer reconciliation", () => {
     ).toMatchInlineSnapshot(`
       [
         "client -> server | LOAD Group sessions: header/3",
-        "server -> client | KNOWN Group sessions: header/3",
+        "client -> server | LOAD Group sessions: header/3",
         "client -> server | LOAD Map sessions: header/2",
-        "server -> client | KNOWN Map sessions: header/1",
+        "server -> client | KNOWN Group sessions: header/3",
         "client -> server | CONTENT Map header: false new: After: 1 New: 1",
+        "server -> client | KNOWN Map sessions: header/1",
         "server -> client | KNOWN Map sessions: header/2",
       ]
     `);
@@ -191,16 +179,16 @@ describe("peer reconciliation", () => {
     ).toMatchInlineSnapshot(`
       [
         "client -> server | LOAD Group sessions: header/3",
-        "server -> client | KNOWN Group sessions: empty",
         "client -> server | LOAD Map sessions: header/2",
-        "server -> client | KNOWN Map sessions: empty",
+        "server -> client | KNOWN Group sessions: empty",
         "client -> server | CONTENT Group header: true new: After: 0 New: 3",
-        "server -> client | KNOWN Group sessions: header/3",
+        "server -> client | KNOWN Map sessions: empty",
         "client -> server | CONTENT Map header: true new: After: 0 New: 2",
+        "server -> client | KNOWN Group sessions: header/3",
         "server -> client | KNOWN Map sessions: header/2",
         "client -> server | LOAD Group sessions: header/3",
-        "server -> client | KNOWN Group sessions: header/3",
         "client -> server | LOAD Map sessions: header/2",
+        "server -> client | KNOWN Group sessions: header/3",
         "server -> client | KNOWN Map sessions: header/2",
       ]
     `);

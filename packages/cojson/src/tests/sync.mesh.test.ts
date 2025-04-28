@@ -66,10 +66,10 @@ describe("multiple clients syncing with the a cloud-like server mesh", () => {
       [
         "edge-france -> core | CONTENT Group header: true new: After: 0 New: 3",
         "core -> edge-france | KNOWN Group sessions: header/3",
-        "core -> storage | CONTENT Group header: true new: After: 0 New: 3",
         "edge-france -> core | CONTENT Map header: true new: After: 0 New: 1",
-        "storage -> core | KNOWN Group sessions: header/3",
+        "core -> storage | CONTENT Group header: true new: After: 0 New: 3",
         "core -> edge-france | KNOWN Map sessions: header/1",
+        "storage -> core | KNOWN Group sessions: header/3",
         "core -> storage | CONTENT Map header: true new: After: 0 New: 1",
         "storage -> core | KNOWN Map sessions: header/1",
         "client -> edge-italy | LOAD Map sessions: empty",
@@ -77,17 +77,16 @@ describe("multiple clients syncing with the a cloud-like server mesh", () => {
         "core -> edge-italy | CONTENT Group header: true new: After: 0 New: 3",
         "edge-italy -> core | KNOWN Group sessions: header/3",
         "core -> edge-italy | CONTENT Map header: true new: After: 0 New: 1",
+        "edge-italy -> core | KNOWN Map sessions: header/1",
         "edge-italy -> client | CONTENT Group header: true new: After: 0 New: 3",
         "client -> edge-italy | KNOWN Group sessions: header/3",
-        "edge-italy -> core | KNOWN Map sessions: header/1",
         "edge-italy -> client | CONTENT Map header: true new: After: 0 New: 1",
         "client -> edge-italy | KNOWN Map sessions: header/1",
       ]
     `);
   });
 
-  // FIXME: Expected parent group to be loaded: CoValue co_zEKiodKQprnfsi2qfDtsHGCGDSo not yet loaded
-  test.skip("coValue created on a different edge with parent groups loading", async () => {
+  test("coValue created on a different edge with parent groups loading", async () => {
     const client = setupTestNode();
 
     client.connectToSyncServer({
@@ -96,7 +95,7 @@ describe("multiple clients syncing with the a cloud-like server mesh", () => {
     });
 
     const group = mesh.edgeFrance.node.createGroup();
-    const parentGroup = mesh.edgeItaly.node.createGroup();
+    const parentGroup = mesh.edgeFrance.node.createGroup();
     parentGroup.addMember("everyone", "reader");
 
     group.extend(parentGroup);
@@ -115,7 +114,36 @@ describe("multiple clients syncing with the a cloud-like server mesh", () => {
         Group: group.core,
         Map: map.core,
       }),
-    ).toMatchInlineSnapshot();
+    ).toMatchInlineSnapshot(`
+      [
+        "edge-france -> core | CONTENT ParentGroup header: true new: After: 0 New: 6",
+        "core -> edge-france | KNOWN ParentGroup sessions: header/6",
+        "edge-france -> core | CONTENT Group header: true new: After: 0 New: 5",
+        "core -> storage | CONTENT ParentGroup header: true new: After: 0 New: 6",
+        "core -> edge-france | KNOWN Group sessions: header/5",
+        "edge-france -> core | CONTENT Map header: true new: After: 0 New: 1",
+        "storage -> core | KNOWN ParentGroup sessions: header/6",
+        "core -> storage | CONTENT Group header: true new: After: 0 New: 5",
+        "core -> edge-france | KNOWN Map sessions: header/1",
+        "storage -> core | KNOWN Group sessions: header/5",
+        "core -> storage | CONTENT Map header: true new: After: 0 New: 1",
+        "storage -> core | KNOWN Map sessions: header/1",
+        "client -> edge-italy | LOAD Map sessions: empty",
+        "edge-italy -> core | LOAD Map sessions: empty",
+        "core -> edge-italy | CONTENT ParentGroup header: true new: After: 0 New: 6",
+        "edge-italy -> core | KNOWN ParentGroup sessions: header/6",
+        "core -> edge-italy | CONTENT Group header: true new: After: 0 New: 5",
+        "edge-italy -> core | KNOWN Group sessions: header/5",
+        "core -> edge-italy | CONTENT Map header: true new: After: 0 New: 1",
+        "edge-italy -> core | KNOWN Map sessions: header/1",
+        "edge-italy -> client | CONTENT ParentGroup header: true new: After: 0 New: 6",
+        "client -> edge-italy | KNOWN ParentGroup sessions: header/6",
+        "edge-italy -> client | CONTENT Group header: true new: After: 0 New: 5",
+        "client -> edge-italy | KNOWN Group sessions: header/5",
+        "edge-italy -> client | CONTENT Map header: true new: After: 0 New: 1",
+        "client -> edge-italy | KNOWN Map sessions: header/1",
+      ]
+    `);
   });
 
   test("updating a coValue coming from a different edge", async () => {
@@ -155,8 +183,8 @@ describe("multiple clients syncing with the a cloud-like server mesh", () => {
         "edge-italy -> core | CONTENT Map header: false new: After: 0 New: 1",
         "core -> edge-italy | KNOWN Map sessions: header/2",
         "core -> storage | CONTENT Map header: false new: After: 0 New: 1",
-        "storage -> core | KNOWN Map sessions: header/2",
         "core -> edge-france | CONTENT Map header: false new: After: 0 New: 1",
+        "storage -> core | KNOWN Map sessions: header/2",
         "edge-france -> core | KNOWN Map sessions: header/2",
       ]
     `);
@@ -210,29 +238,29 @@ describe("multiple clients syncing with the a cloud-like server mesh", () => {
         "edge-italy -> core | CONTENT Group header: true new: After: 0 New: 5",
         "edge-italy -> client | CONTENT Group header: true new: After: 0 New: 5",
         "core -> edge-italy | KNOWN Group sessions: header/5",
-        "client -> edge-italy | KNOWN Group sessions: header/5",
-        "core -> storage | CONTENT Group header: true new: After: 0 New: 5",
         "edge-italy -> core | CONTENT Map header: true new: After: 0 New: 1",
+        "client -> edge-italy | KNOWN Group sessions: header/5",
         "edge-italy -> client | CONTENT Map header: true new: After: 0 New: 1",
-        "storage -> core | KNOWN Group sessions: header/5",
+        "core -> storage | CONTENT Group header: true new: After: 0 New: 5",
         "core -> edge-italy | KNOWN Map sessions: header/1",
-        "core -> storage | CONTENT Map header: true new: After: 0 New: 1",
         "client -> edge-italy | KNOWN Map sessions: header/1",
+        "storage -> core | KNOWN Group sessions: header/5",
+        "core -> storage | CONTENT Map header: true new: After: 0 New: 1",
         "storage -> core | KNOWN Map sessions: header/1",
         "client -> edge-italy | CONTENT Map header: false new: After: 0 New: 1",
         "core -> storage | CONTENT Map header: false new: After: 0 New: 1",
+        "core -> edge-italy | CONTENT Map header: false new: After: 0 New: 1",
         "edge-italy -> client | KNOWN CORRECTION Map sessions: empty",
         "storage -> core | KNOWN Map sessions: header/2",
-        "core -> edge-italy | CONTENT Map header: false new: After: 0 New: 1",
-        "client -> edge-italy | CONTENT Map header: true new: After: 0 New: 1 | After: 0 New: 1",
         "edge-italy -> core | KNOWN CORRECTION Map sessions: empty",
-        "edge-italy -> client | KNOWN Map sessions: header/2",
+        "client -> edge-italy | CONTENT Map header: true new: After: 0 New: 1 | After: 0 New: 1",
         "core -> edge-italy | CONTENT Map header: true new: After: 0 New: 1 | After: 0 New: 1",
-        "edge-italy -> core | CONTENT Map header: false new: After: 0 New: 1",
-        "edge-italy -> client | CONTENT Map header: false new: After: 0 New: 1",
-        "core -> edge-italy | KNOWN Map sessions: header/3",
+        "edge-italy -> client | KNOWN Map sessions: header/2",
         "edge-italy -> core | KNOWN Map sessions: header/3",
+        "edge-italy -> client | CONTENT Map header: false new: After: 0 New: 1",
+        "edge-italy -> core | CONTENT Map header: false new: After: 0 New: 1",
         "client -> edge-italy | KNOWN Map sessions: header/3",
+        "core -> edge-italy | KNOWN Map sessions: header/3",
         "core -> storage | CONTENT Map header: false new: After: 0 New: 1",
         "storage -> core | KNOWN Map sessions: header/3",
       ]

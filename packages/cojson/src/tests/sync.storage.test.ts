@@ -39,11 +39,11 @@ describe("client with storage syncs with server", () => {
         "client -> server | LOAD Map sessions: empty",
         "server -> client | CONTENT Group header: true new: After: 0 New: 3",
         "client -> server | KNOWN Group sessions: header/3",
-        "client -> storage | CONTENT Group header: true new: After: 0 New: 3",
         "server -> client | CONTENT Map header: true new: After: 0 New: 1",
+        "client -> storage | CONTENT Group header: true new: After: 0 New: 3",
+        "client -> server | KNOWN Map sessions: header/1",
         "storage -> client | KNOWN Group sessions: header/3",
         "client -> storage | CONTENT Map header: true new: After: 0 New: 1",
-        "client -> server | KNOWN Map sessions: header/1",
         "storage -> client | KNOWN Map sessions: header/1",
       ]
     `);
@@ -76,10 +76,12 @@ describe("client with storage syncs with server", () => {
         "client -> storage | KNOWN Group sessions: header/3",
         "storage -> client | CONTENT Map header: true new: After: 0 New: 1",
         "client -> server | CONTENT Group header: true new: After: 0 New: 3",
+        "client -> storage | KNOWN Map sessions: header/1",
         "server -> client | KNOWN Group sessions: header/3",
         "client -> server | LOAD Map sessions: header/1",
-        "client -> storage | KNOWN Map sessions: header/1",
         "server -> client | CONTENT Group header: true new: After: 0 New: 3",
+        "client -> server | CONTENT Map header: true new: After: 0 New: 1",
+        "server -> client | KNOWN Map sessions: header/1",
         "client -> server | KNOWN Group sessions: header/3",
         "server -> client | KNOWN Map sessions: header/1",
       ]
@@ -117,16 +119,16 @@ describe("client with storage syncs with server", () => {
         "client -> server | LOAD Map sessions: empty",
         "server -> client | CONTENT ParentGroup header: true new: After: 0 New: 6",
         "client -> server | KNOWN ParentGroup sessions: header/6",
-        "client -> storage | CONTENT ParentGroup header: true new: After: 0 New: 6",
         "server -> client | CONTENT Group header: true new: After: 0 New: 5",
-        "storage -> client | KNOWN ParentGroup sessions: header/6",
-        "server -> client | CONTENT Map header: true new: After: 0 New: 1",
-        "client -> storage | CONTENT Group header: true new: After: 0 New: 5",
-        "storage -> client | KNOWN Group sessions: header/5",
+        "client -> storage | CONTENT ParentGroup header: true new: After: 0 New: 6",
         "client -> server | KNOWN Group sessions: header/5",
+        "server -> client | CONTENT Map header: true new: After: 0 New: 1",
+        "storage -> client | KNOWN ParentGroup sessions: header/6",
+        "client -> storage | CONTENT Group header: true new: After: 0 New: 5",
+        "client -> server | KNOWN Map sessions: header/1",
+        "storage -> client | KNOWN Group sessions: header/5",
         "client -> storage | CONTENT Map header: true new: After: 0 New: 1",
         "storage -> client | KNOWN Map sessions: header/1",
-        "client -> server | KNOWN Map sessions: header/1",
       ]
     `);
   });
@@ -167,7 +169,9 @@ describe("client with storage syncs with server", () => {
         "client -> server | LOAD Map sessions: header/1",
         "server -> client | CONTENT Map header: false new: After: 1 New: 1",
         "client -> server | KNOWN Map sessions: header/2",
+        "server -> client | CONTENT Map header: false new: After: 1 New: 1",
         "client -> storage | CONTENT Map header: false new: After: 1 New: 1",
+        "client -> server | KNOWN Map sessions: header/2",
         "storage -> client | KNOWN Map sessions: header/2",
       ]
     `);
@@ -212,10 +216,10 @@ describe("client syncs with a server with storage", () => {
       [
         "client -> server | CONTENT Group header: true new: After: 0 New: 3",
         "server -> client | KNOWN Group sessions: header/3",
-        "server -> storage | CONTENT Group header: true new: After: 0 New: 3",
         "client -> server | CONTENT Map header: true new: After: 0 New: 1",
-        "storage -> server | KNOWN Group sessions: header/3",
+        "server -> storage | CONTENT Group header: true new: After: 0 New: 3",
         "server -> client | KNOWN Map sessions: header/1",
+        "storage -> server | KNOWN Group sessions: header/3",
         "server -> storage | CONTENT Map header: true new: After: 0 New: 1",
         "storage -> server | KNOWN Map sessions: header/1",
       ]

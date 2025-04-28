@@ -1,5 +1,12 @@
 # reactions
 
+## 0.0.79
+
+### Patch Changes
+
+- jazz-react@0.13.14
+- jazz-tools@0.13.14
+
 ## 0.0.78
 
 ### Patch Changes

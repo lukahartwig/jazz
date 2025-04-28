@@ -31,7 +31,7 @@ beforeEach(async () => {
   });
 });
 
-test("If we add a peer, but it never subscribes to a coValue, it won't get any messages", async () => {
+test("If we add a client peer, but it never subscribes to a coValue, it won't get any messages", async () => {
   const [admin, session] = randomAnonymousAccountAndSessionID();
   const node = new LocalNode(admin, session, Crypto);
 
@@ -47,7 +47,7 @@ test("If we add a peer, but it never subscribes to a coValue, it won't get any m
     id: "test",
     incoming: inRx,
     outgoing: outTx,
-    role: "peer",
+    role: "client",
     crashOnClose: true,
   });
 
@@ -561,7 +561,7 @@ describe("SyncManager - knownStates vs optimisticKnownStates", () => {
     const mapOnClient = group.createMap();
     mapOnClient.set("key1", "value1", "trusting");
 
-    await client.syncManager.actuallySyncCoValue(mapOnClient.core);
+    await client.syncManager.syncCoValue(mapOnClient.core);
 
     // Wait for the full sync to complete
     await mapOnClient.core.waitForSync();
@@ -592,7 +592,7 @@ describe("SyncManager - knownStates vs optimisticKnownStates", () => {
     const map = group.createMap();
     map.set("key1", "value1", "trusting");
 
-    await client.node.syncManager.actuallySyncCoValue(map.core);
+    await client.node.syncManager.syncCoValue(map.core);
     await map.core.waitForSync();
 
     // Block the content messages
@@ -604,7 +604,7 @@ describe("SyncManager - knownStates vs optimisticKnownStates", () => {
 
     map.set("key2", "value2", "trusting");
 
-    await client.node.syncManager.actuallySyncCoValue(map.core);
+    await client.node.syncManager.syncCoValue(map.core);
 
     expect(peerState.optimisticKnownStates.get(map.core.id)).not.toEqual(
       peerState.knownStates.get(map.core.id),
@@ -636,7 +636,7 @@ describe("SyncManager.addPeer", () => {
     const map = group.createMap();
     map.set("key1", "value1", "trusting");
 
-    await client.node.syncManager.actuallySyncCoValue(map.core);
+    await client.node.syncManager.syncCoValue(map.core);
 
     // Wait for initial sync
     await map.core.waitForSync();
@@ -669,7 +669,7 @@ describe("SyncManager.addPeer", () => {
     const map = group.createMap();
     map.set("key1", "value1", "trusting");
 
-    await client.node.syncManager.actuallySyncCoValue(map.core);
+    await client.node.syncManager.syncCoValue(map.core);
 
     // Wait for initial sync
     await map.core.waitForSync();
@@ -841,7 +841,7 @@ describe("waitForSyncWithPeer", () => {
     const map = group.createMap();
     map.set("key1", "value1", "trusting");
 
-    await client.node.syncManager.actuallySyncCoValue(map.core);
+    await client.node.syncManager.syncCoValue(map.core);
 
     await expect(
       client.node.syncManager.waitForSyncWithPeer(
@@ -866,7 +866,7 @@ describe("waitForSyncWithPeer", () => {
       return Promise.resolve();
     });
 
-    await client.node.syncManager.actuallySyncCoValue(map.core);
+    await client.node.syncManager.syncCoValue(map.core);
 
     await expect(
       client.node.syncManager.waitForSyncWithPeer(
@@ -914,7 +914,7 @@ describe("metrics", () => {
     const node = new LocalNode(admin, session, Crypto);
 
     let connectedPeers = await metricReader.getMetricValue("jazz.peers", {
-      role: "peer",
+      role: "client",
     });
     expect(connectedPeers).toBeUndefined();
     let connectedServerPeers = await metricReader.getMetricValue("jazz.peers", {
@@ -928,12 +928,12 @@ describe("metrics", () => {
       id: "peer-1",
       incoming: inPeer1,
       outgoing: outPeer1,
-      role: "peer",
+      role: "client",
       crashOnClose: false,
     });
 
     connectedPeers = await metricReader.getMetricValue("jazz.peers", {
-      role: "peer",
+      role: "client",
     });
     expect(connectedPeers).toBe(1);
 
@@ -943,12 +943,12 @@ describe("metrics", () => {
       id: "peer-2",
       incoming: inPeer2,
       outgoing: outPeer2,
-      role: "peer",
+      role: "client",
       crashOnClose: false,
     });
 
     connectedPeers = await metricReader.getMetricValue("jazz.peers", {
-      role: "peer",
+      role: "client",
     });
     expect(connectedPeers).toBe(2);
 
@@ -966,7 +966,7 @@ describe("metrics", () => {
     });
     expect(connectedServerPeers).toBe(1);
     connectedPeers = await metricReader.getMetricValue("jazz.peers", {
-      role: "peer",
+      role: "client",
     });
     expect(connectedPeers).toBe(2);
 
@@ -975,7 +975,7 @@ describe("metrics", () => {
     await waitFor(() => node.syncManager.peers["peer-1"]?.closed);
 
     connectedPeers = await metricReader.getMetricValue("jazz.peers", {
-      role: "peer",
+      role: "client",
     });
     expect(connectedPeers).toBe(1);
 
@@ -990,20 +990,6 @@ describe("metrics", () => {
     expect(connectedServerPeers).toBe(0);
   });
 });
-
-function groupContentEx(group: RawGroup) {
-  return {
-    action: "content",
-    id: group.core.id,
-  };
-}
-
-function groupStateEx(group: RawGroup) {
-  return {
-    action: "known",
-    id: group.core.id,
-  };
-}
 
 describe("LocalNode.load", () => {
   test("should throw error when trying to load with undefined ID", async () => {
