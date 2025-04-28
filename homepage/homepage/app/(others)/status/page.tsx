@@ -1,6 +1,6 @@
 import LatencyChart from "@/components/LatencyChart";
-import { HeroHeader } from "@garden-co/design-system/src/components/molecules/HeroHeader";
 import { clsx } from "clsx";
+import { HeroHeader } from "@garden-co/design-system/src/components/molecules/HeroHeader";
 import type { Metadata } from "next";
 import { Fragment } from "react";
 

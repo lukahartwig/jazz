@@ -1,6 +1,6 @@
 import { packages } from "@/content/packages";
-import { Icon } from "@garden-co/design-system/src/components/atoms/Icon";
 import { clsx } from "clsx";
+import { Icon } from "@garden-co/design-system/src/components/atoms/Icon";
 import type { Metadata } from "next";
 import Link from "next/link";
 
