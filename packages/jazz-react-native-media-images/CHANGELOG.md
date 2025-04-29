@@ -1,5 +1,17 @@
 # jazz-browser-media-images
 
+## 0.13.15
+
+### Patch Changes
+
+- jazz-tools@0.13.15
+
+## 0.13.14
+
+### Patch Changes
+
+- jazz-tools@0.13.14
+
 ## 0.13.13
 
 ### Patch Changes

@@ -140,7 +140,9 @@ export class LocalNode {
     function syncAllCoValuesAfterCreateAccount() {
       for (const coValueEntry of nodeWithAccount.coValuesStore.getValues()) {
         if (coValueEntry.isAvailable()) {
-          void nodeWithAccount.syncManager.syncCoValue(coValueEntry.core);
+          void nodeWithAccount.syncManager.requestCoValueSync(
+            coValueEntry.core,
+          );
         }
       }
     }
@@ -248,7 +250,7 @@ export class LocalNode {
     const coValue = new CoValueCore(header, this);
     this.coValuesStore.internalMarkMagicallyAvailable(coValue.id, coValue);
 
-    void this.syncManager.syncCoValue(coValue);
+    void this.syncManager.requestCoValueSync(coValue);
 
     return coValue;
   }

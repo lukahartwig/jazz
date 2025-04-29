@@ -2,11 +2,12 @@ import { describe, expect, test, vi } from "vitest";
 import { PeerState } from "../PeerState.js";
 import { CO_VALUE_PRIORITY } from "../priority.js";
 import { CoValueKnownState, Peer, SyncMessage } from "../sync.js";
+import { waitFor } from "./testUtils.js";
 
 function setup() {
   const mockPeer: Peer = {
     id: "test-peer",
-    role: "peer",
+    role: "client",
     priority: 1,
     crashOnClose: false,
     incoming: (async function* () {})(),
@@ -62,13 +63,19 @@ describe("PeerState", () => {
       });
     });
 
-    const message1 = peerState.pushOutgoingMessage({
+    peerState.pushOutgoingMessage({
       action: "content",
       id: "co_z1",
       new: {},
       priority: CO_VALUE_PRIORITY.HIGH,
     });
-    const message2 = peerState.pushOutgoingMessage({
+    peerState.pushOutgoingMessage({
+      action: "content",
+      id: "co_z1",
+      new: {},
+      priority: CO_VALUE_PRIORITY.HIGH,
+    });
+    peerState.pushOutgoingMessage({
       action: "content",
       id: "co_z1",
       new: {},
@@ -77,14 +84,21 @@ describe("PeerState", () => {
 
     peerState.gracefulShutdown();
 
-    await Promise.allSettled([message1, message2]);
+    await waitFor(() => {
+      expect(peerState.isProcessing()).toBe(false);
+    });
 
-    await expect(message1).resolves.toBe(undefined);
-    await expect(message2).resolves.toBe(undefined);
+    expect(mockPeer.outgoing.push).toHaveBeenCalledTimes(1);
   });
 
   test("should schedule outgoing messages based on their priority", async () => {
-    const { peerState } = setup();
+    const { peerState, mockPeer } = setup();
+
+    mockPeer.outgoing.push = vi.fn().mockImplementation((message) => {
+      return new Promise<void>((resolve) => {
+        setTimeout(resolve, 0);
+      });
+    });
 
     const loadMessage: SyncMessage = {
       action: "load",
@@ -111,14 +125,14 @@ describe("PeerState", () => {
       priority: CO_VALUE_PRIORITY.LOW,
     };
 
-    const promises = [
-      peerState.pushOutgoingMessage(contentMessageLow),
-      peerState.pushOutgoingMessage(contentMessageMid),
-      peerState.pushOutgoingMessage(contentMessageHigh),
-      peerState.pushOutgoingMessage(loadMessage),
-    ];
+    peerState.pushOutgoingMessage(contentMessageLow);
+    peerState.pushOutgoingMessage(contentMessageMid);
+    peerState.pushOutgoingMessage(contentMessageHigh);
+    peerState.pushOutgoingMessage(loadMessage);
 
-    await Promise.all(promises);
+    await waitFor(() => {
+      expect(peerState.isProcessing()).toBe(false);
+    });
 
     // The first message is pushed directly, the other three are queued because are waiting
     // for the first push to be completed.

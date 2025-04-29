@@ -7,8 +7,6 @@ import { connectedPeers } from "../streamUtils.js";
 import { emptyKnownState } from "../sync.js";
 import {
   SyncMessagesLog,
-  blockMessageTypeOnOutgoingPeer,
-  createTestNode,
   loadCoValueOrFail,
   setupTestNode,
   waitFor,
@@ -37,7 +35,7 @@ describe("SyncStateManager", () => {
     const updateSpy: GlobalSyncStateListenerCallback = vi.fn();
     const unsubscribe = subscriptionManager.subscribeToUpdates(updateSpy);
 
-    await client.node.syncManager.actuallySyncCoValue(map.core);
+    await client.node.syncManager.syncCoValue(map.core);
 
     expect(updateSpy).toHaveBeenCalledWith(
       peerState.id,
@@ -97,7 +95,7 @@ describe("SyncStateManager", () => {
       unsubscribe2();
     });
 
-    await client.node.syncManager.actuallySyncCoValue(map.core);
+    await client.node.syncManager.syncCoValue(map.core);
 
     expect(updateToJazzCloudSpy).toHaveBeenCalledWith(
       emptyKnownState(map.core.id),
@@ -132,7 +130,7 @@ describe("SyncStateManager", () => {
     const map = group.createMap();
     map.set("key1", "value1", "trusting");
 
-    await client.node.syncManager.actuallySyncCoValue(map.core);
+    await client.node.syncManager.syncCoValue(map.core);
 
     const subscriptionManager = client.node.syncManager.syncState;
 
@@ -173,7 +171,7 @@ describe("SyncStateManager", () => {
     unsubscribe1();
     unsubscribe2();
 
-    await client.node.syncManager.actuallySyncCoValue(map.core);
+    await client.node.syncManager.syncCoValue(map.core);
 
     anyUpdateSpy.mockClear();
 
@@ -217,9 +215,6 @@ describe("SyncStateManager", () => {
 
     const mapOnServer = await loadCoValueOrFail(serverNode, map.id);
 
-    // Block the content messages so the client won't fully sync immediately
-    const outgoing = blockMessageTypeOnOutgoingPeer(peerOnServer, "content");
-
     mapOnServer.set("key2", "value2", "trusting");
 
     expect(
@@ -235,9 +230,6 @@ describe("SyncStateManager", () => {
         map.core.id,
       ),
     ).toEqual({ uploaded: false });
-
-    await outgoing.sendBlockedMessages();
-    outgoing.unblock();
 
     await mapOnServer.core.waitForSync();
 

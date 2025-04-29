@@ -488,7 +488,7 @@ export class CoValueCore {
 
     if (success) {
       this.node.syncManager.recordTransactionsSize([transaction], "local");
-      void this.node.syncManager.syncCoValue(this);
+      void this.node.syncManager.requestCoValueSync(this);
     }
 
     return success;

@@ -141,16 +141,10 @@ export class CoValueState {
           continue;
         }
 
-        peer
-          .pushOutgoingMessage({
-            action: "load",
-            ...(this.core ? this.core.knownState() : emptyKnownState(this.id)),
-          })
-          .catch((err) => {
-            logger.warn(`Failed to push load message to peer ${peer.id}`, {
-              err,
-            });
-          });
+        peer.pushOutgoingMessage({
+          action: "load",
+          ...(this.core ? this.core.knownState() : emptyKnownState(this.id)),
+        });
 
         /**
          * Use a very long timeout for storage peers, because under pressure

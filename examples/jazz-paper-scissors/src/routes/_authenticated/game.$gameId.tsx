@@ -45,7 +45,7 @@ export const Route = createFileRoute("/_authenticated/game/$gameId")({
 });
 
 function RouteComponent() {
-  const { gameId, me, loaderGame } = Route.useLoaderData();
+  const { gameId, loaderGame } = Route.useLoaderData();
 
   const isPlayer1 = loaderGame.player1?.account?.isMe;
   const player = isPlayer1 ? "player1" : "player2";
