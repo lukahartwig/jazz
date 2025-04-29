@@ -10,7 +10,7 @@ import { CoMap, Group } from "../../exports.js";
 import { ID, co } from "../../internal.js";
 import { AuthenticateAccountFunction } from "../../types.js";
 import { AuthSecretStorage } from "../AuthSecretStorage.js";
-import { MagicLinkAuthOptions } from "./types.js";
+import { CrossDeviceAccountTransferOptions } from "./types.js";
 import {
   createTemporaryAgent,
   defaultOptions,
@@ -18,7 +18,7 @@ import {
   shutdownTransferAccount,
 } from "./utils.js";
 
-export class MagicLinkAuthTransfer extends CoMap {
+export class CrossDeviceAccountTransferCoMap extends CoMap {
   status = co.literal("pending", "incorrectCode", "authorized");
   secret = co.optional.string;
   acceptedBy = co.optional.ref(Account);
@@ -26,38 +26,38 @@ export class MagicLinkAuthTransfer extends CoMap {
 }
 
 /**
- * `MagicLinkAuth` provides a `JazzAuth` object for secret URL authentication. Good for use in a QR code.
+ * `CrossDeviceAccountTransfer` provides a `JazzAuth` object for secret URL authentication. Good for use in a QR code.
  *
  * ```ts
- * import { MagicLinkAuth } from "jazz-tools";
+ * import { CrossDeviceAccountTransfer } from "jazz-tools";
  *
- * const auth = new MagicLinkAuth(crypto, jazzContext.authenticate, new AuthSecretStorage(), window.location.origin, options);
+ * const auth = new CrossDeviceAccountTransfer(crypto, jazzContext.authenticate, new AuthSecretStorage(), window.location.origin, options);
  * ```
  *
  * @category Auth Providers
  */
-export class MagicLinkAuth {
+export class CrossDeviceAccountTransfer {
   constructor(
     private crypto: CryptoProvider,
     private authenticate: AuthenticateAccountFunction,
     private authSecretStorage: AuthSecretStorage,
     private origin: string,
-    options?: Partial<MagicLinkAuthOptions>,
+    options?: Partial<CrossDeviceAccountTransferOptions>,
   ) {
     this.options = { ...defaultOptions, ...options };
   }
 
-  private options: MagicLinkAuthOptions;
+  private options: CrossDeviceAccountTransferOptions;
 
   /**
-   * Creates a magic link URL for authentication.
+   * Creates a transfer URL for authentication.
    * @param handler - Specifies whether the link should be handled by consumer or provider.
-   * @param transfer - The MagicLinkAuthTransfer to create the link for.
+   * @param transfer - The CrossDeviceAccountTransferCoMap to create the link for.
    * @returns A URL that can be displayed as a QR code to be scanned by the handler.
    */
   public createLink(
     handler: "source" | "target",
-    transfer: MagicLinkAuthTransfer,
+    transfer: CrossDeviceAccountTransferCoMap,
   ) {
     let handlerUrl = this.origin + this.options[`${handler}HandlerPath`];
 
@@ -73,7 +73,7 @@ export class MagicLinkAuth {
 
     if (!url.includes("#")) {
       console.warn(
-        "MagicLinkAuth: URL does not include # - consider using a hash fragment to avoid leaking the transfer secret",
+        "CrossDeviceAccountTransfer: URL does not include # - consider using a hash fragment to avoid leaking the transfer secret",
       );
     }
 
@@ -90,13 +90,13 @@ export class MagicLinkAuth {
 
   /**
    * Creates a transfer as a temporary agent.
-   * @returns The created MagicLinkAuthTransfer.
+   * @returns The created CrossDeviceAccountTransferCoMap.
    */
   public async createTransfer() {
     const temporaryAgent = await createTemporaryAgent(this.crypto);
     const group = Group.create({ owner: temporaryAgent });
 
-    const transfer = MagicLinkAuthTransfer.create(
+    const transfer = CrossDeviceAccountTransferCoMap.create(
       { status: "pending" },
       { owner: group },
     );
@@ -106,9 +106,11 @@ export class MagicLinkAuth {
 
   /**
    * Load the secret seed from auth storage and reveal it to the transfer.
-   * @param transfer - The MagicLinkAuthTransfer to reveal the secret to.
+   * @param transfer - The CrossDeviceAccountTransferCoMap to reveal the secret to.
    */
-  public async revealSecretToTransfer(transfer: MagicLinkAuthTransfer) {
+  public async revealSecretToTransfer(
+    transfer: CrossDeviceAccountTransferCoMap,
+  ) {
     const credentials = await this.authSecretStorage.get();
     if (!credentials?.secretSeed) {
       throw new Error("No existing authentication found");
@@ -119,9 +121,9 @@ export class MagicLinkAuth {
 
   /**
    * Log in via a transfer secret.
-   * @param transfer - The MagicLinkAuthTransfer with the secret to log in with.
+   * @param transfer - The CrossDeviceAccountTransferCoMap with the secret to log in with.
    */
-  public async logInViaTransfer(transfer: MagicLinkAuthTransfer) {
+  public async logInViaTransfer(transfer: CrossDeviceAccountTransferCoMap) {
     const secret = transfer.secret;
     if (!secret) throw new Error("Transfer secret not set");
     transfer.status = "authorized";
@@ -145,7 +147,7 @@ export class MagicLinkAuth {
       accountID,
       secretSeed,
       accountSecret,
-      provider: "magicLink",
+      provider: "crossDeviceAccountTransfer",
     });
   }
 
@@ -153,7 +155,7 @@ export class MagicLinkAuth {
    * Accept a transfer from a URL.
    * @param url - The URL to accept the transfer from.
    * @param handler - Specifies whether the URL is for consumer or provider.
-   * @returns The accepted MagicLinkAuthTransfer.
+   * @returns The accepted CrossDeviceAccountTransferCoMap.
    */
   public async acceptTransferUrl(url: string, handler: "source" | "target") {
     const { transferId, inviteSecret } = parseTransferUrl(
@@ -166,7 +168,7 @@ export class MagicLinkAuth {
     const transfer = await account.acceptInvite(
       transferId,
       inviteSecret,
-      MagicLinkAuthTransfer,
+      CrossDeviceAccountTransferCoMap,
     );
     if (!transfer) throw new Error("Failed to accept invite");
 

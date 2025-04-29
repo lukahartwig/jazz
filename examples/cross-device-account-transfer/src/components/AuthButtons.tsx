@@ -5,15 +5,15 @@ import { useState } from "react";
 import { APPLICATION_NAME } from "../main";
 import { Button } from "./Button";
 import { Card } from "./Card";
-import { CreateMagicLinkAsSource } from "./CreateMagicLinkAsSource";
-import { CreateMagicLinkAsTarget } from "./CreateMagicLinkAsTarget";
+import { CreateCrossDeviceAccountTransferAsSource } from "./CreateCrossDeviceAccountTransferAsSource";
+import { CreateCrossDeviceAccountTransferAsTarget } from "./CreateCrossDeviceAccountTransferAsTarget";
 
 export function AuthButtons() {
   const { logOut } = useAccount();
 
   const auth = usePasskeyAuth({ appName: APPLICATION_NAME });
 
-  const [magicLinkFlow, setMagicLinkFlow] = useState(false);
+  const [accountTransferFlow, setAccountTransferFlow] = useState(false);
 
   function handleLogOut() {
     logOut();
@@ -28,14 +28,14 @@ export function AuthButtons() {
             Log out
           </Button>
 
-          <Button color="primary" onClick={() => setMagicLinkFlow(true)}>
+          <Button color="primary" onClick={() => setAccountTransferFlow(true)}>
             ✨ Get your mobile device logged in ✨
           </Button>
         </div>
 
-        {magicLinkFlow ? (
+        {accountTransferFlow ? (
           <Card className="w-full flex flex-col gap-4 items-center text-center">
-            <CreateMagicLinkAsSource />
+            <CreateCrossDeviceAccountTransferAsSource />
           </Card>
         ) : null}
       </div>
@@ -51,17 +51,17 @@ export function AuthButtons() {
 
         <Button onClick={() => auth.logIn()}>Log in with passkey</Button>
 
-        <Button color="primary" onClick={() => setMagicLinkFlow(true)}>
+        <Button color="primary" onClick={() => setAccountTransferFlow(true)}>
           ✨ Use mobile device to log in ✨
         </Button>
       </div>
 
-      {magicLinkFlow ? (
+      {accountTransferFlow ? (
         <Card className="w-full flex flex-col gap-4 items-center text-center">
-          <CreateMagicLinkAsTarget
+          <CreateCrossDeviceAccountTransferAsTarget
             onLoggedIn={() => {
               console.log("logged in!");
-              setMagicLinkFlow(false);
+              setAccountTransferFlow(false);
             }}
           />
         </Card>

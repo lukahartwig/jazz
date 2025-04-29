@@ -249,8 +249,8 @@ export const docNavigationItems = [
         done: 100,
       },
       {
-        name: "Magic Link",
-        href: "/docs/authentication/magic-link",
+        name: "Cross-Device Account Transfer",
+        href: "/docs/authentication/cross-device-account-transfer",
         done: 100,
       },
       {

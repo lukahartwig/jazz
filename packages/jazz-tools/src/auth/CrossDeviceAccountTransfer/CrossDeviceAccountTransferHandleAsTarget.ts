@@ -1,9 +1,12 @@
 import { waitForCoValueCondition } from "../../internal.js";
-import { MagicLinkAuth, MagicLinkAuthTransfer } from "./MagicLinkAuth.js";
-import { MagicLinkAuthAsTargetOptions } from "./types.js";
+import {
+  CrossDeviceAccountTransfer,
+  CrossDeviceAccountTransferCoMap,
+} from "./CrossDeviceAccountTransfer.js";
+import { CrossDeviceAccountTransferAsTargetOptions } from "./types.js";
 import { shutdownTransferAccount } from "./utils.js";
 
-export type MagicLinkAuthHandleAsTargetStatus =
+export type CrossDeviceAccountTransferHandleAsTargetStatus =
   | "idle"
   | "confirmationCodeRequired"
   | "confirmationCodePending"
@@ -12,26 +15,26 @@ export type MagicLinkAuthHandleAsTargetStatus =
   | "error"
   | "cancelled";
 
-export class MagicLinkAuthHandleAsTarget {
+export class CrossDeviceAccountTransferHandleAsTarget {
   constructor(
-    private magicLinkAuth: MagicLinkAuth,
-    options?: MagicLinkAuthAsTargetOptions,
+    private crossDeviceAccountTransfer: CrossDeviceAccountTransfer,
+    options?: CrossDeviceAccountTransferAsTargetOptions,
   ) {
     this.options = { ...defaultOptions, ...options };
   }
 
-  private options: MagicLinkAuthAsTargetOptions;
+  private options: CrossDeviceAccountTransferAsTargetOptions;
   private abortController: AbortController | null = null;
 
   public authState: {
-    status: MagicLinkAuthHandleAsTargetStatus;
+    status: CrossDeviceAccountTransferHandleAsTargetStatus;
     sendConfirmationCode: null | ((code: string) => void);
   } = {
     status: "idle",
     sendConfirmationCode: null,
   };
 
-  private set status(status: MagicLinkAuthHandleAsTargetStatus) {
+  private set status(status: CrossDeviceAccountTransferHandleAsTargetStatus) {
     this.authState = { ...this.authState, status };
   }
   private set sendConfirmationCode(sendConfirmationCode:
@@ -44,10 +47,13 @@ export class MagicLinkAuthHandleAsTarget {
     this.abortController = new AbortController();
     const { signal } = this.abortController;
 
-    let transfer: MagicLinkAuthTransfer | undefined;
+    let transfer: CrossDeviceAccountTransferCoMap | undefined;
 
     try {
-      transfer = await this.magicLinkAuth.acceptTransferUrl(url, "target");
+      transfer = await this.crossDeviceAccountTransfer.acceptTransferUrl(
+        url,
+        "target",
+      );
 
       this.status = "confirmationCodeRequired";
       this.notify();
@@ -75,7 +81,7 @@ export class MagicLinkAuthHandleAsTarget {
         return;
       }
 
-      await this.magicLinkAuth.logInViaTransfer(transfer);
+      await this.crossDeviceAccountTransfer.logInViaTransfer(transfer);
       this.status = "authorized";
       this.notify();
       this.options.onLoggedIn?.();
@@ -83,7 +89,7 @@ export class MagicLinkAuthHandleAsTarget {
       if (error instanceof Error && error.message.startsWith("Aborted")) {
         this.status = "cancelled";
       } else {
-        console.error("Magic Link Auth error", error);
+        console.error("Cross-Device Account Transfer error", error);
         this.status = "error";
       }
       this.notify();
@@ -98,7 +104,7 @@ export class MagicLinkAuthHandleAsTarget {
   }
 
   public checkValidUrl(url: string) {
-    return this.magicLinkAuth.checkValidUrl(url, "target");
+    return this.crossDeviceAccountTransfer.checkValidUrl(url, "target");
   }
 
   listeners = new Set<() => void>();
@@ -117,6 +123,6 @@ export class MagicLinkAuthHandleAsTarget {
   }
 }
 
-const defaultOptions: MagicLinkAuthAsTargetOptions = {
+const defaultOptions: CrossDeviceAccountTransferAsTargetOptions = {
   handlerTimeout: 30 * 1000,
 };

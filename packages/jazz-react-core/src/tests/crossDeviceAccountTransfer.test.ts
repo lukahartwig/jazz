@@ -2,11 +2,11 @@
 
 import { beforeEach, describe, expect, it } from "vitest";
 import {
-  useCreateMagicLinkAuthAsSource,
-  useCreateMagicLinkAuthAsTarget,
-  useHandleMagicLinkAuthAsSource,
-  useHandleMagicLinkAuthAsTarget,
-} from "../auth/MagicLinkAuth.js";
+  useCreateCrossDeviceAccountTransferAsSource,
+  useCreateCrossDeviceAccountTransferAsTarget,
+  useHandleCrossDeviceAccountTransferAsSource,
+  useHandleCrossDeviceAccountTransferAsTarget,
+} from "../auth/CrossDeviceAccountTransfer.js";
 import {
   createJazzTestAccount,
   createJazzTestGuest,
@@ -18,8 +18,8 @@ beforeEach(async () => {
   await setupJazzTestSync();
 });
 
-describe("MagicLinkAuth", () => {
-  describe("useCreateMagicLinkAuthAsProvider", () => {
+describe("CrossDeviceAccountTransfer", () => {
+  describe("useCreateCrossDeviceAccountTransferAsProvider", () => {
     beforeEach(async () => {
       await createJazzTestAccount({ isCurrentActiveAccount: true });
     });
@@ -29,17 +29,21 @@ describe("MagicLinkAuth", () => {
 
       expect(() =>
         renderHook(
-          () => useCreateMagicLinkAuthAsSource(window.location.origin),
+          () =>
+            useCreateCrossDeviceAccountTransferAsSource(window.location.origin),
           { account: guestAccount },
         ),
-      ).toThrowError("Magic Link Auth is not supported in guest mode");
+      ).toThrowError(
+        "Cross-Device Account Transfer is not supported in guest mode",
+      );
     });
 
     it("initializes with idle state", async () => {
       const account = await createJazzTestAccount({});
 
       const { result: createAsProvider } = renderHook(
-        () => useCreateMagicLinkAuthAsSource(window.location.origin),
+        () =>
+          useCreateCrossDeviceAccountTransferAsSource(window.location.origin),
         { account },
       );
 
@@ -49,10 +53,11 @@ describe("MagicLinkAuth", () => {
       createAsProvider.current.cancelFlow();
     });
 
-    it("can create a magic link and cancel flow", async () => {
+    it("can create a link and cancel flow", async () => {
       const account = await createJazzTestAccount({});
       const { result: createAsProvider } = renderHook(
-        () => useCreateMagicLinkAuthAsSource(window.location.origin),
+        () =>
+          useCreateCrossDeviceAccountTransferAsSource(window.location.origin),
         { account },
       );
       let link = "";
@@ -60,7 +65,7 @@ describe("MagicLinkAuth", () => {
         link = await createAsProvider.current.createLink();
       });
       expect(link).toMatch(
-        /^http:\/\/localhost:3000\/magic-link-handler-target\/co_[^/]+\/inviteSecret_[^/]+$/,
+        /^http:\/\/localhost:3000\/account-transfer-handler-target\/co_[^/]+\/inviteSecret_[^/]+$/,
       );
       expect(createAsProvider.current.status).toBe("waitingForHandler");
       act(() => {
@@ -72,7 +77,7 @@ describe("MagicLinkAuth", () => {
     });
   });
 
-  describe("useCreateMagicLinkAuthAsConsumer", () => {
+  describe("useCreateCrossDeviceAccountTransferAsConsumer", () => {
     beforeEach(async () => {
       await createJazzTestAccount({ isCurrentActiveAccount: true });
     });
@@ -81,15 +86,18 @@ describe("MagicLinkAuth", () => {
       const guestAccount = await createJazzTestGuest();
       expect(() =>
         renderHook(
-          () => useCreateMagicLinkAuthAsTarget(window.location.origin),
+          () =>
+            useCreateCrossDeviceAccountTransferAsTarget(window.location.origin),
           { account: guestAccount },
         ),
-      ).toThrowError("Magic Link Auth is not supported in guest mode");
+      ).toThrowError(
+        "Cross-Device Account Transfer is not supported in guest mode",
+      );
     });
 
     it("initializes with idle state", async () => {
       const { result: createAsConsumer } = renderHook(() =>
-        useCreateMagicLinkAuthAsTarget(window.location.origin),
+        useCreateCrossDeviceAccountTransferAsTarget(window.location.origin),
       );
       expect(createAsConsumer.current.status).toBe("idle");
       expect(createAsConsumer.current.createLink).toBeTypeOf("function");
@@ -97,10 +105,11 @@ describe("MagicLinkAuth", () => {
       createAsConsumer.current.cancelFlow();
     });
 
-    it("can create a magic link and cancel flow", async () => {
+    it("can create a link and cancel flow", async () => {
       const account = await createJazzTestAccount({});
       const { result: createAsConsumer } = renderHook(
-        () => useCreateMagicLinkAuthAsTarget(window.location.origin),
+        () =>
+          useCreateCrossDeviceAccountTransferAsTarget(window.location.origin),
         { account },
       );
       let link = "";
@@ -108,7 +117,7 @@ describe("MagicLinkAuth", () => {
         link = await createAsConsumer.current.createLink();
       });
       expect(link).toMatch(
-        /^http:\/\/localhost:3000\/magic-link-handler-source\/co_[^/]+\/inviteSecret_[^/]+$/,
+        /^http:\/\/localhost:3000\/account-transfer-handler-source\/co_[^/]+\/inviteSecret_[^/]+$/,
       );
       expect(createAsConsumer.current.status).toBe("waitingForHandler");
       act(() => {
@@ -120,7 +129,7 @@ describe("MagicLinkAuth", () => {
     });
   });
 
-  describe("useHandleMagicLinkAuthAsProvider", () => {
+  describe("useHandleCrossDeviceAccountTransferAsProvider", () => {
     beforeEach(async () => {
       await createJazzTestAccount({ isCurrentActiveAccount: true });
     });
@@ -129,7 +138,7 @@ describe("MagicLinkAuth", () => {
       const account = await createJazzTestAccount({});
       const { result: handleAsProvider } = renderHook(
         () =>
-          useHandleMagicLinkAuthAsSource(
+          useHandleCrossDeviceAccountTransferAsSource(
             window.location.origin,
             "invalid-link-gets-ignored",
           ),
@@ -142,7 +151,7 @@ describe("MagicLinkAuth", () => {
     it("handles the flow", async () => {
       // Create consumer
       const { result: createAsConsumer } = renderHook(() =>
-        useCreateMagicLinkAuthAsTarget(window.location.origin),
+        useCreateCrossDeviceAccountTransferAsTarget(window.location.origin),
       );
       let link = "";
       await act(async () => {
@@ -155,7 +164,11 @@ describe("MagicLinkAuth", () => {
       // Create provider
       const account = await createJazzTestAccount({});
       const { result: handleAsProvider } = renderHook(
-        () => useHandleMagicLinkAuthAsSource(window.location.origin, link),
+        () =>
+          useHandleCrossDeviceAccountTransferAsSource(
+            window.location.origin,
+            link,
+          ),
         { account },
       );
 
@@ -182,14 +195,14 @@ describe("MagicLinkAuth", () => {
     });
   });
 
-  describe("useHandleMagicLinkAuthAsConsumer", () => {
+  describe("useHandleCrossDeviceAccountTransferAsConsumer", () => {
     beforeEach(async () => {
       await createJazzTestAccount({ isCurrentActiveAccount: true });
     });
 
     it("initializes with idle state", async () => {
       const { result: handleAsConsumer } = renderHook(() =>
-        useHandleMagicLinkAuthAsTarget(
+        useHandleCrossDeviceAccountTransferAsTarget(
           window.location.origin,
           "invalid-link-gets-ignored",
         ),
@@ -201,7 +214,7 @@ describe("MagicLinkAuth", () => {
     it("handles the flow", async () => {
       // Create consumer
       const { result: createAsConsumer } = renderHook(() =>
-        useCreateMagicLinkAuthAsTarget(window.location.origin),
+        useCreateCrossDeviceAccountTransferAsTarget(window.location.origin),
       );
       let link = "";
       await act(async () => {
@@ -214,7 +227,11 @@ describe("MagicLinkAuth", () => {
       // Create provider
       const account = await createJazzTestAccount({});
       const { result: handleAsProvider } = renderHook(
-        () => useHandleMagicLinkAuthAsSource(window.location.origin, link),
+        () =>
+          useHandleCrossDeviceAccountTransferAsSource(
+            window.location.origin,
+            link,
+          ),
         { account },
       );
 

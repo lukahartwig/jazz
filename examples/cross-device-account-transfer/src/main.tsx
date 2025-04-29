@@ -8,7 +8,7 @@ import { apiKey } from "./apiKey.ts";
 import { JazzAccount } from "./schema.ts";
 
 // We use this to identify the app in the passkey auth
-export const APPLICATION_NAME = "Magic Link Auth Example";
+export const APPLICATION_NAME = "Cross-Device Account Transfer Example";
 
 declare module "jazz-react" {
   export interface Register {

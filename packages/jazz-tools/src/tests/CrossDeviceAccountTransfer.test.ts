@@ -4,12 +4,12 @@ import { AgentSecret, bytesToBase64url } from "cojson";
 import { PureJSCrypto } from "cojson/crypto/PureJSCrypto";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
-  MagicLinkAuth,
-  MagicLinkAuthCreateAsSource,
-  MagicLinkAuthCreateAsTarget,
-  MagicLinkAuthHandleAsSource,
-  MagicLinkAuthHandleAsTarget,
-} from "../auth/MagicLinkAuth";
+  CrossDeviceAccountTransfer,
+  CrossDeviceAccountTransferCreateAsSource,
+  CrossDeviceAccountTransferCreateAsTarget,
+  CrossDeviceAccountTransferHandleAsSource,
+  CrossDeviceAccountTransferHandleAsTarget,
+} from "../auth/CrossDeviceAccountTransfer";
 import {
   Account,
   AuthSecretStorage,
@@ -23,11 +23,11 @@ import { waitFor } from "./utils";
 // Initialize KV store for tests
 KvStoreContext.getInstance().initialize(new InMemoryKVStore());
 
-describe("MagicLinkAuth", () => {
+describe("CrossDeviceAccountTransfer", () => {
   let crypto: PureJSCrypto;
   let mockAuthenticate: any;
   let authSecretStorage: AuthSecretStorage;
-  let magicLinkAuth: MagicLinkAuth;
+  let crossDeviceAccountTransfer: CrossDeviceAccountTransfer;
   let account: Account;
 
   beforeEach(async () => {
@@ -52,8 +52,8 @@ describe("MagicLinkAuth", () => {
       isCurrentActiveAccount: true,
     });
 
-    // Create MagicLinkAuth instance
-    magicLinkAuth = new MagicLinkAuth(
+    // Create CrossDeviceAccountTransfer instance
+    crossDeviceAccountTransfer = new CrossDeviceAccountTransfer(
       crypto,
       mockAuthenticate,
       authSecretStorage,
@@ -63,7 +63,7 @@ describe("MagicLinkAuth", () => {
 
   describe("createTransferAsProvider", () => {
     it("creates a transfer", async () => {
-      const transfer = await magicLinkAuth.createTransfer();
+      const transfer = await crossDeviceAccountTransfer.createTransfer();
 
       expect(transfer.status).toBe("pending");
     });
@@ -71,7 +71,7 @@ describe("MagicLinkAuth", () => {
 
   describe("createTransferAsConsumer", () => {
     it("creates a transfer", async () => {
-      const transfer = await magicLinkAuth.createTransfer();
+      const transfer = await crossDeviceAccountTransfer.createTransfer();
 
       // The transfer should NOT be loaded as the logged-in account
       expect((transfer._loadedAs as Account).id).not.toBe(account.id);
@@ -86,13 +86,13 @@ describe("MagicLinkAuth", () => {
       mockRandomBytes.mockReturnValue(new Uint8Array([1]));
       crypto.randomBytes = mockRandomBytes;
 
-      const code = await magicLinkAuth.createConfirmationCode();
+      const code = await crossDeviceAccountTransfer.createConfirmationCode();
 
       expect(code).toBe("111111");
     });
 
     it("creates a code using custom code function", async () => {
-      magicLinkAuth = new MagicLinkAuth(
+      crossDeviceAccountTransfer = new CrossDeviceAccountTransfer(
         crypto,
         mockAuthenticate,
         authSecretStorage,
@@ -100,14 +100,14 @@ describe("MagicLinkAuth", () => {
         { confirmationCodeFn: () => Promise.resolve("123456") },
       );
 
-      const code = await magicLinkAuth.createConfirmationCode();
+      const code = await crossDeviceAccountTransfer.createConfirmationCode();
       expect(code).toBe("123456");
     });
   });
 
   describe("logInViaTransfer", () => {
     it("logs in via transfer", async () => {
-      const transfer = await magicLinkAuth.createTransfer();
+      const transfer = await crossDeviceAccountTransfer.createTransfer();
 
       transfer.secret = bytesToBase64url(
         new Uint8Array([
@@ -117,7 +117,7 @@ describe("MagicLinkAuth", () => {
         ]),
       );
 
-      await magicLinkAuth.logInViaTransfer(transfer);
+      await crossDeviceAccountTransfer.logInViaTransfer(transfer);
 
       expect(mockAuthenticate).toHaveBeenCalledWith({
         accountID: expect.stringMatching(/^co_[^/]+$/),
@@ -128,16 +128,20 @@ describe("MagicLinkAuth", () => {
     });
   });
 
-  describe("MagicLinkAuthCreateAsConsumer", () => {
+  describe("CrossDeviceAccountTransferCreateAsConsumer", () => {
     it("should initialize", () => {
-      const createAsConsumer = new MagicLinkAuthCreateAsTarget(magicLinkAuth);
+      const createAsConsumer = new CrossDeviceAccountTransferCreateAsTarget(
+        crossDeviceAccountTransfer,
+      );
 
       expect(createAsConsumer.authState.status).toEqual("idle");
       expect(createAsConsumer.authState.sendConfirmationCode).toBeUndefined();
     });
 
     it("should cancel flow", async () => {
-      const createAsConsumer = new MagicLinkAuthCreateAsTarget(magicLinkAuth);
+      const createAsConsumer = new CrossDeviceAccountTransferCreateAsTarget(
+        crossDeviceAccountTransfer,
+      );
       await createAsConsumer.createLink();
 
       createAsConsumer.cancelFlow();
@@ -148,9 +152,11 @@ describe("MagicLinkAuth", () => {
     });
   });
 
-  describe("MagicLinkAuthHandleAsProvider", () => {
+  describe("CrossDeviceAccountTransferHandleAsProvider", () => {
     it("should initialize", () => {
-      const handleAsProvider = new MagicLinkAuthHandleAsSource(magicLinkAuth);
+      const handleAsProvider = new CrossDeviceAccountTransferHandleAsSource(
+        crossDeviceAccountTransfer,
+      );
 
       expect(handleAsProvider.authState.status).toEqual("idle");
       expect(handleAsProvider.authState.confirmationCode).toBeUndefined();
@@ -158,11 +164,15 @@ describe("MagicLinkAuth", () => {
 
     it("should cancel flow", async () => {
       // Create the link as consumer
-      const createAsConsumer = new MagicLinkAuthCreateAsTarget(magicLinkAuth);
+      const createAsConsumer = new CrossDeviceAccountTransferCreateAsTarget(
+        crossDeviceAccountTransfer,
+      );
       const link = await createAsConsumer.createLink();
 
       // Handle the flow as provider
-      const handleAsProvider = new MagicLinkAuthHandleAsSource(magicLinkAuth);
+      const handleAsProvider = new CrossDeviceAccountTransferHandleAsSource(
+        crossDeviceAccountTransfer,
+      );
       handleAsProvider.handleFlow(link);
 
       setTimeout(() => {
@@ -176,15 +186,19 @@ describe("MagicLinkAuth", () => {
 
     it("should handle the flow", async () => {
       // Create the link as consumer
-      const createAsConsumer = new MagicLinkAuthCreateAsTarget(magicLinkAuth);
+      const createAsConsumer = new CrossDeviceAccountTransferCreateAsTarget(
+        crossDeviceAccountTransfer,
+      );
       const link = await createAsConsumer.createLink();
       expect(link).toMatch(
-        /^http:\/\/localhost:3000\/magic-link-handler-source\/co_[^/]+\/inviteSecret_[^/]+$/,
+        /^http:\/\/localhost:3000\/account-transfer-handler-source\/co_[^/]+\/inviteSecret_[^/]+$/,
       );
       expect(createAsConsumer.authState.status).toEqual("waitingForHandler");
 
       // Handle the flow as provider
-      const handleAsProvider = new MagicLinkAuthHandleAsSource(magicLinkAuth);
+      const handleAsProvider = new CrossDeviceAccountTransferHandleAsSource(
+        crossDeviceAccountTransfer,
+      );
       handleAsProvider.handleFlow(link);
       await waitFor(() => {
         expect(createAsConsumer.authState.status).toEqual(
@@ -217,16 +231,20 @@ describe("MagicLinkAuth", () => {
     });
   });
 
-  describe("MagicLinkAuthCreateAsProvider", () => {
+  describe("CrossDeviceAccountTransferCreateAsProvider", () => {
     it("should initialize", () => {
-      const createAsProvider = new MagicLinkAuthCreateAsSource(magicLinkAuth);
+      const createAsProvider = new CrossDeviceAccountTransferCreateAsSource(
+        crossDeviceAccountTransfer,
+      );
 
       expect(createAsProvider.authState.status).toEqual("idle");
       expect(createAsProvider.authState.confirmationCode).toBeUndefined();
     });
 
     it("should cancel flow", async () => {
-      const createAsProvider = new MagicLinkAuthCreateAsSource(magicLinkAuth);
+      const createAsProvider = new CrossDeviceAccountTransferCreateAsSource(
+        crossDeviceAccountTransfer,
+      );
       await createAsProvider.createLink();
 
       setTimeout(() => {
@@ -239,9 +257,11 @@ describe("MagicLinkAuth", () => {
     });
   });
 
-  describe("MagicLinkAuthHandleAsConsumer", () => {
+  describe("CrossDeviceAccountTransferHandleAsConsumer", () => {
     it("should initialize", () => {
-      const handleAsConsumer = new MagicLinkAuthHandleAsTarget(magicLinkAuth);
+      const handleAsConsumer = new CrossDeviceAccountTransferHandleAsTarget(
+        crossDeviceAccountTransfer,
+      );
 
       expect(handleAsConsumer.authState.status).toEqual("idle");
       expect(handleAsConsumer.authState.sendConfirmationCode).toBeNull();
@@ -249,11 +269,15 @@ describe("MagicLinkAuth", () => {
 
     it("should cancel flow", async () => {
       // Create the link as provider
-      const createAsProvider = new MagicLinkAuthCreateAsSource(magicLinkAuth);
+      const createAsProvider = new CrossDeviceAccountTransferCreateAsSource(
+        crossDeviceAccountTransfer,
+      );
       const link = await createAsProvider.createLink();
 
       // Handle the flow as consumer
-      const handleAsConsumer = new MagicLinkAuthHandleAsTarget(magicLinkAuth);
+      const handleAsConsumer = new CrossDeviceAccountTransferHandleAsTarget(
+        crossDeviceAccountTransfer,
+      );
       handleAsConsumer.handleFlow(link);
 
       // Cancel the flow
@@ -268,15 +292,19 @@ describe("MagicLinkAuth", () => {
 
     it("should handle the flow", async () => {
       // Create the link as provider
-      const createAsProvider = new MagicLinkAuthCreateAsSource(magicLinkAuth);
+      const createAsProvider = new CrossDeviceAccountTransferCreateAsSource(
+        crossDeviceAccountTransfer,
+      );
       const link = await createAsProvider.createLink();
       expect(link).toMatch(
-        /^http:\/\/localhost:3000\/magic-link-handler-target\/co_[^/]+\/inviteSecret_[^/]+$/,
+        /^http:\/\/localhost:3000\/account-transfer-handler-target\/co_[^/]+\/inviteSecret_[^/]+$/,
       );
       expect(createAsProvider.authState.status).toEqual("waitingForHandler");
 
       // Handle the flow as consumer
-      const handleAsConsumer = new MagicLinkAuthHandleAsTarget(magicLinkAuth);
+      const handleAsConsumer = new CrossDeviceAccountTransferHandleAsTarget(
+        crossDeviceAccountTransfer,
+      );
       handleAsConsumer.handleFlow(link);
       await waitFor(() => {
         expect(createAsProvider.authState.status).toEqual(

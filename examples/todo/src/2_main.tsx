@@ -18,8 +18,8 @@ import {
   ThemeProvider,
   TitleAndLogo,
 } from "./basicComponents/index.ts";
-import { MagicLinkHandlerPage } from "./components/Auth/MagicLinkHandlerPage.tsx";
-import { PasskeyAndMagicLinkAuth } from "./components/Auth/PasskeyAndMagicLinkAuth.tsx";
+import { AccountTransferLinkHandlerPage } from "./components/Auth/AccountTransferLinkHandlerPage";
+import { PasskeyAndCrossDeviceAccountTransferAuth } from "./components/Auth/PasskeyAndCrossDeviceAccountTransferAuth";
 
 /**
  * Walkthrough: The top-level provider `<JazzProvider/>`
@@ -41,7 +41,9 @@ function JazzAndAuth({ children }: { children: React.ReactNode }) {
       }}
       AccountSchema={TodoAccount}
     >
-      <PasskeyAndMagicLinkAuth>{children}</PasskeyAndMagicLinkAuth>
+      <PasskeyAndCrossDeviceAccountTransferAuth>
+        {children}
+      </PasskeyAndCrossDeviceAccountTransferAuth>
     </JazzProvider>
   );
 }
@@ -90,8 +92,8 @@ export default function App() {
       element: <p>Accepting invite...</p>,
     },
     {
-      path: "/magic-link-handler-source/:x/:y",
-      element: <MagicLinkHandlerPage />,
+      path: "/account-transfer-handler-source/:x/:y",
+      element: <AccountTransferLinkHandlerPage />,
     },
   ]);
 

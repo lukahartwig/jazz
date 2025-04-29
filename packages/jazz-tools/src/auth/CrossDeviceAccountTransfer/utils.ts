@@ -6,8 +6,8 @@ import {
 } from "cojson";
 import { Account } from "../../coValues/account.js";
 import type { ID } from "../../internal.js";
-import type { MagicLinkAuthTransfer } from "./MagicLinkAuth.js";
-import type { MagicLinkAuthOptions } from "./types.js";
+import type { CrossDeviceAccountTransferCoMap } from "./CrossDeviceAccountTransfer.js";
+import type { CrossDeviceAccountTransferOptions } from "./types.js";
 
 /**
  * Create a temporary agent to keep the transfer secret isolated from persistent accounts.
@@ -22,13 +22,14 @@ export async function createTemporaryAgent(crypto: CryptoProvider) {
   });
   const account = Account.fromNode(node);
 
-  const [localPeer, magicLinkAuthPeer] = cojsonInternals.connectedPeers(
+  const [localPeer, authTransferPeer] = cojsonInternals.connectedPeers(
     "local",
-    "magicLinkAuth/" + account.id, // Use an unique identifier to avoid conflicts with other magic link auth instances
+    // Use an unique identifier to avoid conflicts with other cross-device account transfer instances
+    "crossDeviceAccountTransfer/" + account.id,
     { peer1role: "server", peer2role: "client" },
   );
 
-  Account.getMe()._raw.core.node.syncManager.addPeer(magicLinkAuthPeer);
+  Account.getMe()._raw.core.node.syncManager.addPeer(authTransferPeer);
   account._raw.core.node.syncManager.addPeer(localPeer);
 
   await account.waitForAllCoValuesSync();
@@ -48,7 +49,9 @@ export function parseTransferUrl(handlerPath: string, url: string) {
   const match = url.match(re);
   if (!match) throw new Error("Invalid URL");
 
-  const transferId = match[1] as ID<MagicLinkAuthTransfer> | undefined;
+  const transferId = match[1] as
+    | ID<CrossDeviceAccountTransferCoMap>
+    | undefined;
   const inviteSecret = match[2] as InviteSecret | undefined;
 
   if (!transferId || !inviteSecret) throw new Error("Invalid URL");
@@ -74,14 +77,14 @@ async function defaultConfirmationCodeFn(crypto: CryptoProvider) {
 }
 
 export function shutdownTransferAccount(
-  transfer: MagicLinkAuthTransfer | undefined,
+  transfer: CrossDeviceAccountTransferCoMap | undefined,
 ) {
   if (!transfer || transfer._loadedAs._type !== "Account") return;
   transfer._loadedAs._raw.core.node.gracefulShutdown();
 }
 
-export const defaultOptions: MagicLinkAuthOptions = {
+export const defaultOptions: CrossDeviceAccountTransferOptions = {
   confirmationCodeFn: defaultConfirmationCodeFn,
-  targetHandlerPath: "/magic-link-handler-target",
-  sourceHandlerPath: "/magic-link-handler-source",
+  targetHandlerPath: "/account-transfer-handler-target",
+  sourceHandlerPath: "/account-transfer-handler-source",
 };

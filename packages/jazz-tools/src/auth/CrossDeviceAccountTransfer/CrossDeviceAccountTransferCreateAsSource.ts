@@ -1,9 +1,9 @@
 import { waitForCoValueCondition } from "../../internal.js";
-import { MagicLinkAuth } from "./MagicLinkAuth.js";
-import { MagicLinkAuthAsSourceOptions } from "./types.js";
+import { CrossDeviceAccountTransfer } from "./CrossDeviceAccountTransfer.js";
+import { CrossDeviceAccountTransferAsSourceOptions } from "./types.js";
 import { shutdownTransferAccount } from "./utils.js";
 
-export type MagicLinkAuthCreateAsSourceStatus =
+export type CrossDeviceAccountTransferCreateAsSourceStatus =
   | "idle"
   | "waitingForHandler"
   | "confirmationCodeGenerated"
@@ -13,26 +13,26 @@ export type MagicLinkAuthCreateAsSourceStatus =
   | "error"
   | "cancelled";
 
-export class MagicLinkAuthCreateAsSource {
+export class CrossDeviceAccountTransferCreateAsSource {
   constructor(
-    private magicLinkAuth: MagicLinkAuth,
-    options?: MagicLinkAuthAsSourceOptions,
+    private crossDeviceAccountTransfer: CrossDeviceAccountTransfer,
+    options?: CrossDeviceAccountTransferAsSourceOptions,
   ) {
     this.options = { ...defaultOptions, ...options };
   }
 
-  private options: MagicLinkAuthAsSourceOptions;
+  private options: CrossDeviceAccountTransferAsSourceOptions;
   private abortController: AbortController | null = null;
 
   public authState: {
-    status: MagicLinkAuthCreateAsSourceStatus;
+    status: CrossDeviceAccountTransferCreateAsSourceStatus;
     confirmationCode: string | undefined;
   } = {
     status: "idle",
     confirmationCode: undefined,
   };
 
-  private set status(status: MagicLinkAuthCreateAsSourceStatus) {
+  private set status(status: CrossDeviceAccountTransferCreateAsSourceStatus) {
     this.authState = { ...this.authState, status };
   }
   private set confirmationCode(confirmationCode: string | undefined) {
@@ -43,9 +43,9 @@ export class MagicLinkAuthCreateAsSource {
     this.abortController = new AbortController();
     const { signal } = this.abortController;
 
-    let transfer = await this.magicLinkAuth.createTransfer();
+    let transfer = await this.crossDeviceAccountTransfer.createTransfer();
 
-    const url = this.magicLinkAuth.createLink("target", transfer);
+    const url = this.crossDeviceAccountTransfer.createLink("target", transfer);
 
     const handleFlow = async () => {
       try {
@@ -63,7 +63,8 @@ export class MagicLinkAuthCreateAsSource {
         if (!transfer.acceptedBy) throw new Error("Transfer not accepted");
 
         // Wait for confirmation code
-        const code = await this.magicLinkAuth.createConfirmationCode();
+        const code =
+          await this.crossDeviceAccountTransfer.createConfirmationCode();
         this.confirmationCode = code;
         this.status = "confirmationCodeGenerated";
         this.notify();
@@ -86,7 +87,7 @@ export class MagicLinkAuthCreateAsSource {
         this.status = "confirmationCodeCorrect";
 
         // Reveal the secret to the transfer
-        await this.magicLinkAuth.revealSecretToTransfer(transfer);
+        await this.crossDeviceAccountTransfer.revealSecretToTransfer(transfer);
 
         // Wait for the transfer to be authorized and update the status
         await waitForCoValueCondition(
@@ -100,7 +101,7 @@ export class MagicLinkAuthCreateAsSource {
         if (error instanceof Error && error.message.startsWith("Aborted")) {
           this.status = "cancelled";
         } else {
-          console.error("Magic Link Auth error", error);
+          console.error("Cross-Device Account Transfer error", error);
           this.status = "error";
         }
         this.notify();
@@ -134,6 +135,6 @@ export class MagicLinkAuthCreateAsSource {
   }
 }
 
-const defaultOptions: MagicLinkAuthAsSourceOptions = {
+const defaultOptions: CrossDeviceAccountTransferAsSourceOptions = {
   expireInMs: 15 * 60 * 1000,
 };

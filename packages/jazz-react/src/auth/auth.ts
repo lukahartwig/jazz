@@ -5,9 +5,9 @@ export {
 } from "./PasskeyAuth.js";
 export { PassphraseAuthBasicUI } from "./PassphraseAuth.js";
 export {
-  useCreateMagicLinkAuth,
-  useHandleMagicLinkAuth,
-} from "./MagicLinkAuth.js";
+  useCreateCrossDeviceAccountTransfer,
+  useHandleCrossDeviceAccountTransfer,
+} from "./CrossDeviceAccountTransfer.js";
 export {
   useIsAuthenticated,
   useDemoAuth,

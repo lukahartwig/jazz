@@ -2,9 +2,9 @@ import { Button } from "@/basicComponents/ui/button";
 import { useIsAuthenticated, usePasskeyAuth } from "jazz-react";
 import { KeyRoundIcon, QrCodeIcon } from "lucide-react";
 import { useState } from "react";
-import { CreateMagicLink } from "./CreateMagicLink";
+import { CreateAccountTransferLink } from "./CreateAccountTransferLink";
 
-export const PasskeyAndMagicLinkAuth = ({
+export const PasskeyAndCrossDeviceAccountTransferAuth = ({
   children,
 }: {
   children: React.ReactNode;
@@ -13,9 +13,9 @@ export const PasskeyAndMagicLinkAuth = ({
   const [username, setUsername] = useState("");
   const [isSignUp, setIsSignUp] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [authMethod, setAuthMethod] = useState<"passkey" | "magic-link" | null>(
-    null,
-  );
+  const [authMethod, setAuthMethod] = useState<
+    "passkey" | "auth-transfer" | null
+  >(null);
 
   const passkeyAuth = usePasskeyAuth({
     appName: "Jazz Todo App",
@@ -44,11 +44,11 @@ export const PasskeyAndMagicLinkAuth = ({
 
   if (isAuthenticated) return children;
 
-  if (authMethod === "magic-link") {
+  if (authMethod === "auth-transfer") {
     return (
       <div className="flex flex-col gap-4 items-center max-w-md mx-auto p-6 text-center">
         <h2 className="text-2xl font-bold">Sign in with mobile device</h2>
-        <CreateMagicLink onLoggedIn={() => setAuthMethod(null)} />
+        <CreateAccountTransferLink onLoggedIn={() => setAuthMethod(null)} />
       </div>
     );
   }
@@ -89,7 +89,7 @@ export const PasskeyAndMagicLinkAuth = ({
         </Button>
 
         <Button
-          onClick={() => setAuthMethod("magic-link")}
+          onClick={() => setAuthMethod("auth-transfer")}
           className="w-full"
           variant="outline"
         >

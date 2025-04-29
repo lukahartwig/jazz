@@ -1,5 +1,5 @@
 import { Button } from "@/basicComponents/ui/button";
-import { useCreateMagicLinkAuth } from "jazz-react";
+import { useCreateCrossDeviceAccountTransfer } from "jazz-react";
 import { useEffect, useRef, useState } from "react";
 import {
   InputOTP,
@@ -8,20 +8,23 @@ import {
 } from "../../basicComponents/ui/input-otp";
 import { QRCode } from "./QRCode";
 
-interface CreateMagicLinkProps {
+interface CreateAccountTransferLinkProps {
   onLoggedIn: () => void;
 }
 
-export function CreateMagicLink({ onLoggedIn }: CreateMagicLinkProps) {
+export function CreateAccountTransferLink({
+  onLoggedIn,
+}: CreateAccountTransferLinkProps) {
   const [link, setLink] = useState<string | undefined>();
   const [confirmationCode, setConfirmationCode] = useState("");
   const createdLinkRef = useRef<boolean>(false);
 
-  const { status, createLink, sendConfirmationCode } = useCreateMagicLinkAuth({
-    as: "target",
-    sourceHandlerPath: "/#/magic-link-handler-source",
-    onLoggedIn,
-  });
+  const { status, createLink, sendConfirmationCode } =
+    useCreateCrossDeviceAccountTransfer({
+      as: "target",
+      sourceHandlerPath: "/#/account-transfer-handler-source",
+      onLoggedIn,
+    });
 
   const onCreateLink = () => createLink().then(setLink);
 

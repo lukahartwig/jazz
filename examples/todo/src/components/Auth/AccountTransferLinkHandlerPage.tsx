@@ -1,24 +1,24 @@
 import { Button } from "@/basicComponents/ui/button";
-import { useHandleMagicLinkAuth } from "jazz-react";
+import { useHandleCrossDeviceAccountTransfer } from "jazz-react";
 import { useNavigate } from "react-router-dom";
 
-export function MagicLinkHandlerPage() {
+export function AccountTransferLinkHandlerPage() {
   return (
     <main className="container flex flex-col items-center gap-4 px-4 py-8 text-center">
       <h1 className="text-2xl font-bold">Get your device logged in</h1>
       <div className="flex flex-col items-center gap-4 p-6">
-        <MagicLinkHandler />
+        <AccountTransferHandler />
       </div>
     </main>
   );
 }
 
-export function MagicLinkHandler() {
+export function AccountTransferHandler() {
   const navigate = useNavigate();
 
-  const { status, confirmationCode } = useHandleMagicLinkAuth({
+  const { status, confirmationCode } = useHandleCrossDeviceAccountTransfer({
     as: "source",
-    sourceHandlerPath: "/#/magic-link-handler-source",
+    sourceHandlerPath: "/#/account-transfer-handler-source",
   });
 
   const handleBackToHome = () => {

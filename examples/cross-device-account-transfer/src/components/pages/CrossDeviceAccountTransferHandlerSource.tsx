@@ -1,20 +1,20 @@
-import { useHandleMagicLinkAuth } from "jazz-react";
+import { useHandleCrossDeviceAccountTransfer } from "jazz-react";
 import { BackToHomepageContainer } from "../BackToHomepageContainer";
 
-export default function MagicLinkHandlerSourcePage() {
+export default function CrossDeviceAccountTransferHandlerSource() {
   return (
     <main className="container flex flex-col items-center gap-4 px-4 py-8 text-center">
-      <h1 className="text-xl">Magic Link Auth Source Handler</h1>
-      <HandleMagicLinkAsSource />
+      <h1 className="text-xl">Account Transfer Source Handler</h1>
+      <HandleAccountTransferAsSource />
     </main>
   );
 }
 
-function HandleMagicLinkAsSource() {
-  const { status, confirmationCode } = useHandleMagicLinkAuth({
+function HandleAccountTransferAsSource() {
+  const { status, confirmationCode } = useHandleCrossDeviceAccountTransfer({
     as: "source",
-    targetHandlerPath: "/#/magic-link-handler-target",
-    sourceHandlerPath: "/#/magic-link-handler-source",
+    targetHandlerPath: "/#/account-transfer-handler-target",
+    sourceHandlerPath: "/#/account-transfer-handler-source",
   });
 
   switch (status) {

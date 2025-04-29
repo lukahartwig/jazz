@@ -63,16 +63,16 @@ export { InMemoryKVStore } from "./auth/InMemoryKVStore.js";
 export { DemoAuth } from "./auth/DemoAuth.js";
 export { PassphraseAuth } from "./auth/PassphraseAuth.js";
 export {
-  MagicLinkAuth,
-  MagicLinkAuthTransfer,
-  type MagicLinkAuthOptions,
-  MagicLinkAuthCreateAsSource,
-  MagicLinkAuthCreateAsTarget,
-  MagicLinkAuthHandleAsTarget,
-  MagicLinkAuthHandleAsSource,
-  type MagicLinkAuthAsTargetOptions,
-  type MagicLinkAuthAsSourceOptions,
-} from "./auth/MagicLinkAuth/index.js";
+  CrossDeviceAccountTransfer,
+  CrossDeviceAccountTransferCoMap,
+  type CrossDeviceAccountTransferOptions,
+  CrossDeviceAccountTransferCreateAsSource,
+  CrossDeviceAccountTransferCreateAsTarget,
+  CrossDeviceAccountTransferHandleAsTarget,
+  CrossDeviceAccountTransferHandleAsSource,
+  type CrossDeviceAccountTransferAsTargetOptions,
+  type CrossDeviceAccountTransferAsSourceOptions,
+} from "./auth/CrossDeviceAccountTransfer/index.js";
 
 export {
   createInviteLink,

@@ -1,9 +1,9 @@
 import type { CryptoProvider } from "cojson";
 
 /**
- * Options for the MagicLinkAuth class.
+ * Options for the CrossDeviceAccountTransfer class.
  */
-export interface MagicLinkAuthOptions {
+export interface CrossDeviceAccountTransferOptions {
   /**
    * Function to generate a confirmation code.
    * @param crypto - The crypto provider to use for random number generation.
@@ -21,9 +21,9 @@ export interface MagicLinkAuthOptions {
 }
 
 /**
- * Options for MagicLinkAuth consumer classes.
+ * Options for CrossDeviceAccountTransfer consumer classes.
  */
-export interface MagicLinkAuthAsTargetOptions {
+export interface CrossDeviceAccountTransferAsTargetOptions {
   /**
    * The timeout for the consumer handler.
    */
@@ -35,9 +35,9 @@ export interface MagicLinkAuthAsTargetOptions {
 }
 
 /**
- * Options for MagicLinkAuth provider classes.
+ * Options for CrossDeviceAccountTransfer provider classes.
  */
-export interface MagicLinkAuthAsSourceOptions {
+export interface CrossDeviceAccountTransferAsSourceOptions {
   /**
    * The expiration time for the provider.
    */

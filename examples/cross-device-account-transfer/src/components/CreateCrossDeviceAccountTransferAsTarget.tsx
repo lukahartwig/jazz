@@ -1,16 +1,25 @@
-import { useCreateMagicLinkAuth } from "jazz-react";
+import { useCreateCrossDeviceAccountTransfer } from "jazz-react";
 import { useState } from "react";
 import { Button } from "./Button";
+import { ConfirmationCodeForm } from "./ConfirmationCodeForm";
 import { QRCode } from "./QRCode";
 
-export function CreateMagicLinkAsSource() {
+interface CreateCrossDeviceAccountTransferAsTargetProps {
+  onLoggedIn: () => void;
+}
+
+export function CreateCrossDeviceAccountTransferAsTarget({
+  onLoggedIn,
+}: CreateCrossDeviceAccountTransferAsTargetProps) {
   const [link, setLink] = useState<string | undefined>();
 
-  const { status, createLink, confirmationCode } = useCreateMagicLinkAuth({
-    as: "source",
-    targetHandlerPath: "/#/magic-link-handler-target",
-    sourceHandlerPath: "/#/magic-link-handler-source",
-  });
+  const { status, createLink, sendConfirmationCode } =
+    useCreateCrossDeviceAccountTransfer({
+      as: "target",
+      targetHandlerPath: "/#/account-transfer-handler-target",
+      sourceHandlerPath: "/#/account-transfer-handler-source",
+      onLoggedIn,
+    });
 
   const onCreateLink = () => createLink().then(setLink);
 
@@ -25,33 +34,33 @@ export function CreateMagicLinkAsSource() {
     case "waitingForHandler":
       return (
         <>
-          <p>Scan QR code to get your mobile device logged in</p>
+          <p>Scan QR code to log in</p>
 
           {link ? <QRCode url={link} /> : null}
         </>
       );
 
-    case "confirmationCodeGenerated":
+    case "confirmationCodeRequired":
       return (
         <>
-          <p>Confirmation code:</p>
+          <p>Enter the confirmation code displayed on your other device</p>
 
-          <p className="font-medium text-3xl tracking-widest">
-            {confirmationCode ?? "empty"}
-          </p>
+          {sendConfirmationCode ? (
+            <ConfirmationCodeForm onSubmit={sendConfirmationCode} />
+          ) : null}
         </>
       );
 
-    case "confirmationCodeCorrect":
-      return <p>Confirmed! Logging in...</p>;
+    case "confirmationCodePending":
+      return <p>Confirming...</p>;
 
     case "authorized":
-      return <p>Your device has been logged in!</p>;
+      return <p>Logged in!</p>;
 
     case "confirmationCodeIncorrect":
       return (
         <>
-          <p>Incorrect confirmation code</p>
+          <p>Incorrect confirmation code!</p>
 
           <Button color="primary" onClick={onCreateLink}>
             Try again
@@ -71,11 +80,9 @@ export function CreateMagicLinkAsSource() {
     case "cancelled":
       return (
         <>
-          <p>Login cancelled</p>
+          <p>Cancelled</p>
 
-          <Button color="primary" onClick={onCreateLink}>
-            Try again
-          </Button>
+          <Button onClick={onCreateLink}>Try again</Button>
         </>
       );
 
