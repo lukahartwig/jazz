@@ -320,9 +320,8 @@ export class RawCoListView<
           });
         }
 
-        // traverse successors in reverse for correct insertion behavior
-        for (const successor of entry.successors) {
-          todo.push(successor);
+        for (let i = entry.successors.length - 1; i >= 0; i--) {
+          todo.push(entry.successors[i]!);
         }
       }
     }
@@ -472,12 +471,6 @@ export class RawCoList<
       value: isCoValue(item) ? item.id : item,
       after: opIDBefore,
     }));
-
-    if (opIDBefore !== "start") {
-      // When added as successors we need to reverse the items
-      // to keep the same insertion order
-      changes.reverse();
-    }
 
     this.core.makeTransaction(changes, privacy);
 
