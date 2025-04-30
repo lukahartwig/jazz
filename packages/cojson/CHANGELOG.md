@@ -1,5 +1,11 @@
 # cojson
 
+## 0.13.16
+
+### Patch Changes
+
+- c6fb8dc: Handle null values in msg.id
+
 ## 0.13.15
 
 ### Patch Changes
