@@ -1,14 +1,14 @@
-import { useCloudAuth } from "jazz-react-auth-cloudauth";
+import { useBetterAuth } from "jazz-react-auth-betterauth";
 import { useState } from "react";
-import { CloudAuthBasicEmailSignInUI } from "./CloudAuthBasicEmailSignInUI";
-import { CloudAuthBasicEmailSignUpUI } from "./CloudAuthBasicEmailSignUpUI";
+import { BetterAuthBasicEmailSignInUI } from "./BetterAuthBasicEmailSignInUI";
+import { BetterAuthBasicEmailSignUpUI } from "./BetterAuthBasicEmailSignUpUI";
 import { Button } from "./atoms/Button";
 
-export const CloudAuthBasicEmailUI = (props: {
+export const BetterAuthBasicEmailUI = (props: {
   baseUrl: string;
   children?: React.ReactNode;
 }) => {
-  const auth = useCloudAuth({ baseURL: props.baseUrl });
+  const auth = useBetterAuth({ baseURL: props.baseUrl });
   const [menuState, setMenuState] = useState<"initial" | "signUp" | "signIn">(
     "initial",
   );
@@ -24,10 +24,10 @@ export const CloudAuthBasicEmailUI = (props: {
         </div>
       )}
       {menuState === "signUp" && (
-        <CloudAuthBasicEmailSignUpUI auth={auth} setMenuState={setMenuState} />
+        <BetterAuthBasicEmailSignUpUI auth={auth} setMenuState={setMenuState} />
       )}
       {menuState === "signIn" && (
-        <CloudAuthBasicEmailSignInUI auth={auth} setMenuState={setMenuState} />
+        <BetterAuthBasicEmailSignInUI auth={auth} setMenuState={setMenuState} />
       )}
     </main>
   );

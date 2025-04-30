@@ -14,14 +14,14 @@ import {
   setupJazzTestSync,
 } from "jazz-tools/testing";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { CloudAuth, newAuthClient } from "..";
+import { BetterAuth, newAuthClient } from "..";
 
 const crypto = await TestJSCrypto.create();
 KvStoreContext.getInstance().initialize(new InMemoryKVStore());
 const mockAuthenticate = vi.fn();
 const baseUrl = "http://localhost:3000";
 const authClient = newAuthClient({ baseURL: baseUrl });
-let auth: CloudAuth;
+let auth: BetterAuth;
 let account: Account;
 let contextManager: TestJazzContextManager<any>;
 let authSecretStorage: AuthSecretStorage;
@@ -34,14 +34,14 @@ beforeEach(async () => {
   contextManager = TestJazzContextManager.fromAccountOrGuest(account);
   authSecretStorage = contextManager.getAuthSecretStorage();
   await contextManager.createContext({});
-  auth = new CloudAuth(
+  auth = new BetterAuth(
     contextManager.authenticate,
     authSecretStorage,
     authClient,
   );
 });
 
-describe("JazzCloudAuth", () => {
+describe("JazzBetterAuth", () => {
   describe("Sign-in", () => {
     it("should sign up successfully with email & password", async () => {
       let me = await Account.getMe().ensureLoaded({
@@ -73,7 +73,7 @@ describe("JazzCloudAuth", () => {
       credentials = await authSecretStorage.get();
 
       expect(credentials?.accountID).toBe(me.id);
-      expect(credentials?.provider).toBe("cloudauth");
+      expect(credentials?.provider).toBe("betterauth");
       expect(me.profile.name).toBe("UserA");
 
       await authClient.deleteUser();
@@ -128,7 +128,7 @@ describe("JazzCloudAuth", () => {
       });
       credentials = await authSecretStorage.get();
       expect(credentials?.accountID).toBe(me.id);
-      expect(credentials?.provider).toBe("cloudauth");
+      expect(credentials?.provider).toBe("betterauth");
       expect(me.profile.name).toBe("UserA");
 
       await authClient.deleteUser();

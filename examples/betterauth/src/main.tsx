@@ -3,7 +3,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App";
 import { apiKey } from "./apiKey.ts";
-import { CloudAuthBasicEmailUI } from "./components/CloudAuthBasicEmailUI.tsx";
+import { BetterAuthBasicEmailUI } from "./components/BetterAuthBasicEmailUI.tsx";
 
 function JazzAndAuth({ children }: { children: React.ReactNode }) {
   return (
@@ -13,9 +13,9 @@ function JazzAndAuth({ children }: { children: React.ReactNode }) {
         when: "signedUp",
       }}
     >
-      <CloudAuthBasicEmailUI baseUrl="http://localhost:3000">
+      <BetterAuthBasicEmailUI baseUrl="http://localhost:3000">
         {children}
-      </CloudAuthBasicEmailUI>
+      </BetterAuthBasicEmailUI>
     </JazzProvider>
   );
 }

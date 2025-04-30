@@ -1,12 +1,12 @@
-import { useCloudAuth } from "jazz-react-auth-cloudauth";
+import type { useBetterAuth } from "jazz-react-auth-betterauth";
 import { useState } from "react";
 import { Alert } from "./atoms/Alert";
 import { Button } from "./atoms/Button";
 import { Input } from "./atoms/Input";
 import { JazzLogo } from "./atoms/JazzLogo";
 
-export const CloudAuthBasicEmailSignUpUI = (props: {
-  auth: ReturnType<typeof useCloudAuth>;
+export const BetterAuthBasicEmailSignUpUI = (props: {
+  auth: ReturnType<typeof useBetterAuth>;
   setMenuState: React.Dispatch<
     React.SetStateAction<"initial" | "signUp" | "signIn">
   >;

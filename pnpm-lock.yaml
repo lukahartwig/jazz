@@ -622,7 +622,7 @@ importers:
         specifier: ^6.0.11
         version: 6.0.11(@types/node@22.10.2)(jiti@2.4.2)(lightningcss@1.29.2)(terser@5.37.0)(yaml@2.6.1)
 
-  examples/cloudauth:
+  examples/betterauth:
     dependencies:
       '@headlessui/react':
         specifier: ^2.2.0
@@ -639,9 +639,9 @@ importers:
       jazz-react:
         specifier: workspace:*
         version: link:../../packages/jazz-react
-      jazz-react-auth-cloudauth:
+      jazz-react-auth-betterauth:
         specifier: workspace:*
-        version: link:../../packages/jazz-react-auth-cloudauth
+        version: link:../../packages/jazz-react-auth-betterauth
       jazz-tools:
         specifier: workspace:*
         version: link:../../packages/jazz-tools
@@ -1874,7 +1874,7 @@ importers:
         specifier: ~5.6.2
         version: 5.6.3
 
-  packages/jazz-auth-cloudauth:
+  packages/jazz-auth-betterauth:
     dependencies:
       cojson:
         specifier: workspace:*
@@ -2169,14 +2169,14 @@ importers:
         specifier: ~5.6.2
         version: 5.6.3
 
-  packages/jazz-react-auth-cloudauth:
+  packages/jazz-react-auth-betterauth:
     dependencies:
       cojson:
         specifier: workspace:*
         version: link:../cojson
-      jazz-auth-cloudauth:
+      jazz-auth-betterauth:
         specifier: workspace:*
-        version: link:../jazz-auth-cloudauth
+        version: link:../jazz-auth-betterauth
       jazz-browser:
         specifier: workspace:*
         version: link:../jazz-browser

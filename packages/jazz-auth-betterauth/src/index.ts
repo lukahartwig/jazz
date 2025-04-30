@@ -39,7 +39,7 @@ export const newAuthClient = (
 export type AuthClient = ReturnType<typeof newAuthClient>;
 export type Session = AuthClient["$Infer"]["Session"];
 
-export class CloudAuth {
+export class BetterAuth {
   constructor(
     private authenticate: AuthenticateAccountFunction,
     private authSecretStorage: AuthSecretStorage,
@@ -52,7 +52,7 @@ export class CloudAuth {
   ) {
     return storage.set({
       ...credentials,
-      provider: "cloudauth",
+      provider: "betterauth",
     } satisfies AuthSetPayload);
   }
 
@@ -76,7 +76,7 @@ export class CloudAuth {
     const credentials = (await this.authClient.jazzPlugin.decryptCredentials())
       .data as AuthCredentials;
     await this.authenticate(credentials);
-    await CloudAuth.loadAuthData(this.authSecretStorage, credentials);
+    await BetterAuth.loadAuthData(this.authSecretStorage, credentials);
   };
 
   /**
@@ -89,7 +89,7 @@ export class CloudAuth {
     var credentials = await this.authSecretStorage.get();
     if (!credentials) throw new Error("No credentials found");
 
-    credentials.provider = "cloudauth"; // If the provider remains 'anonymous', Jazz will not consider us authenticated later.
+    credentials.provider = "betterauth"; // If the provider remains 'anonymous', Jazz will not consider us authenticated later.
     await this.authClient.jazzPlugin.encryptCredentials({
       ...credentials,
       secretSeed: credentials.secretSeed
@@ -103,6 +103,6 @@ export class CloudAuth {
       },
     });
     currentAccount.profile.name = session.user.name;
-    await CloudAuth.loadAuthData(this.authSecretStorage, credentials);
+    await BetterAuth.loadAuthData(this.authSecretStorage, credentials);
   };
 }

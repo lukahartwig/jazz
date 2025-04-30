@@ -1,9 +1,9 @@
 import {
   type AuthClient,
-  CloudAuth,
+  BetterAuth,
   type Session,
   newAuthClient,
-} from "jazz-auth-cloudauth";
+} from "jazz-auth-betterauth";
 import {
   useAuthSecretStorage,
   useIsAuthenticated,
@@ -14,7 +14,7 @@ import { useEffect, useMemo } from "react";
 /**
  * @category Auth Providers
  */
-export function useCloudAuth(...props: Parameters<typeof newAuthClient>): {
+export function useBetterAuth(...props: Parameters<typeof newAuthClient>): {
   readonly state: "signedIn" | "anonymous";
   readonly logIn: () => Promise<void>;
   readonly signIn: () => Promise<void>;
@@ -25,11 +25,11 @@ export function useCloudAuth(...props: Parameters<typeof newAuthClient>): {
   const authClient: AuthClient = newAuthClient(...props);
 
   if ("guest" in context) {
-    throw new Error("Cloud auth is not supported in guest mode");
+    throw new Error("Better Auth is not supported in guest mode");
   }
 
   const authMethod = useMemo(() => {
-    return new CloudAuth(context.authenticate, authSecretStorage, authClient);
+    return new BetterAuth(context.authenticate, authSecretStorage, authClient);
   }, []);
 
   const isAuthenticated = useIsAuthenticated();

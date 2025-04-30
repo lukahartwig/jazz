@@ -40,7 +40,7 @@ This authentication method is not fully local-first, as it relies on a connectio
 ## Implementation
 
 <ContentByFramework framework="vanilla">
-We offer Jazz Cloud Authentication integration through our package: [`jazz-auth-cloudauth`](https://npmjs.com/package/jazz-auth-cloudauth).
+We offer Jazz Cloud Authentication integration through our package: [`jazz-auth-betterauth`](https://npmjs.com/package/jazz-auth-betterauth).
 
 <CodeGroup>
 ```tsx twoslash
@@ -55,14 +55,14 @@ import { AuthSecretStorage } from "jazz-tools";
 const authSecretStorage = new AuthSecretStorage();
 // ---cut---
 import {
-  CloudAuth,
+  BetterAuth,
   newAuthClient,
-} from "jazz-auth-cloudauth";
+} from "jazz-auth-betterauth";
 
 // …
 
 const authClient = newAuthClient({ baseURL: authUrl });
-const auth = new CloudAuth(authenticate, authSecretStorage, authClient);
+const auth = new BetterAuth(authenticate, authSecretStorage, authClient);
 
 // …
 
@@ -118,9 +118,9 @@ await authClient.sendVerificationEmail({
 </ContentByFramework>
 
 <ContentByFramework framework="react">
-We offer Jazz Cloud Authentication integration through our package: [`jazz-react-auth-cloudauth`](https://npmjs.com/package/jazz-react-auth-cloudauth).
+We offer Jazz Cloud Authentication integration through our package: [`jazz-react-auth-betterauth`](https://npmjs.com/package/jazz-react-auth-betterauth).
 
-The package provides a `useCloudAuth` hook for managing authentication state.
+The package provides a `useBetterAuth` hook for managing authentication state.
 
 <CodeGroup>
 ```tsx twoslash
@@ -132,11 +132,11 @@ const userPassword = "12345678";
 const userNewPassword = "asdfghjk";
 const userPasswordResetToken = "examplePasswordResetToken";
 // ---cut---
-import { useCloudAuth } from "jazz-react-auth-cloudauth";
+import { useBetterAuth } from "jazz-react-auth-betterauth";
 
 // …
 
-const auth = useCloudAuth({ baseURL: authUrl });
+const auth = useBetterAuth({ baseURL: authUrl });
 
 // …
 
@@ -192,9 +192,9 @@ await auth.authClient.sendVerificationEmail({
 </ContentByFramework>
 
 <ContentByFramework framework="react-native-expo">
-We offer Jazz Cloud Authentication integration through our package: [`jazz-react-auth-cloudauth`](https://npmjs.com/package/jazz-react-auth-cloudauth).
+We offer Jazz Cloud Authentication integration through our package: [`jazz-react-auth-betterauth`](https://npmjs.com/package/jazz-react-auth-betterauth).
 
-The package provides a `useCloudAuth` hook for managing authentication state.
+The package provides a `useBetterAuth` hook for managing authentication state.
 
 <CodeGroup>
 ```tsx twoslash
@@ -208,11 +208,11 @@ const userPasswordResetToken = "examplePasswordResetToken";
 // ---cut---
 import { expoClient } from "@better-auth/expo/client";
 import * as SecureStore from "expo-secure-store";
-import { useCloudAuth } from "jazz-react-auth-cloudauth";
+import { useBetterAuth } from "jazz-react-auth-betterauth";
 
 // …
 
-const auth = useCloudAuth({
+const auth = useBetterAuth({
   baseURL: authUrl,
   plugins: [
     expoClient({
