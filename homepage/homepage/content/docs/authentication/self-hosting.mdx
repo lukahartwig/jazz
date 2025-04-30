@@ -194,6 +194,8 @@ const userPassword = "12345678";
 const userNewPassword = "asdfghjk";
 const userPasswordResetToken = "examplePasswordResetToken";
 // ---cut---
+import { expoClient } from "@better-auth/expo/client";
+import * as SecureStore from "expo-secure-store";
 import { useCloudAuth } from "jazz-react-auth-cloudauth";
 
 // …
