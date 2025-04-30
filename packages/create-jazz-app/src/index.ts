@@ -59,7 +59,7 @@ async function getLatestPackageVersions(
             `https://registry.npmjs.org/${pkg}/latest`,
           );
           if (!response.ok) throw new Error(`HTTP ${response.status}`);
-          const data = await response.json();
+          const data = (await response.json()) as { version: string };
           versions[pkg] = `^${data.version}`; // Using caret for minor version updates
         } catch (error) {
           failures.push(pkg);
@@ -264,7 +264,7 @@ const { withNativeWind } = require("nativewind/metro");
 
 const config = getDefaultConfig(__dirname);
 
-module.exports = withNativeWind(config, { input: "./src/global.css" });
+module.exports = withNativeWind(config, { input: "./global.css" });
 `;
       fs.writeFileSync(metroConfigPath, metroConfig);
 

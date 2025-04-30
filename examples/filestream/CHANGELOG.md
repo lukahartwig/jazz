@@ -1,5 +1,91 @@
 # jazz-tailwind-demo-auth-starter
 
+## 0.0.24
+
+### Patch Changes
+
+- jazz-inspector@0.13.16
+- jazz-react@0.13.16
+- jazz-tools@0.13.16
+
+## 0.0.23
+
+### Patch Changes
+
+- jazz-inspector@0.13.15
+- jazz-react@0.13.15
+- jazz-tools@0.13.15
+
+## 0.0.22
+
+### Patch Changes
+
+- jazz-inspector@0.13.14
+- jazz-react@0.13.14
+- jazz-tools@0.13.14
+
+## 0.0.21
+
+### Patch Changes
+
+- jazz-inspector@0.13.13
+- jazz-react@0.13.13
+- jazz-tools@0.13.13
+
+## 0.0.20
+
+### Patch Changes
+
+- Updated dependencies [4547525]
+  - jazz-tools@0.13.12
+  - jazz-inspector@0.13.12
+  - jazz-react@0.13.12
+
+## 0.0.19
+
+### Patch Changes
+
+- Updated dependencies [17273a6]
+  - jazz-tools@0.13.11
+  - jazz-inspector@0.13.11
+  - jazz-react@0.13.11
+
+## 0.0.18
+
+### Patch Changes
+
+- jazz-inspector@0.13.10
+- jazz-react@0.13.10
+- jazz-tools@0.13.10
+
+## 0.0.17
+
+### Patch Changes
+
+- Updated dependencies [a6cf01f]
+  - jazz-tools@0.13.9
+  - jazz-inspector@0.13.9
+  - jazz-react@0.13.9
+
+## 0.0.16
+
+### Patch Changes
+
+- Updated dependencies [22b5c4f]
+- Updated dependencies [31ea2ef]
+- Updated dependencies [4530c4a]
+- Updated dependencies [bc3d7bb]
+  - jazz-inspector@0.13.7
+  - jazz-tools@0.13.7
+  - jazz-react@0.13.7
+
+## 0.0.15
+
+### Patch Changes
+
+- Updated dependencies [c320615]
+  - jazz-inspector@0.13.6
+
 ## 0.0.14
 
 ### Patch Changes

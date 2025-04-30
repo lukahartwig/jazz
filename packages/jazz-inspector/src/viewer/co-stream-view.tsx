@@ -12,8 +12,8 @@ import { styled } from "goober";
 import { useEffect, useState } from "react";
 import { Badge } from "../ui/badge.js";
 import { Button } from "../ui/button.js";
+import { AccountOrGroupText } from "./account-or-group-text.js";
 import { PageInfo } from "./types.js";
-import { AccountOrGroupPreview } from "./value-renderer.js";
 
 // typeguard for BinaryStreamStart
 function isBinaryStreamStart(item: unknown): item is BinaryStreamStart {
@@ -162,13 +162,6 @@ const LabelContentPairContainer = styled("div")`
   gap: 0.375rem;
 `;
 
-const BinaryStreamContainer = styled("div")`
-  margin-top: 2rem;
-  display: flex;
-  flex-direction: column;
-  gap: 2rem;
-`;
-
 const BinaryStreamGrid = styled("div")`
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -269,7 +262,7 @@ function RenderCoBinaryStream({
   const sizeInKB = (file.totalSize || 0) / 1024;
 
   return (
-    <BinaryStreamContainer>
+    <>
       <BinaryStreamGrid>
         <LabelContentPair
           label="Mime Type"
@@ -305,7 +298,7 @@ function RenderCoBinaryStream({
           }
         />
       ) : null}
-    </BinaryStreamContainer>
+    </>
   );
 }
 
@@ -323,7 +316,7 @@ function RenderCoStream({
     <CoStreamGrid>
       {userCoIds.map((id, idx) => (
         <CoStreamItemContainer key={id}>
-          <AccountOrGroupPreview coId={id as CoID<RawCoValue>} node={node} />
+          <AccountOrGroupText coId={id as CoID<RawCoValue>} node={node} />
           {/* @ts-expect-error - TODO: fix types */}
           {value.items[streamPerUser[idx]]?.map(
             (item: CoStreamItem<JsonValue>) => (

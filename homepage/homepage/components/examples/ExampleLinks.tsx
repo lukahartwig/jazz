@@ -2,15 +2,15 @@
 
 import { Example } from "@/content/example";
 import { InterpolateInCode } from "@/mdx-components";
-import { DialogDescription } from "@headlessui/react";
-import { Button } from "gcmp-design-system/src/app/components/atoms/Button";
-import { CodeGroup } from "gcmp-design-system/src/app/components/molecules/CodeGroup";
+import { Button } from "@garden-co/design-system/src/components/atoms/Button";
+import { CodeGroup } from "@garden-co/design-system/src/components/molecules/CodeGroup";
 import {
   Dialog,
   DialogActions,
   DialogBody,
   DialogTitle,
-} from "gcmp-design-system/src/app/components/organisms/Dialog";
+} from "@garden-co/design-system/src/components/organisms/Dialog";
+import { DialogDescription } from "@headlessui/react";
 import { useState } from "react";
 import CreateJazzApp from "./CreateJazzApp.mdx";
 

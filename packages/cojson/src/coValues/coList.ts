@@ -2,6 +2,7 @@ import { CoID, RawCoValue } from "../coValue.js";
 import { CoValueCore } from "../coValueCore.js";
 import { AgentID, SessionID, TransactionID } from "../ids.js";
 import { JsonObject, JsonValue } from "../jsonValue.js";
+import { CoValueKnownState } from "../sync.js";
 import { accountOrAgentIDfromSessionID } from "../typeUtils/accountOrAgentIDfromSessionID.js";
 import { isCoValue } from "../typeUtils/isCoValue.js";
 import { RawAccountID } from "./account.js";
@@ -41,7 +42,7 @@ type DeletionEntry = {
   deletionID: OpID;
 } & DeletionOpPayload;
 
-export class RawCoListView<
+export class RawCoList<
   Item extends JsonValue = JsonValue,
   Meta extends JsonObject | null = null,
 > implements RawCoValue
@@ -81,26 +82,52 @@ export class RawCoListView<
     madeAt: number;
     opID: OpID;
   }[];
+  /** @internal */
+  totalValidTransactions = 0;
+  knownTransactions: CoValueKnownState["sessions"] = {};
+  lastValidTransaction: number | undefined;
 
   /** @internal */
   constructor(core: CoValueCore) {
     this.id = core.id as CoID<this>;
     this.core = core;
-    this.afterStart = [];
-    this.beforeEnd = [];
-    this.insertions = {};
-    this.deletionsByInsertion = {};
 
     this.insertions = {};
     this.deletionsByInsertion = {};
     this.afterStart = [];
     this.beforeEnd = [];
+    this.knownTransactions = {};
 
-    for (const {
-      txID,
-      changes,
-      madeAt,
-    } of this.core.getValidSortedTransactions()) {
+    this.processNewTransactions();
+  }
+
+  processNewTransactions() {
+    const transactions = this.core.getValidSortedTransactions({
+      ignorePrivateTransactions: false,
+      knownTransactions: this.knownTransactions,
+    });
+
+    if (transactions.length === 0) {
+      return;
+    }
+
+    this.totalValidTransactions += transactions.length;
+    let lastValidTransaction: number | undefined = undefined;
+    let oldestValidTransaction: number | undefined = undefined;
+    this._cachedEntries = undefined;
+
+    for (const { txID, changes, madeAt } of transactions) {
+      lastValidTransaction = Math.max(lastValidTransaction ?? 0, madeAt);
+      oldestValidTransaction = Math.min(
+        oldestValidTransaction ?? Infinity,
+        madeAt,
+      );
+
+      this.knownTransactions[txID.sessionID] = Math.max(
+        this.knownTransactions[txID.sessionID] ?? 0,
+        txID.txIndex,
+      );
+
       for (const [changeIdx, changeUntyped] of changes.entries()) {
         const change = changeUntyped as ListOpPayload<Item>;
 
@@ -193,6 +220,16 @@ export class RawCoListView<
         }
       }
     }
+
+    if (
+      this.lastValidTransaction &&
+      oldestValidTransaction &&
+      oldestValidTransaction < this.lastValidTransaction
+    ) {
+      this.rebuildFromCore();
+    } else {
+      this.lastValidTransaction = lastValidTransaction;
+    }
   }
 
   /** @category 6. Meta */
@@ -279,30 +316,52 @@ export class RawCoListView<
       opID: OpID;
     }[],
   ) {
-    const entry =
-      this.insertions[opID.sessionID]?.[opID.txIndex]?.[opID.changeIdx];
+    const todo = [opID]; // a stack with the next item to do at the end
+    const predecessorsVisited = new Set<OpID>();
 
-    if (!entry) {
-      throw new Error("Missing op " + opID);
-    }
-    for (const predecessor of entry.predecessors) {
-      this.fillArrayFromOpID(predecessor, arr);
-    }
-    const deleted =
-      (this.deletionsByInsertion[opID.sessionID]?.[opID.txIndex]?.[
-        opID.changeIdx
-      ]?.length || 0) > 0;
-    if (!deleted) {
-      arr.push({
-        value: entry.value,
-        madeAt: entry.madeAt,
-        opID,
-      });
-    }
-    // traverse successors in reverse for correct insertion behavior
-    for (let i = entry.successors.length - 1; i >= 0; i--) {
-      const successor = entry.successors[i]!;
-      this.fillArrayFromOpID(successor, arr);
+    while (todo.length > 0) {
+      const currentOpID = todo[todo.length - 1]!;
+
+      const entry =
+        this.insertions[currentOpID.sessionID]?.[currentOpID.txIndex]?.[
+          currentOpID.changeIdx
+        ];
+
+      if (!entry) {
+        throw new Error("Missing op " + currentOpID);
+      }
+
+      const shouldTraversePredecessors =
+        entry.predecessors.length > 0 && !predecessorsVisited.has(currentOpID);
+
+      // We navigate the predecessors before processing the current opID in the list
+      if (shouldTraversePredecessors) {
+        for (let i = entry.predecessors.length - 1; i >= 0; i--) {
+          todo.push(entry.predecessors[i]!);
+        }
+        predecessorsVisited.add(currentOpID);
+      } else {
+        // Remove the current opID from the todo stack to consider it processed.
+        todo.pop();
+
+        const deleted =
+          (this.deletionsByInsertion[currentOpID.sessionID]?.[
+            currentOpID.txIndex
+          ]?.[currentOpID.changeIdx]?.length || 0) > 0;
+
+        if (!deleted) {
+          arr.push({
+            value: entry.value,
+            madeAt: entry.madeAt,
+            opID: currentOpID,
+          });
+        }
+
+        // traverse successors in reverse for correct insertion behavior
+        for (const successor of entry.successors) {
+          todo.push(successor);
+        }
+      }
     }
   }
 
@@ -385,15 +444,7 @@ export class RawCoListView<
       listener(content as this);
     });
   }
-}
 
-export class RawCoList<
-    Item extends JsonValue = JsonValue,
-    Meta extends JsonObject | null = JsonObject | null,
-  >
-  extends RawCoListView<Item, Meta>
-  implements RawCoValue
-{
   /** Appends `item` after the item currently at index `after`.
    *
    * If `privacy` is `"private"` **(default)**, `item` is encrypted in the transaction, only readable by other members of the group this `CoList` belongs to. Not even sync servers can see the content in plaintext.
@@ -410,6 +461,15 @@ export class RawCoList<
     this.appendItems([item], after, privacy);
   }
 
+  /**
+   * Appends `items` to the list at index `after`. If `after` is negative, it is treated as `0`.
+   *
+   * If `privacy` is `"private"` **(default)**, `items` are encrypted in the transaction, only readable by other members of the group this `CoList` belongs to. Not even sync servers can see the content in plaintext.
+   *
+   * If `privacy` is `"trusting"`, `items` are stored in plaintext in the transaction, visible to everyone who gets a hold of it, including sync servers.
+   *
+   * @category 2. Editing
+   */
   appendItems(
     items: Item[],
     after?: number,
@@ -421,7 +481,7 @@ export class RawCoList<
         ? entries.length > 0
           ? entries.length - 1
           : 0
-        : after;
+        : Math.max(0, after);
     let opIDBefore: OpID | "start";
     if (entries.length > 0) {
       const entryBefore = entries[after];
@@ -449,8 +509,7 @@ export class RawCoList<
     }
 
     this.core.makeTransaction(changes, privacy);
-
-    this.rebuildFromCore();
+    this.processNewTransactions();
   }
 
   /**
@@ -497,7 +556,7 @@ export class RawCoList<
       privacy,
     );
 
-    this.rebuildFromCore();
+    this.processNewTransactions();
   }
 
   /** Deletes the item at index `at`.
@@ -524,7 +583,7 @@ export class RawCoList<
       privacy,
     );
 
-    this.rebuildFromCore();
+    this.processNewTransactions();
   }
 
   replace(
@@ -552,7 +611,7 @@ export class RawCoList<
       ],
       privacy,
     );
-    this.rebuildFromCore();
+    this.processNewTransactions();
   }
 
   /** @internal */

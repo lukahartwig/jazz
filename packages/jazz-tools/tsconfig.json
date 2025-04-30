@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "lib": ["ESNext"],
+    "lib": ["ESNext", "DOM"],
     "module": "esnext",
     "target": "ES2021",
     "moduleResolution": "bundler",
@@ -12,7 +12,8 @@
     "esModuleInterop": true,
     "declaration": true,
     "emitDeclarationOnly": true,
-    "declarationMap": true
+    "declarationMap": true,
+    "rootDir": "./src"
   },
   "include": ["./src/**/*.ts"],
   "exclude": ["./node_modules"]

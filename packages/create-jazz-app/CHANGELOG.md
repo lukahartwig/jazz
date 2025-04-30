@@ -1,5 +1,11 @@
 # create-jazz-app
 
+## 0.1.17
+
+### Patch Changes
+
+- e1dbab1: Fix CSS import for Expo starter app when using create-jazz-app
+
 ## 0.1.16
 
 ### Patch Changes

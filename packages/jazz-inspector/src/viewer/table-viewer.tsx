@@ -17,10 +17,6 @@ import {
 } from "../ui/table.js";
 import { Text } from "../ui/text.js";
 
-const TableContainer = styled("div")`
-  margin-top: 2rem;
-`;
-
 const PaginationContainer = styled("div")`
   padding: 1rem 0;
   display: flex;
@@ -42,9 +38,7 @@ function CoValuesTableView({
   const [coIdArray, visibleRows] = useMemo(() => {
     const coIdArray = Array.isArray(data)
       ? data
-      : Object.values(data).every(
-            (k) => typeof k === "string" && k.startsWith("co_"),
-          )
+      : Object.values(data).every((k) => typeof k === "string" && isCoId(k))
         ? Object.values(data).map((k) => k as CoID<RawCoValue>)
         : [];
 
@@ -73,7 +67,7 @@ function CoValuesTableView({
   };
 
   return (
-    <TableContainer>
+    <>
       <Table>
         <TableHead>
           <TableRow>
@@ -139,7 +133,7 @@ function CoValuesTableView({
           </Button>
         )}
       </PaginationContainer>
-    </TableContainer>
+    </>
   );
 }
 

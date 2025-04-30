@@ -1,7 +1,7 @@
 "use client";
 
+import { Button } from "@garden-co/design-system/src/components/atoms/Button";
 import { track } from "@vercel/analytics";
-import { Button } from "gcmp-design-system/src/app/components/atoms/Button";
 
 export function FakeGetStartedButton({ tier }: { tier: "starter" | "indie" }) {
   return (
