@@ -61,7 +61,7 @@ import {
 
 // …
 
-const authClient = newAuthClient(authUrl);
+const authClient = newAuthClient({ baseURL: authUrl });
 const auth = new CloudAuth(authenticate, authSecretStorage, authClient);
 
 // …
@@ -136,7 +136,7 @@ import { useCloudAuth } from "jazz-react-auth-cloudauth";
 
 // …
 
-const auth = useCloudAuth(authUrl);
+const auth = useCloudAuth({ baseURL: authUrl });
 
 // …
 
@@ -212,13 +212,16 @@ import { useCloudAuth } from "jazz-react-auth-cloudauth";
 
 // …
 
-const auth = useCloudAuth(authUrl, [
-  expoClient({
-      scheme: "myapp",
-      storagePrefix: "myapp",
-      storage: SecureStore,
-  })
-]);
+const auth = useCloudAuth({
+  baseURL: authUrl,
+  plugins: [
+    expoClient({
+        scheme: "myapp",
+        storagePrefix: "myapp",
+        storage: SecureStore,
+    })
+  ]
+});
 
 // …
 

@@ -1,7 +1,4 @@
-import {
-  type BetterAuthClientPlugin,
-  createAuthClient,
-} from "better-auth/client";
+import { createAuthClient } from "better-auth/client";
 import { inferAdditionalFields } from "better-auth/client/plugins";
 import { jazzClientPlugin } from "jazz-betterauth-client-plugin";
 import {
@@ -13,8 +10,7 @@ import {
 import type { AuthSetPayload } from "jazz-tools/dist/auth/AuthSecretStorage.js";
 
 export const newAuthClient = (
-  baseUrl: string,
-  plugins?: BetterAuthClientPlugin[],
+  ...[props]: Parameters<typeof createAuthClient>
 ) => {
   const requiredPlugins = [
     jazzClientPlugin(),
@@ -31,11 +27,11 @@ export const newAuthClient = (
       },
     }),
   ];
-  const allPlugins = plugins
-    ? [...plugins, ...requiredPlugins]
+  const allPlugins = props?.plugins
+    ? [...props?.plugins, ...requiredPlugins]
     : requiredPlugins;
   return createAuthClient({
-    baseURL: baseUrl,
+    ...props,
     plugins: allPlugins,
   });
 };

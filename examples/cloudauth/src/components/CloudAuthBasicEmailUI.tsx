@@ -8,7 +8,7 @@ export const CloudAuthBasicEmailUI = (props: {
   baseUrl: string;
   children?: React.ReactNode;
 }) => {
-  const auth = useCloudAuth(props.baseUrl);
+  const auth = useCloudAuth({ baseURL: props.baseUrl });
   const [menuState, setMenuState] = useState<"initial" | "signUp" | "signIn">(
     "initial",
   );

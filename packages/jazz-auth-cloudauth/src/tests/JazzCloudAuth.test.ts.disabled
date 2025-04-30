@@ -20,7 +20,7 @@ const crypto = await TestJSCrypto.create();
 KvStoreContext.getInstance().initialize(new InMemoryKVStore());
 const mockAuthenticate = vi.fn();
 const baseUrl = "http://localhost:3000";
-const authClient = newAuthClient(baseUrl);
+const authClient = newAuthClient({ baseURL: baseUrl });
 let auth: CloudAuth;
 let account: Account;
 let contextManager: TestJazzContextManager<any>;
