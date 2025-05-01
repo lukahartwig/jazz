@@ -1,6 +1,6 @@
 import { useIframeHashRouter } from "hash-slash";
 import { useAccount, useCoState } from "jazz-react";
-import { ID } from "jazz-tools";
+import { CoPlainText, ID } from "jazz-tools";
 import { useState } from "react";
 import { Errors } from "./Errors.tsx";
 import { LinkToHome } from "./LinkToHome.tsx";
@@ -32,9 +32,13 @@ export function CreateOrder() {
     me.root.orders.push(draft as BubbleTeaOrder);
 
     // reset the draft
-    me.root.draft = DraftBubbleTeaOrder.create({
-      addOns: ListOfBubbleTeaAddOns.create([]),
-    });
+    me.root.draft = DraftBubbleTeaOrder.create(
+      {
+        addOns: ListOfBubbleTeaAddOns.create([]),
+        instructions: CoPlainText.create("", { owner: me }),
+      },
+      me,
+    );
 
     router.navigate("/");
   };
@@ -62,7 +66,7 @@ function CreateOrderForm({
   onSave: (draft: DraftBubbleTeaOrder) => void;
 }) {
   const draft = useCoState(DraftBubbleTeaOrder, id, {
-    resolve: { addOns: true },
+    resolve: { addOns: true, instructions: true },
   });
 
   if (!draft) return;

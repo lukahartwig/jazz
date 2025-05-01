@@ -19,7 +19,9 @@ export function OrderThumbnail({ order }: { order: BubbleTeaOrder }) {
           </p>
         )}
         {instructions && (
-          <p className="text-sm text-stone-600 italic">{instructions}</p>
+          <p className="text-sm text-stone-600 italic">
+            {instructions.toString()}
+          </p>
         )}
       </div>
       <div className="text-sm text-stone-600">{date}</div>
