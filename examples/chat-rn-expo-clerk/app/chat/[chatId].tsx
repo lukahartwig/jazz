@@ -7,7 +7,7 @@ import { useLocalSearchParams } from "expo-router";
 import { useAccount, useCoState } from "jazz-expo";
 import { ProgressiveImg } from "jazz-expo";
 import { createImage } from "jazz-react-native-media-images";
-import { Group, ID } from "jazz-tools";
+import { CoPlainText, Group, ID } from "jazz-tools";
 import { useEffect, useLayoutEffect, useState } from "react";
 import React, {
   SafeAreaView,
@@ -82,7 +82,12 @@ export default function Conversation() {
   const sendMessage = () => {
     if (!chat) return;
     if (message.trim()) {
-      chat.push(Message.create({ text: message }, { owner: chat._owner }));
+      chat.push(
+        Message.create(
+          { text: CoPlainText.create(message, { owner: chat._owner }) },
+          { owner: chat._owner },
+        ),
+      );
       setMessage("");
     }
   };
@@ -104,7 +109,12 @@ export default function Conversation() {
           maxSize: 2048,
         });
 
-        chat.push(Message.create({ text: "", image }, { owner: chat._owner }));
+        chat.push(
+          Message.create(
+            { text: CoPlainText.create("", { owner: chat._owner }), image },
+            { owner: chat._owner },
+          ),
+        );
       }
     } catch (error) {
       Alert.alert("Error", "Failed to upload image");
@@ -156,7 +166,7 @@ export default function Conversation() {
                 `text-md max-w-[85%]`,
               )}
             >
-              {item.text}
+              {item.text?.toString()}
             </Text>
           )}
           <Text
