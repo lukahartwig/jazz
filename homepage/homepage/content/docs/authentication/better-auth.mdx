@@ -1,14 +1,14 @@
-export const metadata = { title: "Self-Hosted Authentication" };
+export const metadata = { title: "Better Auth" };
 
 import { CodeGroup, ContentByFramework } from "@/components/forMdx";
 
-# Self-Hosted Authentication
+# Better Auth
 
 Jazz can be integrated with [Better Auth](https://www.better-auth.com/) to provide authentication methods to users. This integration allows users to sign up or sign in through your Jazz application, using authentication infrastructure managed by you.
 
 ## How it works
 
-When using self-hosted authentication, users:
+When using Better Auth, users:
 
 1. Sign up or sign in through your Jazz application.
 2. Your application's authentication server stores the user's account keys and provides a traditional authentication experience.
@@ -28,14 +28,16 @@ This authentication method is not fully local-first, as it relies on a connectio
 <ContentByFramework framework="vanilla">
 We offer Better Auth integration through our package: [`jazz-auth-betterauth`](https://npmjs.com/package/jazz-auth-betterauth).
 
+The package provides a `BetterAuth` object for managing authentication state.
+
+For documentation on how to configure Better Auth clients created via `newAuthClient`, read the [Better Auth documentation](https://www.better-auth.com/docs/introduction).
+
 <CodeGroup>
 ```tsx twoslash
-const authUrl = "http://localhost:3000/api/auth/";
-const userName = "Firstname Lastname";
-const userEmail = "user@example.com";
-const userPassword = "12345678";
-const userNewPassword = "asdfghjk";
-const userPasswordResetToken = "examplePasswordResetToken";
+const authUrl: string = "http://localhost:3000/api/auth/";
+const userName: string = "Firstname Lastname";
+const userEmail: string = "user@example.com";
+const userPassword: string = "12345678";
 const authenticate = async () => {};
 import { AuthSecretStorage } from "jazz-tools";
 const authSecretStorage = new AuthSecretStorage();
@@ -44,15 +46,12 @@ import {
   BetterAuth,
   newAuthClient,
 } from "jazz-auth-betterauth";
-
-// …
+// @annotate: Creating the authentication client.
 
 const authClient = newAuthClient({ baseURL: authUrl });
 const auth = new BetterAuth(authenticate, authSecretStorage, authClient);
+// @annotate: Signing up with email & password
 
-// …
-
-// Signing up with email & password
 await authClient.signUp.email({
   name: userName,
   email: userEmail,
@@ -62,10 +61,8 @@ await authClient.signUp.email({
     await auth.signIn();
   }
 });
+// @annotate: Signing in with email & password
 
-// …
-
-// Signing in with email & password
 await authClient.signIn.email({
   email: userEmail,
   password: userPassword
@@ -73,30 +70,6 @@ await authClient.signIn.email({
   onSuccess: async () => {
     await auth.logIn();
   }
-});
-
-// …
-
-// Sending password reset email
-await authClient.forgetPassword({
-  email: userEmail,
-  redirectTo: "/reset-password"
-});
-
-// …
-
-// Resetting password
-await authClient.resetPassword({
-  newPassword: userNewPassword,
-  token: userPasswordResetToken
-});
-
-// …
-
-// Sending verification email
-await authClient.sendVerificationEmail({
-  email: userEmail,
-  callbackURL: "/"
 });
 ```
 
@@ -108,25 +81,22 @@ We offer Better Auth integration through our package: [`jazz-react-auth-betterau
 
 The package provides a `useBetterAuth` hook for managing authentication state.
 
+For documentation on how to configure Better Auth clients created via `useBetterAuth`, read the [Better Auth documentation](https://www.better-auth.com/docs/introduction).
+
 <CodeGroup>
 ```tsx twoslash
 import * as React from "react";
-const authUrl = "https://auth.jazz.tools/exampleApiKey/api/auth/";
-const userName = "Firstname Lastname";
-const userEmail = "user@example.com";
-const userPassword = "12345678";
-const userNewPassword = "asdfghjk";
-const userPasswordResetToken = "examplePasswordResetToken";
+const authUrl: string = "https://auth.jazz.tools/exampleApiKey/api/auth/";
+const userName: string = "Firstname Lastname";
+const userEmail: string = "user@example.com";
+const userPassword: string = "12345678";
 // ---cut---
 import { useBetterAuth } from "jazz-react-auth-betterauth";
-
-// …
+// @annotate: Creating the authentication client.
 
 const auth = useBetterAuth({ baseURL: authUrl });
+// @annotate: Signing up with email & password
 
-// …
-
-// Signing up with email & password
 await auth.authClient.signUp.email({
   name: userName,
   email: userEmail,
@@ -136,10 +106,8 @@ await auth.authClient.signUp.email({
     await auth.signIn();
   }
 });
+// @annotate: Signing in with email & password
 
-// …
-
-// Signing in with email & password
 await auth.authClient.signIn.email({
   email: userEmail,
   password: userPassword
@@ -147,30 +115,6 @@ await auth.authClient.signIn.email({
   onSuccess: async () => {
     await auth.logIn();
   }
-});
-
-// …
-
-// Sending password reset email
-await auth.authClient.forgetPassword({
-  email: userEmail,
-  redirectTo: "/reset-password"
-});
-
-// …
-
-// Resetting password
-await auth.authClient.resetPassword({
-  newPassword: userNewPassword,
-  token: userPasswordResetToken
-});
-
-// …
-
-// Sending verification email
-await auth.authClient.sendVerificationEmail({
-  email: userEmail,
-  callbackURL: "/"
 });
 ```
 
@@ -184,36 +128,35 @@ We offer Better Auth integration through our package: [`jazz-react-auth-betterau
 
 The package provides a `useBetterAuth` hook for managing authentication state.
 
+For documentation on how to configure Better Auth clients created via `useBetterAuth`, read the [Better Auth documentation](https://www.better-auth.com/docs/introduction).
+
 <CodeGroup>
 ```tsx twoslash
 import * as React from "react";
-const authUrl = "https://auth.jazz.tools/exampleApiKey/api/auth/";
-const userName = "Firstname Lastname";
-const userEmail = "user@example.com";
-const userPassword = "12345678";
-const userNewPassword = "asdfghjk";
-const userPasswordResetToken = "examplePasswordResetToken";
+const authUrl: string = "https://auth.jazz.tools/exampleApiKey/api/auth/";
+const userName: string = "Firstname Lastname";
+const userEmail: string = "user@example.com";
+const userPassword: string = "12345678";
+const appScheme: string = "myapp";
+const appStoragePrefix: string = "myapp";
 // ---cut---
 import { expoClient } from "@better-auth/expo/client";
 import * as SecureStore from "expo-secure-store";
 import { useBetterAuth } from "jazz-react-auth-betterauth";
-
-// …
+// @annotate: Creating the authentication client.
 
 const auth = useBetterAuth({
   baseURL: authUrl,
   plugins: [
     expoClient({
-        scheme: "myapp",
-        storagePrefix: "myapp",
+        scheme: appScheme,
+        storagePrefix: appStoragePrefix,
         storage: SecureStore,
     })
   ]
 });
+// @annotate: Signing up with email & password
 
-// …
-
-// Signing up with email & password
 await auth.authClient.signUp.email({
   name: userName,
   email: userEmail,
@@ -223,10 +166,8 @@ await auth.authClient.signUp.email({
     await auth.signIn();
   }
 });
+// @annotate: Signing in with email & password
 
-// …
-
-// Signing in with email & password
 await auth.authClient.signIn.email({
   email: userEmail,
   password: userPassword
@@ -235,30 +176,6 @@ await auth.authClient.signIn.email({
     await auth.logIn();
   }
 });
-
-// …
-
-// Sending password reset email
-await auth.authClient.forgetPassword({
-  email: userEmail,
-  redirectTo: "/reset-password"
-});
-
-// …
-
-// Resetting password
-await auth.authClient.resetPassword({
-  newPassword: userNewPassword,
-  token: userPasswordResetToken
-});
-
-// …
-
-// Sending verification email
-await auth.authClient.sendVerificationEmail({
-  email: userEmail,
-  callbackURL: "/"
-});
 ```
 
 </CodeGroup>
@@ -266,11 +183,11 @@ await auth.authClient.sendVerificationEmail({
 
 ## Examples
 
-You can explore Jazz applications using self-hosted authentication in our [example projects](/docs/examples).
+You can explore Jazz applications using Better Auth in our [example projects](/docs/examples).
 
-## When to use self-hosted authentication
+## When to use Better Auth
 
-Self-hosted authentication is appropriate when:
+Better Auth is appropriate when:
 
 - You want a traditional & seamless authentication experience for your users.
 - You want control over your application's authentication infrastructure.
@@ -284,7 +201,6 @@ Self-hosted authentication is appropriate when:
 - **Online requirement**: Internet connectivity is required when authenticating.
 - **Third-party dependency**: Your authentication server will depend on the Better Auth library.
 - **Platform support**: Adding support for Expo applications is your responsibility.
-- **Platform support**: Better Auth integration is not supported in applications using React Native.
 - **Configuration**: You will need to configure your authentication methods, server framework, and database.
 
 ## Additional resources
