@@ -77,7 +77,6 @@ export class JazzAccount extends Account {
       const draft = DraftBubbleTeaOrder.create(
         {
           addOns: ListOfBubbleTeaAddOns.create([], account),
-          instructions: CoPlainText.create("", { owner: account }),
         },
         account,
       );

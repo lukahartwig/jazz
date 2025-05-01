@@ -1,6 +1,6 @@
 import { useIframeHashRouter } from "hash-slash";
 import { useAccount, useCoState } from "jazz-react";
-import { CoPlainText, ID } from "jazz-tools";
+import { ID } from "jazz-tools";
 import { useState } from "react";
 import { Errors } from "./Errors.tsx";
 import { LinkToHome } from "./LinkToHome.tsx";
@@ -35,7 +35,6 @@ export function CreateOrder() {
     me.root.draft = DraftBubbleTeaOrder.create(
       {
         addOns: ListOfBubbleTeaAddOns.create([]),
-        instructions: CoPlainText.create("", { owner: me }),
       },
       me,
     );
