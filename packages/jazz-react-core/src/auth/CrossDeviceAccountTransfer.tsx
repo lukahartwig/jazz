@@ -78,7 +78,14 @@ export function useCreateCrossDeviceAccountTransferAsTarget(
   const context = useJazzContext();
   const authSecretStorage = useAuthSecretStorage();
 
+  const onLoggedInRef = useRef(onLoggedIn);
+  onLoggedInRef.current = onLoggedIn;
+
   const crossDeviceAccountTransfer = useMemo(() => {
+    const onLoggedIn = () => {
+      onLoggedInRef.current?.();
+    };
+
     return new CrossDeviceAccountTransferCreateAsTarget(
       new CrossDeviceAccountTransfer(
         context.node.crypto,
@@ -124,7 +131,14 @@ export function useHandleCrossDeviceAccountTransferAsTarget(
   const authSecretStorage = useAuthSecretStorage();
   const urlRef = useRef<string | undefined>();
 
+  const onLoggedInRef = useRef(onLoggedIn);
+  onLoggedInRef.current = onLoggedIn;
+
   const crossDeviceAccountTransfer = useMemo(() => {
+    const onLoggedIn = () => {
+      onLoggedInRef.current?.();
+    };
+
     return new CrossDeviceAccountTransferHandleAsTarget(
       new CrossDeviceAccountTransfer(
         context.node.crypto,
