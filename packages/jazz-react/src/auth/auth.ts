@@ -5,8 +5,8 @@ export {
 } from "./PasskeyAuth.js";
 export { PassphraseAuthBasicUI } from "./PassphraseAuth.js";
 export {
-  useCreateCrossDeviceAccountTransfer,
-  useHandleCrossDeviceAccountTransfer,
+  useCreateAccountTransfer,
+  useAcceptAccountTransfer,
 } from "./CrossDeviceAccountTransfer.js";
 export {
   useIsAuthenticated,

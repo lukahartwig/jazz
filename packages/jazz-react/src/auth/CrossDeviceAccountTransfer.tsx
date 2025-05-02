@@ -1,24 +1,24 @@
 import {
   type UseCrossDeviceAccountTransferAsSourceOptions,
   type UseCrossDeviceAccountTransferAsTargetOptions,
-  useCreateCrossDeviceAccountTransferAsSource,
-  useCreateCrossDeviceAccountTransferAsTarget,
-  useHandleCrossDeviceAccountTransferAsSource,
-  useHandleCrossDeviceAccountTransferAsTarget,
+  useAcceptAccountTransferAsSource,
+  useAcceptAccountTransferAsTarget,
+  useCreateAccountTransferAsSource,
+  useCreateAccountTransferAsTarget,
 } from "jazz-react-core";
 import { useRef } from "react";
 
-export function useCreateCrossDeviceAccountTransfer(
+export function useCreateAccountTransfer(
   options: {
     as: "source";
   } & Partial<UseCrossDeviceAccountTransferAsSourceOptions>,
-): ReturnType<typeof useCreateCrossDeviceAccountTransferAsSource>;
-export function useCreateCrossDeviceAccountTransfer(
+): ReturnType<typeof useCreateAccountTransferAsSource>;
+export function useCreateAccountTransfer(
   options: {
     as: "target";
   } & Partial<UseCrossDeviceAccountTransferAsTargetOptions>,
-): ReturnType<typeof useCreateCrossDeviceAccountTransferAsTarget>;
-export function useCreateCrossDeviceAccountTransfer({
+): ReturnType<typeof useCreateAccountTransferAsTarget>;
+export function useCreateAccountTransfer({
   as: mode,
   ...options
 }:
@@ -32,34 +32,28 @@ export function useCreateCrossDeviceAccountTransfer({
 
   if (initialMode.current !== mode) {
     console.warn(
-      "useCreateCrossDeviceAccountTransfer mode cannot be changed once mounted.",
+      "useCreateAccountTransfer mode cannot be changed once mounted.",
     );
   }
 
   if (initialMode.current === "source") {
-    return useCreateCrossDeviceAccountTransferAsSource(
-      window.location.origin,
-      options,
-    );
+    return useCreateAccountTransferAsSource(window.location.origin, options);
   } else {
-    return useCreateCrossDeviceAccountTransferAsTarget(
-      window.location.origin,
-      options,
-    );
+    return useCreateAccountTransferAsTarget(window.location.origin, options);
   }
 }
 
-export function useHandleCrossDeviceAccountTransfer(
+export function useAcceptAccountTransfer(
   options: {
     as: "source";
   } & Partial<UseCrossDeviceAccountTransferAsSourceOptions>,
-): ReturnType<typeof useHandleCrossDeviceAccountTransferAsSource>;
-export function useHandleCrossDeviceAccountTransfer(
+): ReturnType<typeof useAcceptAccountTransferAsSource>;
+export function useAcceptAccountTransfer(
   options: {
     as: "target";
   } & Partial<UseCrossDeviceAccountTransferAsTargetOptions>,
-): ReturnType<typeof useHandleCrossDeviceAccountTransferAsTarget>;
-export function useHandleCrossDeviceAccountTransfer({
+): ReturnType<typeof useAcceptAccountTransferAsTarget>;
+export function useAcceptAccountTransfer({
   as: mode,
   ...options
 }:
@@ -73,18 +67,18 @@ export function useHandleCrossDeviceAccountTransfer({
 
   if (initialMode.current !== mode) {
     console.warn(
-      "useHandleCrossDeviceAccountTransfer mode cannot be changed once mounted.",
+      "useAcceptAccountTransfer mode cannot be changed once mounted.",
     );
   }
 
   if (initialMode.current === "source") {
-    return useHandleCrossDeviceAccountTransferAsSource(
+    return useAcceptAccountTransferAsSource(
       window.location.origin,
       window.location.href,
       options,
     );
   } else {
-    return useHandleCrossDeviceAccountTransferAsTarget(
+    return useAcceptAccountTransferAsTarget(
       window.location.origin,
       window.location.href,
       options,

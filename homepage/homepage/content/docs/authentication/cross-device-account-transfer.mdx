@@ -29,11 +29,11 @@ You can pick a flow that suits your use case, or use both!
 <ContentByFramework framework="react">
 ### Mobile to Desktop
 
-We start by creating a link on the **Desktop** device using `useCreateCrossDeviceAccountTransfer` as `target`, and handling the flow's `status`:
+We start by creating a link on the **Desktop** device using `useCreateAccountTransfer` as `target`, and handling the flow's `status`:
 
 <CodeGroup>
 ```tsx twoslash
-import { useCreateCrossDeviceAccountTransfer } from "jazz-react";
+import { useCreateAccountTransfer } from "jazz-react";
 import React, { useState } from "react";
 interface CreateAccountTransferAsTargetProps {
   onLoggedIn: () => void;
@@ -48,7 +48,7 @@ export function CreateAccountTransferAsTarget({
 }: CreateAccountTransferAsTargetProps) {
   const [link, setLink] = useState<string | undefined>();
 
-  const { status, createLink, sendConfirmationCode } = useCreateCrossDeviceAccountTransfer({
+  const { status, createLink, sendConfirmationCode } = useCreateAccountTransfer({
     as: "target",
     onLoggedIn,
   });
@@ -60,18 +60,18 @@ export function CreateAccountTransferAsTarget({
 
 [Full example](https://github.com/garden-co/jazz/blob/main/examples/cross-device-account-transfer/src/components/CreateCrossDeviceAccountTransferAsTarget.tsx)
 
-On the **Mobile** side, we need to host a page at `/account-transfer-handler-source`, or provide an alternative handler path to the hooks using the `sourceHandlerPath` option.
+On the **Mobile** side, we need to host a page at `#/accept-account-transfer`, or provide an alternative handler path to the hooks using the `handlerPath` option.
 
-This is the page we'll land on when the QR code is scanned, handling the link with the `useHandleCrossDeviceAccountTransfer` hook as `source`, and using `status` to display the current state:
+This is the page we'll land on when the QR code is scanned, handling the link with the `useAcceptAccountTransfer` hook as `source`, and using `status` to display the current state:
 
 <CodeGroup>
 ```tsx twoslash
 import React from "react";
-import { useHandleCrossDeviceAccountTransfer } from "jazz-react";
+import { useAcceptAccountTransfer } from "jazz-react";
 
 // ---cut---
 export function HandleAccountTransferAsSource() {
-  const { status, confirmationCode } = useHandleCrossDeviceAccountTransfer({
+  const { status, confirmationCode } = useAcceptAccountTransfer({
     as: "source",
   });
 
@@ -84,21 +84,21 @@ export function HandleAccountTransferAsSource() {
 
 ### Desktop to Mobile
 
-This is similar to the **Mobile to Desktop** flow, but the roles are reversed: `useCreateCrossDeviceAccountTransfer` on the **Desktop** device should be used as `source`, and `useHandleCrossDeviceAccountTransfer` on the **Mobile** device should be used as `target`.
+This is similar to the **Mobile to Desktop** flow, but the roles are reversed: `useCreateAccountTransfer` on the **Desktop** device should be used as `source`, and `useAcceptAccountTransfer` on the **Mobile** device should be used as `target`.
 
 On the **Desktop** device:
 
 <CodeGroup>
 ```tsx twoslash
 import React, { useState } from "react";
-import { useCreateCrossDeviceAccountTransfer } from "jazz-react";
+import { useCreateAccountTransfer } from "jazz-react";
 const QRCode = (_: { url: string }) => (<></>)
 
 // ---cut---
 export function CreateAccountTransferAsSource() {
   const [link, setLink] = useState<string | undefined>();
 
-  const { status, createLink, confirmationCode } = useCreateCrossDeviceAccountTransfer({
+  const { status, createLink, confirmationCode } = useCreateAccountTransfer({
     as: "source",
   });
 
@@ -109,22 +109,21 @@ export function CreateAccountTransferAsSource() {
 
 [Full example](https://github.com/garden-co/jazz/blob/main/examples/cross-device-account-transfer/src/components/CreateCrossDeviceAccountTransferAsSource.tsx)
 
-On the **Mobile** device we need to host a page at `/account-transfer-handler-target`, or provide an alternative handler path to the hooks using the `targetHandlerPath` option.
+On the **Mobile** device we need to host a page at `#/accept-account-transfer`, or provide an alternative handler path to the hooks using the `handlerPath` option.
 
-This is the page we'll land on when the QR code is scanned, handling the link with the `useHandleCrossDeviceAccountTransfer` hook as `target`, and using `status` to display the current state:
+This is the page we'll land on when the QR code is scanned, handling the link with the `useAcceptAccountTransfer` hook as `target`, and using `status` to display the current state:
 
 <CodeGroup>
 ```tsx twoslash
 import React from "react";
-import { useHandleCrossDeviceAccountTransfer } from "jazz-react";
+import { useAcceptAccountTransfer } from "jazz-react";
 const ConfirmationCodeForm = (_: { onSubmit: (code: string) => void}) => (<></>)
 
 // ---cut---
 export function HandleAccountTransferAsTarget() {
-  const { status, sendConfirmationCode } = useHandleCrossDeviceAccountTransfer({
+  const { status, sendConfirmationCode } = useAcceptAccountTransfer({
     as: "target",
-    targetHandlerPath: "/#/account-transfer-handler-target",
-    sourceHandlerPath: "/#/account-transfer-handler-source",
+    handlerPath: "/#/accept-account-transfer",
     onLoggedIn: () => {
       console.log("logged in!");
     },

@@ -51,15 +51,11 @@ export class CrossDeviceAccountTransfer {
 
   /**
    * Creates a transfer URL for authentication.
-   * @param handler - Specifies whether the link should be handled by consumer or provider.
    * @param transfer - The CrossDeviceAccountTransferCoMap to create the link for.
    * @returns A URL that can be displayed as a QR code to be scanned by the handler.
    */
-  public createLink(
-    handler: "source" | "target",
-    transfer: CrossDeviceAccountTransferCoMap,
-  ) {
-    let handlerUrl = this.origin + this.options[`${handler}HandlerPath`];
+  public createLink(transfer: CrossDeviceAccountTransferCoMap) {
+    let handlerUrl = this.origin + this.options.handlerPath;
 
     let transferCore = transfer._raw.core;
     while (transferCore.header.ruleset.type === "ownedByGroup") {
@@ -157,9 +153,9 @@ export class CrossDeviceAccountTransfer {
    * @param handler - Specifies whether the URL is for consumer or provider.
    * @returns The accepted CrossDeviceAccountTransferCoMap.
    */
-  public async acceptTransferUrl(url: string, handler: "source" | "target") {
+  public async acceptTransferUrl(url: string) {
     const { transferId, inviteSecret } = parseTransferUrl(
-      this.options[`${handler}HandlerPath`],
+      this.options.handlerPath,
       url,
     );
 
@@ -185,7 +181,7 @@ export class CrossDeviceAccountTransfer {
    */
   public checkValidUrl(url: string, handler: "source" | "target") {
     try {
-      parseTransferUrl(this.options[`${handler}HandlerPath`], url);
+      parseTransferUrl(this.options.handlerPath, url);
       return true;
     } catch (error) {
       return false;

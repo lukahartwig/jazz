@@ -191,7 +191,7 @@ describe("CrossDeviceAccountTransfer", () => {
       );
       const link = await createAsConsumer.createLink();
       expect(link).toMatch(
-        /^http:\/\/localhost:3000\/account-transfer-handler-source\/co_[^/]+\/inviteSecret_[^/]+$/,
+        /^http:\/\/localhost:3000\/accept-account-transfer\/co_[^/]+\/inviteSecret_[^/]+$/,
       );
       expect(createAsConsumer.authState.status).toEqual("waitingForHandler");
 
@@ -297,7 +297,7 @@ describe("CrossDeviceAccountTransfer", () => {
       );
       const link = await createAsProvider.createLink();
       expect(link).toMatch(
-        /^http:\/\/localhost:3000\/account-transfer-handler-target\/co_[^/]+\/inviteSecret_[^/]+$/,
+        /^http:\/\/localhost:3000\/accept-account-transfer\/co_[^/]+\/inviteSecret_[^/]+$/,
       );
       expect(createAsProvider.authState.status).toEqual("waitingForHandler");
 

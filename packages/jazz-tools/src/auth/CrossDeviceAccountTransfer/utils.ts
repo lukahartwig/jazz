@@ -85,6 +85,5 @@ export function shutdownTransferAccount(
 
 export const defaultOptions: CrossDeviceAccountTransferOptions = {
   confirmationCodeFn: defaultConfirmationCodeFn,
-  targetHandlerPath: "/account-transfer-handler-target",
-  sourceHandlerPath: "/account-transfer-handler-source",
+  handlerPath: "/accept-account-transfer",
 };
