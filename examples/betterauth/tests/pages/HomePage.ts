@@ -1,10 +1,10 @@
-import { Page, expect } from "@playwright/test";
+import { type Page, expect } from "@playwright/test";
 
 export class HomePage {
   constructor(public page: Page) {}
 
   usernameInput = this.page.getByRole("textbox", {
-    name: "Profile name",
+    name: "Full name",
   });
   emailInput = this.page.getByRole("textbox", { name: "Email address" });
   passwordInput = this.page.getByRole("textbox", {
@@ -16,11 +16,13 @@ export class HomePage {
   });
   signUpButton = this.page.getByRole("button", { name: "Sign up" });
   signInButton = this.page.getByRole("button", { name: "Sign in" });
+  signUpLinkButton = this.page.getByRole("link", { name: "Sign up" });
+  signInLinkButton = this.page.getByRole("link", { name: "Sign in" });
   logoutButton = this.page.getByRole("button", {
-    name: "Logout",
+    name: "Sign out",
   });
 
-  async signUp(name: string, email: string, password: string) {
+  async signUpEmail(name: string, email: string, password: string) {
     await this.usernameInput.fill(name);
     await this.emailInput.fill(email);
     await this.passwordInput.fill(password);
@@ -28,7 +30,7 @@ export class HomePage {
     await this.signUpButton.click();
   }
 
-  async signIn(email: string, password: string) {
+  async signInEmail(email: string, password: string) {
     await this.emailInput.fill(email);
     await this.passwordInput.fill(password);
     await this.signInButton.click();
@@ -38,14 +40,19 @@ export class HomePage {
     await this.logoutButton.click();
   }
 
-  async expectLoggedIn(name: string | undefined = undefined) {
+  async expectLoggedIn(name?: string) {
     await expect(this.logoutButton).toBeVisible();
+    await expect(this.signInLinkButton).not.toBeVisible();
+    await expect(this.signUpLinkButton).not.toBeVisible();
     if (name) {
-      await expect(this.page.getByText(`Welcome back, ${name}`)).toBeVisible();
+      await expect(this.page.getByText(`Signed in as ${name}.`)).toBeVisible();
     }
   }
 
   async expectLoggedOut() {
-    await expect(this.signInButton).toBeVisible();
+    await expect(this.logoutButton).not.toBeVisible();
+    await expect(this.signInLinkButton).toBeVisible();
+    await expect(this.signUpLinkButton).toBeVisible();
+    await expect(this.page.getByText(`Not signed in.`)).toBeVisible();
   }
 }
