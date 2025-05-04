@@ -3,17 +3,13 @@
 import { useBetterAuth } from "jazz-react-auth-betterauth";
 import { createContext, useContext } from "react";
 
-export const authBaseUrl =
-  process.env.NEXT_PUBLIC_AUTH_BASE_URL ?? "http://localhost:3000";
-const authEnvId = process.env.NEXT_PUBLIC_AUTH_ENV_ID ?? "jazzCloudDashboard";
-
 const AuthContext = createContext<ReturnType<typeof useBetterAuth> | null>(
   null,
 );
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const value = useBetterAuth({
-    baseURL: `${authBaseUrl}/${authEnvId}/api/auth/`,
+    baseURL: process.env.NEXT_PUBLIC_AUTH_BASE_URL,
   });
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

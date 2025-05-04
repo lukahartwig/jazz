@@ -1,7 +1,7 @@
 @import "tailwindcss";
 @import "tailwindcss/utilities";
 @import "@garden-co/design-system/design-system/src/app/globals.css";
-@source "../../../../homepage/design-system";
+@source "../../node_modules/@garden-co/design-system/design-system";
 
 :root {
   --background: #ffffff;

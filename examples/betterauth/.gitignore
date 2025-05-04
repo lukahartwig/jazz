@@ -2,6 +2,7 @@
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+sqlite.db
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # dependencies

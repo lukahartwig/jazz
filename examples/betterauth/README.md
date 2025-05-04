@@ -8,6 +8,11 @@ To run this example, you may either:
 * Clone the Jazz monorepo and run this example from within.
 * Create a new Jazz project using this example as a template, and run that new project.
 
+### Setting environment variables
+- `NEXT_PUBLIC_AUTH_BASE_URL`: A URL to a Better Auth server. If undefined, the example will self-host a Better Auth server.
+- `BETTER_AUTH_SECRET`: The encryption secret used by the self-hosted Better Auth server (required only if `NEXT_PUBLIC_AUTH_BASE_URL` is undefined)
+- `GITHUB_CLIENT_ID`: The client ID for the GitHub OAuth provider used by the self-hosted Better Auth server (required only if `NEXT_PUBLIC_AUTH_BASE_URL` is undefined)
+- `GITHUB_CLIENT_SECRET`: The client secret for the GitHub OAuth provider used by the self-hosted Better Auth server (required only if `NEXT_PUBLIC_AUTH_BASE_URL` is undefined)
 
 ### Using this example as a template
 
@@ -18,7 +23,8 @@ npx create-jazz-app@latest betterauth-app --example betterauth
 2. Navigate to the new project and start the development server.
 ```sh
 cd betterauth-app
-npm run dev
+pnpm install
+pnpm dev
 ```
 
 ### Using the monorepo

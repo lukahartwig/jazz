@@ -6,13 +6,12 @@ import { useAuth } from "@/contexts/Auth";
 import { Alert } from "@garden-co/design-system/design-system/src/components/atoms/Alert";
 import { TextLink } from "@garden-co/design-system/design-system/src/components/atoms/TextLink";
 import { Input } from "@garden-co/design-system/design-system/src/components/molecules/Input";
-import { SiGithub } from "@icons-pack/react-simple-icons";
 import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { useState } from "react";
 
-const title = "Sign up to Jazz Cloud";
+const title = "Sign up";
 
 export default function Page() {
   const auth = useAuth();
@@ -132,7 +131,14 @@ export default function Page() {
               setLoading(false);
             }}
           >
-            <SiGithub size={16} className="absolute left-3" />
+            <Image
+              src="/social/github.svg"
+              alt="GitHub logo"
+              className="absolute left-3"
+              width={16}
+              height={16}
+              priority
+            />
             Continue with GitHub
           </Button>
         </div>

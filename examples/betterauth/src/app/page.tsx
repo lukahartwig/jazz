@@ -97,7 +97,11 @@ export default function Home() {
                 </span>
               </>
             )}
-            {!user && !isAuthenticated && <>{"Not signed in"}</>}.
+            {!user && !isAuthenticated && <>{"Not signed in"}</>}
+            {!user && isAuthenticated && (
+              <>{"Could not connect to the authentication server"}</>
+            )}
+            .
           </p>
           {/* <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
 						<li className="mb-2 tracking-[-.01em]">
