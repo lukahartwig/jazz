@@ -21,6 +21,28 @@ export default function Page() {
   const [confirmPassword, setConfirmPassword] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<Error | undefined>(undefined);
+
+  const ssoSignUp =
+    (
+      provider: Parameters<typeof auth.authClient.signIn.social>[0]["provider"],
+    ) =>
+    async (e: React.MouseEvent<HTMLButtonElement>) => {
+      e.preventDefault();
+      setLoading(true);
+      const { error } = await auth.authClient.signIn.social({
+        provider: provider,
+        callbackURL: `${window.location.origin}/social/signIn`,
+      });
+      if (error) {
+        setError({
+          ...error,
+          name: error.message ?? error.statusText,
+          message: error.message ?? error.statusText,
+        });
+      }
+      setLoading(false);
+    };
+
   return (
     <div className="min-h-screen flex flex-col justify-center">
       <h1 className="sr-only">{title}</h1>
@@ -114,22 +136,7 @@ export default function Page() {
           <Button
             variant="secondary"
             className="relative"
-            onClick={async (e) => {
-              e.preventDefault();
-              setLoading(true);
-              const { error } = await auth.authClient.signIn.social({
-                provider: "github",
-                callbackURL: `${window.location.origin}/social/signIn`,
-              });
-              if (error) {
-                setError({
-                  ...error,
-                  name: error.message ?? error.statusText,
-                  message: error.message ?? error.statusText,
-                });
-              }
-              setLoading(false);
-            }}
+            onClick={ssoSignUp("github")}
           >
             <Image
               src="/social/github.svg"
