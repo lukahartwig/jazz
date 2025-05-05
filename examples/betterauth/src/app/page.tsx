@@ -8,7 +8,7 @@ import { useCallback } from "react";
 
 export default function Home() {
   const { auth, user, account } = useAuth();
-  const { me, logOut } = useAccount({ resolve: { profile: true } });
+  const { me, logOut } = useAccount({ resolve: { profile: {} } });
   const isAuthenticated = useIsAuthenticated();
   const signOut = useCallback(() => {
     auth.authClient.signOut({

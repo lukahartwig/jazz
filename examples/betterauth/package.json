@@ -11,7 +11,8 @@
 		"format-and-lint": "biome check .",
 		"format-and-lint:fix": "biome check . --write",
 		"test:e2e": "playwright test",
-		"test:e2e:ui": "playwright test --ui"
+		"test:e2e:ui": "playwright test --ui",
+		"email": "email dev --dir src/components/emails"
 	},
 	"dependencies": {
 		"@garden-co/design-system": "workspace:../../homepage",

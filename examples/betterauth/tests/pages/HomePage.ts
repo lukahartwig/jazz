@@ -5,21 +5,39 @@ export class HomePage {
 
   usernameInput = this.page.getByRole("textbox", {
     name: "Full name",
+    exact: true,
   });
-  emailInput = this.page.getByRole("textbox", { name: "Email address" });
+  emailInput = this.page.getByRole("textbox", {
+    name: "Email address",
+    exact: true,
+  });
   passwordInput = this.page.getByRole("textbox", {
     name: "Password",
     exact: true,
   });
   confirmPasswordInput = this.page.getByRole("textbox", {
     name: "Confirm password",
+    exact: true,
   });
-  signUpButton = this.page.getByRole("button", { name: "Sign up" });
-  signInButton = this.page.getByRole("button", { name: "Sign in" });
-  signUpLinkButton = this.page.getByRole("link", { name: "Sign up" });
-  signInLinkButton = this.page.getByRole("link", { name: "Sign in" });
+  signUpButton = this.page.getByRole("button", {
+    name: "Sign up",
+    exact: true,
+  });
+  signInButton = this.page.getByRole("button", {
+    name: "Sign in",
+    exact: true,
+  });
+  signUpLinkButton = this.page.getByRole("link", {
+    name: "Sign up",
+    exact: true,
+  });
+  signInLinkButton = this.page.getByRole("link", {
+    name: "Sign in",
+    exact: true,
+  });
   logoutButton = this.page.getByRole("button", {
     name: "Sign out",
+    exact: true,
   });
 
   async signUpEmail(name: string, email: string, password: string) {

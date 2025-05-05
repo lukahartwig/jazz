@@ -8,12 +8,13 @@ import { TextLink } from "@garden-co/design-system/design-system/src/components/
 import { Input } from "@garden-co/design-system/design-system/src/components/molecules/Input";
 import Image from "next/image";
 import Link from "next/link";
-import { redirect } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 const title = "Sign up";
 
 export default function Page() {
+  const router = useRouter();
   const { auth, user, account } = useAuth();
   const [name, setName] = useState<string>("");
   const [email, setEmail] = useState<string>("");
@@ -95,7 +96,7 @@ export default function Page() {
                 {
                   onSuccess: async () => {
                     await auth.signIn();
-                    redirect("/");
+                    router.push("/");
                   },
                   onError: (error) => {
                     setError(error.error);
@@ -123,7 +124,7 @@ export default function Page() {
               );
               if (data) {
                 await auth.signIn();
-                redirect("/");
+                router.push("/");
               }
             }
             setLoading(false);

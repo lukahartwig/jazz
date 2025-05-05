@@ -8,12 +8,13 @@ import { TextLink } from "@garden-co/design-system/design-system/src/components/
 import { Input } from "@garden-co/design-system/design-system/src/components/molecules/Input";
 import Image from "next/image";
 import Link from "next/link";
-import { redirect } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 const title = "Sign in";
 
 export default function SignInPage() {
+  const router = useRouter();
   const { auth, user, account } = useAuth();
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
@@ -89,7 +90,7 @@ export default function SignInPage() {
                 {
                   onSuccess: async () => {
                     await auth.logIn();
-                    redirect("/");
+                    router.push("/");
                   },
                   onError: (error) => {
                     setError(error.error);
@@ -117,7 +118,7 @@ export default function SignInPage() {
               );
               if (data) {
                 await auth.logIn();
-                redirect("/");
+                router.push("/");
               }
             }
             setLoading(false);
