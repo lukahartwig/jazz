@@ -1,5 +1,5 @@
+import { ClientOptions } from "better-auth";
 import { createAuthClient } from "better-auth/client";
-import { inferAdditionalFields } from "better-auth/client/plugins";
 import { jazzClientPlugin } from "jazz-betterauth-client-plugin";
 import {
   Account,
@@ -9,41 +9,17 @@ import {
 } from "jazz-tools";
 import type { AuthSetPayload } from "jazz-tools/dist/auth/AuthSecretStorage.js";
 
-export const newAuthClient = (
-  ...[props]: Parameters<typeof createAuthClient>
-) => {
-  const requiredPlugins = [
-    jazzClientPlugin(),
-    inferAdditionalFields({
-      user: {
-        encryptedCredentials: {
-          type: "string",
-          required: false,
-        },
-        salt: {
-          type: "string",
-          required: false,
-        },
-      },
-    }),
-  ];
-  const allPlugins = props?.plugins
-    ? [...props?.plugins, ...requiredPlugins]
-    : requiredPlugins;
-  return createAuthClient({
-    ...props,
-    plugins: allPlugins,
+export const newAuthClient = (options?: ClientOptions) =>
+  createAuthClient({
+    ...options,
+    plugins: [...(options?.plugins ?? []), ...[jazzClientPlugin()]],
   });
-};
 
-export type AuthClient = ReturnType<typeof newAuthClient>;
-export type Session = AuthClient["$Infer"]["Session"];
-
-export class BetterAuth {
+export class BetterAuth<T extends ReturnType<typeof newAuthClient>> {
   constructor(
     private authenticate: AuthenticateAccountFunction,
     private authSecretStorage: AuthSecretStorage,
-    private authClient: AuthClient,
+    public authClient: T,
   ) {}
 
   static async loadAuthData(
@@ -60,7 +36,9 @@ export class BetterAuth {
    * Called when the authentication session changes.
    * @param session The authentication session.
    */
-  onUserChange = async (session: Pick<Session, "user">) => {
+  onUserChange = async (
+    session?: (typeof this.authClient)["$Infer"]["Session"],
+  ) => {
     if (!session || !session.user) return;
     const isAuthenticated = this.authSecretStorage.isAuthenticated;
     if (!isAuthenticated) return;

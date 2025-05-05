@@ -19,6 +19,7 @@
 		"better-auth": "^1.2.4",
 		"better-sqlite3": "^11.9.1",
 		"jazz-betterauth-server-plugin": "workspace:*",
+		"jazz-betterauth-client-plugin": "workspace:*",
 		"jazz-inspector": "workspace:*",
 		"jazz-react": "workspace:*",
 		"jazz-react-auth-betterauth": "workspace:*",

@@ -232,6 +232,9 @@ importers:
       '@vercel/speed-insights':
         specifier: ^1.0.12
         version: 1.0.12(next@15.2.1(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)
+      better-auth:
+        specifier: ^1.2.7
+        version: 1.2.7
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
@@ -250,6 +253,9 @@ importers:
       jazz-auth-betterauth:
         specifier: link:../../packages/jazz-auth-betterauth
         version: link:../../packages/jazz-auth-betterauth
+      jazz-betterauth-client-plugin:
+        specifier: link:../../packages/jazz-betterauth-client-plugin
+        version: link:../../packages/jazz-betterauth-client-plugin
       jazz-browser:
         specifier: link:../../packages/jazz-browser
         version: link:../../packages/jazz-browser

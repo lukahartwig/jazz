@@ -8,6 +8,7 @@
 	"dependencies": {
 		"cojson": "workspace:*",
 		"jazz-auth-betterauth": "workspace:*",
+		"jazz-betterauth-client-plugin": "workspace:*",
 		"jazz-browser": "workspace:*",
 		"jazz-react": "workspace:*",
 		"jazz-tools": "workspace:*"

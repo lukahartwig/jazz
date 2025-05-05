@@ -18,6 +18,7 @@ export default function SignInPage() {
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [rememberMe, setRememberMe] = useState(true);
+  const [status, setStatus] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<Error | undefined>(undefined);
 
@@ -140,6 +141,81 @@ export default function SignInPage() {
               priority
             />
             Continue with GitHub
+          </Button>
+          <Button
+            variant="secondary"
+            className="relative"
+            onClick={async (e) => {
+              e.preventDefault();
+              setLoading(true);
+              const { data, error } = await auth.authClient.signIn.magicLink({
+                email: email,
+                callbackURL: `${window.location.origin}/magic-link/logIn`,
+              });
+              setStatus(data?.status ?? false);
+              const errorMessage = error?.message ?? error?.statusText;
+              setError(
+                error
+                  ? {
+                      ...error,
+                      name: error.statusText,
+                      message:
+                        errorMessage && errorMessage.length > 0
+                          ? errorMessage
+                          : "An error occurred",
+                    }
+                  : undefined,
+              );
+              setLoading(false);
+            }}
+          >
+            <Image
+              src="/link.svg"
+              alt="Link icon"
+              className="absolute left-3"
+              width={16}
+              height={16}
+              priority
+            />
+            Sign in with magic link
+          </Button>
+          <Button
+            variant="secondary"
+            className="relative"
+            onClick={async (e) => {
+              e.preventDefault();
+              setLoading(true);
+              const { data, error } =
+                await auth.authClient.emailOtp.sendVerificationOtp({
+                  email: email,
+                  type: "sign-in",
+                });
+              setStatus(data?.success ?? false);
+              const errorMessage = error?.message ?? error?.statusText;
+              setError(
+                error
+                  ? {
+                      ...error,
+                      name: error.statusText,
+                      message:
+                        errorMessage && errorMessage.length > 0
+                          ? errorMessage
+                          : "An error occurred",
+                    }
+                  : undefined,
+              );
+              setLoading(false);
+            }}
+          >
+            <Image
+              src="/mail.svg"
+              alt="Mail icon"
+              className="absolute left-3"
+              width={16}
+              height={16}
+              priority
+            />
+            Sign in with one-time password
           </Button>
         </div>
 

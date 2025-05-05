@@ -2,10 +2,11 @@ import * as crypto from "node:crypto";
 import { appName } from "@/components/emails";
 import { betterAuth } from "better-auth";
 import { getMigrations } from "better-auth/db";
-import { haveIBeenPwned, magicLink } from "better-auth/plugins";
+import { emailOTP, haveIBeenPwned, magicLink } from "better-auth/plugins";
 import Database from "better-sqlite3";
 import { jazzPlugin } from "jazz-betterauth-server-plugin";
 import {
+  sendEmailOtpCb,
   sendMagicLinkCb,
   sendResetPasswordCb,
   sendVerificationEmailCb,
@@ -51,6 +52,7 @@ export const auth = await (async () => {
       magicLink({
         sendMagicLink: sendMagicLinkCb,
       }),
+      emailOTP({ sendVerificationOTP: sendEmailOtpCb }),
     ],
     databaseHooks: {
       user: {

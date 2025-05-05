@@ -30,7 +30,7 @@ We offer Better Auth integration through our package: [`jazz-auth-betterauth`](h
 
 The package provides a `BetterAuth` object for managing authentication state.
 
-For documentation on how to configure Better Auth clients created via `newAuthClient`, read the [Better Auth documentation](https://www.better-auth.com/docs/introduction).
+For documentation on how to configure Better Auth clients created via `createAuthClient`, read the [Better Auth documentation](https://www.better-auth.com/docs/introduction).
 
 <CodeGroup>
 ```tsx twoslash
@@ -42,17 +42,15 @@ const authenticate = async () => {};
 import { AuthSecretStorage } from "jazz-tools";
 const authSecretStorage = new AuthSecretStorage();
 // ---cut---
-import {
-  BetterAuth,
-  newAuthClient,
-} from "jazz-auth-betterauth";
+import { BetterAuth } from "jazz-auth-betterauth";
+import { createAuthClient } from "better-auth/client";
+import { jazzClientPlugin } from "jazz-betterauth-client-plugin";
 // @annotate: Creating the authentication client.
 
-const authClient = newAuthClient({ baseURL: authUrl });
-const auth = new BetterAuth(authenticate, authSecretStorage, authClient);
+const auth = new BetterAuth(authenticate, authSecretStorage, createAuthClient({ baseURL: authUrl, plugins: [jazzClientPlugin()] }));
 // @annotate: Signing up with email & password
 
-await authClient.signUp.email({
+await auth.authClient.signUp.email({
   name: userName,
   email: userEmail,
   password: userPassword,
@@ -63,7 +61,7 @@ await authClient.signUp.email({
 });
 // @annotate: Signing in with email & password
 
-await authClient.signIn.email({
+await auth.authClient.signIn.email({
   email: userEmail,
   password: userPassword
 }, {
@@ -92,9 +90,11 @@ const userEmail: string = "user@example.com";
 const userPassword: string = "12345678";
 // ---cut---
 import { useBetterAuth } from "jazz-react-auth-betterauth";
+import { createAuthClient } from "better-auth/client";
+import { jazzClientPlugin } from "jazz-betterauth-client-plugin";
 // @annotate: Creating the authentication client.
 
-const auth = useBetterAuth({ baseURL: authUrl });
+const auth = useBetterAuth(createAuthClient({ baseURL: authUrl, plugins: [jazzClientPlugin()] }));
 // @annotate: Signing up with email & password
 
 await auth.authClient.signUp.email({
@@ -143,18 +143,21 @@ const appStoragePrefix: string = "myapp";
 import { expoClient } from "@better-auth/expo/client";
 import * as SecureStore from "expo-secure-store";
 import { useBetterAuth } from "jazz-react-auth-betterauth";
+import { createAuthClient } from "better-auth/client";
+import { jazzClientPlugin } from "jazz-betterauth-client-plugin";
 // @annotate: Creating the authentication client.
 
-const auth = useBetterAuth({
+const auth = useBetterAuth(createAuthClient({
   baseURL: authUrl,
   plugins: [
+    jazzClientPlugin(),
     expoClient({
         scheme: appScheme,
         storagePrefix: appStoragePrefix,
         storage: SecureStore,
     })
   ]
-});
+}));
 // @annotate: Signing up with email & password
 
 await auth.authClient.signUp.email({

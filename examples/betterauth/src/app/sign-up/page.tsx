@@ -19,6 +19,7 @@ export default function Page() {
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [confirmPassword, setConfirmPassword] = useState<string>("");
+  const [status, setStatus] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<Error | undefined>(undefined);
 
@@ -147,6 +148,43 @@ export default function Page() {
               priority
             />
             Continue with GitHub
+          </Button>
+          <Button
+            variant="secondary"
+            className="relative"
+            onClick={async (e) => {
+              e.preventDefault();
+              setLoading(true);
+              const { data, error } = await auth.authClient.signIn.magicLink({
+                email: email,
+                callbackURL: `${window.location.origin}/magic-link/signIn`,
+              });
+              setStatus(data?.status ?? false);
+              const errorMessage = error?.message ?? error?.statusText;
+              setError(
+                error
+                  ? {
+                      ...error,
+                      name: error.statusText,
+                      message:
+                        errorMessage && errorMessage.length > 0
+                          ? errorMessage
+                          : "An error occurred",
+                    }
+                  : undefined,
+              );
+              setLoading(false);
+            }}
+          >
+            <Image
+              src="/link.svg"
+              alt="Link icon"
+              className="absolute left-3"
+              width={16}
+              height={16}
+              priority
+            />
+            Sign up with magic link
           </Button>
         </div>
 

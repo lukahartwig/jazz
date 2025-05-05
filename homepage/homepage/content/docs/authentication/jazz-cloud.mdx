@@ -52,17 +52,15 @@ const authenticate = async () => {};
 import { AuthSecretStorage } from "jazz-tools";
 const authSecretStorage = new AuthSecretStorage();
 // ---cut---
-import {
-  BetterAuth,
-  newAuthClient,
-} from "jazz-auth-betterauth";
+import { BetterAuth } from "jazz-auth-betterauth";
+import { createAuthClient } from "better-auth/client";
+import { jazzClientPlugin } from "jazz-betterauth-client-plugin";
 // @annotate: Creating the authentication client.
 
-const authClient = newAuthClient({ baseURL: authUrl });
-const auth = new BetterAuth(authenticate, authSecretStorage, authClient);
+const auth = new BetterAuth(authenticate, authSecretStorage, createAuthClient({ baseURL: authUrl, plugins: [jazzClientPlugin()] }));
 // @annotate: Signing up with email & password
 
-await authClient.signUp.email({
+await auth.authClient.signUp.email({
   name: userName,
   email: userEmail,
   password: userPassword,
@@ -73,7 +71,7 @@ await authClient.signUp.email({
 });
 // @annotate: Signing in with email & password
 
-await authClient.signIn.email({
+await auth.authClient.signIn.email({
   email: userEmail,
   password: userPassword
 }, {
@@ -100,9 +98,11 @@ const userEmail: string = "user@example.com";
 const userPassword: string = "12345678";
 // ---cut---
 import { useBetterAuth } from "jazz-react-auth-betterauth";
+import { createAuthClient } from "better-auth/client";
+import { jazzClientPlugin } from "jazz-betterauth-client-plugin";
 // @annotate: Creating the authentication client.
 
-const auth = useBetterAuth({ baseURL: authUrl });
+const auth = useBetterAuth(createAuthClient({ baseURL: authUrl, plugins: [jazzClientPlugin()] }));
 // @annotate: Signing up with email & password
 
 await auth.authClient.signUp.email({
@@ -147,18 +147,21 @@ const appStoragePrefix: string = "myapp";
 import { expoClient } from "@better-auth/expo/client";
 import * as SecureStore from "expo-secure-store";
 import { useBetterAuth } from "jazz-react-auth-betterauth";
+import { createAuthClient } from "better-auth/client";
+import { jazzClientPlugin } from "jazz-betterauth-client-plugin";
 // @annotate: Creating the authentication client.
 
-const auth = useBetterAuth({
+const auth = useBetterAuth(createAuthClient({
   baseURL: authUrl,
   plugins: [
+    jazzClientPlugin(),
     expoClient({
         scheme: appScheme,
         storagePrefix: appStoragePrefix,
         storage: SecureStore,
     })
   ]
-});
+}));
 // @annotate: Signing up with email & password
 
 await auth.authClient.signUp.email({
@@ -194,8 +197,10 @@ To integrate social sign-on into your application, configure the social provider
 <CodeGroup>
 ```tsx twoslash
 import { useBetterAuth } from "jazz-react-auth-betterauth";
+import { createAuthClient } from "better-auth/client";
+import { jazzClientPlugin } from "jazz-betterauth-client-plugin";
 const authUrl: string = "https://auth.jazz.tools/exampleApiKey/api/auth/";
-const auth = useBetterAuth({ baseURL: authUrl });
+const auth = useBetterAuth(createAuthClient({ baseURL: authUrl, plugins: [jazzClientPlugin()] }));
 const providerName = "github" as Parameters<typeof auth.authClient.signIn.social>[0]["provider"];
 // ---cut---
 // @annotate: Sign-in with SSO provider
@@ -220,8 +225,10 @@ Here's an example with [Next.js](https://nextjs.org/):
 <CodeGroup>
 ```tsx twoslash
 import { useBetterAuth } from "jazz-react-auth-betterauth";
+import { createAuthClient } from "better-auth/client";
+import { jazzClientPlugin } from "jazz-betterauth-client-plugin";
 const authUrl: string = "https://auth.jazz.tools/exampleApiKey/api/auth/";
-const auth = useBetterAuth({ baseURL: authUrl });
+const auth = useBetterAuth(createAuthClient({ baseURL: authUrl, plugins: [jazzClientPlugin()] }));
 // ---cut---
 // @annotate: social/logIn/page.tsx
 
@@ -236,8 +243,9 @@ export default function Page() {
 ```
 ```tsx twoslash
 import { useBetterAuth } from "jazz-react-auth-betterauth";
+import { createAuthClient } from "better-auth/client";
 const authUrl = "https://auth.jazz.tools/exampleApiKey/api/auth/";
-const auth = useBetterAuth({ baseURL: authUrl });
+const auth = useBetterAuth(createAuthClient({ baseURL: authUrl }));
 // ---cut---
 // @annotate: social/signIn/page.tsx
 
