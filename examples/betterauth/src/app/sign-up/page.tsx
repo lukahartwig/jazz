@@ -20,6 +20,8 @@ export default function Page() {
   const [password, setPassword] = useState<string>("");
   const [confirmPassword, setConfirmPassword] = useState<string>("");
   const [status, setStatus] = useState<boolean>(false);
+  const [otp, setOtp] = useState<string>("");
+  const [otpStatus, setOtpStatus] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<Error | undefined>(undefined);
 
@@ -59,6 +61,12 @@ export default function Page() {
           />
         </Link>
 
+        {otpStatus && (
+          <Alert variant="info" title="Sign Up">
+            A one-time password has been sent to your email.
+          </Alert>
+        )}
+
         {error && (
           <Alert variant="warning" title="Sign Up">
             {error.message}
@@ -77,22 +85,47 @@ export default function Page() {
               setLoading(false);
               return;
             }
-            await auth.authClient.signUp.email(
-              {
-                email,
-                password,
-                name,
-              },
-              {
-                onSuccess: async () => {
-                  await auth.signIn();
-                  redirect("/");
+            if (!otpStatus) {
+              await auth.authClient.signUp.email(
+                {
+                  email,
+                  password,
+                  name,
                 },
-                onError: (error) => {
-                  setError(error.error);
+                {
+                  onSuccess: async () => {
+                    await auth.signIn();
+                    redirect("/");
+                  },
+                  onError: (error) => {
+                    setError(error.error);
+                  },
                 },
-              },
-            );
+              );
+            } else {
+              const { data, error } = await auth.authClient.signIn.emailOtp({
+                email: email,
+                otp: otp,
+              });
+              setStatus(data !== null);
+              const errorMessage = error?.message ?? error?.statusText;
+              setError(
+                error
+                  ? {
+                      ...error,
+                      name: error.statusText,
+                      message:
+                        errorMessage && errorMessage.length > 0
+                          ? errorMessage
+                          : "An error occurred",
+                    }
+                  : undefined,
+              );
+              if (data) {
+                await auth.signIn();
+                redirect("/");
+              }
+            }
             setLoading(false);
           }}
         >
@@ -108,20 +141,32 @@ export default function Page() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
-          <Input
-            label="Password"
-            type="password"
-            disabled={loading}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-          <Input
-            label="Confirm password"
-            type="password"
-            disabled={loading}
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-          />
+          {!otpStatus && (
+            <>
+              <Input
+                label="Password"
+                type="password"
+                disabled={loading}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+              <Input
+                label="Confirm password"
+                type="password"
+                disabled={loading}
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+              />
+            </>
+          )}
+          {otpStatus && (
+            <Input
+              label="One-time password"
+              disabled={loading}
+              value={otp}
+              onChange={(e) => setOtp(e.target.value)}
+            />
+          )}
           <Button type="submit" disabled={loading}>
             Sign up
           </Button>
@@ -185,6 +230,45 @@ export default function Page() {
               priority
             />
             Sign up with magic link
+          </Button>
+          <Button
+            variant="secondary"
+            className="relative"
+            onClick={async (e) => {
+              e.preventDefault();
+              setLoading(true);
+              const { data, error } =
+                await auth.authClient.emailOtp.sendVerificationOtp({
+                  email: email,
+                  type: "sign-in",
+                });
+              setStatus(data?.success ?? false);
+              setOtpStatus(data?.success ?? false);
+              const errorMessage = error?.message ?? error?.statusText;
+              setError(
+                error
+                  ? {
+                      ...error,
+                      name: error.statusText,
+                      message:
+                        errorMessage && errorMessage.length > 0
+                          ? errorMessage
+                          : "An error occurred",
+                    }
+                  : undefined,
+              );
+              setLoading(false);
+            }}
+          >
+            <Image
+              src="/mail.svg"
+              alt="Mail icon"
+              className="absolute left-3"
+              width={16}
+              height={16}
+              priority
+            />
+            Sign up with one-time password
           </Button>
         </div>
 

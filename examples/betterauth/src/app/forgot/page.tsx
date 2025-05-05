@@ -8,7 +8,6 @@ import { Heading } from "@garden-co/design-system/design-system/src/components/a
 import { Input } from "@garden-co/design-system/design-system/src/components/molecules/Input";
 import Image from "next/image";
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { useState } from "react";
 
 const title = "Forgot your password?";

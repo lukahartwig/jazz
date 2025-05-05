@@ -19,6 +19,8 @@ export default function SignInPage() {
   const [password, setPassword] = useState<string>("");
   const [rememberMe, setRememberMe] = useState(true);
   const [status, setStatus] = useState<boolean>(false);
+  const [otp, setOtp] = useState<string>("");
+  const [otpStatus, setOtpStatus] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<Error | undefined>(undefined);
 
@@ -58,6 +60,12 @@ export default function SignInPage() {
           />
         </Link>
 
+        {otpStatus && (
+          <Alert variant="info" title="Sign In">
+            A one-time password has been sent to your email.
+          </Alert>
+        )}
+
         {error && (
           <Alert variant="warning" title="Sign In">
             {error.message}
@@ -71,22 +79,47 @@ export default function SignInPage() {
           onSubmit={async (e) => {
             e.preventDefault();
             setLoading(true);
-            await auth.authClient.signIn.email(
-              {
-                email,
-                password,
-                rememberMe,
-              },
-              {
-                onSuccess: async () => {
-                  await auth.logIn();
-                  redirect("/");
+            if (!otpStatus) {
+              await auth.authClient.signIn.email(
+                {
+                  email,
+                  password,
+                  rememberMe,
                 },
-                onError: (error) => {
-                  setError(error.error);
+                {
+                  onSuccess: async () => {
+                    await auth.logIn();
+                    redirect("/");
+                  },
+                  onError: (error) => {
+                    setError(error.error);
+                  },
                 },
-              },
-            );
+              );
+            } else {
+              const { data, error } = await auth.authClient.signIn.emailOtp({
+                email: email,
+                otp: otp,
+              });
+              setStatus(data !== null);
+              const errorMessage = error?.message ?? error?.statusText;
+              setError(
+                error
+                  ? {
+                      ...error,
+                      name: error.statusText,
+                      message:
+                        errorMessage && errorMessage.length > 0
+                          ? errorMessage
+                          : "An error occurred",
+                    }
+                  : undefined,
+              );
+              if (data) {
+                await auth.logIn();
+                redirect("/");
+              }
+            }
             setLoading(false);
           }}
         >
@@ -96,13 +129,23 @@ export default function SignInPage() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
-          <Input
-            label="Password"
-            type="password"
-            disabled={loading}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
+          {!otpStatus && (
+            <Input
+              label="Password"
+              type="password"
+              disabled={loading}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+          )}
+          {otpStatus && (
+            <Input
+              label="One-time password"
+              disabled={loading}
+              value={otp}
+              onChange={(e) => setOtp(e.target.value)}
+            />
+          )}
           <div className="items-center">
             <Input
               label="Remember me"
@@ -191,6 +234,7 @@ export default function SignInPage() {
                   type: "sign-in",
                 });
               setStatus(data?.success ?? false);
+              setOtpStatus(data?.success ?? false);
               const errorMessage = error?.message ?? error?.statusText;
               setError(
                 error
