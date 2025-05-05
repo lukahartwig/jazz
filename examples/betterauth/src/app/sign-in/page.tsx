@@ -14,7 +14,7 @@ import { useState } from "react";
 const title = "Sign in";
 
 export default function SignInPage() {
-  const auth = useAuth();
+  const { auth, user, account } = useAuth();
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [rememberMe, setRememberMe] = useState(true);
@@ -178,7 +178,7 @@ export default function SignInPage() {
             <Image
               src="/social/github.svg"
               alt="GitHub logo"
-              className="absolute left-3"
+              className="absolute left-3 dark:invert"
               width={16}
               height={16}
               priority

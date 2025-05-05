@@ -3,38 +3,11 @@
 import { Button } from "@/components/Button";
 import { useAuth } from "@/contexts/Auth";
 import { useAccount, useIsAuthenticated } from "jazz-react";
-import type { AuthCredentials } from "jazz-tools";
 import Image from "next/image";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback } from "react";
 
 export default function Home() {
-  const auth = useAuth();
-  const [user, setUser] = useState<AuthCredentials | undefined>(undefined);
-  useEffect(() => {
-    auth.authClient.useSession.subscribe(({ data }) => {
-      if (data?.user.encryptedCredentials) {
-        auth.authClient.jazzPlugin
-          .decryptCredentials()
-          .then((x) => {
-            setUser(x.data === null ? undefined : x.data);
-          })
-          .catch((error) => {
-            console.error("Error decrypting credentials:", error);
-          });
-      } else if (data && !data.user.encryptedCredentials) {
-        auth.signIn().then(() => {
-          auth.authClient.jazzPlugin
-            .decryptCredentials()
-            .then((x) => {
-              setUser(x.data === null ? undefined : x.data);
-            })
-            .catch((error) => {
-              console.error("Error decrypting credentials:", error);
-            });
-        });
-      }
-    });
-  }, [user]);
+  const { auth, user, account } = useAuth();
   const { me, logOut } = useAccount({ resolve: { profile: true } });
   const isAuthenticated = useIsAuthenticated();
   const signOut = useCallback(() => {
@@ -48,16 +21,18 @@ export default function Home() {
   }, [logOut, auth]);
   console.log("me", JSON.stringify(me));
   console.log("user", JSON.stringify(user));
+  console.log("account", JSON.stringify(account));
   console.log("isAuthenticated", JSON.stringify(isAuthenticated));
 
   return (
     <>
       <header className="absolute p-4 top-0 left-0 w-full z-10 flex items-center justify-between gap-4">
-        <div className="float-start">
+        <div className="float-start flex gap-4">
           {me && user && isAuthenticated && (
-            <Button className="float-start" onClick={signOut}>
-              Sign out
-            </Button>
+            <>
+              <Button onClick={signOut}>Sign out</Button>
+              <Button href="/settings">Settings</Button>
+            </>
           )}
         </div>
         <div className="float-end flex gap-4">

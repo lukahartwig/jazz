@@ -264,15 +264,6 @@ export const docNavigationItems = [
         done: 100,
       },
       {
-        name: "Better Auth",
-        href: "/docs/authentication/better-auth",
-        done: {
-          react: 100,
-          vanilla: 100,
-          "react-native-expo": 100,
-        },
-      },
-      {
         name: "Writing your own",
         href: "/docs/authentication/writing-your-own",
         done: 0,

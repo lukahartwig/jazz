@@ -13,10 +13,11 @@ import { useState } from "react";
 const title = "Forgot your password?";
 
 export default function Page() {
-  const auth = useAuth();
+  const { auth, user, account } = useAuth();
   const [email, setEmail] = useState<string>("");
 
   const [otp, setOtp] = useState<string>("");
+  const [otpSentStatus, setOtpSentStatus] = useState<boolean>(false);
   const [otpStatus, setOtpStatus] = useState<boolean>(false);
   const [password, setPassword] = useState<string>("");
   const [confirmPassword, setConfirmPassword] = useState<string>("");
@@ -113,7 +114,7 @@ export default function Page() {
                   type: "forget-password",
                 });
               setStatus(data?.success ?? false);
-              setOtpStatus(data?.success ?? false);
+              setOtpSentStatus(data?.success ?? false);
               const errorMessage = error?.message ?? error?.statusText;
               setError(
                 error
@@ -135,7 +136,7 @@ export default function Page() {
           </Button>
         </form>
 
-        {otpStatus && (
+        {otpSentStatus && (
           <form
             className="flex flex-col gap-6"
             onSubmit={async (e) => {
@@ -153,6 +154,7 @@ export default function Page() {
                   password: password,
                 });
               setStatus(data?.success ?? false);
+              setOtpStatus(data?.success ?? false);
               const errorMessage = error?.message ?? error?.statusText;
               setError(
                 error

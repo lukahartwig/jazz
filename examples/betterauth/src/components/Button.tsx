@@ -6,7 +6,7 @@ import Link from "next/link";
 import { forwardRef } from "react";
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: "primary" | "secondary";
+  variant?: "primary" | "secondary" | "danger";
   children?: React.ReactNode;
   className?: string;
   src?: Parameters<typeof Image>[0]["src"];
@@ -33,8 +33,14 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       "rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto";
     const secondary =
       "rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center gap-2 hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto";
+    const danger =
+      "rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center bg-red-400 dark:bg-red-600 gap-2 hover:bg-red-300 dark:hover:bg-red-700 hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto";
     const classes = clsx(
-      variant === "primary" ? primary : secondary,
+      variant === "primary"
+        ? primary
+        : variant === "secondary"
+          ? secondary
+          : danger,
       className,
     );
     const [width, height] = [

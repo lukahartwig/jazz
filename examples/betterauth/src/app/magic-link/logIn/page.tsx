@@ -5,7 +5,7 @@ import { Alert } from "@garden-co/design-system/design-system/src/components/ato
 import { redirect } from "next/navigation";
 
 export default function Page() {
-  const auth = useAuth();
+  const { auth, user, account } = useAuth();
   const searchParams = new URLSearchParams(window.location.search);
   const error = searchParams.get("error");
   if (!error) {

@@ -25,7 +25,7 @@ export default function Page() {
       : undefined,
   );
 
-  const auth = useAuth();
+  const { auth, user, account } = useAuth();
   const [password, setPassword] = useState<string>("");
   const [confirmPassword, setConfirmPassword] = useState<string>("");
   const [status, setStatus] = useState<boolean>(false);
