@@ -1,5 +1,12 @@
 # organization
 
+## 0.0.78
+
+### Patch Changes
+
+- jazz-react@0.13.17
+- jazz-tools@0.13.17
+
 ## 0.0.77
 
 ### Patch Changes

@@ -1,5 +1,12 @@
 # cojson
 
+## 0.13.17
+
+### Patch Changes
+
+- 9fb98e2: Resolve CoValue load as soon as the core is available
+- 0b89fad: Re-introduce incremental processing on RawCoList
+
 ## 0.13.16
 
 ### Patch Changes
