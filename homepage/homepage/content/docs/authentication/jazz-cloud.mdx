@@ -244,8 +244,9 @@ export default function Page() {
 ```tsx twoslash
 import { useBetterAuth } from "jazz-react-auth-betterauth";
 import { createAuthClient } from "better-auth/client";
+import { jazzClientPlugin } from "jazz-betterauth-client-plugin";
 const authUrl = "https://auth.jazz.tools/exampleApiKey/api/auth/";
-const auth = useBetterAuth(createAuthClient({ baseURL: authUrl }));
+const auth = useBetterAuth(createAuthClient({ baseURL: authUrl, plugins: [jazzClientPlugin()] }));
 // ---cut---
 // @annotate: social/signIn/page.tsx
 
