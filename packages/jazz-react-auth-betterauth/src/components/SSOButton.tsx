@@ -2,6 +2,8 @@ import { forwardRef } from "react";
 // biome-ignore lint/correctness/useImportExtensions: <explanation>
 import { useAuth } from "../contexts/Auth";
 // biome-ignore lint/correctness/useImportExtensions: <explanation>
+import { socialProviderNames } from "../lib/social";
+// biome-ignore lint/correctness/useImportExtensions: <explanation>
 import { Button } from "./common/Button";
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
@@ -22,10 +24,11 @@ export const SSOButton = forwardRef<HTMLButtonElement, ButtonProps>(
     ref,
   ) => {
     const { auth } = useAuth();
+    const providerName = socialProviderNames[provider];
     return (
       <Button
         src={`/social/${provider}.svg`}
-        alt={`${provider} logo`}
+        alt={`${providerName} logo`}
         imageClassName="absolute left-3 dark:invert"
         variant="secondary"
         className="relative"
@@ -48,7 +51,7 @@ export const SSOButton = forwardRef<HTMLButtonElement, ButtonProps>(
         {...buttonProps}
         ref={ref}
       >
-        Continue with {provider}
+        Continue with {providerName}
         {children}
       </Button>
     );
