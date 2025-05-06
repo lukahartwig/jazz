@@ -1,7 +1,7 @@
 "use client";
 
-import { useAuth } from "@/contexts/Auth";
 import { Alert } from "@garden-co/design-system/design-system/src/components/atoms/Alert";
+import { useAuth } from "jazz-react-auth-betterauth";
 import { redirect } from "next/navigation";
 
 export default function Page() {

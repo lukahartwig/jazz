@@ -1,8 +1,8 @@
 "use client";
 
 import { Button } from "@/components/Button";
-import { useAuth } from "@/contexts/Auth";
 import { useAccount, useIsAuthenticated } from "jazz-react";
+import { useAuth } from "jazz-react-auth-betterauth";
 import Image from "next/image";
 import { useCallback } from "react";
 

@@ -2310,6 +2310,9 @@ importers:
 
   packages/jazz-react-auth-betterauth:
     dependencies:
+      '@garden-co/design-system':
+        specifier: workspace:../../homepage
+        version: link:../../homepage
       cojson:
         specifier: workspace:*
         version: link:../cojson
