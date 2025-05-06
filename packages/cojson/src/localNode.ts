@@ -152,22 +152,10 @@ export class LocalNode {
     accountSecret: AgentSecret;
     sessionID: SessionID;
   }> {
-    const throwawayAgent = crypto.newRandomAgentSecret();
-    const setupNode = new LocalNode(
-      throwawayAgent,
-      crypto.newRandomSessionID(crypto.getAgentID(throwawayAgent)),
+    const node = this.withNewlyCreatedAccountNoSyncOrMigration({
       crypto,
-    );
-
-    const createdAccount = setupNode.createAccount(initialAgentSecret);
-
-    const node = new LocalNode(
       initialAgentSecret,
-      crypto.newRandomSessionID(createdAccount.id),
-      crypto,
-    );
-
-    node.cloneVerifiedStateFrom(setupNode);
+    });
 
     const account = node.expectCurrentAccount("after creation");
 
@@ -211,6 +199,70 @@ export class LocalNode {
       accountSecret: initialAgentSecret,
       sessionID: node.currentSessionID,
     };
+  }
+
+  private static withNewlyCreatedAccountNoSyncOrMigration({
+    crypto,
+    initialAgentSecret,
+  }: {
+    crypto: CryptoProvider;
+    initialAgentSecret: AgentSecret;
+  }) {
+    const agentID = crypto.getAgentID(initialAgentSecret);
+    const node = new LocalNode(
+      initialAgentSecret,
+      crypto.newRandomSessionID(agentID),
+      crypto,
+    );
+
+    const account = expectAccount(
+      node
+        .createCoValue(
+          accountHeaderForInitialAgentSecret(initialAgentSecret, crypto),
+        )
+        .getCurrentContent(),
+    );
+
+    account.set(agentID, "admin", "trusting");
+
+    const readKey = crypto.newRandomKeySecret();
+
+    const sealed = crypto.seal({
+      message: readKey.secret,
+      from: crypto.getAgentSealerSecret(initialAgentSecret),
+      to: crypto.getAgentSealerID(agentID),
+      nOnceMaterial: {
+        in: account.id,
+        tx: account.core.nextTransactionID(),
+      },
+    });
+
+    account.set(
+      `${readKey.id}_for_${crypto.getAgentID(initialAgentSecret)}`,
+      sealed,
+      "trusting",
+    );
+
+    account.set("readKey", readKey.id, "trusting");
+
+    // @ts-ignore
+    node.currentSessionID = crypto.newRandomSessionID(account.id);
+
+    return node;
+  }
+
+  createAccount(initialAgentSecret = this.crypto.newRandomAgentSecret()) {
+    const accountNode = LocalNode.withNewlyCreatedAccountNoSyncOrMigration({
+      crypto: this.crypto,
+      initialAgentSecret,
+    });
+
+    accountNode.cloneVerifiedStateFrom(this);
+
+    return new ControlledAccount(
+      accountNode.expectCurrentAccount("after creation"),
+      accountNode.agentSecret,
+    );
   }
 
   /** @category 2. Node Creation */
@@ -516,59 +568,6 @@ export class LocalNode {
       profileID,
       expectation,
     ).getCurrentContent() as RawProfile;
-  }
-
-  /** @internal */
-  createAccount(
-    agentSecret = this.crypto.newRandomAgentSecret(),
-  ): ControlledAccount {
-    const accountAgentID = this.crypto.getAgentID(agentSecret);
-
-    const temporaryNode = this.cloneWithDifferentAccount(
-      new ControlledAgent(agentSecret, this.crypto),
-    );
-
-    const accountOnTempNode = expectGroup(
-      temporaryNode
-        .createCoValue(
-          accountHeaderForInitialAgentSecret(agentSecret, this.crypto),
-        )
-        .getCurrentContent(),
-    );
-
-    accountOnTempNode.set(accountAgentID, "admin", "trusting");
-
-    const readKey = this.crypto.newRandomKeySecret();
-
-    const sealed = this.crypto.seal({
-      message: readKey.secret,
-      from: this.crypto.getAgentSealerSecret(agentSecret),
-      to: this.crypto.getAgentSealerID(accountAgentID),
-      nOnceMaterial: {
-        in: accountOnTempNode.id,
-        tx: accountOnTempNode.core.nextTransactionID(),
-      },
-    });
-
-    accountOnTempNode.set(
-      `${readKey.id}_for_${accountAgentID}`,
-      sealed,
-      "trusting",
-    );
-
-    accountOnTempNode.set("readKey", readKey.id, "trusting");
-
-    const accountCoreEntry = this.getCoValue(accountOnTempNode.id);
-    accountCoreEntry.internalMarkMagicallyAvailable(
-      accountOnTempNode.core.verified,
-    );
-
-    const account = new ControlledAccount(
-      accountCoreEntry.getCurrentContent() as RawAccount,
-      agentSecret,
-    );
-
-    return account;
   }
 
   /** @internal */
