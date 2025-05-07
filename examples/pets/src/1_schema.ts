@@ -3,6 +3,7 @@ import {
   CoFeed,
   CoList,
   CoMap,
+  CoPlainText,
   ImageDefinition,
   Profile,
   co,
@@ -29,7 +30,7 @@ export type ReactionType = (typeof ReactionTypes)[number];
 export class PetReactions extends CoFeed.Of(co.json<ReactionType>()) {}
 
 export class PetPost extends CoMap {
-  name = co.string;
+  name = co.ref(CoPlainText);
   image = co.ref(ImageDefinition);
   reactions = co.ref(PetReactions);
 }

@@ -3,7 +3,7 @@ import { useNavigate } from "react-router";
 
 import { ProgressiveImg } from "jazz-react";
 import { createImage, useAccount, useCoState } from "jazz-react";
-import { CoMap, Group, ID, ImageDefinition, co } from "jazz-tools";
+import { CoMap, CoPlainText, Group, ID, ImageDefinition, co } from "jazz-tools";
 import { PetPost, PetReactions } from "./1_schema";
 import { Button, Input } from "./basicComponents";
 
@@ -11,7 +11,7 @@ import { Button, Input } from "./basicComponents";
  */
 
 class PartialPetPost extends CoMap {
-  name = co.string;
+  name = co.ref(CoPlainText);
   image = co.ref(ImageDefinition, { optional: true });
   reactions = co.ref(PetReactions);
 }
@@ -30,12 +30,12 @@ export function NewPetPostForm() {
     (name: string) => {
       if (!me) return;
       if (newPetPost) {
-        newPetPost.name = name;
+        newPetPost.name = CoPlainText.create(name, { owner: me });
       } else {
         const petPostGroup = Group.create();
         const petPost = PartialPetPost.create(
           {
-            name,
+            name: CoPlainText.create(name, { owner: petPostGroup }),
             reactions: PetReactions.create([], {
               owner: petPostGroup,
             }),
@@ -83,7 +83,7 @@ export function NewPetPostForm() {
         placeholder="Pet Name"
         className="text-3xl py-6"
         onChange={(event) => onChangeName(event.target.value)}
-        value={newPetPost?.name || ""}
+        value={newPetPost?.name?.toString() || ""}
       />
 
       {newPetPost?.image ? (
@@ -99,7 +99,7 @@ export function NewPetPostForm() {
         />
       )}
 
-      {newPetPost?.name && newPetPost?.image && (
+      {newPetPost?.name?.toString() && newPetPost?.image && (
         <Button onClick={onSubmit}>Submit Post</Button>
       )}
     </div>
