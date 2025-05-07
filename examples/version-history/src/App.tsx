@@ -1,5 +1,5 @@
 import { useAccount, useCoState } from "jazz-react";
-import { Group, ID } from "jazz-tools";
+import { CoPlainText, Group, ID } from "jazz-tools";
 import { useState } from "react";
 import { IssueComponent } from "./Issue.tsx";
 import { IssueVersionHistory } from "./IssueVersionHistory.tsx";
@@ -20,8 +20,11 @@ function App() {
 
     const newIssue = Issue.create(
       {
-        title: "Buy terrarium",
-        description: "Make sure it's big enough for 10 snails.",
+        title: CoPlainText.create("Buy terrarium", { owner: group }),
+        description: CoPlainText.create(
+          "Make sure it's big enough for 10 snails.",
+          { owner: group },
+        ),
         estimate: 5,
         status: "backlog",
       },
