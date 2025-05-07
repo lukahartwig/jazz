@@ -28,10 +28,6 @@ export default function ForgotForm() {
   return (
     <div className="min-h-screen flex flex-col justify-center">
       <div className="max-w-md flex flex-col gap-8 w-full px-6 py-12 mx-auto">
-        <Link href="/">
-          <span className="sr-only">Back to home</span>
-          <Image src="/jazz-logo.svg" alt="Jazz logo" width={180} height={38} />
-        </Link>
         <div>
           <Heading level={1} className="mb-2">
             {title}
