@@ -19,7 +19,7 @@ export function PlaylistTitleInput({
 
   function handleFoucsIn() {
     setIsEditing(true);
-    setLocalPlaylistTitle(playlist?.title ?? "");
+    setLocalPlaylistTitle(playlist?.title?.toString() ?? "");
   }
 
   function handleFocusOut() {
@@ -28,7 +28,9 @@ export function PlaylistTitleInput({
     playlist && updatePlaylistTitle(playlist, localPlaylistTitle);
   }
 
-  const inputValue = isEditing ? localPlaylistTitle : (playlist?.title ?? "");
+  const inputValue = isEditing
+    ? localPlaylistTitle
+    : (playlist?.title?.toString() ?? "");
 
   return (
     <input

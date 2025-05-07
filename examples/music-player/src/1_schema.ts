@@ -1,4 +1,12 @@
-import { Account, CoList, CoMap, FileStream, Profile, co } from "jazz-tools";
+import {
+  Account,
+  CoList,
+  CoMap,
+  CoPlainText,
+  FileStream,
+  Profile,
+  co,
+} from "jazz-tools";
 
 /** Walkthrough: Defining the data model with CoJSON
  *
@@ -18,7 +26,7 @@ export class MusicTrack extends CoMap {
    *
    *  Tip: try to follow the co.string defintion to discover the other available primitives!
    */
-  title = co.string;
+  title = co.ref(CoPlainText);
   duration = co.number;
 
   /**
@@ -53,7 +61,7 @@ export class MusicTrackWaveform extends CoMap {
 export class ListOfTracks extends CoList.Of(co.ref(MusicTrack)) {}
 
 export class Playlist extends CoMap {
-  title = co.string;
+  title = co.ref(CoPlainText);
   tracks = co.ref(ListOfTracks);
 }
 
@@ -92,7 +100,7 @@ export class MusicaAccount extends Account {
       const tracks = ListOfTracks.create([]);
       const rootPlaylist = Playlist.create({
         tracks,
-        title: "",
+        title: CoPlainText.create("My Playlist", { owner: this }),
       });
 
       this.root = MusicaAccountRoot.create({

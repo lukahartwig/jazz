@@ -1,5 +1,5 @@
 import { getAudioFileData } from "@/lib/audio/getAudioFileData";
-import { FileStream, Group } from "jazz-tools";
+import { CoPlainText, FileStream, Group } from "jazz-tools";
 import {
   ListOfTracks,
   MusicTrack,
@@ -53,7 +53,7 @@ export async function uploadMusicTracks(
         file: fileStream,
         duration: data.duration,
         waveform: MusicTrackWaveform.create({ data: data.waveform }, group),
-        title: file.name,
+        title: CoPlainText.create(file.name, { owner: group }),
         isExampleTrack,
       },
       group,
@@ -81,7 +81,7 @@ export async function createNewPlaylist() {
 
   const playlist = Playlist.create(
     {
-      title: "New Playlist",
+      title: CoPlainText.create("New Playlist", { owner: playlistGroup }),
       tracks: ListOfTracks.create([], playlistGroup),
     },
     playlistGroup,
@@ -144,11 +144,11 @@ export async function removeTrackFromPlaylist(
 }
 
 export async function updatePlaylistTitle(playlist: Playlist, title: string) {
-  playlist.title = title;
+  playlist.title?.applyDiff(title);
 }
 
 export async function updateMusicTrackTitle(track: MusicTrack, title: string) {
-  track.title = title;
+  track.title?.applyDiff(title);
 }
 
 export async function updateActivePlaylist(playlist?: Playlist) {

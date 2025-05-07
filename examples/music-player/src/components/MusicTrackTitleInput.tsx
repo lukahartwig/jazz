@@ -19,7 +19,7 @@ export function MusicTrackTitleInput({
 
   function handleFoucsIn() {
     setIsEditing(true);
-    setLocalTrackTitle(track?.title ?? "");
+    setLocalTrackTitle(track?.title?.toString() ?? "");
   }
 
   function handleFocusOut() {
@@ -28,7 +28,9 @@ export function MusicTrackTitleInput({
     track && updateMusicTrackTitle(track, localTrackTitle);
   }
 
-  const inputValue = isEditing ? localTrackTitle : (track?.title ?? "");
+  const inputValue = isEditing
+    ? localTrackTitle
+    : (track?.title?.toString() ?? "");
 
   return (
     <div
@@ -42,7 +44,7 @@ export function MusicTrackTitleInput({
         spellCheck="false"
         onFocus={handleFoucsIn}
         onBlur={handleFocusOut}
-        aria-label={`Edit track title: ${track?.title}`}
+        aria-label={`Edit track title: ${track?.title?.toString()}`}
       />
       <span className="opacity-0 px-1 w-fit pointer-events-none whitespace-pre">
         {inputValue}
