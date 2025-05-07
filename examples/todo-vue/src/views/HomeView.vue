@@ -20,7 +20,7 @@
           :class="['folder-item', { active: selectedFolder?.id === folder?.id }]"
           @click="selectFolder(folder)"
         >
-          <span class="folder-name">{{ folder?.name }}</span>
+          <span class="folder-name">{{ folder?.name?.toString() }}</span>
           <button class="btn btn-icon" @click.stop="deleteFolder(folder?.id)">
             <span class="material-icons">delete</span>
           </button>
@@ -30,7 +30,7 @@
 
     <div class="todos" v-if="selectedFolder">
       <div class="section-header">
-        <h2>{{ selectedFolder?.name }}</h2>
+        <h2>{{ selectedFolder?.name?.toString() }}</h2>
         <div class="new-todo">
           <input
             v-model="newTodoTitle"
@@ -50,7 +50,7 @@
                 :checked="todo?.completed"
                 @change="toggleTodo(todo)"
               />
-              <span :class="{ completed: todo?.completed }">{{ todo?.name }}</span>
+              <span :class="{ completed: todo?.completed }">{{ todo?.name?.toString() }}</span>
             </label>
             <button class="btn btn-icon" @click="deleteTodo(todo?.id)">
               <span class="material-icons">delete</span>
@@ -63,7 +63,7 @@
 </template>
 
 <script setup lang="ts">
-import { Group, type ID } from "jazz-tools";
+import { CoPlainText, Group, type ID } from "jazz-tools";
 import { useAccount, useCoState } from "jazz-vue";
 import { ref, toRaw, watch } from "vue";
 import { computed } from "vue";
@@ -99,7 +99,7 @@ const createFolder = () => {
   // Create the folder
   const newFolder = Folder.create(
     {
-      name: newFolderName.value,
+      name: CoPlainText.create(newFolderName.value, { owner: group }),
       items: ToDoList.create([], { owner: group }),
     },
     { owner: group },
@@ -130,7 +130,7 @@ const createTodo = () => {
   const group = Group.create({ owner: me.value });
   const newTodo = ToDoItem.create(
     {
-      name: newTodoTitle.value,
+      name: CoPlainText.create(newTodoTitle.value, { owner: group }),
       completed: false,
     },
     { owner: group },

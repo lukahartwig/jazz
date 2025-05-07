@@ -1,14 +1,22 @@
-import { Account, CoList, CoMap, Group, Profile, co } from "jazz-tools";
+import {
+  Account,
+  CoList,
+  CoMap,
+  CoPlainText,
+  Group,
+  Profile,
+  co,
+} from "jazz-tools";
 
 export class ToDoItem extends CoMap {
-  name = co.string;
+  name = co.ref(CoPlainText);
   completed = co.boolean;
 }
 
 export class ToDoList extends CoList.Of(co.ref(ToDoItem)) {}
 
 export class Folder extends CoMap {
-  name = co.string;
+  name = co.ref(CoPlainText);
   items = co.ref(ToDoList);
 }
 
@@ -26,13 +34,16 @@ export class ToDoAccount extends Account {
     if (!this._refs.root) {
       const group = Group.create({ owner: this });
       const exampleTodo = ToDoItem.create(
-        { name: "Example todo", completed: false },
+        {
+          name: CoPlainText.create("Example todo", { owner: group }),
+          completed: false,
+        },
         { owner: group },
       );
 
       const defaultFolder = Folder.create(
         {
-          name: "Default",
+          name: CoPlainText.create("Default", { owner: group }),
           items: ToDoList.create([exampleTodo], { owner: group }),
         },
         { owner: group },
