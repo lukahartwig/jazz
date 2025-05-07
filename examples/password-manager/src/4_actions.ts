@@ -1,5 +1,5 @@
 import { createInviteLink } from "jazz-react";
-import { Group, ID } from "jazz-tools";
+import { CoPlainText, Group, ID } from "jazz-tools";
 import { CoMapInit } from "jazz-tools";
 import {
   Folder,
@@ -38,7 +38,10 @@ export const createFolder = (
 ): Folder => {
   const group = Group.create({ owner: me });
   const folder = Folder.create(
-    { name: folderName, items: PasswordList.create([], { owner: group }) },
+    {
+      name: CoPlainText.create(folderName, { owner: group }),
+      items: PasswordList.create([], { owner: group }),
+    },
     { owner: group },
   );
   me.root?.folders?.push(folder);

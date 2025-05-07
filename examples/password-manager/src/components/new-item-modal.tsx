@@ -1,11 +1,21 @@
-import { CoMap } from "jazz-tools";
+import { useAccount } from "jazz-react";
+import { CoPlainText } from "jazz-tools";
 import React, { useEffect } from "react";
-import { SubmitHandler, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { Folder } from "../1_schema";
 import { PasswordItemFormValues } from "../types";
 import { Alert, AlertDescription } from "./alert";
 import BaseModal from "./base-modal";
 import Button from "./button";
+
+type PasswordItemFormStrings = {
+  name: string;
+  username?: string;
+  password: string;
+  uri?: string;
+  deleted: boolean;
+  folderID: string; // Use folder id for the form, not the object
+};
 
 interface NewItemModalProps {
   isOpen: boolean;
@@ -24,42 +34,69 @@ const NewItemModal: React.FC<NewItemModalProps> = ({
   folders,
   selectedFolder,
 }) => {
+  const { me } = useAccount();
   const {
     register,
     handleSubmit,
     setValue,
     formState: { errors },
     reset,
-    // @ts-expect-error error
-  } = useForm<PasswordItemFormValues>({
-    defaultValues: initialValues || {
-      name: "",
-      username: "",
-      password: "",
-      uri: "",
-      deleted: false,
-      folder: selectedFolder,
-    },
+    clearErrors,
+  } = useForm<PasswordItemFormStrings>({
+    defaultValues: initialValues
+      ? {
+          name: initialValues.name?.toString() ?? "",
+          username: initialValues.username?.toString() ?? "",
+          password: initialValues.password?.toString() ?? "",
+          uri: initialValues.uri?.toString() ?? "",
+          deleted: initialValues.deleted ?? false,
+          folderID: initialValues.folder?.id ?? selectedFolder?.id ?? "",
+        }
+      : {
+          name: "",
+          username: "",
+          password: "",
+          uri: "",
+          deleted: false,
+          folderID: selectedFolder?.id ?? "",
+        },
   });
+  console.log("initialValues", initialValues);
+  console.log("selectedFolder", selectedFolder?.id);
 
   useEffect(() => {
     if (initialValues) {
-      Object.entries(initialValues).forEach(([key, value]) => {
-        const valueToSet = value instanceof CoMap ? value.id : value;
-        setValue(key as keyof PasswordItemFormValues & string, valueToSet);
-      });
+      setValue("name", initialValues.name?.toString() ?? "");
+      setValue("username", initialValues.username?.toString() ?? "");
+      setValue("password", initialValues.password?.toString() ?? "");
+      setValue("uri", initialValues.uri?.toString() ?? "");
+      setValue("deleted", initialValues.deleted ?? false);
+      setValue(
+        "folderID",
+        initialValues.folder?.id ?? selectedFolder?.id ?? "",
+      );
     } else {
       reset();
+      setValue("folderID", selectedFolder?.id ?? "");
     }
-  }, [initialValues, setValue, reset]);
+    clearErrors();
+  }, [initialValues, setValue, reset, selectedFolder]);
 
-  const onSubmit: SubmitHandler<PasswordItemFormValues> = (data) => {
-    const folderId = data?.folder as unknown as string;
-    const selectedFolder = folders.find((folder) => folder.id === folderId);
-    if (selectedFolder) {
-      data.folder = selectedFolder;
-    }
-    onSave(data);
+  const onSubmit = (data: PasswordItemFormStrings) => {
+    const selectedFolderObj =
+      folders.find((folder) => folder.id === data.folderID) ?? selectedFolder;
+    const owner = selectedFolderObj?._owner || me;
+    const toSave = {
+      name: CoPlainText.create(data.name, { owner }),
+      username: data.username
+        ? CoPlainText.create(data.username, { owner })
+        : undefined,
+      password: CoPlainText.create(data.password, { owner }),
+      uri: data.uri ? CoPlainText.create(data.uri, { owner }) : undefined,
+      deleted: data.deleted ?? false,
+      folder: selectedFolderObj ?? null,
+    };
+    onSave(toSave);
     onClose();
   };
 
@@ -161,28 +198,20 @@ const NewItemModal: React.FC<NewItemModalProps> = ({
             Folder
           </label>
           <select
-            {...register("folder", { required: "Must select a folder" })}
-            id="folder"
+            {...register("folderID", { required: "Must select a folder" })}
+            id="folderID"
             className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
           >
             <option value="">Select a folder</option>
             {folders.map((folder) => (
-              <option
-                key={folder.id}
-                value={folder.id}
-                selected={
-                  initialValues
-                    ? initialValues?.folder?.id === folder.id
-                    : selectedFolder?.id === folder.id
-                }
-              >
-                {folder.name}
+              <option key={folder.id} value={folder.id}>
+                {folder.name?.toString()}
               </option>
             ))}
           </select>
-          {errors.folder && (
+          {errors.folderID && (
             <Alert variant="destructive">
-              <AlertDescription>{errors.folder.message}</AlertDescription>
+              <AlertDescription>{errors.folderID.message}</AlertDescription>
             </Alert>
           )}
         </div>

@@ -6,7 +6,7 @@ import NewItemModal from "./components/new-item-modal";
 import Table from "./components/table";
 
 import { useAccount, useCoState } from "jazz-react";
-import { CoMapInit, ID } from "jazz-tools";
+import { CoMapInit, CoPlainText, ID } from "jazz-tools";
 import { useNavigate, useParams } from "react-router-dom";
 import { Folder, FolderList, PasswordItem } from "./1_schema";
 import {
@@ -59,7 +59,9 @@ const VaultPage: React.FC = () => {
 
   const filteredItems = selectedFolder
     ? items?.filter(
-        (item) => item?.folder?.name === selectedFolder.name && !item.deleted,
+        (item) =>
+          item?.folder?.name?.toString() === selectedFolder.name?.toString() &&
+          !item.deleted,
       )
     : items?.filter((item) => !item?.deleted);
 
@@ -133,7 +135,11 @@ const VaultPage: React.FC = () => {
       accessor: "id" as const,
       render: (item: PasswordItem) => (
         <div className="flex flex-wrap gap-2">
-          <Button onClick={() => navigator.clipboard.writeText(item.password)}>
+          <Button
+            onClick={() =>
+              navigator.clipboard.writeText(item.password?.toString() || "")
+            }
+          >
             Copy Password
           </Button>
           <Button
@@ -235,7 +241,21 @@ const VaultPage: React.FC = () => {
           folders={folders}
           selectedFolder={selectedFolder}
           initialValues={
-            editingItem && editingItem.folder ? { ...editingItem } : undefined
+            editingItem && editingItem.folder
+              ? {
+                  name:
+                    editingItem.name ?? CoPlainText.create("", { owner: me }),
+                  username:
+                    editingItem.username ??
+                    CoPlainText.create("", { owner: me }),
+                  password:
+                    editingItem.password ??
+                    CoPlainText.create("", { owner: me }),
+                  uri: editingItem.uri ?? CoPlainText.create("", { owner: me }),
+                  deleted: editingItem.deleted ?? false,
+                  folder: editingItem.folder,
+                }
+              : undefined
           }
         />
       ) : null}

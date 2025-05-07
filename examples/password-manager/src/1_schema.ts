@@ -1,12 +1,20 @@
-import { Account, CoList, CoMap, Group, Profile, co } from "jazz-tools";
+import {
+  Account,
+  CoList,
+  CoMap,
+  CoPlainText,
+  Group,
+  Profile,
+  co,
+} from "jazz-tools";
 
 export class PasswordItem extends CoMap {
-  name = co.string;
-  username = co.optional.string;
+  name = co.ref(CoPlainText);
+  username = co.optional.ref(CoPlainText);
   username_input_selector = co.optional.string;
-  password = co.string;
+  password = co.ref(CoPlainText);
   password_input_selector = co.optional.string;
-  uri = co.optional.string;
+  uri = co.optional.ref(CoPlainText);
   folder = co.ref(Folder);
   deleted = co.boolean;
 }
@@ -14,7 +22,7 @@ export class PasswordItem extends CoMap {
 export class PasswordList extends CoList.Of(co.ref(PasswordItem)) {}
 
 export class Folder extends CoMap {
-  name = co.string;
+  name = co.ref(CoPlainText);
   items = co.ref(PasswordList);
 }
 
@@ -33,7 +41,7 @@ export class PasswordManagerAccount extends Account {
       const group = Group.create({ owner: this });
       const firstFolder = Folder.create(
         {
-          name: "Default",
+          name: CoPlainText.create("Default", { owner: group }),
           items: PasswordList.create([], { owner: group }),
         },
         { owner: group },
@@ -42,10 +50,10 @@ export class PasswordManagerAccount extends Account {
       firstFolder.items?.push(
         PasswordItem.create(
           {
-            name: "Gmail",
-            username: "user@gmail.com",
-            password: "password123",
-            uri: "https://gmail.com",
+            name: CoPlainText.create("Gmail", { owner: group }),
+            username: CoPlainText.create("user@gmail.com", { owner: group }),
+            password: CoPlainText.create("password123", { owner: group }),
+            uri: CoPlainText.create("https://gmail.com", { owner: group }),
             folder: firstFolder,
             deleted: false,
           },
@@ -56,10 +64,10 @@ export class PasswordManagerAccount extends Account {
       firstFolder.items?.push(
         PasswordItem.create(
           {
-            name: "Facebook",
-            username: "user@facebook.com",
-            password: "facebookpass",
-            uri: "https://facebook.com",
+            name: CoPlainText.create("Facebook", { owner: group }),
+            username: CoPlainText.create("user@facebook.com", { owner: group }),
+            password: CoPlainText.create("facebookpass", { owner: group }),
+            uri: CoPlainText.create("https://facebook.com", { owner: group }),
             folder: firstFolder,
             deleted: false,
           },
