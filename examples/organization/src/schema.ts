@@ -1,24 +1,24 @@
-import { Account, CoList, CoMap, Group, co } from "jazz-tools";
+import { Account, CoList, CoMap, CoPlainText, Group, co } from "jazz-tools";
 
 export class Project extends CoMap {
-  name = co.string;
+  name = co.ref(CoPlainText);
 }
 
 export class ListOfProjects extends CoList.Of(co.ref(Project)) {}
 
 export class Organization extends CoMap {
-  name = co.string;
+  name = co.ref(CoPlainText);
   projects = co.ref(ListOfProjects);
 }
 
 export class DraftOrganization extends CoMap {
-  name = co.optional.string;
+  name = co.optional.ref(CoPlainText);
   projects = co.ref(ListOfProjects);
 
   validate() {
     const errors: string[] = [];
 
-    if (!this.name) {
+    if (!this.name?.toString()) {
       errors.push("Please enter a name.");
     }
 
@@ -58,8 +58,10 @@ export class JazzAccount extends Account {
           Organization.create(
             {
               name: this.profile?.name
-                ? `${this.profile.name}'s projects`
-                : "Your projects",
+                ? CoPlainText.create(`${this.profile.name}'s projects`, {
+                    owner: this,
+                  })
+                : CoPlainText.create("Your projects", { owner: this }),
               projects: ListOfProjects.create([], initialOrganizationOwnership),
             },
             initialOrganizationOwnership,

@@ -21,7 +21,9 @@ export function OrganizationPage() {
   return (
     <Layout>
       <div className="grid gap-8">
-        <Heading text={`Welcome to ${organization.name} organization!`} />
+        <Heading
+          text={`Welcome to ${organization.name?.toString() || "Your"} organization!`}
+        />
 
         <div className="rounded-lg border shadow-sm bg-white dark:bg-stone-925">
           <div className="border-b px-4 py-5 sm:px-6">
@@ -50,7 +52,7 @@ export function OrganizationPage() {
                     key={project.id}
                     className="px-4 py-5 sm:px-6 font-medium block"
                   >
-                    {project.name}
+                    {project.name?.toString()}
                   </strong>
                 ) : null,
               )

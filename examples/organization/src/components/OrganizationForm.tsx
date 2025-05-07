@@ -1,3 +1,4 @@
+import { CoPlainText } from "jazz-tools";
 import { DraftOrganization, Organization } from "../schema.ts";
 
 export function OrganizationForm({
@@ -7,6 +8,16 @@ export function OrganizationForm({
   organization: Organization | DraftOrganization;
   onSave?: (e: React.FormEvent<HTMLFormElement>) => void;
 }) {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (organization.name) {
+      return organization.name.applyDiff(e.target.value);
+    }
+
+    organization.name = CoPlainText.create(e.target.value, {
+      owner: organization._owner,
+    });
+  };
+
   return (
     <form onSubmit={onSave} className="flex gap-3 items-center">
       <label className="flex-1">
@@ -15,10 +26,10 @@ export function OrganizationForm({
           type="text"
           name="name"
           id="name"
-          value={organization.name}
+          value={organization.name?.toString() || ""}
           placeholder="Enter organization name..."
           className="rounded-md shadow-sm dark:bg-transparent w-full"
-          onChange={(e) => (organization.name = e.target.value)}
+          onChange={handleChange}
           required
         />
       </label>

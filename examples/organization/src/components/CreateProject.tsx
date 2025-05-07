@@ -1,3 +1,4 @@
+import { CoPlainText } from "jazz-tools";
 import { useState } from "react";
 import { Organization, Project } from "../schema.ts";
 
@@ -14,7 +15,10 @@ export function CreateProject({
     if (!organization?.projects) return;
 
     if (name.length > 0) {
-      const project = Project.create({ name }, { owner: organization._owner });
+      const project = Project.create(
+        { name: CoPlainText.create(name, { owner: organization._owner }) },
+        { owner: organization._owner },
+      );
       organization.projects.push(project);
       setName("");
     }

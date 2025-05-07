@@ -50,7 +50,7 @@ export function OrganizationSelector({ className }: { className?: string }) {
         {me?.root.organizations.map((organization) => {
           return (
             <option key={organization.id} value={organization.id}>
-              {organization.name}
+              {organization.name?.toString()}
             </option>
           );
         })}
