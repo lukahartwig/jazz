@@ -5,7 +5,7 @@ import { ListOfTasks, TodoProject } from "./1_schema";
 import { SubmittableInput } from "./basicComponents";
 
 import { useAccount } from "jazz-react";
-import { Group } from "jazz-tools";
+import { CoPlainText, Group } from "jazz-tools";
 import { useNavigate } from "react-router";
 
 export function NewProjectForm() {
@@ -26,7 +26,7 @@ export function NewProjectForm() {
       // Then we create an empty todo project within that group
       const project = TodoProject.create(
         {
-          title,
+          title: CoPlainText.create(title, { owner: projectGroup }),
           tasks: ListOfTasks.create([], { owner: projectGroup }),
         },
         { owner: projectGroup },

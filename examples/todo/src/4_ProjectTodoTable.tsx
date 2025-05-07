@@ -15,7 +15,7 @@ import {
 } from "./basicComponents";
 
 import { useCoState } from "jazz-react";
-import { ID } from "jazz-tools";
+import { CoPlainText, ID } from "jazz-tools";
 import { useParams } from "react-router";
 import uniqolor from "uniqolor";
 import { InviteButton } from "./components/InviteButton";
@@ -46,7 +46,7 @@ export function ProjectTodoTable() {
       const task = Task.create(
         {
           done: false,
-          text,
+          text: CoPlainText.create(text, { owner: project._owner }),
         },
         { owner: project._owner },
       );
@@ -66,7 +66,8 @@ export function ProjectTodoTable() {
             // accounting for the fact that note everything might be loaded yet
             project?.title ? (
               <>
-                {project.title} <span className="text-sm">({project.id})</span>
+                {project.title?.toString()}{" "}
+                <span className="text-sm">({project.id})</span>
               </>
             ) : (
               <Skeleton className="mt-1 w-[200px] h-[1em] rounded-full" />
