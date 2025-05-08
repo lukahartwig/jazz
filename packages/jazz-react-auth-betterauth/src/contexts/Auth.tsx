@@ -1,8 +1,7 @@
 "use client";
 
-import { createAuthClient } from "better-auth/client";
-import { emailOTPClient, magicLinkClient } from "better-auth/client/plugins";
-import { jazzClientPlugin } from "jazz-betterauth-client-plugin";
+import type { ClientOptions } from "better-auth/client";
+import { useAccount, useIsAuthenticated } from "jazz-react";
 import type { AuthCredentials } from "jazz-tools";
 import {
   createContext,
@@ -14,45 +13,49 @@ import {
 // biome-ignore lint/correctness/useImportExtensions: <explanation>
 import { useBetterAuth } from "../index";
 // biome-ignore lint/correctness/useImportExtensions: <explanation>
-import { DefaultImage, Image as ImageType } from "../types/image";
+import { DefaultImage, type Image as ImageType } from "../types/image";
 // biome-ignore lint/correctness/useImportExtensions: <explanation>
-import { DefaultLink, Link as LinkType } from "../types/link";
+import { DefaultLink, type Link as LinkType } from "../types/link";
 // biome-ignore lint/correctness/useImportExtensions: <explanation>
 import { defaultNavigate, defaultReplace } from "../types/router";
 
-const newAuthClient = () =>
-  createAuthClient({
-    plugins: [jazzClientPlugin(), magicLinkClient(), emailOTPClient()],
-  });
-
-const authClient = (...[props]: Parameters<typeof useBetterAuth>) => {
-  const auth = useBetterAuth(props as ReturnType<typeof newAuthClient>);
+const authClient = <T extends ClientOptions>(
+  onSessionChange?: () => void | Promise<void>,
+  options?: T,
+) => {
+  const { me } = useAccount();
+  const isAuthenticated = useIsAuthenticated();
+  const auth = useBetterAuth(options);
+  type Data = Awaited<
+    ReturnType<typeof auth.authClient.getSession<{}>>
+  >["data"];
+  type User = NonNullable<Data>["user"];
   const [user, setUser] = useState<AuthCredentials | undefined>(undefined);
-  const [account, setAccount] = useState<
-    typeof auth.authClient.$Infer.Session.user | undefined
-  >(undefined);
-  const updateUser = useCallback(() => {
+  const [account, setAccount] = useState<User | undefined>(undefined);
+  function useUpdateUser() {
     auth.authClient.jazzPlugin
       .decryptCredentials()
       .then((x) => {
-        setUser(x.data === null ? undefined : x.data);
+        if (x.error) console.error("Error decrypting credentials:", x.error);
+        setUser(x.data ?? undefined);
       })
       .catch((error) => {
         console.error("Error decrypting credentials:", error);
       });
-  }, [auth.authClient.jazzPlugin]);
+  }
   useEffect(() => {
-    auth.authClient.useSession.subscribe(({ data }) => {
+    auth.authClient.useSession.subscribe(({ data }: { data: Data }) => {
       if (data?.user) setAccount(data.user);
       if (data?.user.encryptedCredentials) {
-        updateUser();
+        useUpdateUser();
       } else if (data && !data.user.encryptedCredentials) {
         auth.signIn().then(() => {
-          updateUser();
+          useUpdateUser();
         });
       }
+      if (onSessionChange) onSessionChange();
     });
-  }, [user, account]);
+  }, [user, account, auth.state, isAuthenticated]);
   return {
     auth: auth,
     user: user,
@@ -76,18 +79,26 @@ export function AuthProvider({
   Link = DefaultLink,
   navigate = defaultNavigate,
   replace = defaultReplace,
-  client,
+  onSessionChange,
+  options,
 }: {
   children: React.ReactNode;
   Image?: ImageType;
   Link?: LinkType;
   navigate?: typeof defaultNavigate;
   replace?: typeof defaultReplace;
-  client: Parameters<typeof useBetterAuth>[0];
+  onSessionChange?: () => void | Promise<void>;
+  options: Parameters<typeof useBetterAuth>[0];
 }) {
   return (
     <AuthContext.Provider
-      value={{ ...authClient(client), Image, Link, navigate, replace }}
+      value={{
+        ...authClient(onSessionChange, options),
+        Image,
+        Link,
+        navigate,
+        replace,
+      }}
     >
       {children}
     </AuthContext.Provider>

@@ -5,7 +5,7 @@ import { useState } from "react";
 // biome-ignore lint/correctness/useImportExtensions: <explanation>
 import { useAuth } from "../../contexts/Auth";
 // biome-ignore lint/correctness/useImportExtensions: <explanation>
-import { SSOButton } from "../SSOButton";
+import type { FullAuthClient } from "../../types/auth";
 // biome-ignore lint/correctness/useImportExtensions: <explanation>
 import { Button } from "../common/Button";
 // biome-ignore lint/correctness/useImportExtensions: <explanation>
@@ -98,11 +98,12 @@ export default function ForgotForm() {
             onClick={async (e) => {
               e.preventDefault();
               setLoading(true);
-              const { data, error } =
-                await auth.authClient.emailOtp.sendVerificationOtp({
-                  email: email,
-                  type: "forget-password",
-                });
+              const { data, error } = await (
+                auth.authClient as FullAuthClient
+              ).emailOtp.sendVerificationOtp({
+                email: email,
+                type: "forget-password",
+              });
               setStatus(data?.success ?? false);
               setOtpSentStatus(data?.success ?? false);
               const errorMessage = error?.message ?? error?.statusText;
@@ -137,12 +138,13 @@ export default function ForgotForm() {
                 setLoading(false);
                 return;
               }
-              const { data, error } =
-                await auth.authClient.emailOtp.resetPassword({
-                  email: email,
-                  otp: otp,
-                  password: password,
-                });
+              const { data, error } = await (
+                auth.authClient as FullAuthClient
+              ).emailOtp.resetPassword({
+                email: email,
+                otp: otp,
+                password: password,
+              });
               setStatus(data?.success ?? false);
               setOtpStatus(data?.success ?? false);
               const errorMessage = error?.message ?? error?.statusText;

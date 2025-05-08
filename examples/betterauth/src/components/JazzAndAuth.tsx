@@ -1,6 +1,5 @@
 "use client";
 
-import { createAuthClient } from "better-auth/client";
 import { emailOTPClient, magicLinkClient } from "better-auth/client/plugins";
 import { jazzClientPlugin } from "jazz-betterauth-client-plugin";
 import { JazzProvider } from "jazz-react";
@@ -23,7 +22,9 @@ export function JazzAndAuth({ children }: { children: ReactNode }) {
   const router = useRouter();
   return (
     <JazzProvider
-      sync={{ peer: "wss://cloud.jazz.tools/?key=dashboard@garden.co" }}
+      sync={{
+        peer: "wss://cloud.jazz.tools/?key=betterauth-example@garden.co",
+      }}
     >
       <>
         <AuthProvider
@@ -31,10 +32,10 @@ export function JazzAndAuth({ children }: { children: ReactNode }) {
           Image={NextImage.default}
           navigate={router.push}
           replace={router.replace}
-          client={createAuthClient({
+          options={{
             baseURL: process.env.NEXT_PUBLIC_AUTH_BASE_URL,
             plugins: [jazzClientPlugin(), magicLinkClient(), emailOTPClient()],
-          })}
+          }}
         >
           {children}
         </AuthProvider>

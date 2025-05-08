@@ -62,13 +62,16 @@ export default function Home() {
                 <span className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
                   {me.profile.name}
                 </span>
+                .
               </>
             )}
-            {!user && !isAuthenticated && <>{"Not signed in"}</>}
+            {!user && !isAuthenticated && <>Not signed in.</>}
             {!user && isAuthenticated && (
-              <>{"Not connected to the authentication server"}</>
+              <>Not connected to the authentication server.</>
             )}
-            .
+            {user && !isAuthenticated && (
+              <>Authenticated, but not logged in. Try refreshing.</>
+            )}
           </p>
 
           <div className="flex gap-4 items-center flex-col sm:flex-row">

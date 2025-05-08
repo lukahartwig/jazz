@@ -1,4 +1,5 @@
-import { BetterAuth, newAuthClient } from "jazz-auth-betterauth";
+import type { ClientOptions } from "better-auth";
+import { BetterAuth } from "jazz-auth-betterauth";
 import {
   useAuthSecretStorage,
   useIsAuthenticated,
@@ -6,6 +7,8 @@ import {
 } from "jazz-react";
 import { useEffect, useMemo } from "react";
 
+// biome-ignore lint/correctness/useImportExtensions: <explanation>
+export * from "./components/AccountProviders";
 // biome-ignore lint/correctness/useImportExtensions: <explanation>
 export * from "./components/SSOButton";
 // biome-ignore lint/correctness/useImportExtensions: <explanation>
@@ -22,13 +25,13 @@ export * as ResetForm from "./components/forms/Reset";
 export * as SettingsForm from "./components/forms/Settings";
 // biome-ignore lint/correctness/useImportExtensions: <explanation>
 export * from "./contexts/Auth";
+// biome-ignore lint/correctness/useImportExtensions: <explanation>
+export * from "./types/auth";
 
 /**
  * @category Auth Providers
  */
-export function useBetterAuth<T extends ReturnType<typeof newAuthClient>>(
-  authClient: T,
-) {
+export function useBetterAuth<T extends ClientOptions>(options?: T) {
   const context = useJazzContext();
   const authSecretStorage = useAuthSecretStorage();
 
@@ -37,8 +40,8 @@ export function useBetterAuth<T extends ReturnType<typeof newAuthClient>>(
   }
 
   const authMethod = useMemo(() => {
-    return new BetterAuth(context.authenticate, authSecretStorage, authClient);
-  }, [context.authenticate, authSecretStorage, authClient]);
+    return new BetterAuth(context.authenticate, authSecretStorage, options);
+  }, [context.authenticate, authSecretStorage, options]);
 
   const isAuthenticated = useIsAuthenticated();
 

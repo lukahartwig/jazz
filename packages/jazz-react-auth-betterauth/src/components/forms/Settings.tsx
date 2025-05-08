@@ -6,8 +6,13 @@ import { useCallback, useEffect, useState } from "react";
 // biome-ignore lint/correctness/useImportExtensions: <explanation>
 import { useAuth } from "../../contexts/Auth";
 // biome-ignore lint/correctness/useImportExtensions: <explanation>
+import type { FullAuthClient } from "../../types/auth";
+// biome-ignore lint/correctness/useImportExtensions: <explanation>
+import { AccountProviders } from "../AccountProviders";
+// biome-ignore lint/correctness/useImportExtensions: <explanation>
 import { DeleteAccountButton } from "../DeleteAccountButton";
 // biome-ignore lint/correctness/useImportExtensions: <explanation>
+import { SSOButton } from "../SSOButton";
 // biome-ignore lint/correctness/useImportExtensions: <explanation>
 import { Button } from "../common/Button";
 // biome-ignore lint/correctness/useImportExtensions: <explanation>
@@ -15,23 +20,34 @@ import { Loading } from "../common/Loading";
 
 const title = "Settings";
 
-export default function SettingsForm() {
-  const { auth, Image, Link, user, account, navigate } = useAuth();
+declare const listAccounts: ReturnType<
+  typeof useAuth
+>["auth"]["authClient"]["listAccounts"];
+type AccountsType = Awaited<ReturnType<typeof listAccounts<{}>>>;
+
+export default function SettingsForm({
+  providers,
+}: {
+  providers?: Parameters<
+    ReturnType<typeof useAuth>["auth"]["authClient"]["signIn"]["social"]
+  >[0]["provider"][];
+}) {
+  const { auth, account, navigate, user } = useAuth();
+
+  const [accounts, setAccounts] = useState<AccountsType | undefined>(undefined);
+  useEffect(() => {
+    auth.authClient.useSession.subscribe(() => {
+      auth.authClient.listAccounts().then((x) => setAccounts(x));
+    });
+  }, [user, account, accounts]);
+
   const [status, setStatus] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<Error | undefined>(undefined);
   const [otpSentStatus, setOtpSentStatus] = useState<boolean>(false);
   const [otpStatus, setOtpStatus] = useState<boolean>(false);
   const [otp, setOtp] = useState<string>("");
-  const initialAccounts = auth.authClient.listAccounts();
-  const [accounts, setAccounts] = useState<
-    Awaited<typeof initialAccounts> | undefined
-  >(undefined);
-  useEffect(() => {
-    auth.authClient.useSession.subscribe(({ data }) => {
-      auth.authClient.listAccounts().then((x) => setAccounts(x));
-    });
-  }, [user, account]);
+
   const { me, logOut } = useAccount({ resolve: { profile: true } });
   const isAuthenticated = useIsAuthenticated();
   const signOut = useCallback(() => {
@@ -83,115 +99,24 @@ export default function SettingsForm() {
 
           {loading && <Loading />}
 
-          <table className="w-full text-sm border-full border-collapse">
-            <thead className="text-xs">
-              <tr>
-                <th scope="col" className="px-6 py-3">
-                  Provider
-                </th>
-                <th scope="col" className="px-6 py-3">
-                  Created
-                </th>
-                <th scope="col" className="px-6 py-3">
-                  Updated
-                </th>
-                <th scope="col" className="px-6 py-3">
-                  Scopes
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {accounts?.data &&
-                accounts.data.map((account) => (
-                  <tr key={account.id} className="border-b">
-                    <th
-                      scope="row"
-                      className="px-6 py-4 font-medium whitespace-nowrap"
-                    >
-                      {account.provider}
-                    </th>
-                    <td className="px-6 py-4">
-                      {account.createdAt.toLocaleString()}
-                    </td>
-                    <td className="px-6 py-4">
-                      {account.updatedAt.toLocaleString()}
-                    </td>
-                    <td className="px-6 py-4">{account.scopes.join(", ")}</td>
-                    <td className="px-6 py-4">
-                      <Button
-                        variant="secondary"
-                        className="relative"
-                        onClick={async (e) => {
-                          e.preventDefault();
-                          setLoading(true);
-                          const { error } = await auth.authClient.unlinkAccount(
-                            {
-                              providerId: account.provider,
-                              accountId: account.id,
-                            },
-                          );
-                          const errorMessage =
-                            error?.message ?? error?.statusText;
-                          setError(
-                            error
-                              ? {
-                                  ...error,
-                                  name: error.statusText,
-                                  message:
-                                    errorMessage && errorMessage.length > 0
-                                      ? errorMessage
-                                      : "An error occurred",
-                                }
-                              : undefined,
-                          );
-                          setLoading(false);
-                        }}
-                      >
-                        Unlink
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
-            </tbody>
-          </table>
+          <AccountProviders
+            accounts={accounts}
+            setLoading={setLoading}
+            setError={setError}
+          />
           {accounts?.data &&
-            accounts.data.find((x) => x.provider === "github") ===
-              undefined && (
-              <Button
-                variant="secondary"
-                className="relative"
-                onClick={async (e) => {
-                  e.preventDefault();
-                  setLoading(true);
-                  const { error } = await auth.authClient.linkSocial({
-                    provider: "github",
-                  });
-                  const errorMessage = error?.message ?? error?.statusText;
-                  setError(
-                    error
-                      ? {
-                          ...error,
-                          name: error.statusText,
-                          message:
-                            errorMessage && errorMessage.length > 0
-                              ? errorMessage
-                              : "An error occurred",
-                        }
-                      : undefined,
-                  );
-                  setLoading(false);
-                }}
-              >
-                <Image
-                  src="/social/github.svg"
-                  alt="GitHub logo"
-                  className="absolute left-3 dark:invert"
-                  width={16}
-                  height={16}
-                />
-                Link GitHub account
-              </Button>
-            )}
+            providers?.map((x) => {
+              return (
+                accounts.data.find((y) => y.provider === x) === undefined && (
+                  <SSOButton
+                    link={true}
+                    provider={x}
+                    setLoading={setLoading}
+                    setError={setError}
+                  />
+                )
+              );
+            })}
           {account && account.emailVerified && <p>Account verified.</p>}
           {account && !account.emailVerified && (
             <>
@@ -231,11 +156,12 @@ export default function SettingsForm() {
                 onClick={async (e) => {
                   e.preventDefault();
                   setLoading(true);
-                  const { data, error } =
-                    await auth.authClient.emailOtp.sendVerificationOtp({
-                      email: account.email,
-                      type: "email-verification",
-                    });
+                  const { data, error } = await (
+                    auth.authClient as FullAuthClient
+                  ).emailOtp.sendVerificationOtp({
+                    email: account.email,
+                    type: "email-verification",
+                  });
                   setStatus(data?.success ?? false);
                   setOtpSentStatus(data?.success ?? false);
                   const errorMessage = error?.message ?? error?.statusText;
@@ -264,11 +190,12 @@ export default function SettingsForm() {
               onSubmit={async (e) => {
                 e.preventDefault();
                 setLoading(true);
-                const { data, error } =
-                  await auth.authClient.emailOtp.verifyEmail({
-                    email: account.email,
-                    otp: otp,
-                  });
+                const { data, error } = await (
+                  auth.authClient as FullAuthClient
+                ).emailOtp.verifyEmail({
+                  email: account.email,
+                  otp: otp,
+                });
                 setOtpStatus(data?.status ?? false);
                 const errorMessage = error?.message ?? error?.statusText;
                 setError(

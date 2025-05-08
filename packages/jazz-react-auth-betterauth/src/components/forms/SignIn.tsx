@@ -4,6 +4,8 @@ import { useState } from "react";
 // biome-ignore lint/correctness/useImportExtensions: <explanation>
 import { useAuth } from "../../contexts/Auth";
 // biome-ignore lint/correctness/useImportExtensions: <explanation>
+import type { FullAuthClient } from "../../types/auth";
+// biome-ignore lint/correctness/useImportExtensions: <explanation>
 import { SSOButton } from "../SSOButton";
 // biome-ignore lint/correctness/useImportExtensions: <explanation>
 import { Button } from "../common/Button";
@@ -12,7 +14,13 @@ import { Loading } from "../common/Loading";
 
 const title = "Sign In";
 
-export default function SignInForm() {
+export default function SignInForm({
+  providers,
+}: {
+  providers?: Parameters<
+    ReturnType<typeof useAuth>["auth"]["authClient"]["signIn"]["social"]
+  >[0]["provider"][];
+}) {
   const { auth, Image, Link, navigate } = useAuth();
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
@@ -63,7 +71,9 @@ export default function SignInForm() {
                 },
               );
             } else {
-              const { data, error } = await auth.authClient.signIn.emailOtp({
+              const { data, error } = await (
+                auth.authClient as FullAuthClient
+              ).signIn.emailOtp({
                 email: email,
                 otp: otp,
               });
@@ -135,19 +145,25 @@ export default function SignInForm() {
         </div>
 
         <div className="flex flex-col gap-4">
-          <SSOButton
-            callbackURL={`${window.location.origin}/social/logIn`}
-            provider="github"
-            setLoading={setLoading}
-            setError={setError}
-          />
+          {providers?.map((x) => {
+            return (
+              <SSOButton
+                callbackURL={`${window.location.origin}/social/logIn`}
+                provider={x}
+                setLoading={setLoading}
+                setError={setError}
+              />
+            );
+          })}
           <Button
             variant="secondary"
             className="relative"
             onClick={async (e) => {
               e.preventDefault();
               setLoading(true);
-              const { error } = await auth.authClient.signIn.magicLink({
+              const { error } = await (
+                auth.authClient as FullAuthClient
+              ).signIn.magicLink({
                 email: email,
                 callbackURL: `${window.location.origin}/magic-link/logIn`,
               });
@@ -182,11 +198,12 @@ export default function SignInForm() {
             onClick={async (e) => {
               e.preventDefault();
               setLoading(true);
-              const { data, error } =
-                await auth.authClient.emailOtp.sendVerificationOtp({
-                  email: email,
-                  type: "sign-in",
-                });
+              const { data, error } = await (
+                auth.authClient as FullAuthClient
+              ).emailOtp.sendVerificationOtp({
+                email: email,
+                type: "sign-in",
+              });
               setOtpStatus(data?.success ?? false);
               const errorMessage = error?.message ?? error?.statusText;
               setError(

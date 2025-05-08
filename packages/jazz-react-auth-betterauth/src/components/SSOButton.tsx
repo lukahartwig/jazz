@@ -13,14 +13,23 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   provider: Parameters<
     ReturnType<typeof useAuth>["auth"]["authClient"]["signIn"]["social"]
   >[0]["provider"];
-  callbackURL: string;
+  link?: boolean;
+  callbackURL?: string;
   setLoading: React.Dispatch<React.SetStateAction<boolean>>;
   setError: React.Dispatch<React.SetStateAction<Error | undefined>>;
 }
 
 export const SSOButton = forwardRef<HTMLButtonElement, ButtonProps>(
   (
-    { children, provider, callbackURL, setLoading, setError, ...buttonProps },
+    {
+      children,
+      provider,
+      link = false,
+      callbackURL,
+      setLoading,
+      setError,
+      ...buttonProps
+    },
     ref,
   ) => {
     const { auth } = useAuth();
@@ -35,10 +44,18 @@ export const SSOButton = forwardRef<HTMLButtonElement, ButtonProps>(
         onClick={async (e) => {
           e.preventDefault();
           setLoading(true);
-          const { error } = await auth.authClient.signIn.social({
-            provider: provider,
-            callbackURL: callbackURL,
-          });
+          const { error } = await (async () => {
+            if (link) {
+              return await auth.authClient.linkSocial({
+                provider: provider,
+              });
+            } else {
+              return await auth.authClient.signIn.social({
+                provider: provider,
+                callbackURL: callbackURL,
+              });
+            }
+          })();
           if (error) {
             setError({
               ...error,
@@ -51,7 +68,9 @@ export const SSOButton = forwardRef<HTMLButtonElement, ButtonProps>(
         {...buttonProps}
         ref={ref}
       >
-        Continue with {providerName}
+        {link
+          ? `Link ${providerName} account`
+          : `Continue with ${providerName}`}
         {children}
       </Button>
     );

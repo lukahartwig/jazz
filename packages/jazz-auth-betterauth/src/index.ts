@@ -1,5 +1,22 @@
-import { ClientOptions } from "better-auth";
+import type { ClientOptions } from "better-auth";
 import { createAuthClient } from "better-auth/client";
+import {
+  adminClient,
+  anonymousClient,
+  apiKeyClient,
+  emailOTPClient,
+  genericOAuthClient,
+  magicLinkClient,
+  multiSessionClient,
+  oidcClient,
+  oneTapClient,
+  organizationClient,
+  passkeyClient,
+  phoneNumberClient,
+  ssoClient,
+  twoFactorClient,
+  usernameClient,
+} from "better-auth/client/plugins";
 import { jazzClientPlugin } from "jazz-betterauth-client-plugin";
 import {
   Account,
@@ -9,18 +26,45 @@ import {
 } from "jazz-tools";
 import type { AuthSetPayload } from "jazz-tools/dist/auth/AuthSecretStorage.js";
 
-export const newAuthClient = (options?: ClientOptions) =>
-  createAuthClient({
+export const newAuthClient = <T extends ClientOptions>(options?: T) => {
+  type Plugins = Array<
+    | NonNullable<NonNullable<T>["plugins"]>[number]
+    | ReturnType<typeof jazzClientPlugin>
+  >;
+  type Options<T> = {
+    plugins: Plugins;
+  } & T;
+  type AuthClient<T> = ReturnType<typeof createAuthClient<Options<T>>> &
+    ReturnType<
+      typeof createAuthClient<{
+        plugins: [ReturnType<typeof jazzClientPlugin>];
+      }>
+    >;
+  return createAuthClient<Options<T>>({
     ...options,
     plugins: [...(options?.plugins ?? []), ...[jazzClientPlugin()]],
-  });
+  } as Options<T>) as AuthClient<T>;
+};
 
-export class BetterAuth<T extends ReturnType<typeof newAuthClient>> {
+export type AuthClient<T extends ClientOptions> = ReturnType<
+  typeof newAuthClient<T>
+>;
+export type InferredSession<T extends ClientOptions> =
+  AuthClient<T>["$Infer"]["Session"];
+export type Session<T extends ClientOptions> =
+  AuthClient<T>["$Infer"]["Session"]["session"];
+export type User<T extends ClientOptions> =
+  AuthClient<T>["$Infer"]["Session"]["user"];
+
+export class BetterAuth<T extends ClientOptions> {
+  public authClient: AuthClient<T>;
   constructor(
     private authenticate: AuthenticateAccountFunction,
     private authSecretStorage: AuthSecretStorage,
-    public authClient: T,
-  ) {}
+    options?: T,
+  ) {
+    this.authClient = newAuthClient(options);
+  }
 
   static async loadAuthData(
     storage: AuthSecretStorage,
@@ -36,10 +80,8 @@ export class BetterAuth<T extends ReturnType<typeof newAuthClient>> {
    * Called when the authentication session changes.
    * @param session The authentication session.
    */
-  onUserChange = async (
-    session?: (typeof this.authClient)["$Infer"]["Session"],
-  ) => {
-    if (!session || !session.user) return;
+  onUserChange = async (session?: AuthClient<T>["$Infer"]["Session"]) => {
+    if (!session || (session && !session["user"])) return;
     const isAuthenticated = this.authSecretStorage.isAuthenticated;
     if (!isAuthenticated) return;
   };
