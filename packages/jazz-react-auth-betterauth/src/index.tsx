@@ -27,6 +27,10 @@ export * as SettingsForm from "./components/forms/Settings";
 export * from "./contexts/Auth";
 // biome-ignore lint/correctness/useImportExtensions: <explanation>
 export * from "./types/auth";
+// biome-ignore lint/correctness/useImportExtensions: <explanation>
+export * as MagicLinkSignIn from "./components/routes/magic-link/logIn/page";
+// biome-ignore lint/correctness/useImportExtensions: <explanation>
+export * as MagicLinkSignUp from "./components/routes/magic-link/signIn/page";
 
 /**
  * @category Auth Providers

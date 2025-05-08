@@ -3,7 +3,6 @@ import {
   ArrowDownIcon,
   ArrowRightIcon,
   BoldIcon,
-  BookTextIcon,
   BoxIcon,
   BracesIcon,
   Brackets,
@@ -23,11 +22,9 @@ import {
   InfoIcon,
   ItalicIcon,
   LinkIcon,
-  LockKeyholeIcon,
   type LucideIcon,
   MailIcon,
   MenuIcon,
-  MessageCircleQuestionIcon,
   MonitorSmartphoneIcon,
   MoonIcon,
   MousePointer2Icon,
@@ -42,6 +39,15 @@ import {
   WifiOffIcon,
   XIcon,
 } from "lucide-react";
+// These imports must be separated for Next.js applications (likely due to a bug)
+// See:
+//   - https://github.com/lucide-icons/lucide/issues/2394
+//   - https://github.com/vercel/next.js/issues/58756
+//   - https://github.com/lucide-icons/lucide/issues/2314
+//   - https://nextjs.org/docs/app/guides/local-development#icon-libraries
+import { BookTextIcon } from "lucide-react";
+import { MessageCircleQuestionIcon } from "lucide-react";
+import { LockKeyholeIcon } from "lucide-react";
 
 import { GcmpIcons } from "./icons";
 

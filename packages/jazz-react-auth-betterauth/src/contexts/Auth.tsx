@@ -3,13 +3,7 @@
 import type { ClientOptions } from "better-auth/client";
 import { useAccount, useIsAuthenticated } from "jazz-react";
 import type { AuthCredentials } from "jazz-tools";
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useState,
-} from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 // biome-ignore lint/correctness/useImportExtensions: <explanation>
 import { useBetterAuth } from "../index";
 // biome-ignore lint/correctness/useImportExtensions: <explanation>
