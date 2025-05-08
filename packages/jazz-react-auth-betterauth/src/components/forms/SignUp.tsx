@@ -1,5 +1,5 @@
-import { Alert } from "@garden-co/design-system/design-system/src/components/atoms/Alert";
-import { Input } from "@garden-co/design-system/design-system/src/components/molecules/Input";
+import { Alert } from "@garden-co/design-system/src/components/atoms/Alert";
+import { Input } from "@garden-co/design-system/src/components/molecules/Input";
 import { useState } from "react";
 // biome-ignore lint/correctness/useImportExtensions: <explanation>
 import { useAuth } from "../../contexts/Auth";

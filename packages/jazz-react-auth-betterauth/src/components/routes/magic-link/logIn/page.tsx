@@ -1,4 +1,4 @@
-import { Alert } from "@garden-co/design-system/design-system/src/components/atoms/Alert";
+import { Alert } from "@garden-co/design-system/src/components/atoms/Alert";
 // biome-ignore lint/correctness/useImportExtensions: <explanation>
 import { useAuth } from "../../../../contexts/Auth";
 

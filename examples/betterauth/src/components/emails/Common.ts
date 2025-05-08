@@ -1,4 +1,4 @@
-import { COLORS } from "@garden-co/design-system/design-system/colors/colors";
+import { COLORS } from "@garden-co/design-system/colors/colors";
 
 export const appName = "Jazz Example App";
 

@@ -51,7 +51,7 @@
 		"jazz-react-native": "link:../../packages/jazz-react-native",
 		"jazz-richtext-prosemirror": "link:../../packages/jazz-richtext-prosemirror",
 		"jazz-tools": "link:../../packages/jazz-tools",
-		"lucide-react": "^0.436.0",
+		"lucide-react": "^0.485.0",
 		"mdast-util-from-markdown": "^2.0.0",
 		"mdast-util-mdx": "^3.0.0",
 		"micromark-extension-mdxjs": "^3.0.0",
