@@ -1,6 +1,6 @@
 {
   "name": "file-share-svelte",
-  "version": "0.0.71",
+  "version": "0.0.72",
   "private": true,
   "type": "module",
   "scripts": {
@@ -39,6 +39,7 @@
   },
   "dependencies": {
     "@tailwindcss/typography": "^0.5.15",
+    "jazz-inspector-element": "workspace:*",
     "jazz-svelte": "workspace:*",
     "jazz-tools": "workspace:*",
     "lucide-svelte": "^0.463.0",

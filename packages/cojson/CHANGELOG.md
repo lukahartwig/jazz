@@ -1,5 +1,11 @@
 # cojson
 
+## 0.13.21
+
+### Patch Changes
+
+- e14e61f: Optimized the acceptInvite flow
+
 ## 0.13.20
 
 ### Patch Changes
