@@ -20,7 +20,8 @@ import {
   createTestMetricReader,
   createTestNode,
   loadCoValueOrFail,
-  randomAnonymousAccountAndSessionID,
+  nodeWithRandomAgentAndSessionID,
+  randomAgentAndSessionID,
   setupTestAccount,
   setupTestNode,
   tearDownTestMetricReader,
@@ -40,8 +41,7 @@ beforeEach(async () => {
 });
 
 test("If we add a client peer, but it never subscribes to a coValue, it won't get any messages", async () => {
-  const [admin, session] = randomAnonymousAccountAndSessionID();
-  const node = new LocalNode(admin, session, Crypto);
+  const node = nodeWithRandomAgentAndSessionID();
 
   const group = node.createGroup();
 
@@ -159,11 +159,8 @@ test("should delete the peer state when the peer closes if deletePeerStateOnClos
 describe("sync - extra tests", () => {
   test("Node handles disconnection and reconnection of a peer gracefully", async () => {
     // Create two nodes
-    const [admin1, session1] = randomAnonymousAccountAndSessionID();
-    const node1 = new LocalNode(admin1, session1, Crypto);
-
-    const [admin2, session2] = randomAnonymousAccountAndSessionID();
-    const node2 = new LocalNode(admin2, session2, Crypto);
+    const node1 = nodeWithRandomAgentAndSessionID();
+    const node2 = nodeWithRandomAgentAndSessionID();
 
     // Create a group and a map on node1
     const group = node1.createGroup();
@@ -185,7 +182,7 @@ describe("sync - extra tests", () => {
 
     // Verify that node2 has received the map
     const mapOnNode2 = await node2.loadCoValueCore(map.core.id);
-    if (mapOnNode2 === "unavailable") {
+    if (!mapOnNode2.isAvailable()) {
       throw new Error("Map is unavailable on node2");
     }
 
@@ -219,7 +216,7 @@ describe("sync - extra tests", () => {
 
     // Verify that node2 has received the changes made during disconnection
     const updatedMapOnNode2 = await node2.loadCoValueCore(map.core.id);
-    if (updatedMapOnNode2 === "unavailable") {
+    if (!updatedMapOnNode2.isAvailable()) {
       throw new Error("Updated map is unavailable on node2");
     }
 
@@ -229,7 +226,7 @@ describe("sync - extra tests", () => {
 
     // Make a new change on node2 to verify two-way sync
     const mapOnNode2ForEdit = await node2.loadCoValueCore(map.core.id);
-    if (mapOnNode2ForEdit === "unavailable") {
+    if (!mapOnNode2ForEdit.isAvailable()) {
       throw new Error("Updated map is unavailable on node2");
     }
 
@@ -252,7 +249,7 @@ describe("sync - extra tests", () => {
     await new Promise((resolve) => setTimeout(resolve, 100));
 
     const mapOnNode1 = await node1.loadCoValueCore(map.core.id);
-    if (mapOnNode1 === "unavailable") {
+    if (!mapOnNode1.isAvailable()) {
       throw new Error("Updated map is unavailable on node1");
     }
 
@@ -263,14 +260,9 @@ describe("sync - extra tests", () => {
   });
   test("Concurrent modifications on multiple nodes are resolved correctly", async () => {
     // Create three nodes
-    const [admin1, session1] = randomAnonymousAccountAndSessionID();
-    const node1 = new LocalNode(admin1, session1, Crypto);
-
-    const [admin2, session2] = randomAnonymousAccountAndSessionID();
-    const node2 = new LocalNode(admin2, session2, Crypto);
-
-    const [admin3, session3] = randomAnonymousAccountAndSessionID();
-    const node3 = new LocalNode(admin3, session3, Crypto);
+    const node1 = nodeWithRandomAgentAndSessionID();
+    const node2 = nodeWithRandomAgentAndSessionID();
+    const node3 = nodeWithRandomAgentAndSessionID();
 
     // Create a group and a map on node1
     const group = node1.createGroup();
@@ -324,9 +316,9 @@ describe("sync - extra tests", () => {
     const mapOnNode3 = await node3.loadCoValueCore(map.core.id);
 
     if (
-      mapOnNode1 === "unavailable" ||
-      mapOnNode2 === "unavailable" ||
-      mapOnNode3 === "unavailable"
+      !mapOnNode1.isAvailable() ||
+      !mapOnNode2.isAvailable() ||
+      !mapOnNode3.isAvailable()
     ) {
       throw new Error("Map is unavailable on node2 or node3");
     }
@@ -357,14 +349,9 @@ describe("sync - extra tests", () => {
 
   test("Node correctly handles and recovers from network partitions", async () => {
     // Create three nodes
-    const [admin1, session1] = randomAnonymousAccountAndSessionID();
-    const node1 = new LocalNode(admin1, session1, Crypto);
-
-    const [admin2, session2] = randomAnonymousAccountAndSessionID();
-    const node2 = new LocalNode(admin2, session2, Crypto);
-
-    const [admin3, session3] = randomAnonymousAccountAndSessionID();
-    const node3 = new LocalNode(admin3, session3, Crypto);
+    const node1 = nodeWithRandomAgentAndSessionID();
+    const node2 = nodeWithRandomAgentAndSessionID();
+    const node3 = nodeWithRandomAgentAndSessionID();
 
     // Create a group and a map on node1
     const group = node1.createGroup();
@@ -419,9 +406,9 @@ describe("sync - extra tests", () => {
     const mapOnNode3Core = await node3.loadCoValueCore(map.core.id);
 
     if (
-      mapOnNode1Core === "unavailable" ||
-      mapOnNode2Core === "unavailable" ||
-      mapOnNode3Core === "unavailable"
+      !mapOnNode1Core.isAvailable() ||
+      !mapOnNode2Core.isAvailable() ||
+      !mapOnNode3Core.isAvailable()
     ) {
       throw new Error("Map is unavailable on node2 or node3");
     }
@@ -761,7 +748,7 @@ describe("SyncManager.addPeer", () => {
 
     await map.core.waitForSync();
 
-    expect(jazzCloud.node.coValuesStore.get(map.id).isAvailable()).toBe(true);
+    expect(jazzCloud.node.getCoValue(map.id).isAvailable()).toBe(true);
   });
 });
 
@@ -816,13 +803,13 @@ describe("loadCoValueCore with retry", () => {
     // Start loading before syncing
     const result = await bob.loadCoValueCore(map.id);
 
-    expect(result).toBe("unavailable");
+    expect(result.isAvailable()).toBe(false);
 
     connectTwoPeers(alice, bob, "server", "server");
 
     const result2 = await bob.loadCoValueCore(map.id);
 
-    expect(result2).not.toBe("unavailable");
+    expect(result2.isAvailable()).toBe(true);
   });
 
   test("should successfully mark a coValue as unavailable if the server does not have it", async () => {
@@ -840,7 +827,7 @@ describe("loadCoValueCore with retry", () => {
     // Start loading before syncing
     const result = await bob.loadCoValueCore(map.id);
 
-    expect(result).toBe("unavailable");
+    expect(result.isAvailable()).toBe(false);
   });
 });
 
@@ -924,8 +911,7 @@ describe("metrics", () => {
 
   test("should correctly track the number of connected peers", async () => {
     const metricReader = createTestMetricReader();
-    const [admin, session] = randomAnonymousAccountAndSessionID();
-    const node = new LocalNode(admin, session, Crypto);
+    const node = nodeWithRandomAgentAndSessionID();
 
     let connectedPeers = await metricReader.getMetricValue("jazz.peers", {
       role: "client",
@@ -1073,7 +1059,7 @@ describe("SyncManager.handleSyncMessage", () => {
 
     // Add a coValue to the errored set
     const erroredId = "co_z123" as const;
-    client.node.coValuesStore.get(erroredId).markErrored(peer.id, {
+    client.node.getCoValue(erroredId).markErrored(peer.id, {
       message: "Test error",
     } as any);
 

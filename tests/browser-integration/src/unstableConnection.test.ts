@@ -59,9 +59,7 @@ describe("Browser sync on unstable connection", () => {
 
     await syncServer.disconnectAllClients();
 
-    const fileStream = await file.waitForSync();
-
-    expect(fileStream).toBeDefined();
+    await file.waitForSync();
 
     contextManager.done();
     await new AuthSecretStorage().clear();

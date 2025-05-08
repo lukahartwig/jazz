@@ -84,6 +84,44 @@ describe("client to server upload", () => {
     `);
   });
 
+  test("coValue uploading with a missing dependency", async () => {
+    const client = setupTestNode({
+      connected: true,
+    });
+
+    const group = client.node.createGroup();
+    const map = group.createMap();
+    map.set("hello", "world", "trusting");
+
+    await group.core.waitForSync();
+    await map.core.waitForSync();
+
+    map.set("hello", "new world", "trusting");
+    // Testing that with a missing group the sync will not fail
+    client.node.internalDeleteCoValue(group.id);
+
+    await map.core.waitForSync();
+
+    const mapOnServer = await loadCoValueOrFail(jazzCloud.node, map.id);
+    expect(mapOnServer.get("hello")).toEqual("new world");
+
+    expect(
+      SyncMessagesLog.getMessages({
+        Group: group.core,
+        Map: map.core,
+      }),
+    ).toMatchInlineSnapshot(`
+      [
+        "client -> server | CONTENT Group header: true new: After: 0 New: 3",
+        "server -> client | KNOWN Group sessions: header/3",
+        "client -> server | CONTENT Map header: true new: After: 0 New: 1",
+        "server -> client | KNOWN Map sessions: header/1",
+        "client -> server | CONTENT Map header: false new: After: 1 New: 1",
+        "server -> client | KNOWN Map sessions: header/2",
+      ]
+    `);
+  });
+
   test("wrong optimistic known state should be corrected", async () => {
     const client = setupTestNode({
       connected: true,
@@ -101,7 +139,7 @@ describe("client to server upload", () => {
     await map.core.waitForSync();
 
     // Forcefully delete the coValue from the client (simulating some data loss)
-    jazzCloud.node.coValuesStore.coValues.delete(map.id);
+    jazzCloud.node.internalDeleteCoValue(map.id);
 
     map.set("fromClient", "updated", "trusting");
 

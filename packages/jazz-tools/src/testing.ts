@@ -185,7 +185,7 @@ export class TestJazzContextManager<
 
     const credentials = {
       accountID: account.id,
-      accountSecret: node.account.agentSecret,
+      accountSecret: node.getCurrentAgent().agentSecret,
       secretSeed: SecretSeedMap.get(account.id),
       provider,
     } satisfies AuthCredentials;

@@ -1,4 +1,7 @@
-import { CoValueCore } from "../coValueCore.js";
+import {
+  AvailableCoValueCore,
+  CoValueCore,
+} from "../coValueCore/coValueCore.js";
 import { JsonObject } from "../jsonValue.js";
 import { DeletionOpPayload, OpID, RawCoList } from "./coList.js";
 
@@ -61,7 +64,7 @@ export class RawCoPlainText<
     PlaintextIdxMapping
   >;
 
-  constructor(core: CoValueCore) {
+  constructor(core: AvailableCoValueCore) {
     super(core);
     this._cachedMapping = new WeakMap();
     if (!Intl.Segmenter) {
@@ -72,10 +75,10 @@ export class RawCoPlainText<
 
     // Use locale from meta if provided, fallback to browser locale, or 'en' as last resort
     const effectiveLocale =
-      (core.header.meta &&
-      typeof core.header.meta === "object" &&
-      "locale" in core.header.meta
-        ? (core.header.meta.locale as string)
+      (core.verified.header.meta &&
+      typeof core.verified.header.meta === "object" &&
+      "locale" in core.verified.header.meta
+        ? (core.verified.header.meta.locale as string)
         : undefined) ||
       (typeof navigator !== "undefined" ? navigator.language : "en");
 

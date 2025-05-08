@@ -123,7 +123,8 @@ describe("startWorker integration", () => {
 
     const worker2 = await startWorker({
       accountID: worker1.worker.id,
-      accountSecret: worker1.worker._raw.core.node.account.agentSecret,
+      accountSecret:
+        worker1.worker._raw.core.node.getCurrentAgent().agentSecret,
       syncServer: worker1.syncServer,
       AccountSchema: CustomAccount,
     });

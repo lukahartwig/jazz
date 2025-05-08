@@ -1,5 +1,3 @@
-import { readFile } from "node:fs/promises";
-import { join } from "node:path";
 import { ImageResponse } from "next/og";
 import { JazzLogo } from "../atoms/logos/JazzLogo";
 
@@ -9,6 +7,23 @@ export const imageSize = {
 };
 
 export const imageContentType = "image/png";
+
+async function loadManropeGoogleFont() {
+  const url = `https://fonts.googleapis.com/css2?family=Manrope:wght@600`;
+  const css = await (await fetch(url)).text();
+  const resource = css.match(
+    /src: url\((.+)\) format\('(opentype|truetype)'\)/,
+  );
+
+  if (resource) {
+    const response = await fetch(resource[1]);
+    if (response.status == 200) {
+      return await response.arrayBuffer();
+    }
+  }
+
+  throw new Error("failed to load font data");
+}
 
 export async function OpenGraphImage({
   title,
@@ -23,9 +38,11 @@ export async function OpenGraphImage({
   topic?: string;
   subtopic?: string;
 }) {
-  const manropeSemiBold = await readFile(
-    join(process.cwd(), "public/fonts/Manrope-SemiBold.ttf"),
-  );
+  if (!title) {
+    throw new Error(
+      `No title from tocItems in opengraph-image.tsx ${framework} ${topic} ${subtopic}`,
+    );
+  }
 
   return new ImageResponse(
     <div
@@ -106,7 +123,9 @@ export async function OpenGraphImage({
       fonts: [
         {
           name: "Manrope",
-          data: manropeSemiBold,
+          data: await loadManropeGoogleFont(),
+          style: "normal",
+          weight: 600,
         },
       ],
     },

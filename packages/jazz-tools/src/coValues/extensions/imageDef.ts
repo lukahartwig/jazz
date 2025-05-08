@@ -1,4 +1,4 @@
-import { co, subscriptionsScopes } from "../../internal.js";
+import { co } from "../../internal.js";
 import { FileStream } from "../coFeed.js";
 import { CoMap } from "../coMap.js";
 
@@ -14,12 +14,6 @@ export class ImageDefinition extends CoMap {
     maxWidth?: number;
     targetWidth?: number;
   }): { res: `${number}x${number}`; stream: FileStream } | undefined {
-    if (!subscriptionsScopes.get(this)) {
-      console.warn(
-        "highestResAvailable() only makes sense when used within a subscription.",
-      );
-    }
-
     const resolutions = Object.keys(this).filter((key) =>
       key.match(/^\d+x\d+$/),
     ) as `${number}x${number}`[];

@@ -1,17 +1,9 @@
-import {
-  assert,
-  afterEach,
-  beforeEach,
-  describe,
-  expect,
-  onTestFinished,
-  test,
-  vi,
-} from "vitest";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { PeerState } from "../PeerState";
-import { CoValueCore } from "../coValueCore";
-import { CoValueState } from "../coValueState";
+import { CoValueCore } from "../coValueCore/coValueCore";
+import { CoValueHeader, VerifiedState } from "../coValueCore/verifiedState";
 import { RawCoID } from "../ids";
+import { LocalNode } from "../localNode";
 import { Peer } from "../sync";
 import { createTestMetricReader, tearDownTestMetricReader } from "./testUtils";
 
@@ -25,14 +17,16 @@ afterEach(() => {
   tearDownTestMetricReader();
 });
 
-describe("CoValueState", () => {
+const mockNode = {} as LocalNode;
+
+describe("CoValueCore loading state", () => {
   const mockCoValueId = "co_test123" as RawCoID;
 
   test("should create unknown state", async () => {
-    const state = new CoValueState(mockCoValueId);
+    const state = CoValueCore.fromID(mockCoValueId, mockNode);
 
     expect(state.id).toBe(mockCoValueId);
-    expect(state.highLevelState).toBe("unknown");
+    expect(state.loadingState).toBe("unknown");
     expect(
       await metricReader.getMetricValue("jazz.covalues.loaded", {
         state: "unknown",
@@ -41,14 +35,14 @@ describe("CoValueState", () => {
   });
 
   test("should create loading state", async () => {
-    const state = new CoValueState(mockCoValueId);
+    const state = CoValueCore.fromID(mockCoValueId, mockNode);
     state.loadFromPeers([
       createMockPeerState({ id: "peer1", role: "server" }),
       createMockPeerState({ id: "peer2", role: "server" }),
     ]);
 
     expect(state.id).toBe(mockCoValueId);
-    expect(state.highLevelState).toBe("loading");
+    expect(state.loadingState).toBe("loading");
     expect(
       await metricReader.getMetricValue("jazz.covalues.loaded", {
         state: "loading",
@@ -57,14 +51,16 @@ describe("CoValueState", () => {
   });
 
   test("should create available state", async () => {
-    const mockCoValue = createMockCoValueCore(mockCoValueId);
-    const state = new CoValueState(mockCoValueId);
-    state.internalMarkMagicallyAvailable(mockCoValue);
+    const mockVerified = createMockCoValueVerified(mockCoValueId);
+    const state = CoValueCore.fromID(mockCoValueId, mockNode);
+    state.internalMarkMagicallyAvailable(mockVerified);
 
     expect(state.id).toBe(mockCoValueId);
-    expect(state.highLevelState).toBe("available");
-    expect(state.core).toBe(mockCoValue);
-    await expect(state.getCoValue()).resolves.toEqual(mockCoValue);
+    expect(state.loadingState).toBe("available");
+    expect(state.verified).toBe(mockVerified);
+    await expect(state.waitForAvailableOrUnavailable()).resolves.toMatchObject({
+      verified: mockVerified,
+    });
     expect(
       await metricReader.getMetricValue("jazz.covalues.loaded", {
         state: "available",
@@ -73,8 +69,8 @@ describe("CoValueState", () => {
   });
 
   test("should handle found action", async () => {
-    const mockCoValue = createMockCoValueCore(mockCoValueId);
-    const state = new CoValueState(mockCoValueId);
+    const mockVerified = createMockCoValueVerified(mockCoValueId);
+    const state = CoValueCore.fromID(mockCoValueId, mockNode);
     state.loadFromPeers([
       createMockPeerState({ id: "peer1", role: "server" }),
       createMockPeerState({ id: "peer2", role: "server" }),
@@ -91,13 +87,15 @@ describe("CoValueState", () => {
       }),
     ).toBe(1);
 
-    const stateValuePromise = state.getCoValue();
+    const stateValuePromise = state.waitForAvailableOrUnavailable();
 
-    state.internalMarkMagicallyAvailable(mockCoValue);
+    state.internalMarkMagicallyAvailable(mockVerified);
 
-    const result = await state.getCoValue();
-    expect(result).toBe(mockCoValue);
-    await expect(stateValuePromise).resolves.toBe(mockCoValue);
+    const result = await state.waitForAvailableOrUnavailable();
+    expect(result).toMatchObject({ verified: mockVerified });
+    await expect(stateValuePromise).resolves.toMatchObject({
+      verified: mockVerified,
+    });
 
     expect(
       await metricReader.getMetricValue("jazz.covalues.loaded", {
@@ -135,17 +133,18 @@ describe("CoValueState", () => {
 
     const mockPeers = [peer1, peer2] as unknown as PeerState[];
 
-    const state = new CoValueState(mockCoValueId);
+    const state = CoValueCore.fromID(mockCoValueId, mockNode);
     const loadPromise = state.loadFromPeers(mockPeers);
 
     await vi.runAllTimersAsync();
-
     await loadPromise;
 
     expect(peer1.pushOutgoingMessage).toHaveBeenCalledTimes(1);
     expect(peer2.pushOutgoingMessage).toHaveBeenCalledTimes(1);
-    expect(state.highLevelState).toBe("unavailable");
-    await expect(state.getCoValue()).resolves.toBe("unavailable");
+    expect(state.loadingState).toBe("unavailable");
+    await expect(state.waitForAvailableOrUnavailable()).resolves.toMatchObject({
+      verified: null,
+    });
 
     vi.useRealTimers();
   });
@@ -165,18 +164,22 @@ describe("CoValueState", () => {
 
     const mockPeers = [peer1] as unknown as PeerState[];
 
-    const state = new CoValueState(mockCoValueId);
+    const state = CoValueCore.fromID(mockCoValueId, mockNode);
     const loadPromise = state.loadFromPeers(mockPeers);
 
     await vi.runAllTimersAsync();
 
-    state.internalMarkMagicallyAvailable(createMockCoValueCore(mockCoValueId));
+    state.internalMarkMagicallyAvailable(
+      createMockCoValueVerified(mockCoValueId),
+    );
 
     await loadPromise;
 
     expect(peer1.pushOutgoingMessage).toHaveBeenCalledTimes(1);
-    expect(state.highLevelState).toBe("available");
-    await expect(state.getCoValue()).resolves.toEqual({ id: mockCoValueId });
+    expect(state.loadingState).toBe("available");
+    await expect(state.waitForAvailableOrUnavailable()).resolves.toMatchObject({
+      _verified: expect.any(Object),
+    });
 
     vi.useRealTimers();
   });
@@ -184,7 +187,7 @@ describe("CoValueState", () => {
   test("should start sending the known state to peers when available", async () => {
     vi.useFakeTimers();
 
-    const mockCoValue = createMockCoValueCore(mockCoValueId);
+    const mockVerified = createMockCoValueVerified(mockCoValueId);
 
     const peer1 = createMockPeerState(
       {
@@ -192,7 +195,7 @@ describe("CoValueState", () => {
         role: "storage",
       },
       async () => {
-        state.markAvailable(mockCoValue, "peer1");
+        state.markAvailable({} as CoValueHeader, "peer1");
       },
     );
     const peer2 = createMockPeerState(
@@ -205,7 +208,7 @@ describe("CoValueState", () => {
       },
     );
 
-    const state = new CoValueState(mockCoValueId);
+    const state = CoValueCore.fromID(mockCoValueId, mockNode);
     const loadPromise = state.loadFromPeers([peer1, peer2]);
 
     await vi.runAllTimersAsync();
@@ -215,10 +218,12 @@ describe("CoValueState", () => {
     expect(peer2.pushOutgoingMessage).toHaveBeenCalledTimes(1);
     expect(peer2.pushOutgoingMessage).toHaveBeenCalledWith({
       action: "load",
-      ...mockCoValue.knownState(),
+      ...mockVerified.knownState(),
     });
-    expect(state.highLevelState).toBe("available");
-    await expect(state.getCoValue()).resolves.toEqual({ id: mockCoValueId });
+    expect(state.loadingState).toBe("available");
+    await expect(state.waitForAvailableOrUnavailable()).resolves.toMatchObject({
+      verified: mockVerified,
+    });
 
     vi.useRealTimers();
   });
@@ -226,7 +231,7 @@ describe("CoValueState", () => {
   test("should skip closed peers", async () => {
     vi.useFakeTimers();
 
-    const mockCoValue = createMockCoValueCore(mockCoValueId);
+    const mockVerified = createMockCoValueVerified(mockCoValueId);
 
     const peer1 = createMockPeerState(
       {
@@ -243,13 +248,13 @@ describe("CoValueState", () => {
         role: "server",
       },
       async () => {
-        state.markAvailable(mockCoValue, "peer2");
+        state.markAvailable({} as CoValueHeader, "peer2");
       },
     );
 
     peer1.closed = true;
 
-    const state = new CoValueState(mockCoValueId);
+    const state = CoValueCore.fromID(mockCoValueId, mockNode);
     const loadPromise = state.loadFromPeers([peer1, peer2]);
 
     await vi.runAllTimersAsync();
@@ -258,8 +263,10 @@ describe("CoValueState", () => {
     expect(peer1.pushOutgoingMessage).toHaveBeenCalledTimes(0);
     expect(peer2.pushOutgoingMessage).toHaveBeenCalledTimes(1);
 
-    expect(state.highLevelState).toBe("available");
-    await expect(state.getCoValue()).resolves.toEqual({ id: mockCoValueId });
+    expect(state.loadingState).toBe("available");
+    await expect(state.waitForAvailableOrUnavailable()).resolves.toMatchObject({
+      verified: mockVerified,
+    });
 
     vi.useRealTimers();
   });
@@ -275,7 +282,7 @@ describe("CoValueState", () => {
       async () => {},
     );
 
-    const state = new CoValueState(mockCoValueId);
+    const state = CoValueCore.fromID(mockCoValueId, mockNode);
     const loadPromise = state.loadFromPeers([peer1]);
 
     await vi.runAllTimersAsync();
@@ -283,8 +290,10 @@ describe("CoValueState", () => {
 
     expect(peer1.pushOutgoingMessage).toHaveBeenCalledTimes(1);
 
-    expect(state.highLevelState).toBe("unavailable");
-    await expect(state.getCoValue()).resolves.toEqual("unavailable");
+    expect(state.loadingState).toBe("unavailable");
+    await expect(state.waitForAvailableOrUnavailable()).resolves.toMatchObject({
+      verified: null,
+    });
 
     vi.useRealTimers();
   });
@@ -311,17 +320,18 @@ function createMockPeerState(
   return peerState;
 }
 
-function createMockCoValueCore(mockCoValueId: string) {
+function createMockCoValueVerified(mockCoValueId: string) {
   // Setting the knownState as part of the prototype to simplify
   // the equality checks
-  const mockCoValue = Object.create({
+  const mockCoValueVerified = Object.create({
+    id: mockCoValueId,
     knownState: vi.fn().mockReturnValue({
       id: mockCoValueId,
       header: true,
       sessions: {},
     }),
-  });
+    clone: vi.fn().mockReturnThis(),
+  }) as unknown as VerifiedState;
 
-  mockCoValue.id = mockCoValueId;
-  return mockCoValue as unknown as CoValueCore;
+  return mockCoValueVerified as unknown as VerifiedState;
 }

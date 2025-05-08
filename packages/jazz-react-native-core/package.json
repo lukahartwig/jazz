@@ -1,7 +1,7 @@
 {
   "name": "jazz-react-native-core",
   "type": "module",
-  "version": "0.13.17",
+  "version": "0.13.20",
   "license": "MIT",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
@@ -12,6 +12,11 @@
       "react-native": "./dist/index.js",
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
+    },
+    "./dist/crypto": {
+      "react-native": "./dist/crypto/index.js",
+      "types": "./dist/crypto/index.d.ts",
+      "default": "./dist/crypto/index.js"
     },
     "./crypto": {
       "react-native": "./dist/crypto/index.js",

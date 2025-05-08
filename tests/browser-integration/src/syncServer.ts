@@ -2,7 +2,7 @@ import { randomUUID } from "crypto";
 import { createServer } from "http";
 import { tmpdir } from "os";
 import { dirname, join } from "path";
-import { ControlledAgent, LocalNode } from "cojson";
+import { LocalNode } from "cojson";
 import { SQLiteStorage } from "cojson-storage-sqlite";
 import { createWebSocketPeer } from "cojson-transport-ws";
 import { WasmCrypto } from "cojson/crypto/WasmCrypto";
@@ -26,7 +26,7 @@ export const startSyncServer = async (port?: number, dbName?: string) => {
   const agentID = crypto.getAgentID(agentSecret);
 
   const localNode = new LocalNode(
-    new ControlledAgent(agentSecret, crypto),
+    agentSecret,
     crypto.newRandomSessionID(agentID),
     crypto,
   );

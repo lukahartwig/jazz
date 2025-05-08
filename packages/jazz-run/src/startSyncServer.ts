@@ -1,7 +1,7 @@
 import { createServer } from "http";
 import { mkdir } from "node:fs/promises";
 import { dirname } from "node:path";
-import { ControlledAgent, LocalNode } from "cojson";
+import { LocalNode } from "cojson";
 import { SQLiteStorage } from "cojson-storage-sqlite";
 import { createWebSocketPeer } from "cojson-transport-ws";
 import { WasmCrypto } from "cojson/crypto/WasmCrypto";
@@ -30,7 +30,7 @@ export const startSyncServer = async ({
   const agentID = crypto.getAgentID(agentSecret);
 
   const localNode = new LocalNode(
-    new ControlledAgent(agentSecret, crypto),
+    agentSecret,
     crypto.newRandomSessionID(agentID),
     crypto,
   );

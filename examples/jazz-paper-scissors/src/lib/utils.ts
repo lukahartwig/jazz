@@ -8,7 +8,10 @@ export function cn(...inputs: ClassValue[]) {
 /**
  * Given a player selections, returns the winner of the current game.
  */
-export function determineWinner(player1Choice: string, player2Choice: string) {
+export function determineWinner(
+  player1Choice: "rock" | "paper" | "scissors",
+  player2Choice: "rock" | "paper" | "scissors",
+) {
   if (player1Choice === player2Choice) {
     return "draw";
   } else if (

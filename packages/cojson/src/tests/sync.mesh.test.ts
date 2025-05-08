@@ -225,7 +225,7 @@ describe("multiple clients syncing with the a cloud-like server mesh", () => {
     );
 
     // Forcefully delete the coValue from the edge (simulating some data loss)
-    mesh.edgeItaly.node.coValuesStore.coValues.delete(map.id);
+    mesh.edgeItaly.node.internalDeleteCoValue(map.id);
 
     mapOnClient.set("fromClient", "updated", "trusting");
     mapOnCoreServer.set("fromServer", "updated", "trusting");

@@ -26,7 +26,7 @@ describe("WebSocket Peer Integration", () => {
     // Create client node
     const clientAgent = crypto.newRandomAgentSecret();
     const clientNode = new LocalNode(
-      new ControlledAgent(clientAgent, crypto),
+      clientAgent,
       crypto.newRandomSessionID(crypto.getAgentID(clientAgent)),
       crypto,
     );
@@ -66,7 +66,7 @@ describe("WebSocket Peer Integration", () => {
   test("should sync data between nodes through WebSocket connection", async () => {
     const clientAgent = crypto.newRandomAgentSecret();
     const clientNode = new LocalNode(
-      new ControlledAgent(clientAgent, crypto),
+      clientAgent,
       crypto.newRandomSessionID(crypto.getAgentID(clientAgent)),
       crypto,
     );
@@ -99,7 +99,7 @@ describe("WebSocket Peer Integration", () => {
   test("should handle disconnection and cleanup", async () => {
     const clientAgent = crypto.newRandomAgentSecret();
     const clientNode = new LocalNode(
-      new ControlledAgent(clientAgent, crypto),
+      clientAgent,
       crypto.newRandomSessionID(crypto.getAgentID(clientAgent)),
       crypto,
     );
@@ -134,7 +134,7 @@ describe("WebSocket Peer Integration", () => {
   test("should trigger a timeout if the server does not respond", async () => {
     const clientAgent = crypto.newRandomAgentSecret();
     const clientNode = new LocalNode(
-      new ControlledAgent(clientAgent, crypto),
+      clientAgent,
       crypto.newRandomSessionID(crypto.getAgentID(clientAgent)),
       crypto,
     );

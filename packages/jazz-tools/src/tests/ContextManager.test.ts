@@ -113,7 +113,7 @@ describe("ContextManager", () => {
 
     const credentials = {
       accountID: account.id,
-      accountSecret: account._raw.core.node.account.agentSecret,
+      accountSecret: account._raw.core.node.getCurrentAgent().agentSecret,
       provider: "test",
     };
 
@@ -130,7 +130,7 @@ describe("ContextManager", () => {
 
     const credentials = {
       accountID: account.id,
-      accountSecret: account._raw.core.node.account.agentSecret,
+      accountSecret: account._raw.core.node.getCurrentAgent().agentSecret,
       provider: "test",
     };
 
@@ -193,7 +193,7 @@ describe("ContextManager", () => {
     // Authenticate with credentials
     await manager.authenticate({
       accountID: account.id,
-      accountSecret: account._raw.core.node.account.agentSecret,
+      accountSecret: account._raw.core.node.getCurrentAgent().agentSecret,
       provider: "test",
     });
 
@@ -207,7 +207,7 @@ describe("ContextManager", () => {
 
     await manager.getAuthSecretStorage().set({
       accountID: account.id,
-      accountSecret: account._raw.core.node.account.agentSecret,
+      accountSecret: account._raw.core.node.getCurrentAgent().agentSecret,
       provider: "test",
     });
 
@@ -217,7 +217,7 @@ describe("ContextManager", () => {
     // Authenticate with same credentials
     await manager.authenticate({
       accountID: account.id,
-      accountSecret: account._raw.core.node.account.agentSecret,
+      accountSecret: account._raw.core.node.getCurrentAgent().agentSecret,
       provider: "test",
     });
 
@@ -253,15 +253,19 @@ describe("ContextManager", () => {
       customManager.getCurrentValue() as JazzAuthContext<CustomAccount>
     ).me;
 
+    console.log("before", account._refs.root?.id);
+
     await customManager.authenticate({
       accountID: account.id,
-      accountSecret: account._raw.core.node.account.agentSecret,
+      accountSecret: account._raw.core.node.getCurrentAgent().agentSecret,
       provider: "test",
     });
 
     const me = await CustomAccount.getMe().ensureLoaded({
       resolve: { root: true },
     });
+
+    console.log("after", me._refs.root?.id);
 
     expect(me.root.id).toBe(lastRootId);
   });
@@ -299,7 +303,7 @@ describe("ContextManager", () => {
 
     await customManager.authenticate({
       accountID: account.id,
-      accountSecret: account._raw.core.node.account.agentSecret,
+      accountSecret: account._raw.core.node.getCurrentAgent().agentSecret,
       provider: "test",
     });
 
@@ -365,7 +369,7 @@ describe("ContextManager", () => {
 
     await customManager.authenticate({
       accountID: account.id,
-      accountSecret: account._raw.core.node.account.agentSecret,
+      accountSecret: account._raw.core.node.getCurrentAgent().agentSecret,
       provider: "test",
     });
 
@@ -408,7 +412,7 @@ describe("ContextManager", () => {
 
     await manager.getAuthSecretStorage().set({
       accountID: account.id,
-      accountSecret: account._raw.core.node.account.agentSecret,
+      accountSecret: account._raw.core.node.getCurrentAgent().agentSecret,
       provider: "test",
     });
 

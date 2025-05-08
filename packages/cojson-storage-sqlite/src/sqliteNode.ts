@@ -56,17 +56,15 @@ export class SQLiteNode {
 
   static async asPeer({
     filename,
-    trace,
     localNodeName = "local",
   }: {
     filename: string;
-    trace?: boolean;
     localNodeName?: string;
   }): Promise<Peer> {
     const [localNodeAsPeer, storageAsPeer] = cojsonInternals.connectedPeers(
       localNodeName,
       "storage",
-      { peer1role: "client", peer2role: "storage", trace, crashOnClose: true },
+      { peer1role: "client", peer2role: "storage", crashOnClose: true },
     );
 
     await SQLiteNode.open(

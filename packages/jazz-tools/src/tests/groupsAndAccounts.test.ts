@@ -3,7 +3,7 @@ import { assert, beforeEach, describe, expect, test } from "vitest";
 import { Account, CoMap, Group, Profile, co } from "../exports.js";
 import { Ref } from "../internal.js";
 import { createJazzTestAccount, setupJazzTestSync } from "../testing.js";
-import { setupTwoNodes } from "./utils.js";
+import { setupTwoNodes, waitFor } from "./utils.js";
 
 const Crypto = await WasmCrypto.create();
 
@@ -113,10 +113,12 @@ describe("Group inheritance", () => {
 
     mapInChild.title = "In Child (updated)";
 
-    const mapAsReaderAfterUpdate = await TestMap.load(mapInChild.id, {
-      loadAs: reader,
+    await waitFor(async () => {
+      const mapAsReaderAfterUpdate = await TestMap.load(mapInChild.id, {
+        loadAs: reader,
+      });
+      expect(mapAsReaderAfterUpdate).toBe(null);
     });
-    expect(mapAsReaderAfterUpdate).toBe(null);
   });
 
   test("Group inheritance with grand-children", async () => {

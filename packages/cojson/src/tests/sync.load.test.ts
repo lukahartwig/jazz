@@ -77,12 +77,12 @@ describe("loading coValues from server", () => {
         "client2 -> server | LOAD Map sessions: empty",
         "server -> client2 | KNOWN Map sessions: empty",
         "client -> server | LOAD Group sessions: header/3",
-        "client -> server | LOAD Map sessions: header/1",
         "server -> client | KNOWN Group sessions: empty",
-        "client -> server | CONTENT Group header: true new: After: 0 New: 3",
+        "client -> server | LOAD Map sessions: header/1",
         "server -> client | KNOWN Map sessions: empty",
-        "client -> server | CONTENT Map header: true new: After: 0 New: 1",
+        "client -> server | CONTENT Group header: true new: After: 0 New: 3",
         "server -> client | KNOWN Group sessions: header/3",
+        "client -> server | CONTENT Map header: true new: After: 0 New: 1",
         "server -> client | KNOWN Map sessions: header/1",
         "server -> client2 | CONTENT Group header: true new: After: 0 New: 3",
         "client2 -> server | KNOWN Group sessions: header/3",
@@ -197,8 +197,6 @@ describe("loading coValues from server", () => {
     await map.core.waitForSync();
     await mapOnClient.core.waitForSync();
 
-    expect(mapOnClient.get("fromServer")).toEqual("updated");
-    expect(mapOnClient.get("fromClient")).toEqual("updated");
     expect(
       SyncMessagesLog.getMessages({
         Group: group.core,
@@ -217,6 +215,9 @@ describe("loading coValues from server", () => {
         "client -> server | KNOWN Map sessions: header/3",
       ]
     `);
+
+    expect(mapOnClient.get("fromServer")).toEqual("updated");
+    expect(mapOnClient.get("fromClient")).toEqual("updated");
   });
 
   test("wrong optimistic known state should be corrected", async () => {
@@ -236,7 +237,7 @@ describe("loading coValues from server", () => {
     await loadCoValueOrFail(client.node, map.id);
 
     // Forcefully delete the coValue from the client (simulating some data loss)
-    client.node.coValuesStore.coValues.delete(map.id);
+    client.node.internalDeleteCoValue(map.id);
 
     map.set("fromServer", "updated", "trusting");
 

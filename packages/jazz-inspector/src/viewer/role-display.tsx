@@ -14,10 +14,10 @@ export function RoleDisplay({
 
   let role;
 
-  if (value.group.id == node.account.id) {
+  if (value.group.id == node.getCurrentAgent().id) {
     role = "owner";
-  } else if (snapshot[node.account.id]) {
-    role = snapshot[node.account.id] as string;
+  } else if (snapshot[node.getCurrentAgent().id]) {
+    role = snapshot[node.getCurrentAgent().id] as string;
   } else if (snapshot.everyone) {
     role = snapshot.everyone as string;
   } else {

@@ -231,4 +231,32 @@ describe("Browser sync", () => {
     expect(loadedMap).toBeDefined();
     expect(loadedMap?.value).toBe("test data");
   });
+
+  test("manage to persist the account even when the node is closed immediately after creating the value", async () => {
+    const syncServer = await startSyncServer();
+
+    const { contextManager } = await createAccountContext({
+      sync: {
+        peer: syncServer.url,
+      },
+      storage: "indexedDB",
+      AccountSchema: CustomAccount,
+    });
+
+    contextManager.done();
+
+    // Adding a delay to avoid flakiness on CI
+    // probably on slow environments, data can't be immediately read from IndexedDB after writing
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
+    const { account } = await createAccountContext({
+      sync: {
+        peer: syncServer.url,
+      },
+      storage: "indexedDB",
+      AccountSchema: CustomAccount,
+    });
+
+    expect(account).toBeDefined();
+  });
 });

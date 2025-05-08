@@ -90,14 +90,38 @@ export async function getMdxWithToc(framework: string, slug?: string[]) {
   } = mdxSource;
 
   // Remove items that should not be shown for the current framework
-  const tocItems = (tableOfContents as Toc).filter(({ id }) =>
-    id && id in headingsFrameworkVisibility
-      ? headingsFrameworkVisibility[id]?.includes(framework)
-      : true,
+  const tocItems = filterTocItemsForFramework(
+    tableOfContents as Toc,
+    framework,
+    headingsFrameworkVisibility
   );
 
   return {
     Content,
     tocItems,
   };
+}
+function filterTocItemsForFramework(
+  tocItems: Toc,
+  framework: string,
+  headingsFrameworkVisibility: Record<string, string[]>
+): Toc {
+  return tocItems
+    .map(item => {
+      const isVisible =
+        !item.id || !(item.id in headingsFrameworkVisibility) ||
+        headingsFrameworkVisibility[item.id]?.includes(framework);
+
+      if (!isVisible) return null;
+
+      const filteredChildren = item.children
+        ? filterTocItemsForFramework(item.children, framework, headingsFrameworkVisibility)
+        : [];
+
+      return {
+        ...item,
+        children: filteredChildren,
+      };
+    })
+    .filter(Boolean) as Toc;
 }

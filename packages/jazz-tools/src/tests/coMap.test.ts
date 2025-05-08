@@ -1,420 +1,423 @@
 import { WasmCrypto } from "cojson/crypto/WasmCrypto";
-import { describe, expect, expectTypeOf, test, vi } from "vitest";
-import { Group, randomSessionProvider } from "../exports.js";
 import {
-  Account,
-  CoMap,
-  Encoders,
-  co,
-  cojsonInternals,
-  createJazzContextFromExistingCredentials,
-  isControlledAccount,
-} from "../index.js";
-import { setupTwoNodes } from "./utils.js";
+  assert,
+  beforeEach,
+  describe,
+  expect,
+  expectTypeOf,
+  it,
+  test,
+  vi,
+} from "vitest";
+import { Group, Resolved, subscribeToCoValue } from "../exports.js";
+import { Account, CoMap, Encoders, co, cojsonInternals } from "../index.js";
+import { createJazzTestAccount, setupJazzTestSync } from "../testing.js";
+import { setupTwoNodes, waitFor } from "./utils.js";
 
 const { connectedPeers } = cojsonInternals;
 
 const Crypto = await WasmCrypto.create();
 
-class TestMap extends CoMap {
-  color = co.string;
-  _height = co.number;
-  birthday = co.Date;
-  name? = co.string;
-  nullable = co.optional.encoded<string | undefined>({
-    encode: (value: string | undefined) => value || null,
-    decode: (value: unknown) => (value as string) || undefined,
-  });
-  optionalDate = co.optional.Date;
+beforeEach(async () => {
+  await setupJazzTestSync();
 
-  get roughColor() {
-    return this.color + "ish";
-  }
-}
-
-describe("Simple CoMap operations", async () => {
-  const me = await Account.create({
+  await createJazzTestAccount({
+    isCurrentActiveAccount: true,
     creationProps: { name: "Hermes Puggington" },
-    crypto: Crypto,
   });
+});
 
-  const birthday = new Date();
+describe("CoMap", async () => {
+  describe("init", () => {
+    test("create a CoMap with basic property access", () => {
+      class Person extends CoMap {
+        color = co.string;
+        _height = co.number;
+        birthday = co.Date;
+        name = co.string;
+        nullable = co.optional.encoded<string | undefined>({
+          encode: (value: string | undefined) => value || null,
+          decode: (value: unknown) => (value as string) || undefined,
+        });
+        optionalDate = co.optional.Date;
 
-  const map = TestMap.create(
-    {
-      color: "red",
-      _height: 10,
-      birthday: birthday,
-      nullable: undefined,
-    },
-    { owner: me },
-  );
+        get roughColor() {
+          return this.color + "ish";
+        }
+      }
 
-  test("Construction", () => {
-    expect(map.color).toEqual("red");
-    expect(map.roughColor).toEqual("redish");
-    expect(map._height).toEqual(10);
-    expect(map.birthday).toEqual(birthday);
-    expect(map._raw.get("birthday")).toEqual(birthday.toISOString());
-    expect(Object.keys(map)).toEqual([
-      "color",
-      "_height",
-      "birthday",
-      "nullable",
-    ]);
-  });
+      const birthday = new Date("1989-11-27");
 
-  test("Construction with an Account", () => {
-    const map = TestMap.create(
-      { color: "red", _height: 10, birthday: birthday },
-      me,
-    );
-
-    expect(map.color).toEqual("red");
-  });
-
-  test("Construction with a Group", () => {
-    const group = Group.create(me);
-    const map = TestMap.create(
-      { color: "red", _height: 10, birthday: birthday },
-      group,
-    );
-
-    expect(map.color).toEqual("red");
-  });
-
-  test("Construction with too many things provided", () => {
-    const mapWithExtra = TestMap.create(
-      {
-        color: "red",
-        _height: 10,
-        birthday: birthday,
-        name: "Hermes",
-        extra: "extra",
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } as any,
-      { owner: me },
-    );
-
-    expect(mapWithExtra.color).toEqual("red");
-  });
-
-  test("Empty schema", () => {
-    const emptyMap = CoMap.create({}, { owner: me });
-
-    // @ts-expect-error
-    expect(emptyMap.color).toEqual(undefined);
-  });
-
-  test("setting date as undefined should throw", () => {
-    expect(() =>
-      TestMap.create(
-        {
-          color: "red",
-          _height: 10,
-          birthday: undefined!,
-        },
-        { owner: me },
-      ),
-    ).toThrow();
-  });
-
-  test("toJSON should not fail when there is a key in the raw value not represented in the schema", () => {
-    class TestMap extends CoMap {
-      color = co.string;
-      height = co.number;
-    }
-
-    const map = TestMap.create({ color: "red", height: 10 }, { owner: me });
-
-    map._raw.set("extra", "extra");
-
-    expect(map.toJSON()).toEqual({
-      _type: "CoMap",
-      id: map.id,
-      color: "red",
-      height: 10,
-    });
-  });
-
-  test("toJSON should handle references", () => {
-    class TestMap extends CoMap {
-      color = co.string;
-      height = co.number;
-      nested = co.optional.ref(TestMap);
-    }
-
-    const map = TestMap.create({ color: "red", height: 10 }, { owner: me });
-
-    map.nested = TestMap.create({ color: "blue", height: 20 }, { owner: me });
-
-    expect(map.toJSON()).toEqual({
-      _type: "CoMap",
-      id: map.id,
-      color: "red",
-      height: 10,
-      nested: {
-        _type: "CoMap",
-        id: map.nested?.id,
-        color: "blue",
-        height: 20,
-      },
-    });
-  });
-
-  test("toJSON should handle circular references", () => {
-    class TestMap extends CoMap {
-      color = co.string;
-      height = co.number;
-      nested = co.optional.ref(TestMap);
-    }
-
-    const map = TestMap.create({ color: "red", height: 10 }, { owner: me });
-
-    map.nested = map;
-
-    expect(map.toJSON()).toEqual({
-      _type: "CoMap",
-      id: map.id,
-      color: "red",
-      height: 10,
-      nested: {
-        _circular: map.id,
-      },
-    });
-  });
-
-  test("testing toJSON on a CoMap with a Date field", () => {
-    const map = TestMap.create(
-      {
-        color: "red",
-        _height: 10,
-        birthday: new Date(),
-      },
-      { owner: me },
-    );
-
-    expect(map.toJSON()).toMatchObject({
-      color: "red",
-      _height: 10,
-      birthday: expect.any(String),
-      _type: "CoMap",
-      id: expect.any(String),
-    });
-  });
-
-  test("setting optional date as undefined should not throw", () => {
-    const map = TestMap.create(
-      {
+      const john = Person.create({
         color: "red",
         _height: 10,
         birthday,
-        optionalDate: undefined,
-      },
-      { owner: me },
-    );
-    expect(map.optionalDate).toBeUndefined();
+        name: "John",
+      });
+
+      expect(john.color).toEqual("red");
+      expect(john.roughColor).toEqual("redish");
+      expect(john._height).toEqual(10);
+      expect(john.birthday).toEqual(birthday);
+      expect(john._raw.get("birthday")).toEqual(birthday.toISOString());
+      expect(Object.keys(john)).toEqual([
+        "color",
+        "_height",
+        "birthday",
+        "name",
+      ]);
+    });
+
+    test("property existence", () => {
+      class Person extends CoMap {
+        name = co.string;
+      }
+
+      const john = Person.create({ name: "John" });
+
+      expect("name" in john).toEqual(true);
+      expect("age" in john).toEqual(false);
+    });
+
+    test("create a CoMap with an account as owner", () => {
+      class Person extends CoMap {
+        name = co.string;
+      }
+
+      const john = Person.create({ name: "John" }, Account.getMe());
+
+      expect(john.name).toEqual("John");
+      expect(john._raw.get("name")).toEqual("John");
+    });
+
+    test("create a CoMap with a group as owner", () => {
+      class Person extends CoMap {
+        name = co.string;
+      }
+
+      const john = Person.create({ name: "John" }, Group.create());
+
+      expect(john.name).toEqual("John");
+      expect(john._raw.get("name")).toEqual("John");
+    });
+
+    test("Empty schema", () => {
+      const emptyMap = CoMap.create({});
+
+      // @ts-expect-error
+      expect(emptyMap.color).toEqual(undefined);
+    });
+
+    test("setting date as undefined should throw", () => {
+      class Person extends CoMap {
+        color = co.string;
+        _height = co.number;
+        birthday = co.Date;
+        name = co.string;
+        nullable = co.optional.encoded<string | undefined>({
+          encode: (value: string | undefined) => value || null,
+          decode: (value: unknown) => (value as string) || undefined,
+        });
+        optionalDate = co.optional.Date;
+
+        get roughColor() {
+          return this.color + "ish";
+        }
+      }
+
+      expect(() =>
+        Person.create({
+          color: "red",
+          _height: 10,
+          name: "John",
+          birthday: undefined!,
+        }),
+      ).toThrow();
+    });
+
+    test("CoMap with reference", () => {
+      class Dog extends CoMap {
+        name = co.string;
+        breed = co.string;
+      }
+
+      class Person extends CoMap {
+        name = co.string;
+        age = co.number;
+        dog = co.ref(Dog);
+      }
+
+      const person = Person.create({
+        name: "John",
+        age: 20,
+        dog: Dog.create({ name: "Rex", breed: "Labrador" }),
+      });
+
+      expect(person.dog?.name).toEqual("Rex");
+      expect(person.dog?.breed).toEqual("Labrador");
+    });
+
+    test("CoMap with self reference", () => {
+      class Person extends CoMap {
+        name = co.string;
+        age = co.number;
+        friend = co.optional.ref(Person);
+      }
+
+      const person = Person.create({
+        name: "John",
+        age: 20,
+        friend: Person.create({ name: "Jane", age: 21 }),
+      });
+
+      expect(person.friend?.name).toEqual("Jane");
+      expect(person.friend?.age).toEqual(21);
+    });
+
+    test("toJSON should not fail when there is a key in the raw value not represented in the schema", () => {
+      class Person extends CoMap {
+        name = co.string;
+        age = co.number;
+      }
+
+      const person = Person.create({ name: "John", age: 20 });
+
+      person._raw.set("extra", "extra");
+
+      expect(person.toJSON()).toEqual({
+        _type: "CoMap",
+        id: person.id,
+        name: "John",
+        age: 20,
+      });
+    });
+
+    test("toJSON should handle references", () => {
+      class Person extends CoMap {
+        name = co.string;
+        age = co.number;
+        friend = co.optional.ref(Person);
+      }
+
+      const person = Person.create({
+        name: "John",
+        age: 20,
+        friend: Person.create({ name: "Jane", age: 21 }),
+      });
+
+      expect(person.toJSON()).toEqual({
+        _type: "CoMap",
+        id: person.id,
+        name: "John",
+        age: 20,
+        friend: {
+          _type: "CoMap",
+          id: person.friend?.id,
+          name: "Jane",
+          age: 21,
+        },
+      });
+    });
+
+    test("toJSON should handle circular references", () => {
+      class Person extends CoMap {
+        name = co.string;
+        age = co.number;
+        friend = co.optional.ref(Person);
+      }
+
+      const person = Person.create({
+        name: "John",
+        age: 20,
+      });
+
+      person.friend = person;
+
+      expect(person.toJSON()).toEqual({
+        _type: "CoMap",
+        id: person.id,
+        name: "John",
+        age: 20,
+        friend: {
+          _circular: person.id,
+        },
+      });
+    });
+
+    test("testing toJSON on a CoMap with a Date field", () => {
+      class Person extends CoMap {
+        name = co.string;
+        age = co.number;
+        birthday = co.Date;
+      }
+
+      const birthday = new Date();
+
+      const john = Person.create({
+        name: "John",
+        age: 20,
+        birthday,
+      });
+
+      expect(john.toJSON()).toMatchObject({
+        name: "John",
+        age: 20,
+        birthday: birthday.toISOString(),
+        _type: "CoMap",
+        id: john.id,
+      });
+    });
+
+    test("setting optional date as undefined should not throw", () => {
+      class Person extends CoMap {
+        name = co.string;
+        age = co.number;
+        birthday = co.optional.Date;
+      }
+
+      const john = Person.create({
+        name: "John",
+        age: 20,
+      });
+
+      expect(john.toJSON()).toMatchObject({
+        name: "John",
+        age: 20,
+      });
+    });
+
+    it("should disallow extra properties", () => {
+      class Person extends CoMap {
+        name = co.string;
+        age = co.number;
+      }
+
+      // @ts-expect-error - x is not a valid property
+      const john = Person.create({ name: "John", age: 30, x: 1 });
+
+      expect(john.toJSON()).toEqual({
+        _type: "CoMap",
+        id: john.id,
+        name: "John",
+        age: 30,
+      });
+    });
   });
 
   describe("Mutation", () => {
-    test("assignment & deletion", () => {
-      map.color = "blue";
-      expect(map.color).toEqual("blue");
-      expect(map._raw.get("color")).toEqual("blue");
-      const newBirthday = new Date();
-      map.birthday = newBirthday;
-      expect(map.birthday).toEqual(newBirthday);
-      expect(map._raw.get("birthday")).toEqual(newBirthday.toISOString());
+    test("change a primitive value", () => {
+      class Person extends CoMap {
+        name = co.string;
+        age = co.number;
+      }
 
-      Object.assign(map, { color: "green", _height: 20 });
-      expect(map.color).toEqual("green");
-      expect(map._raw.get("color")).toEqual("green");
-      expect(map._height).toEqual(20);
-      expect(map._raw.get("_height")).toEqual(20);
+      const john = Person.create({ name: "John", age: 20 });
 
-      map.nullable = "not null";
-      map.nullable = undefined;
-      delete map.nullable;
-      map.nullable = undefined;
+      john.name = "Jane";
 
-      map.name = "Secret name";
-      expect(map.name).toEqual("Secret name");
-      map.name = undefined;
-      expect(map.name).toEqual(undefined);
-      expect(Object.keys(map)).toContain("name");
-      delete map.name;
-      expect(map.name).toEqual(undefined);
-      expect(Object.keys(map)).not.toContain("name");
+      expect(john.name).toEqual("Jane");
+      expect(john.age).toEqual(20);
+    });
 
-      expect(map._edits).toMatchObject({
-        _height: {
-          by: { id: me.id },
-          value: 20,
-        },
-        birthday: {
-          by: { id: me.id },
-          value: newBirthday,
-        },
-        color: {
-          by: { id: me.id },
-          value: "green",
-          all: [
-            expect.objectContaining({
-              by: { _type: "Account", id: me.id },
-              value: "red",
-            }),
-            expect.objectContaining({
-              by: { _type: "Account", id: me.id },
-              value: "blue",
-            }),
-            expect.objectContaining({
-              by: { _type: "Account", id: me.id },
-              value: "green",
-            }),
-          ],
-        },
-        nullable: {
-          by: { id: me.id },
-          value: null,
-          all: [
-            expect.objectContaining({
-              by: { _type: "Account", id: me.id },
-              value: null,
-            }),
-            expect.objectContaining({
-              by: { _type: "Account", id: me.id },
-              value: "not null",
-            }),
-            expect.objectContaining({
-              by: { _type: "Account", id: me.id },
-              value: null,
-            }),
-            expect.objectContaining({
-              by: { _type: "Account", id: me.id },
-              value: undefined,
-            }),
-            expect.objectContaining({
-              by: { _type: "Account", id: me.id },
-              value: null,
-            }),
-          ],
-        },
-      });
+    test("delete an optional value", () => {
+      class Person extends CoMap {
+        name = co.string;
+        age = co.optional.number;
+      }
 
-      expect(JSON.parse(JSON.stringify(map._edits))).toMatchObject({
-        _height: {
-          by: { id: me.id },
-          value: 20,
-        },
-        birthday: {
-          by: { id: me.id },
-          value: newBirthday.toISOString(),
-        },
-        color: {
-          by: { id: me.id },
-          value: "green",
-          all: [
-            expect.objectContaining({
-              by: { _type: "Account", id: me.id },
-              value: "red",
-            }),
-            expect.objectContaining({
-              by: { _type: "Account", id: me.id },
-              value: "blue",
-            }),
-            expect.objectContaining({
-              by: { _type: "Account", id: me.id },
-              value: "green",
-            }),
-          ],
-        },
-        nullable: {
-          by: { id: me.id },
-          value: null,
-        },
+      const john = Person.create({ name: "John", age: 20 });
+
+      delete john.age;
+
+      expect(john.name).toEqual("John");
+      expect(john.age).toEqual(undefined);
+
+      expect(john.toJSON()).toEqual({
+        _type: "CoMap",
+        id: john.id,
+        name: "John",
       });
     });
-  });
 
-  describe("property existence", () => {
-    class TestMap extends CoMap.Record(co.string) {}
-    test("CoMap", () => {
-      const map = TestMap.create(
-        { name: "test" },
+    test("update a reference", () => {
+      class Dog extends CoMap {
+        name = co.string;
+      }
+
+      class Person extends CoMap {
+        name = co.string;
+        age = co.number;
+        dog = co.ref(Dog);
+      }
+
+      const john = Person.create({
+        name: "John",
+        age: 20,
+        dog: Dog.create({ name: "Rex" }),
+      });
+
+      john.dog = Dog.create({ name: "Fido" });
+
+      expect(john.dog?.name).toEqual("Fido");
+    });
+
+    test("changes should be listed in _edits", () => {
+      class Person extends CoMap {
+        name = co.string;
+        age = co.number;
+      }
+
+      const john = Person.create({ name: "John", age: 20 });
+
+      const me = Account.getMe();
+
+      john.age = 21;
+
+      expect(john._edits.age.all).toEqual([
         {
-          owner: me,
+          by: expect.objectContaining({ _type: "Account", id: me.id }),
+          value: 20,
+          key: "age",
+          ref: undefined,
+          madeAt: expect.any(Date),
         },
-      );
-
-      expect("name" in map).toBe(true);
-      expect("something" in map).toBe(false);
+        {
+          by: expect.objectContaining({ _type: "Account", id: me.id }),
+          value: 21,
+          key: "age",
+          ref: undefined,
+          madeAt: expect.any(Date),
+        },
+      ]);
     });
   });
-
-  class RecursiveMap extends CoMap {
-    name = co.string;
-    next?: co<RecursiveMap | null> = co.ref(RecursiveMap);
-  }
-
-  const recursiveMap = RecursiveMap.create(
-    {
-      name: "first",
-      next: RecursiveMap.create(
-        {
-          name: "second",
-          next: RecursiveMap.create(
-            {
-              name: "third",
-            },
-            { owner: me },
-          ),
-        },
-        { owner: me },
-      ),
-    },
-    { owner: me },
-  );
-
-  describe("Recursive CoMap", () => {
-    test("Construction", () => {
-      expect(recursiveMap.name).toEqual("first");
-      expect(recursiveMap.next?.name).toEqual("second");
-      expect(recursiveMap.next?.next?.name).toEqual("third");
-    });
-  });
-
-  class MapWithEnumOfMaps extends CoMap {
-    name = co.string;
-    child = co.ref<typeof ChildA | typeof ChildB>((raw) =>
-      raw.get("type") === "a" ? ChildA : ChildB,
-    );
-  }
-
-  class ChildA extends CoMap {
-    type = co.literal("a");
-    value = co.number;
-  }
-
-  class ChildB extends CoMap {
-    type = co.literal("b");
-    value = co.string;
-  }
-
-  const mapWithEnum = MapWithEnumOfMaps.create(
-    {
-      name: "enum",
-      child: ChildA.create(
-        {
-          type: "a",
-          value: 5,
-        },
-        { owner: me },
-      ),
-    },
-    { owner: me },
-  );
 
   test("Enum of maps", () => {
+    class MapWithEnumOfMaps extends CoMap {
+      name = co.string;
+      child = co.ref<typeof ChildA | typeof ChildB>((raw) =>
+        raw.get("type") === "a" ? ChildA : ChildB,
+      );
+    }
+
+    class ChildA extends CoMap {
+      type = co.literal("a");
+      value = co.number;
+    }
+
+    class ChildB extends CoMap {
+      type = co.literal("b");
+      value = co.string;
+    }
+
+    const mapWithEnum = MapWithEnumOfMaps.create({
+      name: "enum",
+      child: ChildA.create({
+        type: "a",
+        value: 5,
+      }),
+    });
+
     expect(mapWithEnum.name).toEqual("enum");
     expect(mapWithEnum.child?.type).toEqual("a");
     expect(mapWithEnum.child?.value).toEqual(5);
@@ -423,393 +426,464 @@ describe("Simple CoMap operations", async () => {
 });
 
 describe("CoMap resolution", async () => {
-  class TwiceNestedMap extends CoMap {
-    taste = co.string;
-  }
-
-  class NestedMap extends CoMap {
-    name = co.string;
-    twiceNested = co.ref(TwiceNestedMap);
-
-    get _fancyName() {
-      return "Sir " + this.name;
+  test("loading a locally available map with deep resolve", async () => {
+    class Dog extends CoMap {
+      name = co.string;
+      breed = co.string;
     }
-  }
 
-  class TestMap extends CoMap {
-    color = co.string;
-    height = co.number;
-    nested = co.ref(NestedMap);
-
-    get _roughColor() {
-      return this.color + "ish";
+    class Person extends CoMap {
+      name = co.string;
+      age = co.number;
+      dog = co.ref(Dog);
     }
-  }
 
-  const initNodeAndMap = async () => {
-    const me = await Account.create({
-      creationProps: { name: "Hermes Puggington" },
-      crypto: Crypto,
+    const person = Person.create({
+      name: "John",
+      age: 20,
+      dog: Dog.create({ name: "Rex", breed: "Labrador" }),
     });
 
-    const map = TestMap.create(
-      {
-        color: "red",
-        height: 10,
-        nested: NestedMap.create(
-          {
-            name: "nested",
-            twiceNested: TwiceNestedMap.create(
-              { taste: "sour" },
-              { owner: me },
-            ),
-          },
-          { owner: me },
-        ),
+    const loadedPerson = await Person.load(person.id, {
+      resolve: {
+        dog: true,
       },
-      { owner: me },
-    );
+    });
 
-    return { me, map };
-  };
-
-  test("Construction", async () => {
-    const { map } = await initNodeAndMap();
-
-    // const test: Schema.Schema.To<typeof NestedMap>
-
-    expect(map.color).toEqual("red");
-    expect(map._roughColor).toEqual("redish");
-    expect(map.height).toEqual(10);
-    expect(map.nested?.name).toEqual("nested");
-    expect(map.nested?._fancyName).toEqual("Sir nested");
-    expect(map.nested?.id).toBeDefined();
-    expect(map.nested?.twiceNested?.taste).toEqual("sour");
+    assert(loadedPerson);
+    expect(loadedPerson.dog.name).toEqual("Rex");
   });
 
-  test("Loading and availability", async () => {
-    const { me, map } = await initNodeAndMap();
-    const [initialAsPeer, secondPeer] = connectedPeers("initial", "second", {
-      peer1role: "server",
-      peer2role: "client",
-    });
-
-    if (!isControlledAccount(me)) {
-      throw "me is not a controlled account";
+  test("loading a locally available map using autoload for the refs", async () => {
+    class Dog extends CoMap {
+      name = co.string;
+      breed = co.string;
     }
-    me._raw.core.node.syncManager.addPeer(secondPeer);
-    const { account: meOnSecondPeer } =
-      await createJazzContextFromExistingCredentials({
-        credentials: {
-          accountID: me.id,
-          secret: me._raw.agentSecret,
-        },
-        sessionProvider: randomSessionProvider,
-        peersToLoadFrom: [initialAsPeer],
-        crypto: Crypto,
-      });
 
-    const loadedMap = await TestMap.load(map.id, { loadAs: meOnSecondPeer });
+    class Person extends CoMap {
+      name = co.string;
+      age = co.number;
+      dog = co.ref(Dog);
+    }
 
-    expect(loadedMap?.color).toEqual("red");
-    expect(loadedMap?.height).toEqual(10);
-    expect(loadedMap?.nested).toEqual(null);
-    expect(loadedMap?._refs.nested?.id).toEqual(map.nested?.id);
-    expect(loadedMap?._refs.nested?.value).toEqual(null);
-
-    const loadedNestedMap = await NestedMap.load(map.nested!.id, {
-      loadAs: meOnSecondPeer,
+    const person = Person.create({
+      name: "John",
+      age: 20,
+      dog: Dog.create({ name: "Rex", breed: "Labrador" }),
     });
 
-    expect(loadedMap?.nested?.name).toEqual("nested");
-    expect(loadedMap?.nested?._fancyName).toEqual("Sir nested");
-    expect(loadedMap?._refs.nested?.value).toEqual(loadedNestedMap);
-    expect(loadedMap?.nested?.twiceNested?.taste).toEqual(undefined);
+    const loadedPerson = await Person.load(person.id);
 
-    const loadedTwiceNestedMap = await TwiceNestedMap.load(
-      map.nested!.twiceNested!.id,
-      { loadAs: meOnSecondPeer },
-    );
+    assert(loadedPerson);
+    expect(loadedPerson.dog?.name).toEqual("Rex");
+  });
 
-    expect(loadedMap?.nested?.twiceNested?.taste).toEqual("sour");
-    expect(loadedMap?.nested?._refs.twiceNested?.value).toEqual(
-      loadedTwiceNestedMap,
-    );
+  test("loading a remotely available map with deep resolve", async () => {
+    class Dog extends CoMap {
+      name = co.string;
+      breed = co.string;
+    }
 
-    const otherNestedMap = NestedMap.create(
+    class Person extends CoMap {
+      name = co.string;
+      age = co.number;
+      dog = co.ref(Dog);
+    }
+
+    const group = Group.create();
+    group.addMember("everyone", "writer");
+
+    const person = Person.create(
       {
-        name: "otherNested",
-        twiceNested: TwiceNestedMap.create(
-          { taste: "sweet" },
-          { owner: meOnSecondPeer },
-        ),
+        name: "John",
+        age: 20,
+        dog: Dog.create({ name: "Rex", breed: "Labrador" }, group),
       },
-      { owner: meOnSecondPeer },
+      group,
     );
 
-    loadedMap!.nested = otherNestedMap;
-    expect(loadedMap?.nested?.name).toEqual("otherNested");
-    expect(loadedMap?._refs.nested?.id).toEqual(otherNestedMap.id);
-    expect(loadedMap?._refs.nested?.value).toEqual(otherNestedMap);
-    expect(loadedMap?.nested?.twiceNested?.taste).toEqual("sweet");
-    expect(loadedMap?.nested?._refs.twiceNested?.value).toBeDefined();
-  });
+    const userB = await createJazzTestAccount();
 
-  async function setupTest() {
-    const { me, map } = await initNodeAndMap();
-
-    const [initialAsPeer, secondAsPeer] = connectedPeers("initial", "second", {
-      peer1role: "server",
-      peer2role: "client",
+    const loadedPerson = await Person.load(person.id, {
+      resolve: {
+        dog: true,
+      },
+      loadAs: userB,
     });
 
-    if (!isControlledAccount(me)) {
-      throw "me is not a controlled account";
+    assert(loadedPerson);
+    expect(loadedPerson.dog.name).toEqual("Rex");
+  });
+
+  test("loading a remotely available map using autoload for the refs", async () => {
+    class Dog extends CoMap {
+      name = co.string;
+      breed = co.string;
     }
-    me._raw.core.node.syncManager.addPeer(secondAsPeer);
-    const { account: meOnSecondPeer } =
-      await createJazzContextFromExistingCredentials({
-        credentials: {
-          accountID: me.id,
-          secret: me._raw.agentSecret,
-        },
-        sessionProvider: randomSessionProvider,
-        peersToLoadFrom: [initialAsPeer],
-        crypto: Crypto,
-      });
 
-    const queue = new cojsonInternals.Channel<TestMap>();
+    class Person extends CoMap {
+      name = co.string;
+      age = co.number;
+      dog = co.ref(Dog);
+    }
 
-    await meOnSecondPeer.waitForAllCoValuesSync();
+    const group = Group.create();
+    group.addMember("everyone", "writer");
 
-    TestMap.subscribe(map.id, { loadAs: meOnSecondPeer }, (subscribedMap) => {
-      // Read to property to trigger loading
-      subscribedMap.nested?.twiceNested?.taste;
-      void queue.push(subscribedMap);
+    const person = Person.create(
+      {
+        name: "John",
+        age: 20,
+        dog: Dog.create({ name: "Rex", breed: "Labrador" }, group),
+      },
+      group,
+    );
+
+    const userB = await createJazzTestAccount();
+    const loadedPerson = await Person.load(person.id, {
+      loadAs: userB,
     });
 
-    return { me, map, meOnSecondPeer, queue };
-  }
+    assert(loadedPerson);
+    expect(loadedPerson.dog).toBe(null);
 
-  test("initial subscription loads nested data progressively", async () => {
-    const { queue } = await setupTest();
+    await waitFor(() => expect(loadedPerson.dog).toBeTruthy());
 
-    const update1 = (await queue.next()).value;
-    expect(update1.nested).toEqual(null);
-
-    const update2 = (await queue.next()).value;
-    expect(update2.nested?.name).toEqual("nested");
+    expect(loadedPerson.dog?.name).toEqual("Rex");
   });
 
-  test("updates to nested properties are received", async () => {
-    const { map, queue } = await setupTest();
+  test("accessing the value refs", async () => {
+    class Dog extends CoMap {
+      name = co.string;
+      breed = co.string;
+    }
 
-    // Skip initial updates
-    await queue.next();
-    await queue.next();
+    class Person extends CoMap {
+      name = co.string;
+      age = co.number;
+      dog = co.ref(Dog);
+    }
 
-    map.nested!.name = "nestedUpdated";
+    const group = Group.create();
+    group.addMember("everyone", "writer");
 
-    await queue.next(); // Skip intermediate update
-    const update3 = (await queue.next()).value;
-    expect(update3.nested?.name).toEqual("nestedUpdated");
+    const person = Person.create(
+      {
+        name: "John",
+        age: 20,
+        dog: Dog.create({ name: "Rex", breed: "Labrador" }, group),
+      },
+      group,
+    );
 
-    const oldTwiceNested = update3.nested!.twiceNested;
-    expect(oldTwiceNested?.taste).toEqual("sour");
+    const userB = await createJazzTestAccount();
+    const loadedPerson = await Person.load(person.id, {
+      loadAs: userB,
+    });
+
+    assert(loadedPerson);
+
+    expect(loadedPerson._refs.dog.id).toBe(person.dog!.id);
+
+    const dog = await loadedPerson._refs.dog.load();
+
+    assert(dog);
+
+    expect(dog.name).toEqual("Rex");
+  });
+
+  test("subscription on a locally available map with deep resolve", async () => {
+    class Dog extends CoMap {
+      name = co.string;
+      breed = co.string;
+    }
+
+    class Person extends CoMap {
+      name = co.string;
+      age = co.number;
+      dog = co.ref(Dog);
+    }
+
+    const person = Person.create({
+      name: "John",
+      age: 20,
+      dog: Dog.create({ name: "Rex", breed: "Labrador" }),
+    });
+
+    const updates: Resolved<Person, { dog: true }>[] = [];
+    const spy = vi.fn((person) => updates.push(person));
+
+    Person.subscribe(
+      person.id,
+      {
+        resolve: {
+          dog: true,
+        },
+      },
+      spy,
+    );
+
+    expect(spy).not.toHaveBeenCalled();
+
+    await waitFor(() => expect(spy).toHaveBeenCalled());
+
+    expect(spy).toHaveBeenCalledTimes(1);
+
+    expect(updates[0]?.dog.name).toEqual("Rex");
+
+    person.dog!.name = "Fido";
+
+    await waitFor(() => expect(spy).toHaveBeenCalledTimes(2));
+
+    expect(updates[1]?.dog.name).toEqual("Fido");
+
+    expect(spy).toHaveBeenCalledTimes(2);
+  });
+
+  test("subscription on a locally available map with autoload", async () => {
+    class Dog extends CoMap {
+      name = co.string;
+      breed = co.string;
+    }
+
+    class Person extends CoMap {
+      name = co.string;
+      age = co.number;
+      dog = co.ref(Dog);
+    }
+
+    const person = Person.create({
+      name: "John",
+      age: 20,
+      dog: Dog.create({ name: "Rex", breed: "Labrador" }),
+    });
+
+    const updates: Person[] = [];
+    const spy = vi.fn((person) => updates.push(person));
+
+    Person.subscribe(person.id, {}, spy);
+
+    expect(spy).not.toHaveBeenCalled();
+
+    await waitFor(() => expect(spy).toHaveBeenCalled());
+
+    expect(spy).toHaveBeenCalledTimes(1);
+
+    expect(updates[0]?.dog?.name).toEqual("Rex");
+
+    person.dog!.name = "Fido";
+
+    await waitFor(() => expect(spy).toHaveBeenCalledTimes(2));
+
+    expect(updates[1]?.dog?.name).toEqual("Fido");
+
+    expect(spy).toHaveBeenCalledTimes(2);
+  });
+
+  test("subscription on a locally available map with syncResolution", async () => {
+    class Dog extends CoMap {
+      name = co.string;
+      breed = co.string;
+    }
+
+    class Person extends CoMap {
+      name = co.string;
+      age = co.number;
+      dog = co.ref(Dog);
+    }
+
+    const person = Person.create({
+      name: "John",
+      age: 20,
+      dog: Dog.create({ name: "Rex", breed: "Labrador" }),
+    });
+
+    const updates: Person[] = [];
+    const spy = vi.fn((person) => updates.push(person));
+
+    subscribeToCoValue(
+      Person,
+      person.id,
+      {
+        syncResolution: true,
+        loadAs: Account.getMe(),
+      },
+      spy,
+    );
+
+    expect(spy).toHaveBeenCalled();
+    expect(spy).toHaveBeenCalledTimes(1);
+
+    expect(updates[0]?.dog?.name).toEqual("Rex");
+
+    expect(spy).toHaveBeenCalledTimes(1);
+
+    person.dog!.name = "Fido";
+
+    expect(spy).toHaveBeenCalledTimes(2);
+
+    expect(updates[1]?.dog?.name).toEqual("Fido");
+
+    expect(spy).toHaveBeenCalledTimes(2);
+  });
+
+  test("subscription on a remotely available map with deep resolve", async () => {
+    class Dog extends CoMap {
+      name = co.string;
+      breed = co.string;
+    }
+
+    class Person extends CoMap {
+      name = co.string;
+      age = co.number;
+      dog = co.ref(Dog);
+    }
+
+    const group = Group.create();
+    group.addMember("everyone", "writer");
+
+    const person = Person.create(
+      {
+        name: "John",
+        age: 20,
+        dog: Dog.create({ name: "Rex", breed: "Labrador" }, group),
+      },
+      group,
+    );
+
+    const userB = await createJazzTestAccount();
+
+    const updates: Resolved<Person, { dog: true }>[] = [];
+    const spy = vi.fn((person) => updates.push(person));
+
+    Person.subscribe(
+      person.id,
+      {
+        resolve: {
+          dog: true,
+        },
+        loadAs: userB,
+      },
+      spy,
+    );
+
+    expect(spy).not.toHaveBeenCalled();
+
+    await waitFor(() => expect(spy).toHaveBeenCalled());
+
+    expect(spy).toHaveBeenCalledTimes(1);
+
+    expect(updates[0]?.dog.name).toEqual("Rex");
+
+    person.dog!.name = "Fido";
+
+    await waitFor(() => expect(spy).toHaveBeenCalledTimes(2));
+
+    expect(updates[1]?.dog.name).toEqual("Fido");
+
+    expect(spy).toHaveBeenCalledTimes(2);
+  });
+
+  test("subscription on a remotely available map with autoload", async () => {
+    class Dog extends CoMap {
+      name = co.string;
+      breed = co.string;
+    }
+
+    class Person extends CoMap {
+      name = co.string;
+      age = co.number;
+      dog = co.ref(Dog);
+    }
+
+    const group = Group.create();
+    group.addMember("everyone", "writer");
+
+    const person = Person.create(
+      {
+        name: "John",
+        age: 20,
+        dog: Dog.create({ name: "Rex", breed: "Labrador" }, group),
+      },
+      group,
+    );
+
+    const updates: Person[] = [];
+    const spy = vi.fn((person) => updates.push(person));
+
+    const userB = await createJazzTestAccount();
+
+    Person.subscribe(
+      person.id,
+      {
+        loadAs: userB,
+      },
+      spy,
+    );
+
+    expect(spy).not.toHaveBeenCalled();
+
+    await waitFor(() => expect(spy).toHaveBeenCalled());
+
+    expect(spy).toHaveBeenCalledTimes(1);
+
+    expect(updates[0]?.dog?.name).toEqual("Rex");
+
+    person.dog!.name = "Fido";
+
+    await waitFor(() => expect(spy).toHaveBeenCalledTimes(2));
+
+    expect(updates[1]?.dog?.name).toEqual("Fido");
+
+    expect(spy).toHaveBeenCalledTimes(2);
   });
 
   test("replacing nested object triggers updates", async () => {
-    const { meOnSecondPeer, queue } = await setupTest();
+    class Dog extends CoMap {
+      name = co.string;
+      breed = co.string;
+    }
 
-    // Skip initial updates
-    await queue.next();
-    await queue.next();
+    class Person extends CoMap {
+      name = co.string;
+      age = co.number;
+      dog = co.ref(Dog);
+    }
 
-    const update3 = (await queue.next()).value;
-
-    const newTwiceNested = TwiceNestedMap.create(
-      {
-        taste: "sweet",
-      },
-      { owner: meOnSecondPeer },
-    );
-
-    const newNested = NestedMap.create(
-      {
-        name: "newNested",
-        twiceNested: newTwiceNested,
-      },
-      { owner: meOnSecondPeer },
-    );
-
-    update3.nested = newNested;
-
-    await queue.next(); // Skip intermediate update
-    const update4 = (await queue.next()).value;
-
-    expect(update4.nested?.name).toEqual("newNested");
-    expect(update4.nested?.twiceNested?.taste).toEqual("sweet");
-  });
-
-  test("updates to deeply nested properties are received", async () => {
-    const { queue } = await setupTest();
-
-    // Skip to the point where we have the nested object
-    await queue.next();
-    await queue.next();
-    const update3 = (await queue.next()).value;
-
-    const newTwiceNested = TwiceNestedMap.create(
-      { taste: "sweet" },
-      { owner: update3.nested!._raw.owner },
-    );
-
-    const newNested = NestedMap.create(
-      {
-        name: "newNested",
-        twiceNested: newTwiceNested,
-      },
-      { owner: update3.nested!._raw.owner },
-    );
-
-    update3.nested = newNested;
-
-    // Skip intermediate updates
-    await queue.next();
-    await queue.next();
-
-    newTwiceNested.taste = "salty";
-    const update5 = (await queue.next()).value;
-    expect(update5.nested?.twiceNested?.taste).toEqual("salty");
-
-    newTwiceNested.taste = "umami";
-    const update6 = (await queue.next()).value;
-    expect(update6.nested?.twiceNested?.taste).toEqual("umami");
-  });
-
-  class TestMapWithOptionalRef extends CoMap {
-    color = co.string;
-    nested = co.optional.ref(NestedMap);
-  }
-
-  test("Construction with optional", async () => {
-    const me = await Account.create({
-      creationProps: { name: "Hermes Puggington" },
-      crypto: Crypto,
+    const person = Person.create({
+      name: "John",
+      age: 20,
+      dog: Dog.create({ name: "Rex", breed: "Labrador" }),
     });
 
-    const mapWithout = TestMapWithOptionalRef.create(
+    const updates: Resolved<Person, { dog: true }>[] = [];
+    const spy = vi.fn((person) => updates.push(person));
+
+    Person.subscribe(
+      person.id,
       {
-        color: "red",
+        resolve: {
+          dog: true,
+        },
       },
-      { owner: me },
+      spy,
     );
 
-    expect(mapWithout.color).toEqual("red");
-    expect(mapWithout.nested).toEqual(undefined);
+    expect(spy).not.toHaveBeenCalled();
 
-    const mapWith = TestMapWithOptionalRef.create(
-      {
-        color: "red",
-        nested: NestedMap.create(
-          {
-            name: "wow!",
-            twiceNested: TwiceNestedMap.create(
-              { taste: "sour" },
-              { owner: me },
-            ),
-          },
-          { owner: me },
-        ),
-      },
-      { owner: me },
-    );
+    await waitFor(() => expect(spy).toHaveBeenCalled());
 
-    expect(mapWith.color).toEqual("red");
-    expect(mapWith.nested?.name).toEqual("wow!");
-    expect(mapWith.nested?._fancyName).toEqual("Sir wow!");
-    expect(mapWith.nested?._raw).toBeDefined();
-  });
+    expect(spy).toHaveBeenCalledTimes(1);
 
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging
-  class TestRecord extends CoMap {
-    [co.items] = co.number;
-  }
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging
-  interface TestRecord extends Record<string, number> {}
+    expect(updates[0]?.dog.name).toEqual("Rex");
 
-  test("Construction with index signature", async () => {
-    const me = await Account.create({
-      creationProps: { name: "Hermes Puggington" },
-      crypto: Crypto,
-    });
+    person.dog!.name = "Fido";
 
-    const record = TestRecord.create(
-      {
-        height: 5,
-        other: 3,
-      },
-      { owner: me },
-    );
+    await waitFor(() => expect(spy).toHaveBeenCalledTimes(2));
 
-    expect(record.height).toEqual(5);
-    expect(record._raw.get("height")).toEqual(5);
-    expect(record.other).toEqual(3);
-    expect(record._raw.get("other")).toEqual(3);
-    expect(Object.keys(record)).toEqual(["height", "other"]);
-    expect(record.toJSON()).toMatchObject({
-      _type: "CoMap",
-      height: 5,
-      id: expect.any(String),
-      other: 3,
-    });
-  });
+    expect(updates[1]?.dog.name).toEqual("Fido");
 
-  class TestRecord2 extends CoMap.Record(co.number) {}
-
-  test("Construction with index signature (shorthand)", async () => {
-    const me = await Account.create({
-      creationProps: { name: "Hermes Puggington" },
-      crypto: Crypto,
-    });
-
-    const record = TestRecord2.create(
-      {
-        height: 5,
-        other: 3,
-      },
-      { owner: me },
-    );
-
-    expect(record.height).toEqual(5);
-    expect(record._raw.get("height")).toEqual(5);
-    expect(record.other).toEqual(3);
-    expect(record._raw.get("other")).toEqual(3);
-    expect(Object.keys(record)).toEqual(["height", "other"]);
-  });
-
-  class TestRecordRef extends CoMap.Record(co.ref(TwiceNestedMap)) {}
-
-  test("Construction with index signature ref", async () => {
-    const me = await Account.create({
-      creationProps: { name: "Hermes Puggington" },
-      crypto: Crypto,
-    });
-
-    const record = TestRecordRef.create(
-      {
-        firstNested: TwiceNestedMap.create({ taste: "sour" }, { owner: me }),
-        secondNested: TwiceNestedMap.create({ taste: "sweet" }, { owner: me }),
-      },
-      { owner: me },
-    );
-
-    expect(record.firstNested?.taste).toEqual("sour");
-    expect(record.firstNested?.id).toBeDefined();
-    expect(record.secondNested?.taste).toEqual("sweet");
-    expect(record.secondNested?.id).toBeDefined();
-    expect(Object.keys(record)).toEqual(["firstNested", "secondNested"]);
-    expect(Object.keys(record._refs)).toEqual(["firstNested", "secondNested"]);
+    expect(spy).toHaveBeenCalledTimes(2);
   });
 });
 
@@ -1134,16 +1208,16 @@ describe("CoMap Typescript validation", async () => {
 
 describe("Creating and finding unique CoMaps", async () => {
   test("Creating and finding unique CoMaps", async () => {
-    const me = await Account.create({
-      creationProps: { name: "Tester McTesterson" },
-      crypto: Crypto,
-    });
+    const group = Group.create();
 
-    const group = await Group.create({
-      owner: me,
-    });
+    class Person extends CoMap {
+      name = co.string;
+      _height = co.number;
+      birthday = co.Date;
+      color = co.string;
+    }
 
-    const alice = TestMap.create(
+    const alice = Person.create(
       {
         name: "Alice",
         _height: 100,
@@ -1153,8 +1227,7 @@ describe("Creating and finding unique CoMaps", async () => {
       { owner: group, unique: { name: "Alice" } },
     );
 
-    const foundAlice = TestMap.findUnique({ name: "Alice" }, group.id, me);
-
+    const foundAlice = Person.findUnique({ name: "Alice" }, group.id);
     expect(foundAlice).toEqual(alice.id);
   });
 });

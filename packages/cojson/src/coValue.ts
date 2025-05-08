@@ -1,4 +1,7 @@
-import { CoValueCore } from "./coValueCore.js";
+import {
+  AvailableCoValueCore,
+  CoValueCore,
+} from "./coValueCore/coValueCore.js";
 import { RawProfile as Profile, RawAccount } from "./coValues/account.js";
 import { RawCoList } from "./coValues/coList.js";
 import { RawCoMap } from "./coValues/coMap.js";
@@ -15,7 +18,7 @@ export type CoID<T extends RawCoValue> = RawCoID & {
 export interface RawCoValue {
   /** The `CoValue`'s (precisely typed) `CoID` */
   id: CoID<this>;
-  core: CoValueCore;
+  core: AvailableCoValueCore;
   /** Specifies which kind of `CoValue` this is */
   type: string;
   /** The `CoValue`'s (precisely typed) static metadata */
@@ -39,20 +42,20 @@ export interface RawCoValue {
 
 export class RawUnknownCoValue implements RawCoValue {
   id: CoID<this>;
-  core: CoValueCore;
+  core: AvailableCoValueCore;
   totalValidTransactions = 0;
 
-  constructor(core: CoValueCore) {
+  constructor(core: AvailableCoValueCore) {
     this.id = core.id as CoID<this>;
     this.core = core;
   }
 
   get type() {
-    return this.core.header.type;
+    return this.core.verified.header.type;
   }
 
   get headerMeta() {
-    return this.core.header.meta as JsonObject;
+    return this.core.verified.header.meta as JsonObject;
   }
 
   /** @category 6. Meta */
@@ -69,8 +72,8 @@ export class RawUnknownCoValue implements RawCoValue {
   }
 
   subscribe(listener: (value: this) => void): () => void {
-    return this.core.subscribe((content) => {
-      listener(content as this);
+    return this.core.subscribe((core) => {
+      listener(core.getCurrentContent() as this);
     });
   }
 }

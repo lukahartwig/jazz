@@ -1,24 +1,23 @@
 import { describe, expect, test } from "vitest";
-import { CoValueState } from "../coValueState.js";
 import { RawCoList } from "../coValues/coList.js";
 import { RawCoMap } from "../coValues/coMap.js";
 import { RawCoStream } from "../coValues/coStream.js";
 import { RawBinaryCoStream } from "../coValues/coStream.js";
 import { WasmCrypto } from "../crypto/WasmCrypto.js";
 import { RawAccountID } from "../exports.js";
-import { LocalNode } from "../localNode.js";
 import {
   createThreeConnectedNodes,
   createTwoConnectedNodes,
   loadCoValueOrFail,
-  randomAnonymousAccountAndSessionID,
+  nodeWithRandomAgentAndSessionID,
+  randomAgentAndSessionID,
   waitFor,
 } from "./testUtils.js";
 
 const Crypto = await WasmCrypto.create();
 
 test("Can create a RawCoMap in a group", () => {
-  const node = new LocalNode(...randomAnonymousAccountAndSessionID(), Crypto);
+  const node = nodeWithRandomAgentAndSessionID();
 
   const group = node.createGroup();
 
@@ -29,7 +28,7 @@ test("Can create a RawCoMap in a group", () => {
 });
 
 test("Can create a CoList in a group", () => {
-  const node = new LocalNode(...randomAnonymousAccountAndSessionID(), Crypto);
+  const node = nodeWithRandomAgentAndSessionID();
 
   const group = node.createGroup();
 
@@ -40,7 +39,7 @@ test("Can create a CoList in a group", () => {
 });
 
 test("Can create a CoStream in a group", () => {
-  const node = new LocalNode(...randomAnonymousAccountAndSessionID(), Crypto);
+  const node = nodeWithRandomAgentAndSessionID();
 
   const group = node.createGroup();
 
@@ -51,7 +50,7 @@ test("Can create a CoStream in a group", () => {
 });
 
 test("Can create a FileStream in a group", () => {
-  const node = new LocalNode(...randomAnonymousAccountAndSessionID(), Crypto);
+  const node = nodeWithRandomAgentAndSessionID();
 
   const group = node.createGroup();
 
@@ -100,7 +99,7 @@ test("Remove a member from a group where the admin role is inherited", async () 
 
   // The node1 account removes the reader from the group
   // The reader should be automatically kicked out of the child group
-  await group.removeMember(node3.node.account);
+  await group.removeMember(node3.node.expectCurrentAccount("node3"));
 
   await group.core.waitForSync();
 
@@ -150,7 +149,7 @@ test("An admin should be able to rotate the readKey on child groups and keep acc
   // The node1 account removes the reader from the group
   // In this case we want to ensure that node1 is still able to read new coValues
   // Even if some childs are not available when the readKey is rotated
-  await group.removeMember(node3.node.account);
+  await group.removeMember(node3.node.expectCurrentAccount("node3"));
   await group.core.waitForSync();
 
   const map = childGroup.createMap();
@@ -191,7 +190,7 @@ test("An admin should be able to rotate the readKey on child groups even if it w
   // The node1 account removes the reader from the group
   // In this case we want to ensure that node1 is still able to read new coValues
   // Even if some childs are not available when the readKey is rotated
-  await group.removeMember(node3.node.account);
+  await group.removeMember(node3.node.expectCurrentAccount("node3"));
   await group.core.waitForSync();
 
   const map = childGroup.createMap();
@@ -234,7 +233,7 @@ test("An admin should be able to rotate the readKey on child groups even if it w
   // The node1 account removes the reader from the group
   // In this case we want to ensure that node1 is still able to read new coValues
   // Even if some childs are not available when the readKey is rotated
-  await group.removeMember(node3.node.account);
+  await group.removeMember(node3.node.expectCurrentAccount("node3"));
   await group.core.waitForSync();
 
   const map = childGroup.createMap();
@@ -268,7 +267,7 @@ test("A user add after a key rotation should have access to the old transactions
 
   await map.core.waitForSync();
 
-  await group.removeMember(node3.node.account);
+  await group.removeMember(node3.node.expectCurrentAccount("node3"));
   group.addMember(
     await loadCoValueOrFail(node1.node, node3.accountID),
     "reader",
@@ -295,7 +294,7 @@ test("Invites should have access to the new keys", async () => {
 
   const invite = group.createInvite("admin");
 
-  await group.removeMember(node3.node.account);
+  await group.removeMember(node3.node.expectCurrentAccount("node3"));
 
   const map = group.createMap();
   map.set("test", "Written from node1");
@@ -454,7 +453,7 @@ describe("writeOnly", () => {
 
     await map.core.waitForSync();
 
-    await group.removeMember(node3.node.account);
+    await group.removeMember(node3.node.expectCurrentAccount("node3"));
 
     await group.core.waitForSync();
 
@@ -491,10 +490,8 @@ describe("writeOnly", () => {
       "writer",
     );
 
-    node2.node.coValuesStore.coValues.delete(map.id);
-    expect(node2.node.coValuesStore.get(map.id)?.highLevelState).toBe(
-      "unknown",
-    );
+    node2.node.internalDeleteCoValue(map.id);
+    expect(node2.node.getCoValue(map.id)?.loadingState).toBe("unknown");
 
     const mapOnNode2 = await loadCoValueOrFail(node2.node, map.id);
 
@@ -753,7 +750,6 @@ describe("extend with role mapping", () => {
     const mapOnNode2 = await loadCoValueOrFail(node2.node, map.id);
 
     expect(mapOnNode2.get("test")).toEqual("Written from the admin");
-
     mapOnNode2.set("test", "Written from the inherited role");
     expect(mapOnNode2.get("test")).toEqual("Written from the inherited role");
 
@@ -918,96 +914,75 @@ describe("extend with role mapping", () => {
 
 describe("roleOf", () => {
   test("returns direct role assignments", () => {
-    const node = new LocalNode(...randomAnonymousAccountAndSessionID(), Crypto);
+    const node = nodeWithRandomAgentAndSessionID();
     const group = node.createGroup();
-    const account = new LocalNode(
-      ...randomAnonymousAccountAndSessionID(),
-      Crypto,
-    ).account;
+    const [agent2] = randomAgentAndSessionID();
 
-    group.addMember(account, "writer");
-    expect(group.roleOf(account.id as RawAccountID)).toEqual("writer");
+    group.addMember(agent2, "writer");
+    expect(group.roleOfInternal(agent2.id)).toEqual("writer");
   });
 
   test("returns undefined for non-members", () => {
-    const node = new LocalNode(...randomAnonymousAccountAndSessionID(), Crypto);
+    const node = nodeWithRandomAgentAndSessionID();
     const group = node.createGroup();
-    const account = new LocalNode(
-      ...randomAnonymousAccountAndSessionID(),
-      Crypto,
-    ).account;
+    const [agent2] = randomAgentAndSessionID();
 
-    expect(group.roleOf(account.id as RawAccountID)).toEqual(undefined);
+    expect(group.roleOfInternal(agent2.id)).toEqual(undefined);
   });
 
   test("revoked roles return undefined", () => {
-    const node = new LocalNode(...randomAnonymousAccountAndSessionID(), Crypto);
+    const node = nodeWithRandomAgentAndSessionID();
     const group = node.createGroup();
-    const account = new LocalNode(
-      ...randomAnonymousAccountAndSessionID(),
-      Crypto,
-    ).account;
+    const [agent2] = randomAgentAndSessionID();
 
-    group.addMember(account, "writer");
-    group.removeMemberInternal(account);
-    expect(group.roleOf(account.id as RawAccountID)).toEqual(undefined);
+    group.addMember(agent2, "writer");
+    group.removeMemberInternal(agent2);
+    expect(group.roleOfInternal(agent2.id)).toEqual(undefined);
   });
 
   test("everyone role applies to all accounts", () => {
-    const node = new LocalNode(...randomAnonymousAccountAndSessionID(), Crypto);
+    const node = nodeWithRandomAgentAndSessionID();
     const group = node.createGroup();
-    const account = new LocalNode(
-      ...randomAnonymousAccountAndSessionID(),
-      Crypto,
-    ).account;
+    const [agent2, sessionID2] = randomAgentAndSessionID();
 
     group.addMemberInternal("everyone", "reader");
-    expect(group.roleOf(account.id as RawAccountID)).toEqual("reader");
+    expect(group.roleOfInternal(agent2.id)).toEqual("reader");
   });
 
   test("account role overrides everyone role", () => {
-    const node = new LocalNode(...randomAnonymousAccountAndSessionID(), Crypto);
+    const node = nodeWithRandomAgentAndSessionID();
     const group = node.createGroup();
-    const account = new LocalNode(
-      ...randomAnonymousAccountAndSessionID(),
-      Crypto,
-    ).account;
+    const [agent2, sessionID2] = randomAgentAndSessionID();
 
     group.addMemberInternal("everyone", "writer");
-    group.addMember(account, "reader");
-    expect(group.roleOf(account.id as RawAccountID)).toEqual("reader");
+    group.addMember(agent2, "reader");
+    expect(group.roleOfInternal(agent2.id)).toEqual("reader");
   });
 
   test("Revoking access on everyone role should not affect existing members", () => {
-    const node = new LocalNode(...randomAnonymousAccountAndSessionID(), Crypto);
+    const node = nodeWithRandomAgentAndSessionID();
     const group = node.createGroup();
-    const account = new LocalNode(
-      ...randomAnonymousAccountAndSessionID(),
-      Crypto,
-    ).account;
+    const [agent2, sessionID2] = randomAgentAndSessionID();
 
     group.addMemberInternal("everyone", "reader");
-    group.addMember(account, "writer");
+    group.addMember(agent2, "writer");
     group.removeMemberInternal("everyone");
-    expect(group.roleOf(account.id as RawAccountID)).toEqual("writer");
-    expect(group.roleOf("123" as RawAccountID)).toEqual(undefined);
+    expect(group.roleOfInternal(agent2.id)).toEqual("writer");
+    expect(group.roleOfInternal("123" as RawAccountID)).toEqual(undefined);
   });
 
   test("Everyone role is inherited following the most permissive algorithm", () => {
-    const node = new LocalNode(...randomAnonymousAccountAndSessionID(), Crypto);
+    const node = nodeWithRandomAgentAndSessionID();
     const group = node.createGroup();
-    const account = new LocalNode(
-      ...randomAnonymousAccountAndSessionID(),
-      Crypto,
-    ).account;
+    const [agent2, sessionID2] = randomAgentAndSessionID();
 
     const parentGroup = node.createGroup();
     parentGroup.addMemberInternal("everyone", "writer");
 
     group.extend(parentGroup);
-    group.addMember(account, "reader");
+    group.addMember(agent2, "reader");
 
-    expect(group.roleOf(account.id as RawAccountID)).toEqual("writer");
+    expect(group.roleOfInternal(agent2.id)).toEqual("writer");
   });
   test("roleOf should prioritize explicit account role over everyone role in same group", async () => {
     const { node1, node2 } = await createTwoConnectedNodes("server", "server");

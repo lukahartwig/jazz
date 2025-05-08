@@ -1,6 +1,7 @@
 import {
   AgentSecret,
   CoID,
+  ControlledAccount,
   CryptoProvider,
   Everyone,
   InviteSecret,
@@ -9,7 +10,6 @@ import {
   RawAccount,
   RawCoMap,
   RawCoValue,
-  RawControlledAccount,
   Role,
   SessionID,
   cojsonInternals,
@@ -31,6 +31,7 @@ import {
   SchemaInit,
   SubscribeListenerOptions,
   SubscribeRestArgs,
+  accessChildByKey,
   ensureCoValueLoaded,
   inspect,
   loadCoValue,
@@ -38,7 +39,6 @@ import {
   parseSubscribeRestArgs,
   subscribeToCoValueWithoutMe,
   subscribeToExistingCoValue,
-  subscriptionsScopes,
 } from "../internal.js";
 import { coValuesCache } from "../lib/cache.js";
 import { RegisteredAccount } from "../types.js";
@@ -57,7 +57,7 @@ export type AccountCreationProps = {
 export class Account extends CoValueBase implements CoValue {
   declare id: ID<this>;
   declare _type: "Account";
-  declare _raw: RawAccount | RawControlledAccount;
+  declare _raw: RawAccount;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   static _schema: any;
@@ -86,10 +86,12 @@ export class Account extends CoValueBase implements CoValue {
   get _loadedAs(): Account | AnonymousJazzAgent {
     if (this.isLocalNodeOwner) return this;
 
-    const rawAccount = this._raw.core.node.account;
+    const agent = this._raw.core.node.getCurrentAgent();
 
-    if (rawAccount instanceof RawAccount) {
-      return coValuesCache.get(rawAccount, () => Account.fromRaw(rawAccount));
+    if (agent instanceof ControlledAccount) {
+      return coValuesCache.get(agent.account, () =>
+        Account.fromRaw(agent.account),
+      );
     }
 
     return new AnonymousJazzAgent(this._raw.core.node);
@@ -97,6 +99,16 @@ export class Account extends CoValueBase implements CoValue {
 
   declare profile: Profile | null;
   declare root: CoMap | null;
+
+  getDescriptor(key: string) {
+    if (key === "profile") {
+      return this._schema.profile;
+    } else if (key === "root") {
+      return this._schema.root;
+    }
+
+    return undefined;
+  }
 
   get _refs(): {
     profile: RefIfCoValue<Profile> | undefined;
@@ -118,6 +130,7 @@ export class Account extends CoValueBase implements CoValue {
           this._schema.profile as RefEncoded<
             NonNullable<this["profile"]> & CoValue
           >,
+          this,
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
         ) as any as RefIfCoValue<this["profile"]>),
       root:
@@ -126,6 +139,7 @@ export class Account extends CoValueBase implements CoValue {
           rootID,
           this._loadedAs,
           this._schema.root as RefEncoded<NonNullable<this["root"]> & CoValue>,
+          this,
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
         ) as any as RefIfCoValue<this["root"]>),
     };
@@ -144,13 +158,13 @@ export class Account extends CoValueBase implements CoValue {
   isLocalNodeOwner: boolean;
   sessionID: SessionID | undefined;
 
-  constructor(options: { fromRaw: RawAccount | RawControlledAccount }) {
+  constructor(options: { fromRaw: RawAccount }) {
     super();
     if (!("fromRaw" in options)) {
       throw new Error("Can only construct account from raw or with .create()");
     }
     this.isLocalNodeOwner =
-      options.fromRaw.id == options.fromRaw.core.node.account.id;
+      options.fromRaw.id == options.fromRaw.core.node.getCurrentAgent().id;
 
     Object.defineProperties(this, {
       id: {
@@ -196,10 +210,15 @@ export class Account extends CoValueBase implements CoValue {
     ref: Ref<RegisteredAccount> | undefined;
     account: RegisteredAccount | null | undefined;
   }> {
-    const ref = new Ref<RegisteredAccount>(this.id, this._loadedAs, {
-      ref: () => this.constructor as typeof Account,
-      optional: false,
-    });
+    const ref = new Ref<RegisteredAccount>(
+      this.id,
+      this._loadedAs,
+      {
+        ref: () => this.constructor as typeof Account,
+        optional: false,
+      },
+      this,
+    );
 
     return [{ id: this.id, role: "admin", ref, account: this }];
   }
@@ -234,7 +253,7 @@ export class Account extends CoValueBase implements CoValue {
       throw new Error("Only a controlled account can accept invites");
     }
 
-    await (this._raw as RawControlledAccount).acceptInvite(
+    await this._raw.core.node.acceptInvite(
       valueID as unknown as CoID<RawCoValue>,
       inviteSecret,
     );
@@ -304,7 +323,7 @@ export class Account extends CoValueBase implements CoValue {
     node: LocalNode,
   ): A {
     return new this({
-      fromRaw: node.account as RawControlledAccount,
+      fromRaw: node.expectCurrentAccount("jazz-tools/Account.fromNode"),
     }) as A;
   }
 
@@ -440,16 +459,14 @@ export class Account extends CoValueBase implements CoValue {
 
 export const AccountAndGroupProxyHandler: ProxyHandler<Account | Group> = {
   get(target, key, receiver) {
-    if (key === "profile") {
-      const ref = target._refs.profile;
-      return ref
-        ? ref.accessFrom(receiver, "profile")
-        : // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (undefined as any);
-    } else if (key === "root") {
-      const ref = target._refs.root;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return ref ? ref.accessFrom(receiver, "root") : (undefined as any);
+    if (key === "profile" || key === "root") {
+      const id = target._raw.get(key);
+
+      if (id) {
+        return accessChildByKey(target, id, key);
+      } else {
+        return undefined;
+      }
     } else {
       return Reflect.get(target, key, receiver);
     }
@@ -471,17 +488,12 @@ export const AccountAndGroupProxyHandler: ProxyHandler<Account | Group> = {
           "trusting",
         );
       }
-      subscriptionsScopes
-        .get(receiver)
-        ?.onRefAccessedOrSet(target.id, value.id);
+
       return true;
     } else if (key === "root") {
       if (value) {
         target._raw.set("root", value.id as unknown as CoID<RawCoMap>);
       }
-      subscriptionsScopes
-        .get(receiver)
-        ?.onRefAccessedOrSet(target.id, value.id);
       return true;
     } else {
       return Reflect.set(target, key, value, receiver);
@@ -507,7 +519,7 @@ export const AccountAndGroupProxyHandler: ProxyHandler<Account | Group> = {
 export function isControlledAccount(account: Account): account is Account & {
   isLocalNodeOwner: true;
   sessionID: SessionID;
-  _raw: RawControlledAccount;
+  _raw: RawAccount;
 } {
   return account.isLocalNodeOwner;
 }

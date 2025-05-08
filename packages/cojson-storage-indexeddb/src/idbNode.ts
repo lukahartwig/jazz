@@ -44,10 +44,7 @@ export class IDBNode {
   }
 
   static async asPeer(
-    {
-      trace,
-      localNodeName = "local",
-    }: { trace?: boolean; localNodeName?: string } | undefined = {
+    { localNodeName = "local" }: { localNodeName?: string } | undefined = {
       localNodeName: "local",
     },
   ): Promise<Peer> {
@@ -57,7 +54,6 @@ export class IDBNode {
       {
         peer1role: "client",
         peer2role: "storage",
-        trace,
         crashOnClose: true,
       },
     );

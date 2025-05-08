@@ -14,7 +14,7 @@ import { type ID } from "jazz-tools";
 import { Badge, CircleHelp, Scissors, ScrollText } from "lucide-react";
 import { useEffect, useState } from "react";
 
-const playIcon = (selection: string | undefined) => {
+const playIcon = (selection: "rock" | "paper" | "scissors" | undefined) => {
   switch (selection) {
     case "rock":
       return <Badge className="w-5 h-5" />;
@@ -50,9 +50,9 @@ function RouteComponent() {
   const isPlayer1 = loaderGame.player1?.account?.isMe;
   const player = isPlayer1 ? "player1" : "player2";
 
-  const [playSelection, setPlaySelection] = useState(
-    loaderGame[player]?.playSelection ?? "",
-  );
+  const [playSelection, setPlaySelection] = useState<
+    "rock" | "paper" | "scissors" | undefined
+  >(loaderGame[player]?.playSelection);
   const sendInboxMessage = experimental_useInboxSender(WORKER_ID);
 
   const game = useCoState(Game, gameId as ID<Game>);
@@ -62,7 +62,7 @@ function RouteComponent() {
 
     return loaderGame.subscribe((game) => {
       if (gameCompleted && !game.outcome) {
-        setPlaySelection(""); // Reset play selection when one player clicks on "Start a new game"
+        setPlaySelection(undefined); // Reset play selection when one player clicks on "Start a new game"
       }
 
       gameCompleted = Boolean(game.outcome);
@@ -82,7 +82,10 @@ function RouteComponent() {
 
   const opponentSelection = opponentPlayer?.playSelection;
 
-  const onSubmit = async (playSelection: string) => {
+  const onSubmit = async (
+    playSelection: "rock" | "paper" | "scissors" | undefined,
+  ) => {
+    if (!playSelection) return;
     sendInboxMessage(
       PlayIntent.create({ type: "play", gameId, player, playSelection }),
     );
@@ -117,7 +120,9 @@ function RouteComponent() {
         ) : null}
         <CardContent>
           <div>
-            {playSelection === "" ? "Make Your Selection" : "Your Selection: "}
+            {playSelection === undefined
+              ? "Make Your Selection"
+              : "Your Selection: "}
           </div>
           <CardSmall>{playIcon(playSelection)}</CardSmall>
           {gameComplete ? null : (
@@ -148,7 +153,7 @@ function RouteComponent() {
               <div className="m-4">
                 <Button
                   disabled={
-                    playSelection === "" ||
+                    playSelection === undefined ||
                     Boolean(currentPlayer?.playSelection)
                   }
                   onClick={() => onSubmit(playSelection)}

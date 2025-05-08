@@ -57,7 +57,8 @@ describe("client with storage syncs with server", () => {
     client.connectToSyncServer();
     const { storage } = client.addStoragePeer();
 
-    storage.coValuesStore = jazzCloud.node.coValuesStore;
+    // biome-ignore lint/suspicious/noExplicitAny: Super ugly, might have unintended side effects
+    (storage as any).coValues = (jazzCloud.node as any).coValues;
 
     const group = jazzCloud.node.createGroup();
     const map = group.createMap();

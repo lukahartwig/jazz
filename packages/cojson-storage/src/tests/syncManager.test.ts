@@ -291,7 +291,7 @@ describe("DB sync manager", () => {
       });
     });
 
-    test("Saves new transaction without sending message when IDB has fewer transactions", async () => {
+    test("Saves new transaction and sends an ack message as response", async () => {
       DBClient.prototype.getCoValue.mockResolvedValueOnce({
         id: coValueIdToLoad,
         header: coValueHeader,
@@ -314,7 +314,12 @@ describe("DB sync manager", () => {
         incomingTxCount,
       );
 
-      expect(syncManager.sendStateMessage).not.toBeCalled();
+      expect(syncManager.sendStateMessage).toBeCalledWith({
+        action: "known",
+        header: true,
+        id: coValueIdToLoad,
+        sessions: expect.any(Object),
+      });
     });
 
     test("Sends correction message when peer sends a message far ahead of our state due to invalid assumption", async () => {

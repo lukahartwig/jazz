@@ -12,7 +12,7 @@ As their name suggests, CoValues are inherently collaborative, meaning **multipl
 
 - CoValues keep their full edit histories, from which they derive their "current state".
 - The fact that this happens in an eventually-consistent way makes them [CRDTs](https://en.wikipedia.org/wiki/Conflict-free_replicated_data_type).
-- Having the full history also means that you often don't need explicit timestamps and author info - you get this for free as part of a CoValue's [edit metadata](/docs/using-covalues/metadata).
+- Having the full history also means that you often don't need explicit timestamps and author info - you get this for free as part of a CoValue's [edit metadata](/docs/using-covalues/history).
 
 CoValues model JSON with CoMaps and CoLists, but also offer CoFeeds for simple per-user value feeds, and let you represent binary data with FileStreams.
 
@@ -31,11 +31,14 @@ Even before you know the details of how your app will work, you'll probably know
 Jazz makes it quick to declare schemas, since they are simple TypeScript classes:
 
 <CodeGroup>
-{/* prettier-ignore */}
-```ts
+```ts twoslash
+import { co, CoMap, CoList } from "jazz-tools";
+class ListOfTasks extends CoList.Of(co.string) {}
+// ---cut---
+// schema.ts
 export class TodoProject extends CoMap {
-    title = co.string;
-    tasks = co.ref(ListOfTasks);
+  title = co.string;
+  tasks = co.ref(ListOfTasks);
 }
 ```
 </CodeGroup>
@@ -45,16 +48,28 @@ Here you can see how we extend a CoValue type and use `co` for declaring (collab
 Classes might look old-fashioned, but Jazz makes use of them being both types and values in TypeScript, letting you refer to either with a single definition and import.
 
 <CodeGroup>
-{/* prettier-ignore */}
-```ts
+```ts twoslash
+// @filename: schema.ts
+import { co, CoMap, CoList } from "jazz-tools";
+
+export class ListOfTasks extends CoList.Of(co.string) {}
+
+export class TodoProject extends CoMap {
+  title = co.string;
+  tasks = co.ref(ListOfTasks);
+}
+// @filename: app.ts
+import { Group } from "jazz-tools";
+// ---cut---
+// app.ts
 import { TodoProject, ListOfTasks } from "./schema";
 
 const project: TodoProject = TodoProject.create(
-    {
-        title: "New Project",
-        tasks: ListOfTasks.create([], Group.create()),
-    },
-    Group.create()
+  {
+    title: "New Project",
+    tasks: ListOfTasks.create([], Group.create()),
+  },
+  Group.create()
 );
 ```
 </CodeGroup>
@@ -63,17 +78,18 @@ const project: TodoProject = TodoProject.create(
 
 ### `CoMap` (declaration)
 
-CoMaps are the most commonly used type of CoValue. They are the equivalent of JSON objects. (Collaborative editing follows a last-write-wins strategy per-key.)
+CoMaps are the most commonly used type of CoValue. They are the equivalent of JSON objects (Collaborative editing follows a last-write-wins strategy per-key).
 
 You can either declare struct-like CoMaps:
 
 <CodeGroup>
-{/* prettier-ignore */}
-```ts
-class Person extends CoMap {
-    name = co.string;
-    age = co.number;
-    pet = co.optional.ref(Pet);
+```ts twoslash
+// schema.ts
+import { co, CoMap } from "jazz-tools";
+// ---cut---
+export class Task extends CoMap {
+  title = co.string;
+  completed = co.boolean;
 }
 ```
 </CodeGroup>
@@ -81,8 +97,13 @@ class Person extends CoMap {
 Or record-like CoMaps (key-value pairs, where keys are always `string`):
 
 <CodeGroup>
-{/* prettier-ignore */}
-```ts
+```ts twoslash
+import { co, CoMap } from "jazz-tools";
+class Fruit extends CoMap {
+  name = co.string;
+  color = co.string;
+}
+// ---cut---
 class ColorToHex extends CoMap.Record(co.string) {}
 
 class ColorToFruit extends CoMap.Record(co.ref(Fruit)) {}
@@ -90,10 +111,10 @@ class ColorToFruit extends CoMap.Record(co.ref(Fruit)) {}
 </CodeGroup>
 
 
-See the corresponding sections for [creating](/docs/using-covalues/creation#comap-creation),
+See the corresponding sections for [creating](/docs/using-covalues/comaps#creating-comaps),
 [subscribing/loading](/docs/using-covalues/subscription-and-loading),
-[reading from](/docs/using-covalues/reading#comap-reading) and
-[writing to](/docs/using-covalues/writing#comap-writing) CoMaps.
+[reading from](/docs/using-covalues/comaps#reading-from-comaps) and
+[updating](/docs/using-covalues/comaps#updating-comaps) CoMaps.
 
 ### `CoList` (declaration)
 
@@ -102,38 +123,48 @@ CoLists are ordered lists and are the equivalent of JSON arrays. (They support c
 You define them by specifying the type of the items they contain:
 
 <CodeGroup>
-{/* prettier-ignore */}
-```ts
+```ts twoslash
+import { co, CoList, CoMap } from "jazz-tools";
+class Task extends CoMap {
+  title = co.string;
+  completed = co.boolean;
+}
+// ---cut---
 class ListOfColors extends CoList.Of(co.string) {}
 
 class ListOfTasks extends CoList.Of(co.ref(Task)) {}
 ```
 </CodeGroup>
 
-See the corresponding sections for [creating](/docs/using-covalues/creation#colist-creation),
+See the corresponding sections for [creating](/docs/using-covalues/colists#creating-colists),
 [subscribing/loading](/docs/using-covalues/subscription-and-loading),
-[reading from](/docs/using-covalues/reading#colist-reading) and
-[writing to](/docs/using-covalues/writing#colist-writing) CoLists.
+[reading from](/docs/using-covalues/colists#reading-from-colists) and
+[updating](/docs/using-covalues/colists#updating-colists) CoLists.
 
 ### `CoFeed` (declaration)
 
-CoFeeds are a special CoValue type that represent a feed of values for a set of users / sessions. (Each session of a user gets its own append-only feed.)
+CoFeeds are a special CoValue type that represent a feed of values for a set of users/sessions (Each session of a user gets its own append-only feed).
 
 They allow easy access of the latest or all items belonging to a user or their sessions. This makes them particularly useful for user presence, reactions, notifications, etc.
 
 You define them by specifying the type of feed item:
 
 <CodeGroup>
-{/* prettier-ignore */}
-```ts
+```ts twoslash
+import { co, CoFeed, CoMap } from "jazz-tools";
+class Task extends CoMap {
+  title = co.string;
+  completed = co.boolean;
+}
+// ---cut---
 class FeedOfTasks extends CoFeed.Of(co.ref(Task)) {}
 ```
 </CodeGroup>
 
-See the corresponding sections for [creating](/docs/using-covalues/creation#cofeed-creation),
+See the corresponding sections for [creating](/docs/using-covalues/cofeeds#creating-cofeeds),
 [subscribing/loading](/docs/using-covalues/subscription-and-loading),
-[reading from](/docs/using-covalues/reading#cofeed-reading) and
-[writing to](/docs/using-covalues/writing#cofeed-writing) CoFeeds.
+[reading from](/docs/using-covalues/cofeeds#reading-from-cofeeds) and
+[writing to](/docs/using-covalues/cofeeds#writing-to-cofeeds) CoFeeds.
 
 ### `FileStream` (declaration)
 
@@ -144,21 +175,22 @@ They allow you to upload and reference files, images, etc.
 You typically don't need to declare or extend them yourself, you simply refer to the built-in `FileStream` from another CoValue:
 
 <CodeGroup>
-{/* prettier-ignore */}
-```ts
+```ts twoslash
+import { co, CoMap } from "jazz-tools";
+// ---cut---
 import { FileStream } from "jazz-tools";
 
-class UserProfile extends CoMap {
-    name = co.string;
-    avatar = co.ref(FileStream);
+class Document extends CoMap {
+  title = co.string;
+  file = co.ref(FileStream);
 }
 ```
 </CodeGroup>
 
-See the corresponding sections for [creating](/docs/using-covalues/creation#filestream-creation),
+See the corresponding sections for [creating](/docs/using-covalues/filestreams#creating-filestreams),
 [subscribing/loading](/docs/using-covalues/subscription-and-loading),
-[reading from](/docs/using-covalues/reading#filestream-reading) and
-[writing to](/docs/using-covalues/writing#filestream-writing) FileStreams.
+[reading from](/docs/using-covalues/filestreams#reading-from-filestreams) and
+[writing to](/docs/using-covalues/filestreams#writing-to-filestreams) FileStreams.
 
 ### `SchemaUnion` (declaration)
 
@@ -167,8 +199,9 @@ SchemaUnion is a helper type that allows you to load and refer to multiple subcl
 You declare them with a base class type and discriminating lambda, in which you have access to the `RawCoMap`, on which you can call `get` with the field name to get the discriminating value.
 
 <CodeGroup>
-{/* prettier-ignore */}
-```ts
+```ts twoslash
+import { co } from "jazz-tools";
+// ---cut---
 import { SchemaUnion, CoMap } from "jazz-tools";
 
 class BaseWidget extends CoMap {
@@ -196,9 +229,9 @@ const WidgetUnion = SchemaUnion.Of<BaseWidget>((raw) => {
 ```
 </CodeGroup>
 
-See the corresponding sections for [creating](/docs/using-covalues/creation#schemaunion-creation),
+See the corresponding sections for [creating](/docs/using-covalues/schemaunions#creating-schemaunions),
 [subscribing/loading](/docs/using-covalues/subscription-and-loading) and
-[narrowing](/docs/using-covalues/reading#schemaunion-narrowing) SchemaUnions.
+[narrowing](/docs/using-covalues/schemaunions#narrowing) SchemaUnions.
 
 ## CoValue field/item types
 
@@ -209,12 +242,11 @@ Now that we've seen the different types of CoValues, let's see more precisely ho
 You can declare primitive field types using the `co` declarer:
 
 <CodeGroup>
-{/* prettier-ignore */}
-```ts
-import { co } from "jazz-tools";
+```ts twoslash
+import { co, CoMap, CoList } from "jazz-tools";
 
 export class Person extends CoMap {
-    title = co.string;
+  title = co.string;
 }
 
 export class ListOfColors extends CoList.Of(co.string) {}
@@ -224,23 +256,25 @@ export class ListOfColors extends CoList.Of(co.string) {}
 Here's a quick overview of the primitive types you can use:
 
 <CodeGroup>
-{/* prettier-ignore */}
-```ts
-co.string;
-co.number;
-co.boolean;
-co.null;
-co.Date;
-co.literal("waiting", "ready");
+```ts twoslash
+import { co } from "jazz-tools";
+// ---cut---
+co.string;  // For simple strings
+co.number;  // For numbers
+co.boolean; // For booleans
+co.null;    // For null
+co.Date;    // For dates
+co.literal("waiting", "ready"); // For enums
 ```
 </CodeGroup>
 
 Finally, for more complex JSON data, that you *don't want to be collaborative internally* (but only ever update as a whole), you can use `co.json<T>()`:
 
 <CodeGroup>
-{/* prettier-ignore */}
-```ts
-co.json<{ name: string }>();
+```ts twoslash
+import { co } from "jazz-tools";
+// ---cut---
+co.json<{ name: string }>(); // For JSON objects
 ```
 </CodeGroup>
 
@@ -257,13 +291,18 @@ The important caveat here is that **a referenced CoValue might or might not be l
 In Schemas, you declare Refs using the `co.ref<T>()` declarer:
 
 <CodeGroup>
-{/* prettier-ignore */}
-```ts
-class Company extends CoMap {
-    members = co.ref(ListOfPeople);
+```ts twoslash
+import { co, CoMap, CoList } from "jazz-tools";
+class Person extends CoMap {
+  name = co.string;
 }
-
+// ---cut---
+// schema.ts
 class ListOfPeople extends CoList.Of(co.ref(Person)) {}
+
+class Company extends CoMap {
+  members = co.ref(ListOfPeople);
+}
 ```
 </CodeGroup>
 
@@ -272,10 +311,14 @@ class ListOfPeople extends CoList.Of(co.ref(Person)) {}
 ⚠️ If you want to make a referenced CoValue field optional, you *have to* use `co.optional.ref<T>()`: ⚠️
 
 <CodeGroup>
-{/* prettier-ignore */}
-```ts
+```ts twoslash
+import { co, CoMap } from "jazz-tools";
+class Pet extends CoMap {
+  name = co.string;
+}
+// ---cut---
 class Person extends CoMap {
-    pet = co.optional.ref(Pet);
+  pet = co.optional.ref(Pet);
 }
 ```
 </CodeGroup>
@@ -285,20 +328,25 @@ class Person extends CoMap {
 Since CoValue schemas are based on classes, you can easily add computed fields and methods:
 
 <CodeGroup>
-{/* prettier-ignore */}
-```ts
+```ts twoslash
+import { co, CoMap } from "jazz-tools";
+function differenceInYears(date1: Date, date2: Date) {
+  const diffTime = Math.abs(date1.getTime() - date2.getTime());
+  return Math.ceil(diffTime / (1000 * 60 * 60 * 24 * 365.25));
+}
+// ---cut---
 class Person extends CoMap {
-    firstName = co.string;
-    lastName = co.string;
-    dateOfBirth = co.Date;
+  firstName = co.string;
+  lastName = co.string;
+  dateOfBirth = co.Date;
 
-    get name() {
-        return `${this.firstName} ${this.lastName}`;
-    }
+  get name() {
+    return `${this.firstName} ${this.lastName}`;
+  }
 
-    ageAsOf(date: Date) {
-        return differenceInYears(date, this.dateOfBirth);
-    }
+  ageAsOf(date: Date) {
+    return differenceInYears(date, this.dateOfBirth);
+  }
 }
 ```
 </CodeGroup>

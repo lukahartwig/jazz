@@ -23,6 +23,8 @@ export class SyncManager {
   private readonly toLocalNode: OutgoingSyncQueue;
   private readonly dbClient: DBClientInterface;
 
+  private loadedCoValues = new Set<RawCoID>();
+
   constructor(dbClient: DBClientInterface, toLocalNode: OutgoingSyncQueue) {
     this.toLocalNode = toLocalNode;
     this.dbClient = dbClient;
@@ -149,6 +151,8 @@ export class SyncManager {
       }),
     );
 
+    this.loadedCoValues.add(coValueRow.id);
+
     const dependedOnCoValuesList = getDependedOnCoValues({
       coValueRow,
       newContentMessages,
@@ -167,8 +171,12 @@ export class SyncManager {
     };
 
     await Promise.all(
-      dependedOnCoValuesList.map((dependedOnCoValue) =>
-        this.collectCoValueData(
+      dependedOnCoValuesList.map((dependedOnCoValue) => {
+        if (this.loadedCoValues.has(dependedOnCoValue)) {
+          return;
+        }
+
+        return this.collectCoValueData(
           {
             id: dependedOnCoValue,
             header: false,
@@ -176,8 +184,8 @@ export class SyncManager {
           },
           messageMap,
           asDependencyOf || coValueRow.id,
-        ),
-      ),
+        );
+      }),
     );
 
     return messageMap;
@@ -229,7 +237,13 @@ export class SyncManager {
         if ((sessionRow?.lastIdx || 0) < (msg.new[sessionID]?.after || 0)) {
           invalidAssumptions = true;
         } else {
-          return this.putNewTxs(msg, sessionID, sessionRow, storedCoValueRowID);
+          const newLastIdx = await this.putNewTxs(
+            msg,
+            sessionID,
+            sessionRow,
+            storedCoValueRowID,
+          );
+          ourKnown.sessions[sessionID] = newLastIdx;
         }
       });
     }
@@ -239,6 +253,11 @@ export class SyncManager {
         action: "known",
         ...ourKnown,
         isCorrection: invalidAssumptions,
+      });
+    } else {
+      this.sendStateMessage({
+        action: "known",
+        ...ourKnown,
       });
     }
   }
@@ -302,11 +321,13 @@ export class SyncManager {
       });
     }
 
-    return Promise.all(
+    await Promise.all(
       actuallyNewTransactions.map((newTransaction, i) =>
         this.dbClient.addTransaction(sessionRowID, nextIdx + i, newTransaction),
       ),
     );
+
+    return newLastIdx;
   }
 
   handleKnown(_msg: CojsonInternalTypes.KnownStateMessage) {

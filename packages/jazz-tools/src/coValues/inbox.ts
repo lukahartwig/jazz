@@ -1,11 +1,4 @@
-import {
-  CoID,
-  InviteSecret,
-  RawAccount,
-  RawCoMap,
-  RawControlledAccount,
-  SessionID,
-} from "cojson";
+import { CoID, InviteSecret, RawAccount, RawCoMap, SessionID } from "cojson";
 import { CoStreamItem, RawCoStream } from "cojson";
 import { activeAccountContext } from "../implementation/activeAccountContext.js";
 import { type Account } from "./account.js";
@@ -32,9 +25,9 @@ export function createInboxRoot(account: Account) {
     throw new Error("Account is not controlled");
   }
 
-  const rawAccount = account._raw as RawControlledAccount;
+  const rawAccount = account._raw;
 
-  const group = rawAccount.createGroup();
+  const group = rawAccount.core.node.createGroup();
   const messagesFeed = group.createStream<MessagesStream>();
 
   const inboxRoot = rawAccount.createMap<InboxRoot>();
@@ -386,7 +379,7 @@ async function acceptInvite(invite: string, account?: Account) {
     throw new Error("Account is not controlled");
   }
 
-  await (account._raw as RawControlledAccount).acceptInvite(id, inviteSecret);
+  await account._raw.core.node.acceptInvite(id, inviteSecret);
 
   return id;
 }

@@ -1,4 +1,4 @@
-import { AgentSecret } from "cojson";
+import { AgentSecret, RawCoMap } from "cojson";
 import { WasmCrypto } from "cojson/crypto/WasmCrypto";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import {
@@ -44,7 +44,7 @@ describe("createContext methods", () => {
 
       const credentials: Credentials = {
         accountID: account.id,
-        secret: account._raw.core.node.account.agentSecret,
+        secret: account._raw.core.node.getCurrentAgent().agentSecret,
       };
 
       const context = await createJazzContextFromExistingCredentials({
@@ -72,7 +72,7 @@ describe("createContext methods", () => {
 
       const credentials: Credentials = {
         accountID: account.id,
-        secret: account._raw.core.node.account.agentSecret,
+        secret: account._raw.core.node.getCurrentAgent().agentSecret,
       };
 
       const context = await createJazzContextFromExistingCredentials({
@@ -96,7 +96,7 @@ describe("createContext methods", () => {
       const context = await createJazzContextFromExistingCredentials({
         credentials: {
           accountID: account.id,
-          secret: account._raw.core.node.account.agentSecret,
+          secret: account._raw.core.node.getCurrentAgent().agentSecret,
         },
         peersToLoadFrom: [getPeerConnectedToTestSyncServer()],
         crypto: Crypto,
@@ -119,7 +119,7 @@ describe("createContext methods", () => {
       const context = await createJazzContextFromExistingCredentials({
         credentials: {
           accountID: account.id,
-          secret: account._raw.core.node.account.agentSecret,
+          secret: account._raw.core.node.getCurrentAgent().agentSecret,
         },
         peersToLoadFrom: [getPeerConnectedToTestSyncServer()],
         crypto: Crypto,
@@ -139,7 +139,7 @@ describe("createContext methods", () => {
       const context = await createJazzContextFromExistingCredentials({
         credentials: {
           accountID: account.id,
-          secret: account._raw.core.node.account.agentSecret,
+          secret: account._raw.core.node.getCurrentAgent().agentSecret,
         },
         peersToLoadFrom: [getPeerConnectedToTestSyncServer()],
         crypto: Crypto,
@@ -172,7 +172,7 @@ describe("createContext methods", () => {
         crypto: Crypto,
       });
 
-      expect(context.node.account.agentSecret).toBe(initialSecret);
+      expect(context.node.getCurrentAgent().agentSecret).toBe(initialSecret);
     });
 
     test("handles custom account schema", async () => {
@@ -311,7 +311,7 @@ describe("createContext methods", () => {
         sessionProvider: randomSessionProvider,
       });
 
-      expect(context.node.account.agentSecret).toBe(initialSecret);
+      expect(context.node.getCurrentAgent().agentSecret).toBe(initialSecret);
       expect(await storage.get()).toEqual({
         accountID: "test" as ID<Account>,
         secretSeed: new Uint8Array([1, 2, 3]),
