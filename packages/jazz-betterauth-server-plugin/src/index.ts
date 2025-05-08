@@ -32,9 +32,7 @@ const decrypt = async (
   return JSON.parse(credentialsString);
 };
 
-let symmetricSecret: string | undefined = undefined;
-
-export const jazzPlugin = (publicKey: string) => {
+export const jazzPlugin = (publicKey: string, symmetricSecret?: string) => {
   return {
     id: "jazz-plugin",
     endpoints: {
