@@ -19,10 +19,11 @@ export default function Home() {
       },
     });
   }, [logOut, auth]);
-  console.log("me", JSON.stringify(me));
-  console.log("user", JSON.stringify(user));
-  console.log("account", JSON.stringify(account));
-  console.log("isAuthenticated", JSON.stringify(isAuthenticated));
+  console.log("me", me);
+  console.log("user", user);
+  console.log("account", account);
+  console.log("auth.state", auth.state);
+  console.log("isAuthenticated", isAuthenticated);
 
   return (
     <>

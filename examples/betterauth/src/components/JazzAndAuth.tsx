@@ -1,7 +1,6 @@
 "use client";
 
 import { emailOTPClient, magicLinkClient } from "better-auth/client/plugins";
-import { jazzClientPlugin } from "jazz-betterauth-client-plugin";
 import { JazzProvider } from "jazz-react";
 import { AuthProvider } from "jazz-react-auth-betterauth";
 import * as NextImage from "next/image";
@@ -34,7 +33,7 @@ export function JazzAndAuth({ children }: { children: ReactNode }) {
           replace={router.replace}
           options={{
             baseURL: process.env.NEXT_PUBLIC_AUTH_BASE_URL,
-            plugins: [jazzClientPlugin(), magicLinkClient(), emailOTPClient()],
+            plugins: [magicLinkClient(), emailOTPClient()],
           }}
         >
           {children}

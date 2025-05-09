@@ -48,6 +48,7 @@ export const auth = await (async () => {
           type: "spki",
           format: "pem",
         }) as string,
+        process.env.BETTER_AUTH_SECRET,
       ),
       magicLink({
         sendMagicLink: sendMagicLinkCb,

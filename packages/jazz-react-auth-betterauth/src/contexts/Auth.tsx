@@ -13,6 +13,19 @@ import { DefaultLink, type Link as LinkType } from "../types/link";
 // biome-ignore lint/correctness/useImportExtensions: <explanation>
 import { defaultNavigate, defaultReplace } from "../types/router";
 
+const equalCredentials = (a?: AuthCredentials, b?: AuthCredentials) => {
+  if (a && b) {
+    return (
+      a.accountID === b.accountID &&
+      JSON.stringify(a.secretSeed) === JSON.stringify(b.secretSeed) &&
+      a.accountSecret === b.accountSecret &&
+      a.provider === b.provider
+    );
+  } else {
+    return a === undefined && b === undefined;
+  }
+};
+
 const authClient = <T extends ClientOptions>(
   onSessionChange?: () => void | Promise<void>,
   options?: T,
@@ -31,7 +44,10 @@ const authClient = <T extends ClientOptions>(
       .decryptCredentials()
       .then((x) => {
         if (x.error) console.error("Error decrypting credentials:", x.error);
-        setUser(x.data ?? undefined);
+        const data = x.data ?? undefined;
+        if (!equalCredentials(user, data)) {
+          setUser(data);
+        }
       })
       .catch((error) => {
         console.error("Error decrypting credentials:", error);
