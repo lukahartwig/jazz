@@ -144,7 +144,7 @@ importers:
         version: 18.3.1
       react-email:
         specifier: ^4.0.11
-        version: 4.0.12(@opentelemetry/api@1.9.0)(@playwright/test@1.52.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        version: 4.0.13(@opentelemetry/api@1.9.0)(@playwright/test@1.52.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       tailwindcss:
         specifier: ^4
         version: 4.1.6
@@ -365,7 +365,7 @@ importers:
         version: 52.0.42(@babel/core@7.27.1)(@babel/preset-env@7.27.2(@babel/core@7.27.1))(@expo/metro-runtime@4.0.1(react-native@0.76.7(@babel/core@7.27.1)(@babel/preset-env@7.27.2(@babel/core@7.27.1))(@react-native-community/cli-server-api@15.0.1)(@types/react@18.3.12)(react@18.3.1)))(react-native@0.76.7(@babel/core@7.27.1)(@babel/preset-env@7.27.2(@babel/core@7.27.1))(@react-native-community/cli-server-api@15.0.1)(@types/react@18.3.12)(react@18.3.1))(react@18.3.1)
       expo-build-properties:
         specifier: ~0.13.1
-        version: 0.13.2(expo@52.0.42(@babel/core@7.27.1)(@babel/preset-env@7.27.2(@babel/core@7.27.1))(@expo/metro-runtime@4.0.1(react-native@0.76.7(@babel/core@7.27.1)(@babel/preset-env@7.27.2(@babel/core@7.27.1))(@react-native-community/cli-server-api@15.0.1)(@types/react@18.3.12)(react@18.3.1)))(react-native@0.76.7(@babel/core@7.27.1)(@babel/preset-env@7.27.2(@babel/core@7.27.1))(@react-native-community/cli-server-api@15.0.1)(@types/react@18.3.12)(react@18.3.1))(react@18.3.1))
+        version: 0.13.3(expo@52.0.42(@babel/core@7.27.1)(@babel/preset-env@7.27.2(@babel/core@7.27.1))(@expo/metro-runtime@4.0.1(react-native@0.76.7(@babel/core@7.27.1)(@babel/preset-env@7.27.2(@babel/core@7.27.1))(@react-native-community/cli-server-api@15.0.1)(@types/react@18.3.12)(react@18.3.1)))(react-native@0.76.7(@babel/core@7.27.1)(@babel/preset-env@7.27.2(@babel/core@7.27.1))(@react-native-community/cli-server-api@15.0.1)(@types/react@18.3.12)(react@18.3.1))(react@18.3.1))
       expo-clipboard:
         specifier: ~7.0.0
         version: 7.0.1(expo@52.0.42(@babel/core@7.27.1)(@babel/preset-env@7.27.2(@babel/core@7.27.1))(@expo/metro-runtime@4.0.1(react-native@0.76.7(@babel/core@7.27.1)(@babel/preset-env@7.27.2(@babel/core@7.27.1))(@react-native-community/cli-server-api@15.0.1)(@types/react@18.3.12)(react@18.3.1)))(react-native@0.76.7(@babel/core@7.27.1)(@babel/preset-env@7.27.2(@babel/core@7.27.1))(@react-native-community/cli-server-api@15.0.1)(@types/react@18.3.12)(react@18.3.1))(react@18.3.1))(react-native@0.76.7(@babel/core@7.27.1)(@babel/preset-env@7.27.2(@babel/core@7.27.1))(@react-native-community/cli-server-api@15.0.1)(@types/react@18.3.12)(react@18.3.1))(react@18.3.1)
@@ -411,6 +411,12 @@ importers:
       react-native-get-random-values:
         specifier: ^1.11.0
         version: 1.11.0(react-native@0.76.7(@babel/core@7.27.1)(@babel/preset-env@7.27.2(@babel/core@7.27.1))(@react-native-community/cli-server-api@15.0.1)(@types/react@18.3.12)(react@18.3.1))
+      react-native-nitro-modules:
+        specifier: 0.25.2
+        version: 0.25.2(react-native@0.76.7(@babel/core@7.27.1)(@babel/preset-env@7.27.2(@babel/core@7.27.1))(@react-native-community/cli-server-api@15.0.1)(@types/react@18.3.12)(react@18.3.1))(react@18.3.1)
+      react-native-quick-crypto:
+        specifier: 1.0.0-beta.15
+        version: 1.0.0-beta.15(react-native-nitro-modules@0.25.2(react-native@0.76.7(@babel/core@7.27.1)(@babel/preset-env@7.27.2(@babel/core@7.27.1))(@react-native-community/cli-server-api@15.0.1)(@types/react@18.3.12)(react@18.3.1))(react@18.3.1))(react-native@0.76.7(@babel/core@7.27.1)(@babel/preset-env@7.27.2(@babel/core@7.27.1))(@react-native-community/cli-server-api@15.0.1)(@types/react@18.3.12)(react@18.3.1))(react@18.3.1)
       react-native-safe-area-context:
         specifier: 4.12.0
         version: 4.12.0(react-native@0.76.7(@babel/core@7.27.1)(@babel/preset-env@7.27.2(@babel/core@7.27.1))(@react-native-community/cli-server-api@15.0.1)(@types/react@18.3.12)(react@18.3.1))(react@18.3.1)
@@ -474,7 +480,7 @@ importers:
         version: 52.0.42(@babel/core@7.27.1)(@babel/preset-env@7.27.2(@babel/core@7.27.1))(@expo/metro-runtime@4.0.1(react-native@0.76.7(@babel/core@7.27.1)(@babel/preset-env@7.27.2(@babel/core@7.27.1))(@react-native-community/cli-server-api@15.0.1)(@types/react@18.3.12)(react@18.3.1)))(react-native@0.76.7(@babel/core@7.27.1)(@babel/preset-env@7.27.2(@babel/core@7.27.1))(@react-native-community/cli-server-api@15.0.1)(@types/react@18.3.12)(react@18.3.1))(react@18.3.1)
       expo-build-properties:
         specifier: ~0.13.1
-        version: 0.13.2(expo@52.0.42(@babel/core@7.27.1)(@babel/preset-env@7.27.2(@babel/core@7.27.1))(@expo/metro-runtime@4.0.1(react-native@0.76.7(@babel/core@7.27.1)(@babel/preset-env@7.27.2(@babel/core@7.27.1))(@react-native-community/cli-server-api@15.0.1)(@types/react@18.3.12)(react@18.3.1)))(react-native@0.76.7(@babel/core@7.27.1)(@babel/preset-env@7.27.2(@babel/core@7.27.1))(@react-native-community/cli-server-api@15.0.1)(@types/react@18.3.12)(react@18.3.1))(react@18.3.1))
+        version: 0.13.3(expo@52.0.42(@babel/core@7.27.1)(@babel/preset-env@7.27.2(@babel/core@7.27.1))(@expo/metro-runtime@4.0.1(react-native@0.76.7(@babel/core@7.27.1)(@babel/preset-env@7.27.2(@babel/core@7.27.1))(@react-native-community/cli-server-api@15.0.1)(@types/react@18.3.12)(react@18.3.1)))(react-native@0.76.7(@babel/core@7.27.1)(@babel/preset-env@7.27.2(@babel/core@7.27.1))(@react-native-community/cli-server-api@15.0.1)(@types/react@18.3.12)(react@18.3.1))(react@18.3.1))
       expo-clipboard:
         specifier: ~7.0.0
         version: 7.0.1(expo@52.0.42(@babel/core@7.27.1)(@babel/preset-env@7.27.2(@babel/core@7.27.1))(@expo/metro-runtime@4.0.1(react-native@0.76.7(@babel/core@7.27.1)(@babel/preset-env@7.27.2(@babel/core@7.27.1))(@react-native-community/cli-server-api@15.0.1)(@types/react@18.3.12)(react@18.3.1)))(react-native@0.76.7(@babel/core@7.27.1)(@babel/preset-env@7.27.2(@babel/core@7.27.1))(@react-native-community/cli-server-api@15.0.1)(@types/react@18.3.12)(react@18.3.1))(react@18.3.1))(react-native@0.76.7(@babel/core@7.27.1)(@babel/preset-env@7.27.2(@babel/core@7.27.1))(@react-native-community/cli-server-api@15.0.1)(@types/react@18.3.12)(react@18.3.1))(react@18.3.1)
@@ -1960,7 +1966,7 @@ importers:
         specifier: ^11.7.0
         version: 11.10.0
       cojson:
-        specifier: workspace:0.13.21
+        specifier: workspace:0.13.23
         version: link:../cojson
       cojson-storage:
         specifier: workspace:*
@@ -2132,13 +2138,13 @@ importers:
   packages/jazz-auth-clerk:
     dependencies:
       cojson:
-        specifier: workspace:0.13.21
+        specifier: workspace:0.13.23
         version: link:../cojson
       jazz-browser:
-        specifier: workspace:0.13.21
+        specifier: workspace:0.13.23
         version: link:../jazz-browser
       jazz-tools:
-        specifier: workspace:0.13.21
+        specifier: workspace:0.13.23
         version: link:../jazz-tools
     devDependencies:
       typescript:
@@ -2223,10 +2229,10 @@ importers:
         specifier: ^4.1.0
         version: 4.1.0
       jazz-browser:
-        specifier: workspace:0.13.21
+        specifier: workspace:0.13.23
         version: link:../jazz-browser
       jazz-tools:
-        specifier: workspace:0.13.21
+        specifier: workspace:0.13.23
         version: link:../jazz-tools
       pica:
         specifier: ^9.0.1
@@ -2381,19 +2387,19 @@ importers:
         specifier: ^1.3.0
         version: 1.6.0
       cojson:
-        specifier: workspace:0.13.21
+        specifier: workspace:0.13.23
         version: link:../cojson
       jazz-browser:
-        specifier: workspace:0.13.21
+        specifier: workspace:0.13.23
         version: link:../jazz-browser
       jazz-browser-media-images:
-        specifier: workspace:0.13.21
+        specifier: workspace:0.13.23
         version: link:../jazz-browser-media-images
       jazz-react-core:
-        specifier: workspace:0.13.21
+        specifier: workspace:0.13.23
         version: link:../jazz-react-core
       jazz-tools:
-        specifier: workspace:0.13.21
+        specifier: workspace:0.13.23
         version: link:../jazz-tools
     devDependencies:
       '@testing-library/dom':
@@ -2584,11 +2590,11 @@ importers:
         specifier: workspace:*
         version: link:../jazz-tools
       react-native-nitro-modules:
-        specifier: 0.24.1
-        version: 0.24.1(react-native@0.76.7(@babel/core@7.27.1)(@babel/preset-env@7.27.2(@babel/core@7.27.1))(@react-native-community/cli-server-api@15.0.1)(@types/react@18.3.12)(react@18.3.1))(react@18.3.1)
+        specifier: 0.25.2
+        version: 0.25.2(react-native@0.76.7(@babel/core@7.27.1)(@babel/preset-env@7.27.2(@babel/core@7.27.1))(@react-native-community/cli-server-api@15.0.1)(@types/react@18.3.12)(react@18.3.1))(react@18.3.1)
       react-native-quick-crypto:
-        specifier: 1.0.0-beta.13
-        version: 1.0.0-beta.13(react-native-nitro-modules@0.24.1(react-native@0.76.7(@babel/core@7.27.1)(@babel/preset-env@7.27.2(@babel/core@7.27.1))(@react-native-community/cli-server-api@15.0.1)(@types/react@18.3.12)(react@18.3.1))(react@18.3.1))(react-native@0.76.7(@babel/core@7.27.1)(@babel/preset-env@7.27.2(@babel/core@7.27.1))(@react-native-community/cli-server-api@15.0.1)(@types/react@18.3.12)(react@18.3.1))(react@18.3.1)
+        specifier: 1.0.0-beta.15
+        version: 1.0.0-beta.15(react-native-nitro-modules@0.25.2(react-native@0.76.7(@babel/core@7.27.1)(@babel/preset-env@7.27.2(@babel/core@7.27.1))(@react-native-community/cli-server-api@15.0.1)(@types/react@18.3.12)(react@18.3.1))(react@18.3.1))(react-native@0.76.7(@babel/core@7.27.1)(@babel/preset-env@7.27.2(@babel/core@7.27.1))(@react-native-community/cli-server-api@15.0.1)(@types/react@18.3.12)(react@18.3.1))(react@18.3.1)
     devDependencies:
       typescript:
         specifier: 'catalog:'
@@ -2686,19 +2692,19 @@ importers:
         specifier: ^0.25.5
         version: 0.25.8(effect@3.14.22)
       cojson:
-        specifier: workspace:0.13.21
+        specifier: workspace:0.13.23
         version: link:../cojson
       cojson-storage-sqlite:
-        specifier: workspace:0.13.21
+        specifier: workspace:0.13.23
         version: link:../cojson-storage-sqlite
       cojson-transport-ws:
-        specifier: workspace:0.13.21
+        specifier: workspace:0.13.23
         version: link:../cojson-transport-ws
       effect:
         specifier: ^3.6.5
         version: 3.14.22
       jazz-tools:
-        specifier: workspace:0.13.21
+        specifier: workspace:0.13.23
         version: link:../jazz-tools
       ws:
         specifier: ^8.14.2
@@ -2851,6 +2857,9 @@ importers:
 
   starters/react-passkey-auth:
     dependencies:
+      jazz-inspector:
+        specifier: workspace:*
+        version: link:../../packages/jazz-inspector
       jazz-react:
         specifier: workspace:*
         version: link:../../packages/jazz-react
@@ -3058,7 +3067,7 @@ importers:
         version: 52.0.42(@babel/core@7.27.1)(@babel/preset-env@7.27.2(@babel/core@7.27.1))(@expo/metro-runtime@4.0.1(react-native@0.76.7(@babel/core@7.27.1)(@babel/preset-env@7.27.2(@babel/core@7.27.1))(@react-native-community/cli-server-api@15.0.1)(@types/react@18.3.12)(react@18.3.1)))(react-native@0.76.7(@babel/core@7.27.1)(@babel/preset-env@7.27.2(@babel/core@7.27.1))(@react-native-community/cli-server-api@15.0.1)(@types/react@18.3.12)(react@18.3.1))(react@18.3.1)
       expo-build-properties:
         specifier: ~0.13.2
-        version: 0.13.2(expo@52.0.42(@babel/core@7.27.1)(@babel/preset-env@7.27.2(@babel/core@7.27.1))(@expo/metro-runtime@4.0.1(react-native@0.76.7(@babel/core@7.27.1)(@babel/preset-env@7.27.2(@babel/core@7.27.1))(@react-native-community/cli-server-api@15.0.1)(@types/react@18.3.12)(react@18.3.1)))(react-native@0.76.7(@babel/core@7.27.1)(@babel/preset-env@7.27.2(@babel/core@7.27.1))(@react-native-community/cli-server-api@15.0.1)(@types/react@18.3.12)(react@18.3.1))(react@18.3.1))
+        version: 0.13.3(expo@52.0.42(@babel/core@7.27.1)(@babel/preset-env@7.27.2(@babel/core@7.27.1))(@expo/metro-runtime@4.0.1(react-native@0.76.7(@babel/core@7.27.1)(@babel/preset-env@7.27.2(@babel/core@7.27.1))(@react-native-community/cli-server-api@15.0.1)(@types/react@18.3.12)(react@18.3.1)))(react-native@0.76.7(@babel/core@7.27.1)(@babel/preset-env@7.27.2(@babel/core@7.27.1))(@react-native-community/cli-server-api@15.0.1)(@types/react@18.3.12)(react@18.3.1))(react@18.3.1))
       expo-clipboard:
         specifier: ~7.0.1
         version: 7.0.1(expo@52.0.42(@babel/core@7.27.1)(@babel/preset-env@7.27.2(@babel/core@7.27.1))(@expo/metro-runtime@4.0.1(react-native@0.76.7(@babel/core@7.27.1)(@babel/preset-env@7.27.2(@babel/core@7.27.1))(@react-native-community/cli-server-api@15.0.1)(@types/react@18.3.12)(react@18.3.1)))(react-native@0.76.7(@babel/core@7.27.1)(@babel/preset-env@7.27.2(@babel/core@7.27.1))(@react-native-community/cli-server-api@15.0.1)(@types/react@18.3.12)(react@18.3.1))(react@18.3.1))(react-native@0.76.7(@babel/core@7.27.1)(@babel/preset-env@7.27.2(@babel/core@7.27.1))(@react-native-community/cli-server-api@15.0.1)(@types/react@18.3.12)(react@18.3.1))(react@18.3.1)
@@ -8993,8 +9002,8 @@ packages:
       react: 18.3.1
       react-native: '*'
 
-  expo-build-properties@0.13.2:
-    resolution: {integrity: sha512-ML2GwBgn0Bo4yPgnSGb7h3XVxCigS/KFdid3xPC2HldEioTP3UewB/2Qa4WBsam9Fb7lAuRyVHAfRoA3swpDzg==}
+  expo-build-properties@0.13.3:
+    resolution: {integrity: sha512-gw7AYP+YF50Gr912BedelRDTfR4GnUEn9p5s25g4nv0hTJGWpBZdCYR5/Oi2rmCHJXxBqhPjxzV7JRh72fntLg==}
     peerDependencies:
       expo: '*'
 
@@ -12091,8 +12100,8 @@ packages:
     peerDependencies:
       react: 18.3.1
 
-  react-email@4.0.12:
-    resolution: {integrity: sha512-ihPMTYChI67CSeMV1skae5uaKd4YRC7foZGWt/V3UrwWc+ksjuSf1coUiZC+yP59dscD4F0aFzLb0uTY7RWJbw==}
+  react-email@4.0.13:
+    resolution: {integrity: sha512-U858xl3mferQ3nkkCA5mG9tkAMuMpdVFS4bU8TLZv8eG6+kQDGI9gbfB+YVpD+IzUjJZB2ft+LBsEs4k0Sav9A==}
     engines: {node: '>=18.0.0'}
     hasBin: true
 
@@ -12176,8 +12185,8 @@ packages:
       react: 18.3.1
       react-native: '*'
 
-  react-native-nitro-modules@0.24.1:
-    resolution: {integrity: sha512-wA04fykLsIObAd/2h0mfl3CGZ7Iqtj9CjnHD9j+yAnMCcYDWYlCV8MICmicWgN6eg4yjrEUDsrfFAYWgCFiCBw==}
+  react-native-nitro-modules@0.25.2:
+    resolution: {integrity: sha512-rL+X0LzB8BXvpdrUE/+oZ5v4qS/1nZIq0M8Uctbvqq2q53sVCHX4995ffT8+lGIJe/f0QcBvvrEeXtBPl86iwQ==}
     peerDependencies:
       react: 18.3.1
       react-native: '*'
@@ -12198,8 +12207,8 @@ packages:
       react: 18.3.1
       react-native: '*'
 
-  react-native-quick-crypto@1.0.0-beta.13:
-    resolution: {integrity: sha512-R/ON9sQ2UVeg/PAcbaAUZ3VONUQuLwi2pEmy1F1FHUg6k5cubSt12BXn+gW3Dm1NVM4VpU4gDtKOlQ5R5tV3ng==}
+  react-native-quick-crypto@1.0.0-beta.15:
+    resolution: {integrity: sha512-714wO6+AzAeqLvA7ZgvLSYYWOVtNgowFvpnrxfZOt6DQpGgumW1FYrUPLMwGankYzpKKwQ0LeKZSqyDZs8N9ow==}
     peerDependencies:
       react: 18.3.1
       react-native: '*'
@@ -21278,7 +21287,7 @@ snapshots:
       - expo
       - supports-color
 
-  expo-build-properties@0.13.2(expo@52.0.42(@babel/core@7.27.1)(@babel/preset-env@7.27.2(@babel/core@7.27.1))(@expo/metro-runtime@4.0.1(react-native@0.76.7(@babel/core@7.27.1)(@babel/preset-env@7.27.2(@babel/core@7.27.1))(@react-native-community/cli-server-api@15.0.1)(@types/react@18.3.12)(react@18.3.1)))(react-native@0.76.7(@babel/core@7.27.1)(@babel/preset-env@7.27.2(@babel/core@7.27.1))(@react-native-community/cli-server-api@15.0.1)(@types/react@18.3.12)(react@18.3.1))(react@18.3.1)):
+  expo-build-properties@0.13.3(expo@52.0.42(@babel/core@7.27.1)(@babel/preset-env@7.27.2(@babel/core@7.27.1))(@expo/metro-runtime@4.0.1(react-native@0.76.7(@babel/core@7.27.1)(@babel/preset-env@7.27.2(@babel/core@7.27.1))(@react-native-community/cli-server-api@15.0.1)(@types/react@18.3.12)(react@18.3.1)))(react-native@0.76.7(@babel/core@7.27.1)(@babel/preset-env@7.27.2(@babel/core@7.27.1))(@react-native-community/cli-server-api@15.0.1)(@types/react@18.3.12)(react@18.3.1))(react@18.3.1)):
     dependencies:
       ajv: 8.17.1
       expo: 52.0.42(@babel/core@7.27.1)(@babel/preset-env@7.27.2(@babel/core@7.27.1))(@expo/metro-runtime@4.0.1(react-native@0.76.7(@babel/core@7.27.1)(@babel/preset-env@7.27.2(@babel/core@7.27.1))(@react-native-community/cli-server-api@15.0.1)(@types/react@18.3.12)(react@18.3.1)))(react-native@0.76.7(@babel/core@7.27.1)(@babel/preset-env@7.27.2(@babel/core@7.27.1))(@react-native-community/cli-server-api@15.0.1)(@types/react@18.3.12)(react@18.3.1))(react@18.3.1)
@@ -24549,7 +24558,7 @@ snapshots:
       react: 18.3.1
       scheduler: 0.23.2
 
-  react-email@4.0.12(@opentelemetry/api@1.9.0)(@playwright/test@1.52.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
+  react-email@4.0.13(@opentelemetry/api@1.9.0)(@playwright/test@1.52.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
     dependencies:
       '@babel/parser': 7.27.2
       '@babel/traverse': 7.27.1
@@ -24675,7 +24684,7 @@ snapshots:
       react: 18.3.1
       react-native: 0.76.7(@babel/core@7.27.1)(@babel/preset-env@7.27.2(@babel/core@7.27.1))(@react-native-community/cli-server-api@15.0.1)(@types/react@18.3.12)(react@18.3.1)
 
-  react-native-nitro-modules@0.24.1(react-native@0.76.7(@babel/core@7.27.1)(@babel/preset-env@7.27.2(@babel/core@7.27.1))(@react-native-community/cli-server-api@15.0.1)(@types/react@18.3.12)(react@18.3.1))(react@18.3.1):
+  react-native-nitro-modules@0.25.2(react-native@0.76.7(@babel/core@7.27.1)(@babel/preset-env@7.27.2(@babel/core@7.27.1))(@react-native-community/cli-server-api@15.0.1)(@types/react@18.3.12)(react@18.3.1))(react@18.3.1):
     dependencies:
       react: 18.3.1
       react-native: 0.76.7(@babel/core@7.27.1)(@babel/preset-env@7.27.2(@babel/core@7.27.1))(@react-native-community/cli-server-api@15.0.1)(@types/react@18.3.12)(react@18.3.1)
@@ -24695,16 +24704,15 @@ snapshots:
       react: 18.3.1
       react-native: 0.76.7(@babel/core@7.27.1)(@babel/preset-env@7.27.2(@babel/core@7.27.1))(@react-native-community/cli-server-api@15.0.1)(@types/react@18.3.12)(react@18.3.1)
 
-  react-native-quick-crypto@1.0.0-beta.13(react-native-nitro-modules@0.24.1(react-native@0.76.7(@babel/core@7.27.1)(@babel/preset-env@7.27.2(@babel/core@7.27.1))(@react-native-community/cli-server-api@15.0.1)(@types/react@18.3.12)(react@18.3.1))(react@18.3.1))(react-native@0.76.7(@babel/core@7.27.1)(@babel/preset-env@7.27.2(@babel/core@7.27.1))(@react-native-community/cli-server-api@15.0.1)(@types/react@18.3.12)(react@18.3.1))(react@18.3.1):
+  react-native-quick-crypto@1.0.0-beta.15(react-native-nitro-modules@0.25.2(react-native@0.76.7(@babel/core@7.27.1)(@babel/preset-env@7.27.2(@babel/core@7.27.1))(@react-native-community/cli-server-api@15.0.1)(@types/react@18.3.12)(react@18.3.1))(react@18.3.1))(react-native@0.76.7(@babel/core@7.27.1)(@babel/preset-env@7.27.2(@babel/core@7.27.1))(@react-native-community/cli-server-api@15.0.1)(@types/react@18.3.12)(react@18.3.1))(react@18.3.1):
     dependencies:
       '@craftzdog/react-native-buffer': 6.0.5(react-native@0.76.7(@babel/core@7.27.1)(@babel/preset-env@7.27.2(@babel/core@7.27.1))(@react-native-community/cli-server-api@15.0.1)(@types/react@18.3.12)(react@18.3.1))(react@18.3.1)
       events: 3.3.0
       react: 18.3.1
       react-native: 0.76.7(@babel/core@7.27.1)(@babel/preset-env@7.27.2(@babel/core@7.27.1))(@react-native-community/cli-server-api@15.0.1)(@types/react@18.3.12)(react@18.3.1)
-      react-native-nitro-modules: 0.24.1(react-native@0.76.7(@babel/core@7.27.1)(@babel/preset-env@7.27.2(@babel/core@7.27.1))(@react-native-community/cli-server-api@15.0.1)(@types/react@18.3.12)(react@18.3.1))(react@18.3.1)
+      react-native-nitro-modules: 0.25.2(react-native@0.76.7(@babel/core@7.27.1)(@babel/preset-env@7.27.2(@babel/core@7.27.1))(@react-native-community/cli-server-api@15.0.1)(@types/react@18.3.12)(react@18.3.1))(react@18.3.1)
       react-native-quick-base64: 2.1.2(react-native@0.76.7(@babel/core@7.27.1)(@babel/preset-env@7.27.2(@babel/core@7.27.1))(@react-native-community/cli-server-api@15.0.1)(@types/react@18.3.12)(react@18.3.1))(react@18.3.1)
       readable-stream: 4.5.2
-      string_decoder: 1.3.0
       util: 0.12.5
 
   react-native-reanimated@3.16.7(@babel/core@7.27.1)(react-native@0.76.7(@babel/core@7.27.1)(@babel/preset-env@7.27.2(@babel/core@7.27.1))(@react-native-community/cli-server-api@15.0.1)(@types/react@18.3.12)(react@18.3.1))(react@18.3.1):
