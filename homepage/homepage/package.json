@@ -18,7 +18,7 @@
 	"packageManager": "pnpm@9.14.0",
 	"dependencies": {
 		"@better-auth/expo": "^1.2.7",
-		"@garden-co/design-system": "workspace:*",
+		"@garden-co/design-system": "link:../../packages/design-system",
 		"@headlessui/react": "^2.2.0",
 		"@icons-pack/react-simple-icons": "^9.1.0",
 		"@mdx-js/loader": "^2.3.0",
