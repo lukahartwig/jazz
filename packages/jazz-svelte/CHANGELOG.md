@@ -1,5 +1,23 @@
 # jazz-svelte
 
+## 0.13.24
+
+### Patch Changes
+
+- ec546b4: Fix return type of the id callback to accept undefined values
+
+## 0.13.23
+
+### Patch Changes
+
+- 3431076: Add CoState and AccountCoState class APIs to subscribe CoValues for better integration with Svelte runes
+  Accept reactive ids on useCoState and CoState via value callback
+- Updated dependencies [6b781cf]
+- Updated dependencies [02a240c]
+  - cojson@0.13.23
+  - jazz-tools@0.13.23
+  - jazz-browser@0.13.23
+
 ## 0.13.21
 
 ### Patch Changes

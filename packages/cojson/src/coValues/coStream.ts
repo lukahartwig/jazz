@@ -319,11 +319,7 @@ export class RawBinaryCoStreamView<
     return lastItem?.type === "end";
   }
 
-  getBinaryChunks(
-    allowUnfinished?: boolean,
-  ):
-    | (BinaryStreamInfo & { chunks: Uint8Array[]; finished: boolean })
-    | undefined {
+  getBinaryStreamInfo(): BinaryStreamInfo | undefined {
     const items = this.getSingleStream();
 
     // No active streams
@@ -335,6 +331,27 @@ export class RawBinaryCoStreamView<
       logger.error("Invalid binary stream start", start);
       return;
     }
+
+    return {
+      mimeType: start.mimeType,
+      fileName: start.fileName,
+      totalSizeBytes: start.totalSizeBytes,
+    };
+  }
+
+  getBinaryChunks(
+    allowUnfinished?: boolean,
+  ):
+    | (BinaryStreamInfo & { chunks: Uint8Array[]; finished: boolean })
+    | undefined {
+    const items = this.getSingleStream();
+
+    // No active streams
+    if (!items) return;
+
+    const info = this.getBinaryStreamInfo();
+
+    if (!info) return;
 
     const end = items[items.length - 1];
 
@@ -360,9 +377,7 @@ export class RawBinaryCoStreamView<
     }
 
     return {
-      mimeType: start.mimeType,
-      fileName: start.fileName,
-      totalSizeBytes: start.totalSizeBytes,
+      ...info,
       chunks,
       finished,
     };

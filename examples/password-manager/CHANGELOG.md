@@ -1,5 +1,13 @@
 # jazz-password-manager
 
+## 0.0.109
+
+### Patch Changes
+
+- Updated dependencies [02a240c]
+  - jazz-tools@0.13.23
+  - jazz-react@0.13.23
+
 ## 0.0.108
 
 ### Patch Changes

@@ -1,5 +1,23 @@
 # jazz-browser
 
+## 0.13.23
+
+### Patch Changes
+
+- Updated dependencies [6b781cf]
+- Updated dependencies [02a240c]
+  - cojson@0.13.23
+  - jazz-tools@0.13.23
+  - cojson-storage@0.13.23
+  - cojson-transport-ws@0.13.23
+  - jazz-react-core@0.13.23
+
+## 0.13.22
+
+### Patch Changes
+
+- b0c2a5a: Fix the InvalidSignature errors on RNQuickCrypto
+
 ## 0.13.21
 
 ### Patch Changes

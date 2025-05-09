@@ -732,6 +732,10 @@ export class FileStream extends CoValueBase implements CoValue {
     return new this(parseCoValueCreateOptions(options));
   }
 
+  getMetadata(): BinaryStreamInfo | undefined {
+    return this._raw.getBinaryStreamInfo();
+  }
+
   getChunks(options?: {
     allowUnfinished?: boolean;
   }):

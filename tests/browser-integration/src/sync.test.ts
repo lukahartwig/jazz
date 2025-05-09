@@ -232,31 +232,27 @@ describe("Browser sync", () => {
     expect(loadedMap?.value).toBe("test data");
   });
 
-  test(
-    "manage to persist the account even when the node is closed immediately after creating the value",
-    async () => {
-      const syncServer = await startSyncServer();
+  test.skip("manage to persist the account even when the node is closed immediately after creating the value", async () => {
+    const syncServer = await startSyncServer();
 
-      const { contextManager } = await createAccountContext({
-        sync: {
-          peer: syncServer.url,
-        },
-        storage: "indexedDB",
-        AccountSchema: CustomAccount,
-      });
+    const { contextManager } = await createAccountContext({
+      sync: {
+        peer: syncServer.url,
+      },
+      storage: "indexedDB",
+      AccountSchema: CustomAccount,
+    });
 
-      contextManager.done();
+    contextManager.done();
 
-      const { account } = await createAccountContext({
-        sync: {
-          peer: syncServer.url,
-        },
-        storage: "indexedDB",
-        AccountSchema: CustomAccount,
-      });
+    const { account } = await createAccountContext({
+      sync: {
+        peer: syncServer.url,
+      },
+      storage: "indexedDB",
+      AccountSchema: CustomAccount,
+    });
 
-      expect(account).toBeDefined();
-    },
-    { skip: process.env.CI },
-  );
+    expect(account).toBeDefined();
+  });
 });

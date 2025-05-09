@@ -1,18 +1,25 @@
 <script lang="ts">
-  import { usePassphraseAuth } from "../../auth/PassphraseAuth.svelte.js";
+  import { usePassphraseAuth } from '../../auth/PassphraseAuth.svelte.js';
 
-  let { wordlist, setResult }: { wordlist: string[]; setResult: (value: ReturnType<typeof usePassphraseAuth>) => void } = $props();
+  let {
+    wordlist,
+    setResult
+  }: { wordlist: string[]; setResult: (value: Result) => void } = $props();
 
   const auth = usePassphraseAuth({ wordlist });
-  
+
+  const result = $derived({
+    state: auth.state,
+    passphrase: auth.passphrase,
+    logIn: auth.logIn,
+    signUp: auth.signUp
+  });
+
+  type Result = typeof result;
+
   $effect(() => {
-    setResult({
-      state: auth.state,
-      passphrase: auth.passphrase,
-      logIn: auth.logIn,
-      signUp: auth.signUp
-    });
+    setResult(result);
   });
 </script>
 
-<div>Test Component</div> 
+<div>Test Component</div>

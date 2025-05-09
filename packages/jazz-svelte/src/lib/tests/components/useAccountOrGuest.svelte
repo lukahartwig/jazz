@@ -1,18 +1,20 @@
 <script lang="ts" module>
   export type Props = {
-    depth?: DepthsIn<RegisteredAccount>;
+    depth?: RefsToResolve<RegisteredAccount>;
     setResult: (result: ReturnType<typeof useAccountOrGuest> | undefined) => void;
   };
 </script>
 
 <script lang="ts">
   import { useAccountOrGuest, type RegisteredAccount } from '../../jazz.svelte.js';
-  import type { DepthsIn } from 'jazz-tools';
+  import type { RefsToResolve } from 'jazz-tools';
 
   let { depth, setResult }: Props = $props();
 
   if (depth) {
-    const result = $derived(useAccountOrGuest(depth));
+    const result = $derived(useAccountOrGuest({
+      resolve: depth
+    }));
 
     $effect(() => {
       setResult(result);

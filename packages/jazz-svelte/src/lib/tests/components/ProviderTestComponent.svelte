@@ -5,7 +5,9 @@
 </script>
 
 <div data-testid="provider-test">
-  <JazzProvider {guestMode} peer="wss://cloud.jazz.tools/?key=jazz-svelte-test">
+  <JazzProvider {guestMode} sync={{
+    peer: "wss://cloud.jazz.tools/?key=jazz-svelte-test"
+  }}>
     <span data-testid="provider-auth-test">Hello</span>
   </JazzProvider>
 </div>

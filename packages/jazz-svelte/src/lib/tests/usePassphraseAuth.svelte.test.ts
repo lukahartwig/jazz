@@ -6,21 +6,26 @@ import { describe, expect, it, beforeEach } from "vitest";
 import { createJazzTestAccount, createJazzTestContext, setupJazzTestSync } from "../testing.js";
 import { testWordlist } from "./fixtures.js";
 import UsePassphraseAuth from "./components/usePassphraseAuth.svelte";
-import type { usePassphraseAuth } from "../auth/PassphraseAuth.svelte.js";
 
 beforeEach(async () => {
   await setupJazzTestSync();
 });
 
+type Result = {
+  state: string;
+  passphrase: string;
+  logIn: (passphrase: string) => Promise<void>;
+  signUp: (name?: string) => Promise<string>;
+}
+
 async function setup() {
-  type PassphraseAuthResult = ReturnType<typeof usePassphraseAuth>;
-  const result = { current: null as PassphraseAuthResult | null };
+  const result = { current: null as Result | null };
 
   render(UsePassphraseAuth, {
     context: createJazzTestContext({ account: await createJazzTestAccount() }),
     props: {
       wordlist: testWordlist,
-      setResult: (value: PassphraseAuthResult) => {
+      setResult: (value) => {
         result.current = value;
       },
     },

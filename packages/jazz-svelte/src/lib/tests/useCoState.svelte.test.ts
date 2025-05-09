@@ -6,9 +6,9 @@ import {
   cojsonInternals,
   type CoValue,
   type CoValueClass,
-  type DepthsIn
+  type RefsToResolve,
 } from 'jazz-tools';
-import { describe, expect, it, expectTypeOf } from 'vitest';
+import { describe, expect, it, expectTypeOf, beforeEach } from 'vitest';
 import { createJazzTestAccount, createJazzTestContext, setupJazzTestSync } from '../testing.js';
 import UseCoState from './components/useCoState.svelte';
 
@@ -21,7 +21,7 @@ beforeEach(() => {
   cojsonInternals.CO_VALUE_LOADING_CONFIG.TIMEOUT = 1;
 });
 
-function setup<T extends CoValue>(options: { account: Account; map: T; depth?: DepthsIn<T> }) {
+function setup<T extends CoValue>(options: { account: Account; map: T; resolve?: RefsToResolve<T> }) {
   const result = { current: undefined } as { current: T | undefined };
 
   render(UseCoState, {
@@ -29,9 +29,9 @@ function setup<T extends CoValue>(options: { account: Account; map: T; depth?: D
     props: {
       Schema: options.map.constructor as CoValueClass<T>,
       id: options.map.id,
-      depth: options.depth ?? [],
-      setResult: (value: T | undefined) => {
-        result.current = value;
+      resolve: options.resolve ?? true,
+      setResult: (value) => {
+        result.current = value as T;
       }
     }
   });
@@ -116,7 +116,7 @@ describe('useCoState', () => {
     const result = setup({
       account,
       map,
-      depth: {
+      resolve: {
         nested: {}
       }
     });
@@ -153,7 +153,7 @@ describe('useCoState', () => {
     const result = setup({
       account,
       map,
-      depth: {
+      resolve: {
         nested: {}
       }
     });

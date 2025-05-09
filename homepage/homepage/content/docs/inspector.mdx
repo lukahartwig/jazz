@@ -13,15 +13,14 @@ For now, you can get your account credentials from the `jazz-logged-in-secret` l
 ## Exporting current account to Inspector from your app [!framework=react,svelte,vue,vanilla]
 
 In development mode, you can launch the Inspector from your Jazz app to inspect your account by pressing `Cmd+J`.
-</ContentByFramework>
 
-<ContentByFramework framework="react">
-## Embedding the Inspector widget into your app [!framework=react]
+## Embedding the Inspector widget into your app [!framework=react,svelte,vue,vanilla]
 
 Alternatively, you can embed the Inspector directly into your app, so you don't need to open a separate window.
 
 Install the package.
 
+<ContentByFramework framework="react">
 <CodeGroup>
 ```sh
 npm install jazz-inspector
@@ -40,9 +39,42 @@ import { JazzInspector } from "jazz-inspector";
 </JazzProvider>
 ```
 </CodeGroup>
+</ContentByFramework>
+
+<ContentByFramework framework={["svelte", "vue", "vanilla"]}>
+<CodeGroup>
+```sh
+npm install jazz-inspector-element
+```
+</CodeGroup>
+
+Render the component.
+
+<CodeGroup>
+```ts
+import "jazz-inspector-element"
+
+document.body.appendChild(document.createElement("jazz-inspector"))
+```
+</CodeGroup>
+
+Or
+
+<CodeGroup>
+```tsx
+import "jazz-inspector-element"
+
+<jazz-inspector />
+```
+</CodeGroup>
+
+</ContentByFramework>
 
 This will show the Inspector launch button on the right of your page.
 
+</ContentByFramework>
+
+<ContentByFramework framework="react">
 ### Positioning the Inspector button [!framework=react]
 
 You can also customize the button position with the following options:
@@ -55,6 +87,7 @@ You can also customize the button position with the following options:
 - top left
 
 For example:
+
 <CodeGroup>
 ```tsx
 <JazzInspector position="bottom left"/>
@@ -68,6 +101,12 @@ For example:
     <JazzIcon className="w-full h-auto"/>
   </button>
 </div>
+</ContentByFramework>
 
+<ContentByFramework framework="react">
 Check out the [music player app](https://github.com/garden-co/jazz/blob/main/examples/music-player/src/2_main.tsx) for a full example.
+</ContentByFramework>
+
+<ContentByFramework framework="svelte">
+Check out the [file share app](https://github.com/garden-co/jazz/blob/main/examples/file-share-svelte/src/src/routes/%2Blayout.svelte) for a full example.
 </ContentByFramework>

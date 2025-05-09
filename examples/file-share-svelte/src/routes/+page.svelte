@@ -1,14 +1,22 @@
 <script lang="ts">
-  import { useAccount, useCoState } from 'jazz-svelte';
-  import { SharedFile, ListOfSharedFiles } from '$lib/schema';
+  import { AccountCoState } from 'jazz-svelte';
+  import { SharedFile } from '$lib/schema';
   import { FileStream } from 'jazz-tools';
   import FileItem from '$lib/components/FileItem.svelte';
   import { CloudUpload } from 'lucide-svelte';
 
-  const { me, logOut } = useAccount();
+  const me = new AccountCoState({
+    resolve: {
+      profile: true,
+      root: {
+        sharedFiles: {
+          $each: true
+        },
+      }
+    }
+  });
 
-  const mySharedFilesId = me?.root?._refs.sharedFiles.id;
-  const sharedFiles = $derived(useCoState(ListOfSharedFiles, mySharedFilesId));
+  const sharedFiles = $derived(me.current?.root.sharedFiles);
 
   let fileInput: HTMLInputElement;
 
@@ -16,17 +24,15 @@
     const input = event.target as HTMLInputElement;
     const files = input.files;
 
-    if (!files || !files.length || !me?.root?.sharedFiles || !me?.root?.publicGroup) return;
+    if (!files?.length || !sharedFiles) return;
 
     const file = files[0];
     const fileName = file.name;
     const createdAt = new Date();
 
     try {
-      const ownership = { owner: me.root.publicGroup };
-
       // Create a FileStream from the uploaded file
-      const fileStream = await FileStream.createFromBlob(file, ownership);
+      const fileStream = await FileStream.createFromBlob(file, sharedFiles._owner);
 
       // Create the shared file entry
       const sharedFile = SharedFile.create(
@@ -37,22 +43,22 @@
           uploadedAt: new Date(),
           size: file.size
         },
-        ownership
+        sharedFiles._owner
       );
 
       // Add the file to the user's files list
-      me.root.sharedFiles.push(sharedFile);
+      sharedFiles.push(sharedFile);
     } finally {
       fileInput.value = ''; // reset input
     }
   }
 
   async function deleteFile(file: SharedFile) {
-    if (!me?.root?.sharedFiles || !sharedFiles.current) return;
+    if (!sharedFiles) return;
 
-    const index = sharedFiles.current.indexOf(file);
+    const index = sharedFiles.indexOf(file);
     if (index > -1) {
-      me.root.sharedFiles.splice(index, 1);
+      sharedFiles.splice(index, 1);
     }
   }
 </script>
@@ -62,11 +68,11 @@
     <div class="mb-12 flex items-center justify-between">
       <div>
         <h1 class="mb-2 text-4xl font-bold text-gray-900">File Share</h1>
-        <h2 class="text-xl text-gray-600">Welcome back, {me?.profile?.name}</h2>
+        <h2 class="text-xl text-gray-600">Welcome back, {me.current?.profile.name}</h2>
       </div>
 
       <button
-        onclick={logOut}
+        onclick={me.logOut}
         class="rounded-lg bg-red-500 px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
       >
         Log Out
@@ -97,9 +103,9 @@
 
     <!-- Files List -->
     <div class="space-y-4">
-      {#if sharedFiles.current}
-        {#if !(sharedFiles.current.length === 0)}
-          {#each sharedFiles.current as file}
+      {#if sharedFiles}
+        {#if sharedFiles.length}
+          {#each sharedFiles as file}
             {#if file}
               <FileItem
                 {file}

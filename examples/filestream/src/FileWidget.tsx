@@ -189,7 +189,7 @@ export function FileWidget() {
     );
   }
 
-  const fileData = me?.profile?.file?.getChunks();
+  const fileData = me?.profile?.file?.getMetadata();
   const mimeType = fileData?.mimeType || "unknown";
 
   return (

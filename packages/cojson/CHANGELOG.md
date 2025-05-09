@@ -1,5 +1,11 @@
 # cojson
 
+## 0.13.23
+
+### Patch Changes
+
+- 6b781cf: Add getBinaryStreamInfo to RawBinaryCoStreamView to make it possible to retrieve file info without processing all the chunks
+
 ## 0.13.21
 
 ### Patch Changes

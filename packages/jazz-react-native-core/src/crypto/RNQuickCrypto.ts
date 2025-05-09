@@ -24,14 +24,6 @@ export class RNQuickCrypto extends PureJSCrypto {
     return new Uint8Array(this.ed.getPrivateKey());
   }
 
-  getSignerID(
-    secret: CojsonInternalTypes.SignerSecret,
-  ): CojsonInternalTypes.SignerID {
-    return `signer_z${base58.encode(
-      base58.decode(secret.substring("signerSecret_z".length)),
-    )}`;
-  }
-
   sign(
     secret: CojsonInternalTypes.SignerSecret,
     message: JsonValue,

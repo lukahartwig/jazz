@@ -4,7 +4,7 @@ import {
   AuthSecretStorage,
 } from "jazz-tools";
 import { JAZZ_AUTH_CTX, JAZZ_CTX, type JazzContext } from './jazz.svelte.js';
-import {  TestJazzContextManager } from "jazz-tools/testing";
+import { TestJazzContextManager } from "jazz-tools/testing";
 
 export function createJazzTestContext<Acc extends Account>(opts: {
   account?: Acc | { guest: AnonymousJazzAgent };

@@ -1,5 +1,13 @@
 # jazz-tools
 
+## 0.13.23
+
+### Patch Changes
+
+- 02a240c: Add getMetadata to fileStream to easily get file metadata
+- Updated dependencies [6b781cf]
+  - cojson@0.13.23
+
 ## 0.13.21
 
 ### Patch Changes
