@@ -15,7 +15,7 @@
 		"@garden-co/design-system": "workspace:*"
 	},
 	"peerDependencies": {
-		"react": "^17.0.0 || ^18.0.0 || ^19.0.0"
+		"react": "^17 || ^18 || ^19"
 	},
 	"scripts": {
 		"format-and-lint": "biome check .",
@@ -25,7 +25,7 @@
 	},
 	"devDependencies": {
 		"@testing-library/react": "^16.1.0",
-		"@types/react": "^18.3.12",
+		"@types/react": "^17 || ^18 || ^19",
 		"typescript": "catalog:"
 	}
 }
