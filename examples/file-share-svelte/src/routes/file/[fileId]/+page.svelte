@@ -1,39 +1,33 @@
 <script lang="ts">
   import { page } from '$app/stores';
-  import { useAccount, useCoState } from 'jazz-svelte';
+  import {  CoState } from 'jazz-svelte';
   import { SharedFile } from '$lib/schema';
   import { File, FileDown, Link2 } from 'lucide-svelte';
   import type { ID } from 'jazz-tools';
   import { FileStream } from 'jazz-tools';
   import { toast } from 'svelte-sonner';
+  import { downloadFileBlob } from '$lib/utils';
 
-  const { me } = useAccount();
   const fileId = $page.params.fileId;
 
-  const file = $state(useCoState(SharedFile, fileId as ID<SharedFile>, {}));
-  const isAdmin = $derived(me && file.current?._owner?.myRole() === 'admin');
+  const file = $derived(new CoState(SharedFile, fileId as ID<SharedFile>));
+  const isAdmin = $derived(file.current?._owner?.myRole() === 'admin');
+
+  const fileStreamId = $derived(file.current?._refs.file?.id);
 
   async function downloadFile() {
-    if (!file.current?._refs.file?.id || !me) {
+    if (!fileStreamId || !file.current) {
       toast.error('Failed to download file');
       return;
     }
 
     try {
-      const fileId = file.current._refs.file.id;
-      const blob = await FileStream.loadAsBlob(fileId, me, {});
+      const blob = await FileStream.loadAsBlob(fileStreamId);
       if (!blob) {
         toast.error('Failed to download file');
         return;
       }
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = file.current.name;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      downloadFileBlob(blob, file.current.name);
       toast.success('File downloaded successfully');
     } catch (error) {
       console.error('Error downloading file:', error);

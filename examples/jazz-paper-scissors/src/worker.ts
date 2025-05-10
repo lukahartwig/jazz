@@ -186,9 +186,9 @@ async function handlePlayIntent(_: ID<Account>, message: PlayIntent) {
   // once both players have a selection, determine the winner
   if (
     !!player1Selection &&
-    player1Selection !== "" &&
+    player1Selection !== undefined &&
     !!player2Selection &&
-    player2Selection !== ""
+    player2Selection !== undefined
   ) {
     const outcome = determineWinner(player1Selection, player2Selection);
     game.outcome = outcome;

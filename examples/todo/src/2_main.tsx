@@ -20,6 +20,8 @@ import {
 } from "./basicComponents/index.ts";
 import { AccountTransferLinkHandlerPage } from "./components/Auth/AccountTransferLinkHandlerPage";
 import { PasskeyAndCrossDeviceAccountTransferAuth } from "./components/Auth/PasskeyAndCrossDeviceAccountTransferAuth";
+import { TaskGenerator } from "./components/TaskGenerator.tsx";
+import { wordlist } from "./wordlist.ts";
 
 /**
  * Walkthrough: The top-level provider `<JazzProvider/>`
@@ -94,6 +96,10 @@ export default function App() {
     {
       path: "/accept-account-transfer/:x/:y",
       element: <AccountTransferLinkHandlerPage />,
+    },
+    {
+      path: "/generate",
+      element: <TaskGenerator />,
     },
   ]);
 

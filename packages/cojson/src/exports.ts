@@ -1,15 +1,16 @@
 import { base64URLtoBytes, bytesToBase64url } from "./base64url.js";
 import { type RawCoValue } from "./coValue.js";
 import {
+  CO_VALUE_LOADING_CONFIG,
   CoValueCore,
-  type CoValueUniqueness,
   MAX_RECOMMENDED_TX_SIZE,
   idforHeader,
-} from "./coValueCore.js";
+} from "./coValueCore/coValueCore.js";
+import { CoValueUniqueness } from "./coValueCore/verifiedState.js";
 import {
+  ControlledAccount,
   ControlledAgent,
   RawAccount,
-  RawControlledAccount,
   RawProfile,
   accountHeaderForInitialAgentSecret,
 } from "./coValues/account.js";
@@ -76,7 +77,6 @@ import {
 
 type Value = JsonValue | AnyRawCoValue;
 
-import { CO_VALUE_LOADING_CONFIG } from "./coValueState.js";
 import { logger } from "./logger.js";
 import { getPriorityFromHeader } from "./priority.js";
 
@@ -121,6 +121,7 @@ export {
   AnyRawCoValue,
   RawAccount,
   RawAccountID,
+  ControlledAccount,
   AccountMeta,
   RawAccountMigration,
   RawProfile as Profile,
@@ -128,7 +129,6 @@ export {
   Media,
   CoValueCore,
   ControlledAgent,
-  RawControlledAccount,
   MAX_RECOMMENDED_TX_SIZE,
   JsonObject,
   JsonValue,
@@ -173,8 +173,10 @@ export namespace CojsonInternalTypes {
   export type LoadMessage = import("./sync.js").LoadMessage;
   export type NewContentMessage = import("./sync.js").NewContentMessage;
   export type SessionNewContent = import("./sync.js").SessionNewContent;
-  export type CoValueHeader = import("./coValueCore.js").CoValueHeader;
-  export type Transaction = import("./coValueCore.js").Transaction;
+  // biome-ignore format: inserts spurious trialing comma that breaks some parsers
+  export type CoValueHeader = import("./coValueCore/verifiedState.js").CoValueHeader;
+  // biome-ignore format: inserts spurious trialing comma that breaks some parsers
+  export type Transaction = import("./coValueCore/verifiedState.js").Transaction;
   export type TransactionID = import("./ids.js").TransactionID;
   export type Signature = import("./crypto/crypto.js").Signature;
   export type RawCoID = import("./ids.js").RawCoID;

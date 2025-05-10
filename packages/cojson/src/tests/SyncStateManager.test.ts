@@ -70,12 +70,12 @@ describe("SyncStateManager", () => {
     const map = group.createMap();
     map.set("key1", "value1", "trusting");
 
-    const [clientStoragePeer] = connectedPeers("clientStorage", "unusedPeer", {
-      peer1role: "client",
-      peer2role: "server",
+    const [serverPeer] = connectedPeers("serverPeer", "unusedPeer", {
+      peer1role: "server",
+      peer2role: "client",
     });
 
-    client.node.syncManager.addPeer(clientStoragePeer);
+    client.node.syncManager.addPeer(serverPeer);
 
     const subscriptionManager = client.node.syncManager.syncState;
 
@@ -86,7 +86,7 @@ describe("SyncStateManager", () => {
       updateToJazzCloudSpy,
     );
     const unsubscribe2 = subscriptionManager.subscribeToPeerUpdates(
-      clientStoragePeer.id,
+      serverPeer.id,
       updateToStorageSpy,
     );
 
@@ -115,7 +115,7 @@ describe("SyncStateManager", () => {
     );
 
     expect(updateToStorageSpy).toHaveBeenLastCalledWith(
-      emptyKnownState(map.core.id),
+      emptyKnownState(group.core.id),
       { uploaded: false },
     );
   });
@@ -246,5 +246,55 @@ describe("SyncStateManager", () => {
         map.core.id,
       ),
     ).toEqual({ uploaded: true });
+  });
+
+  test("should skip closed peers", async () => {
+    const client = setupTestNode();
+    const { peerState } = client.connectToSyncServer();
+
+    peerState.gracefulShutdown();
+
+    const group = client.node.createGroup();
+    const map = group.createMap();
+
+    await expect(map.core.waitForSync()).resolves.toBeUndefined();
+  });
+
+  test("should skip client peers that are not subscribed to the coValue", async () => {
+    const server = setupTestNode({ isSyncServer: true });
+    const client = setupTestNode();
+
+    client.connectToSyncServer({
+      syncServer: server.node,
+    });
+
+    const group = server.node.createGroup();
+    const map = group.createMap();
+
+    await map.core.waitForSync();
+
+    expect(client.node.getCoValue(map.id).isAvailable()).toBe(false);
+  });
+
+  test("should wait for client peers that are subscribed to the coValue", async () => {
+    const server = setupTestNode({ isSyncServer: true });
+    const client = setupTestNode();
+
+    const { peerStateOnServer } = client.connectToSyncServer();
+
+    const group = server.node.createGroup();
+    const map = group.createMap();
+    map.set("key1", "value1", "trusting");
+
+    // Simulate the subscription to the coValue
+    peerStateOnServer.setKnownState(map.core.id, {
+      id: map.core.id,
+      header: true,
+      sessions: {},
+    });
+
+    await map.core.waitForSync();
+
+    expect(client.node.getCoValue(map.id).isAvailable()).toBe(true);
   });
 });

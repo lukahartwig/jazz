@@ -248,7 +248,7 @@ export async function createJazzContext<Acc extends Account>(options: {
       await authSecretStorage.setWithoutNotify({
         accountID: context.account.id,
         secretSeed,
-        accountSecret: context.node.account.agentSecret,
+        accountSecret: context.node.getCurrentAgent().agentSecret,
         provider: "anonymous",
       });
     }
@@ -268,11 +268,10 @@ export async function createAnonymousJazzContext({
   crypto: CryptoProvider;
 }): Promise<JazzContextWithAgent> {
   const agentSecret = crypto.newRandomAgentSecret();
-  const rawAgent = new ControlledAgent(agentSecret, crypto);
 
   const node = new LocalNode(
-    rawAgent,
-    crypto.newRandomSessionID(rawAgent.id),
+    agentSecret,
+    crypto.newRandomSessionID(crypto.getAgentID(agentSecret)),
     crypto,
   );
 

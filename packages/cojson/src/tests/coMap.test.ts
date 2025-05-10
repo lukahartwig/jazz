@@ -1,15 +1,24 @@
-import { expect, test } from "vitest";
+import { beforeEach, expect, test } from "vitest";
 import { expectMap } from "../coValue.js";
 import { operationToEditEntry } from "../coValues/coMap.js";
 import { WasmCrypto } from "../crypto/WasmCrypto.js";
-import { LocalNode } from "../localNode.js";
 import { accountOrAgentIDfromSessionID } from "../typeUtils/accountOrAgentIDfromSessionID.js";
-import { hotSleep, randomAnonymousAccountAndSessionID } from "./testUtils.js";
+import {
+  hotSleep,
+  loadCoValueOrFail,
+  nodeWithRandomAgentAndSessionID,
+  setupTestNode,
+  waitFor,
+} from "./testUtils.js";
 
 const Crypto = await WasmCrypto.create();
 
+beforeEach(async () => {
+  setupTestNode({ isSyncServer: true });
+});
+
 test("Empty CoMap works", () => {
-  const node = new LocalNode(...randomAnonymousAccountAndSessionID(), Crypto);
+  const node = nodeWithRandomAgentAndSessionID();
 
   const coValue = node.createCoValue({
     type: "comap",
@@ -26,7 +35,7 @@ test("Empty CoMap works", () => {
 });
 
 test("Can insert and delete CoMap entries in edit()", () => {
-  const node = new LocalNode(...randomAnonymousAccountAndSessionID(), Crypto);
+  const node = nodeWithRandomAgentAndSessionID();
 
   const coValue = node.createCoValue({
     type: "comap",
@@ -50,7 +59,7 @@ test("Can insert and delete CoMap entries in edit()", () => {
 });
 
 test("Can get CoMap entry values at different points in time", () => {
-  const node = new LocalNode(...randomAnonymousAccountAndSessionID(), Crypto);
+  const node = nodeWithRandomAgentAndSessionID();
 
   const coValue = node.createCoValue({
     type: "comap",
@@ -100,7 +109,7 @@ test("Can get CoMap entry values at different points in time", () => {
 });
 
 test("Can get all historic values of key in CoMap", () => {
-  const node = new LocalNode(...randomAnonymousAccountAndSessionID(), Crypto);
+  const node = nodeWithRandomAgentAndSessionID();
 
   const coValue = node.createCoValue({
     type: "comap",
@@ -124,25 +133,25 @@ test("Can get all historic values of key in CoMap", () => {
   expect([...content.editsAt("hello")]).toEqual([
     {
       tx: editA!.tx,
-      by: node.account.id,
+      by: node.getCurrentAgent().id,
       value: "A",
       at: editA?.at,
     },
     {
       tx: editB!.tx,
-      by: node.account.id,
+      by: node.getCurrentAgent().id,
       value: "B",
       at: editB?.at,
     },
     {
       tx: editDel!.tx,
-      by: node.account.id,
+      by: node.getCurrentAgent().id,
       value: undefined,
       at: editDel?.at,
     },
     {
       tx: editC!.tx,
-      by: node.account.id,
+      by: node.getCurrentAgent().id,
       value: "C",
       at: editC?.at,
     },
@@ -150,7 +159,7 @@ test("Can get all historic values of key in CoMap", () => {
 });
 
 test("Can get last tx ID for a key in CoMap", () => {
-  const node = new LocalNode(...randomAnonymousAccountAndSessionID(), Crypto);
+  const node = nodeWithRandomAgentAndSessionID();
 
   const coValue = node.createCoValue({
     type: "comap",
@@ -167,7 +176,7 @@ test("Can get last tx ID for a key in CoMap", () => {
   content.set("hello", "A", "trusting");
   const sessionID = content.lastEditAt("hello")?.tx.sessionID;
   expect(sessionID && accountOrAgentIDfromSessionID(sessionID)).toEqual(
-    node.account.id,
+    node.getCurrentAgent().id,
   );
   expect(content.lastEditAt("hello")?.tx.txIndex).toEqual(0);
   content.set("hello", "B", "trusting");
@@ -177,7 +186,7 @@ test("Can get last tx ID for a key in CoMap", () => {
 });
 
 test("Can set items in bulk with assign", () => {
-  const node = new LocalNode(...randomAnonymousAccountAndSessionID(), Crypto);
+  const node = nodeWithRandomAgentAndSessionID();
 
   const coValue = node.createCoValue({
     type: "comap",
@@ -206,4 +215,46 @@ test("Can set items in bulk with assign", () => {
     key2: "assign2",
     key3: "assign3",
   });
+});
+
+test("totalValidTransactions should return the number of valid transactions processed", async () => {
+  const client = setupTestNode({
+    connected: true,
+  });
+  const otherClient = setupTestNode({});
+
+  const otherClientConnection = otherClient.connectToSyncServer();
+
+  const group = client.node.createGroup();
+  group.addMember("everyone", "reader");
+
+  const map = group.createMap({ fromClient: true });
+
+  const mapOnOtherClient = await loadCoValueOrFail(otherClient.node, map.id);
+
+  otherClientConnection.peerState.gracefulShutdown();
+
+  group.addMember("everyone", "writer");
+
+  await new Promise((resolve) => setTimeout(resolve, 50));
+
+  mapOnOtherClient.set("fromOtherClient", true, "trusting");
+
+  expect(mapOnOtherClient.totalValidTransactions).toEqual(1);
+  expect(mapOnOtherClient.toJSON()).toEqual({
+    fromClient: true,
+  });
+
+  otherClient.connectToSyncServer();
+
+  await waitFor(() => {
+    expect(mapOnOtherClient.core.getCurrentContent().toJSON()).toEqual({
+      fromClient: true,
+      fromOtherClient: true,
+    });
+  });
+
+  expect(
+    mapOnOtherClient.core.getCurrentContent().totalValidTransactions,
+  ).toEqual(2);
 });

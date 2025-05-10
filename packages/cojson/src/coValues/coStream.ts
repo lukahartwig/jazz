@@ -1,6 +1,9 @@
 import { base64URLtoBytes, bytesToBase64url } from "../base64url.js";
 import { CoID, RawCoValue } from "../coValue.js";
-import { CoValueCore } from "../coValueCore.js";
+import {
+  AvailableCoValueCore,
+  CoValueCore,
+} from "../coValueCore/coValueCore.js";
 import { AgentID, SessionID, TransactionID } from "../ids.js";
 import { JsonObject, JsonValue } from "../jsonValue.js";
 import { logger } from "../logger.js";
@@ -50,15 +53,16 @@ export class RawCoStreamView<
 {
   id: CoID<this>;
   type = "costream" as const;
-  core: CoValueCore;
+  core: AvailableCoValueCore;
   items: {
     [key: SessionID]: CoStreamItem<Item>[];
   };
   /** @internal */
   knownTransactions: CoValueKnownState["sessions"];
+  totalValidTransactions = 0;
   readonly _item!: Item;
 
-  constructor(core: CoValueCore) {
+  constructor(core: AvailableCoValueCore) {
     this.id = core.id as CoID<this>;
     this.core = core;
     this.items = {};
@@ -67,7 +71,7 @@ export class RawCoStreamView<
   }
 
   get headerMeta(): Meta {
-    return this.core.header.meta as Meta;
+    return this.core.verified.header.meta as Meta;
   }
 
   get group(): RawGroup {
@@ -96,7 +100,7 @@ export class RawCoStreamView<
   }
 
   /** @internal */
-  protected processNewTransactions() {
+  processNewTransactions() {
     const changeEntries = new Set<CoStreamItem<Item>[]>();
 
     const newValidTransactions = this.core.getValidTransactions({
@@ -109,6 +113,7 @@ export class RawCoStreamView<
     }
 
     for (const { txID, madeAt, changes } of newValidTransactions) {
+      this.totalValidTransactions++;
       for (const changeUntyped of changes) {
         const change = changeUntyped as Item;
         let entries = this.items[txID.sessionID];
@@ -275,8 +280,8 @@ export class RawCoStreamView<
   }
 
   subscribe(listener: (coStream: this) => void): () => void {
-    return this.core.subscribe((content) => {
-      listener(content as this);
+    return this.core.subscribe((core) => {
+      listener(core.getCurrentContent() as this);
     });
   }
 }
@@ -314,11 +319,7 @@ export class RawBinaryCoStreamView<
     return lastItem?.type === "end";
   }
 
-  getBinaryChunks(
-    allowUnfinished?: boolean,
-  ):
-    | (BinaryStreamInfo & { chunks: Uint8Array[]; finished: boolean })
-    | undefined {
+  getBinaryStreamInfo(): BinaryStreamInfo | undefined {
     const items = this.getSingleStream();
 
     // No active streams
@@ -330,6 +331,27 @@ export class RawBinaryCoStreamView<
       logger.error("Invalid binary stream start", start);
       return;
     }
+
+    return {
+      mimeType: start.mimeType,
+      fileName: start.fileName,
+      totalSizeBytes: start.totalSizeBytes,
+    };
+  }
+
+  getBinaryChunks(
+    allowUnfinished?: boolean,
+  ):
+    | (BinaryStreamInfo & { chunks: Uint8Array[]; finished: boolean })
+    | undefined {
+    const items = this.getSingleStream();
+
+    // No active streams
+    if (!items) return;
+
+    const info = this.getBinaryStreamInfo();
+
+    if (!info) return;
 
     const end = items[items.length - 1];
 
@@ -355,9 +377,7 @@ export class RawBinaryCoStreamView<
     }
 
     return {
-      mimeType: start.mimeType,
-      fileName: start.fileName,
-      totalSizeBytes: start.totalSizeBytes,
+      ...info,
       chunks,
       finished,
     };

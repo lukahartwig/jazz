@@ -1,27 +1,40 @@
 import { cojsonInternals } from "cojson";
 import { WasmCrypto } from "cojson/crypto/WasmCrypto";
-import { describe, expect, test } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 import {
   Account,
   CoList,
   CoMap,
   Group,
+  Resolved,
   co,
   createJazzContextFromExistingCredentials,
   isControlledAccount,
+  subscribeToCoValue,
 } from "../index.js";
 import { randomSessionProvider } from "../internal.js";
+import { createJazzTestAccount, setupJazzTestSync } from "../testing.js";
+import { waitFor } from "./utils.js";
 
 const connectedPeers = cojsonInternals.connectedPeers;
 
 const Crypto = await WasmCrypto.create();
 
-describe("Simple CoList operations", async () => {
-  const me = await Account.create({
-    creationProps: { name: "Hermes Puggington" },
-    crypto: Crypto,
-  });
+let me = await Account.create({
+  creationProps: { name: "Hermes Puggington" },
+  crypto: Crypto,
+});
 
+beforeEach(async () => {
+  await setupJazzTestSync();
+
+  me = await createJazzTestAccount({
+    isCurrentActiveAccount: true,
+    creationProps: { name: "Hermes Puggington" },
+  });
+});
+
+describe("Simple CoList operations", async () => {
   class TestList extends CoList.Of(co.string) {}
 
   const list = TestList.create(["bread", "butter", "onion"], { owner: me });
@@ -347,11 +360,6 @@ describe("Simple CoList operations", async () => {
 });
 
 describe("CoList applyDiff operations", async () => {
-  const me = await Account.create({
-    creationProps: { name: "Hermes Puggington" },
-    crypto: Crypto,
-  });
-
   test("applyDiff with primitive values", () => {
     class StringList extends CoList.Of(co.string) {}
     const list = StringList.create(["a", "b", "c"], { owner: me });
@@ -485,147 +493,328 @@ describe("CoList resolution", async () => {
     expect(list[0]?.[0]?.id).toBeDefined();
     expect(list[1]?.[0]?.[0]).toBe("c");
   });
+});
 
-  test("Loading and availability", async () => {
-    const { me, list } = await initNodeAndList();
-
-    const [initialAsPeer, secondPeer] = connectedPeers("initial", "second", {
-      peer1role: "server",
-      peer2role: "client",
-    });
-    if (!isControlledAccount(me)) {
-      throw "me is not a controlled account";
+describe("CoList subscription", async () => {
+  test("subscription on a locally available list with deep resolve", async () => {
+    class Item extends CoMap {
+      name = co.string;
     }
-    me._raw.core.node.syncManager.addPeer(secondPeer);
-    const { account: meOnSecondPeer } =
-      await createJazzContextFromExistingCredentials({
-        credentials: {
-          accountID: me.id,
-          secret: me._raw.agentSecret,
-        },
-        sessionProvider: randomSessionProvider,
-        peersToLoadFrom: [initialAsPeer],
-        crypto: Crypto,
-      });
 
-    const loadedList = await TestList.load(list.id, { loadAs: meOnSecondPeer });
+    class TestList extends CoList.Of(co.ref(Item)) {}
 
-    expect(loadedList?.[0]).toBe(null);
-    expect(loadedList?._refs[0]?.id).toEqual(list[0]!.id);
-
-    const loadedNestedList = await NestedList.load(list[0]!.id, {
-      loadAs: meOnSecondPeer,
-    });
-
-    expect(loadedList?.[0]).toBeDefined();
-    expect(loadedList?.[0]?.[0]).toBe(null);
-    expect(loadedList?.[0]?._refs[0]?.id).toEqual(list[0]![0]!.id);
-    // TODO: this should be ref equal
-    // expect(loadedList?._refs[0]?.value).toEqual(loadedNestedList);
-    expect(loadedList?._refs[0]?.value?.toJSON()).toEqual(
-      loadedNestedList?.toJSON(),
+    const list = TestList.create(
+      [Item.create({ name: "Item 1" }), Item.create({ name: "Item 2" })],
+      { owner: me },
     );
 
-    const loadedTwiceNestedList = await TwiceNestedList.load(list[0]![0]!.id, {
-      loadAs: meOnSecondPeer,
-    });
-
-    expect(loadedList?.[0]?.[0]).toBeDefined();
-    expect(loadedList?.[0]?.[0]?.[0]).toBe("a");
-    expect(loadedList?.[0]?.[0]?.joined()).toBe("a,b");
-    expect(loadedList?.[0]?._refs[0]?.id).toEqual(list[0]?.[0]?.id);
-    // TODO: this should be ref equal
-    // expect(loadedList?.[0]?._refs[0]?.value).toEqual(loadedTwiceNestedList);
-    expect(loadedList?.[0]?._refs[0]?.value?.toJSON()).toEqual(
-      loadedTwiceNestedList?.toJSON(),
-    );
-
-    const otherNestedList = NestedList.create(
-      [TwiceNestedList.create(["e", "f"], { owner: meOnSecondPeer })],
-      { owner: meOnSecondPeer },
-    );
-
-    loadedList![0] = otherNestedList;
-    // TODO: this should be ref equal
-    // expect(loadedList?.[0]).toEqual(otherNestedList);
-    expect(loadedList?._refs[0]?.value?.toJSON()).toEqual(
-      otherNestedList.toJSON(),
-    );
-    expect(loadedList?._refs[0]?.id).toEqual(otherNestedList.id);
-  });
-
-  test("Subscription & auto-resolution", async () => {
-    const { me, list } = await initNodeAndList();
-
-    const [initialAsPeer, secondPeer] = connectedPeers("initial", "second", {
-      peer1role: "server",
-      peer2role: "client",
-    });
-    if (!isControlledAccount(me)) {
-      throw "me is not a controlled account";
-    }
-    me._raw.core.node.syncManager.addPeer(secondPeer);
-    const { account: meOnSecondPeer } =
-      await createJazzContextFromExistingCredentials({
-        credentials: {
-          accountID: me.id,
-          secret: me._raw.agentSecret,
-        },
-        sessionProvider: randomSessionProvider,
-        peersToLoadFrom: [initialAsPeer],
-        crypto: Crypto,
-      });
-
-    const queue = new cojsonInternals.Channel();
+    const updates: Resolved<TestList, { $each: true }>[] = [];
+    const spy = vi.fn((list) => updates.push(list));
 
     TestList.subscribe(
       list.id,
-      { loadAs: meOnSecondPeer },
-      (subscribedList) => {
-        console.log(
-          "subscribedList?.[0]?.[0]?.[0]",
-          subscribedList?.[0]?.[0]?.[0],
-        );
-        void queue.push(subscribedList);
+      {
+        resolve: {
+          $each: true,
+        },
+      },
+      spy,
+    );
+
+    expect(spy).not.toHaveBeenCalled();
+
+    await waitFor(() => expect(spy).toHaveBeenCalled());
+
+    expect(spy).toHaveBeenCalledTimes(1);
+
+    expect(updates[0]?.[0]?.name).toEqual("Item 1");
+    expect(updates[0]?.[1]?.name).toEqual("Item 2");
+
+    list[0]!.name = "Updated Item 1";
+
+    await waitFor(() => expect(spy).toHaveBeenCalledTimes(2));
+
+    expect(updates[1]?.[0]?.name).toEqual("Updated Item 1");
+    expect(updates[1]?.[1]?.name).toEqual("Item 2");
+
+    expect(spy).toHaveBeenCalledTimes(2);
+  });
+
+  test("subscription on a locally available list with autoload", async () => {
+    class Item extends CoMap {
+      name = co.string;
+    }
+
+    class TestList extends CoList.Of(co.ref(Item)) {}
+
+    const list = TestList.create(
+      [Item.create({ name: "Item 1" }), Item.create({ name: "Item 2" })],
+      { owner: me },
+    );
+
+    const updates: TestList[] = [];
+    const spy = vi.fn((list) => updates.push(list));
+
+    TestList.subscribe(list.id, {}, spy);
+
+    expect(spy).not.toHaveBeenCalled();
+
+    await waitFor(() => expect(spy).toHaveBeenCalled());
+
+    expect(spy).toHaveBeenCalledTimes(1);
+
+    expect(updates[0]?.[0]?.name).toEqual("Item 1");
+    expect(updates[0]?.[1]?.name).toEqual("Item 2");
+
+    list[0]!.name = "Updated Item 1";
+
+    await waitFor(() => expect(spy).toHaveBeenCalledTimes(2));
+
+    expect(updates[1]?.[0]?.name).toEqual("Updated Item 1");
+    expect(updates[1]?.[1]?.name).toEqual("Item 2");
+
+    expect(spy).toHaveBeenCalledTimes(2);
+  });
+
+  test("subscription on a locally available list with syncResolution", async () => {
+    class Item extends CoMap {
+      name = co.string;
+    }
+
+    class TestList extends CoList.Of(co.ref(Item)) {}
+
+    const list = TestList.create(
+      [Item.create({ name: "Item 1" }), Item.create({ name: "Item 2" })],
+      { owner: me },
+    );
+
+    const updates: TestList[] = [];
+    const spy = vi.fn((list) => updates.push(list));
+
+    subscribeToCoValue(
+      TestList,
+      list.id,
+      {
+        syncResolution: true,
+        loadAs: Account.getMe(),
+      },
+      spy,
+    );
+
+    expect(spy).toHaveBeenCalled();
+    expect(spy).toHaveBeenCalledTimes(1);
+
+    expect(updates[0]?.[0]?.name).toEqual("Item 1");
+    expect(updates[0]?.[1]?.name).toEqual("Item 2");
+
+    expect(spy).toHaveBeenCalledTimes(1);
+
+    list[0]!.name = "Updated Item 1";
+
+    expect(spy).toHaveBeenCalledTimes(2);
+
+    expect(updates[1]?.[0]?.name).toEqual("Updated Item 1");
+    expect(updates[1]?.[1]?.name).toEqual("Item 2");
+
+    expect(spy).toHaveBeenCalledTimes(2);
+  });
+
+  test("subscription on a remotely available list with deep resolve", async () => {
+    class Item extends CoMap {
+      name = co.string;
+    }
+
+    class TestList extends CoList.Of(co.ref(Item)) {}
+
+    const group = Group.create();
+    group.addMember("everyone", "writer");
+
+    const list = TestList.create(
+      [
+        Item.create({ name: "Item 1" }, group),
+        Item.create({ name: "Item 2" }, group),
+      ],
+      group,
+    );
+
+    const userB = await createJazzTestAccount();
+
+    const updates: Resolved<TestList, { $each: true }>[] = [];
+    const spy = vi.fn((list) => updates.push(list));
+
+    TestList.subscribe(
+      list.id,
+      {
+        resolve: {
+          $each: true,
+        },
+        loadAs: userB,
+      },
+      spy,
+    );
+
+    expect(spy).not.toHaveBeenCalled();
+
+    await waitFor(() => expect(spy).toHaveBeenCalled());
+
+    expect(spy).toHaveBeenCalledTimes(1);
+
+    expect(updates[0]?.[0]?.name).toEqual("Item 1");
+    expect(updates[0]?.[1]?.name).toEqual("Item 2");
+
+    list[0]!.name = "Updated Item 1";
+
+    await waitFor(() => expect(spy).toHaveBeenCalledTimes(2));
+
+    expect(updates[1]?.[0]?.name).toEqual("Updated Item 1");
+    expect(updates[1]?.[1]?.name).toEqual("Item 2");
+
+    expect(spy).toHaveBeenCalledTimes(2);
+  });
+
+  test("subscription on a remotely available list with autoload", async () => {
+    class Item extends CoMap {
+      name = co.string;
+    }
+
+    class TestList extends CoList.Of(co.ref(Item)) {}
+
+    const group = Group.create();
+    group.addMember("everyone", "writer");
+
+    const list = TestList.create(
+      [
+        Item.create({ name: "Item 1" }, group),
+        Item.create({ name: "Item 2" }, group),
+      ],
+      group,
+    );
+
+    const updates: TestList[] = [];
+    const spy = vi.fn((list) => updates.push(list));
+
+    const userB = await createJazzTestAccount();
+
+    TestList.subscribe(
+      list.id,
+      {
+        loadAs: userB,
+      },
+      spy,
+    );
+
+    expect(spy).not.toHaveBeenCalled();
+
+    await waitFor(() => expect(spy).toHaveBeenCalled());
+
+    expect(spy).toHaveBeenCalledTimes(1);
+
+    expect(updates[0]?.[0]?.name).toEqual("Item 1");
+    expect(updates[0]?.[1]?.name).toEqual("Item 2");
+
+    list[0]!.name = "Updated Item 1";
+
+    await waitFor(() => expect(spy).toHaveBeenCalledTimes(2));
+
+    expect(updates[1]?.[0]?.name).toEqual("Updated Item 1");
+    expect(updates[1]?.[1]?.name).toEqual("Item 2");
+
+    expect(spy).toHaveBeenCalledTimes(2);
+  });
+
+  test("replacing list items triggers updates", async () => {
+    class Item extends CoMap {
+      name = co.string;
+    }
+
+    class TestList extends CoList.Of(co.ref(Item)) {}
+
+    const list = TestList.create(
+      [Item.create({ name: "Item 1" }), Item.create({ name: "Item 2" })],
+      { owner: me },
+    );
+
+    const updates: Resolved<TestList, { $each: true }>[] = [];
+    const spy = vi.fn((list) => updates.push(list));
+
+    TestList.subscribe(
+      list.id,
+      {
+        resolve: {
+          $each: true,
+        },
+      },
+      spy,
+    );
+
+    expect(spy).not.toHaveBeenCalled();
+
+    await waitFor(() => expect(spy).toHaveBeenCalled());
+
+    expect(spy).toHaveBeenCalledTimes(1);
+
+    expect(updates[0]?.[0]?.name).toEqual("Item 1");
+    expect(updates[0]?.[1]?.name).toEqual("Item 2");
+
+    list[0] = Item.create({ name: "New Item 1" });
+
+    await waitFor(() => expect(spy).toHaveBeenCalledTimes(2));
+
+    expect(updates[1]?.[0]?.name).toEqual("New Item 1");
+    expect(updates[1]?.[1]?.name).toEqual("Item 2");
+
+    expect(spy).toHaveBeenCalledTimes(2);
+  });
+
+  test("pushing a new item triggers updates correctly", async () => {
+    class Item extends CoMap {
+      name = co.string;
+    }
+
+    class TestList extends CoList.Of(co.ref(Item)) {}
+
+    const group = Group.create();
+    group.addMember("everyone", "writer");
+
+    const list = TestList.create(
+      [
+        Item.create({ name: "Item 1" }, group),
+        Item.create({ name: "Item 2" }, group),
+      ],
+      group,
+    );
+
+    const updates: TestList[] = [];
+    const spy = vi.fn((list) => updates.push(list));
+
+    const userB = await createJazzTestAccount();
+
+    TestList.subscribe(
+      list.id,
+      {
+        loadAs: userB,
+        resolve: {
+          $each: true,
+        },
+      },
+      (update) => {
+        spy(update);
+
+        // The update should be triggered only when the new item is loaded
+        for (const item of update) {
+          expect(item).toBeDefined();
+        }
       },
     );
 
-    const update1 = (await queue.next()).value;
-    expect(update1?.[0]).toBe(null);
+    await waitFor(() => expect(spy).toHaveBeenCalled());
 
-    const update2 = (await queue.next()).value;
-    expect(update2?.[0]).toBeDefined();
-    expect(update2?.[0]?.[0]).toBe(null);
+    expect(spy).toHaveBeenCalledTimes(1);
 
-    const update3 = (await queue.next()).value;
-    expect(update3?.[0]?.[0]).toBeDefined();
-    expect(update3?.[0]?.[0]?.[0]).toBe("a");
-    expect(update3?.[0]?.[0]?.joined()).toBe("a,b");
+    list.push(Item.create({ name: "Item 3" }, group));
 
-    update3[0]![0]![0] = "x";
+    await waitFor(() => expect(spy).toHaveBeenCalledTimes(2));
 
-    const update4 = (await queue.next()).value;
-    expect(update4?.[0]?.[0]?.[0]).toBe("x");
-
-    // When assigning a new nested value, we get an update
-
-    const newTwiceNestedList = TwiceNestedList.create(["y", "z"], {
-      owner: meOnSecondPeer,
-    });
-
-    const newNestedList = NestedList.create([newTwiceNestedList], {
-      owner: meOnSecondPeer,
-    });
-
-    update4[0] = newNestedList;
-
-    const update5 = (await queue.next()).value;
-    expect(update5?.[0]?.[0]?.[0]).toBe("y");
-    expect(update5?.[0]?.[0]?.joined()).toBe("y,z");
-
-    // we get updates when the new nested value changes
-    newTwiceNestedList[0] = "w";
-    const update6 = (await queue.next()).value;
-    expect(update6?.[0]?.[0]?.[0]).toBe("w");
+    expect(spy).toHaveBeenCalledTimes(2);
   });
 });

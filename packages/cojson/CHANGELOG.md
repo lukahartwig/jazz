@@ -1,5 +1,42 @@
 # cojson
 
+## 0.13.23
+
+### Patch Changes
+
+- 6b781cf: Add getBinaryStreamInfo to RawBinaryCoStreamView to make it possible to retrieve file info without processing all the chunks
+
+## 0.13.21
+
+### Patch Changes
+
+- e14e61f: Optimized the acceptInvite flow
+
+## 0.13.20
+
+### Patch Changes
+
+- adfc9a6: Make waitForSync work on storage peers by handling optimistic/known states
+- 1389207: Removed throw error when the profile is unavailable after a login
+- d6e143e: Wait for storage sync before resolving new account creation
+- 3e6229d: Skip closed and unsubscribed peers when calling waitForSync
+
+## 0.13.18
+
+### Patch Changes
+
+- 9089252: Optimized and simplified LocalNode account creation flow
+- b470f63: Optimize the sync protocol to reduce the amount of messages exchanged during the applications bootstrap
+- 66373ba: Fix an error when trying to call sendNewContentIncludingDependencies without all the dependencies loaded
+- f24cad1: Skip self-sync on storage peers when getting new content
+
+## 0.13.17
+
+### Patch Changes
+
+- 9fb98e2: Resolve CoValue load as soon as the core is available
+- 0b89fad: Re-introduce incremental processing on RawCoList
+
 ## 0.13.16
 
 ### Patch Changes

@@ -2,7 +2,10 @@ import { afterEach, expect, test, vi } from "vitest";
 import { expectPlainText } from "../coValue.js";
 import { WasmCrypto } from "../crypto/WasmCrypto.js";
 import { LocalNode } from "../localNode.js";
-import { randomAnonymousAccountAndSessionID } from "./testUtils.js";
+import {
+  nodeWithRandomAgentAndSessionID,
+  randomAgentAndSessionID,
+} from "./testUtils.js";
 
 const Crypto = await WasmCrypto.create();
 
@@ -13,7 +16,7 @@ test("should throw on creation if Intl.Segmenter is not available", () => {
     Segmenter: undefined,
   });
 
-  const node = new LocalNode(...randomAnonymousAccountAndSessionID(), Crypto);
+  const node = nodeWithRandomAgentAndSessionID();
   const group = node.createGroup();
   expect(() => group.createPlainText()).toThrow(
     "Intl.Segmenter is not supported. Use a polyfill to get coPlainText support in Jazz. (eg. https://formatjs.github.io/docs/polyfills/intl-segmenter/)",
@@ -21,7 +24,7 @@ test("should throw on creation if Intl.Segmenter is not available", () => {
 });
 
 test("Empty CoPlainText works", () => {
-  const node = new LocalNode(...randomAnonymousAccountAndSessionID(), Crypto);
+  const node = nodeWithRandomAgentAndSessionID();
 
   const coValue = node.createCoValue({
     type: "coplaintext",
@@ -37,7 +40,7 @@ test("Empty CoPlainText works", () => {
 });
 
 test("Can insert into empty CoPlainText", () => {
-  const node = new LocalNode(...randomAnonymousAccountAndSessionID(), Crypto);
+  const node = nodeWithRandomAgentAndSessionID();
 
   const coValue = node.createCoValue({
     type: "coplaintext",
@@ -55,7 +58,7 @@ test("Can insert into empty CoPlainText", () => {
 });
 
 test("Can insert and delete in CoPlainText", () => {
-  const node = new LocalNode(...randomAnonymousAccountAndSessionID(), Crypto);
+  const node = nodeWithRandomAgentAndSessionID();
 
   const coValue = node.createCoValue({
     type: "coplaintext",
@@ -88,7 +91,7 @@ test("Can insert and delete in CoPlainText", () => {
 });
 
 test("Multiple items inserted appear in correct order", () => {
-  const node = new LocalNode(...randomAnonymousAccountAndSessionID(), Crypto);
+  const node = nodeWithRandomAgentAndSessionID();
 
   const coValue = node.createCoValue({
     type: "coplaintext",
@@ -109,7 +112,7 @@ test("Multiple items inserted appear in correct order", () => {
 });
 
 test("Items inserted at start appear with latest first", () => {
-  const node = new LocalNode(...randomAnonymousAccountAndSessionID(), Crypto);
+  const node = nodeWithRandomAgentAndSessionID();
 
   const coValue = node.createCoValue({
     type: "coplaintext",
@@ -131,7 +134,7 @@ test("Items inserted at start appear with latest first", () => {
 });
 
 test("Handles different locales correctly", () => {
-  const node = new LocalNode(...randomAnonymousAccountAndSessionID(), Crypto);
+  const node = nodeWithRandomAgentAndSessionID();
 
   // Test with explicit locale in meta
   const coValueJa = node.createCoValue({
@@ -175,7 +178,7 @@ test("Handles different locales correctly", () => {
 });
 
 test("insertBefore and insertAfter work as expected", () => {
-  const node = new LocalNode(...randomAnonymousAccountAndSessionID(), Crypto);
+  const node = nodeWithRandomAgentAndSessionID();
   const coValue = node.createCoValue({
     type: "coplaintext",
     ruleset: { type: "unsafeAllowAll" },

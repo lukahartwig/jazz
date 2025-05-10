@@ -1,5 +1,11 @@
 # create-jazz-app
 
+## 0.1.18
+
+### Patch Changes
+
+- af46c68: create-jazz-app now accepts a --git boolean flag to control git initialization
+
 ## 0.1.17
 
 ### Patch Changes

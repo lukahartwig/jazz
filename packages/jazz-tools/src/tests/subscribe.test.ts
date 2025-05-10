@@ -23,7 +23,11 @@ import {
   createCoValueObservable,
   subscribeToCoValue,
 } from "../internal.js";
-import { createJazzTestAccount, setupJazzTestSync } from "../testing.js";
+import {
+  createJazzTestAccount,
+  getPeerConnectedToTestSyncServer,
+  setupJazzTestSync,
+} from "../testing.js";
 import { setupAccount, waitFor } from "./utils.js";
 
 class ChatRoom extends CoMap {
@@ -70,11 +74,16 @@ describe("subscribeToCoValue", () => {
     const chatRoom = createChatRoom(me, "General");
     const updateFn = vi.fn();
 
+    let result = null as Resolved<ChatRoom, {}> | null;
+
     const unsubscribe = subscribeToCoValue(
       ChatRoom,
       chatRoom.id,
       { loadAs: meOnSecondPeer },
-      updateFn,
+      (value) => {
+        result = value;
+        updateFn();
+      },
     );
 
     onTestFinished(unsubscribe);
@@ -83,14 +92,10 @@ describe("subscribeToCoValue", () => {
       expect(updateFn).toHaveBeenCalled();
     });
 
-    expect(updateFn).toHaveBeenCalledWith(
-      expect.objectContaining({
-        id: chatRoom.id,
-        messages: null,
-        name: "General",
-      }),
-      expect.any(Function),
-    );
+    expect(result).not.toBeNull();
+    expect(result?.id).toBe(chatRoom.id);
+    expect(result?.messages).toEqual(null);
+    expect(result?.name).toBe("General");
 
     updateFn.mockClear();
 
@@ -98,14 +103,7 @@ describe("subscribeToCoValue", () => {
       expect(updateFn).toHaveBeenCalled();
     });
 
-    expect(updateFn).toHaveBeenCalledWith(
-      expect.objectContaining({
-        id: chatRoom.id,
-        name: "General",
-        messages: expect.any(Array),
-      }),
-      expect.any(Function),
-    );
+    expect(result?.messages).toEqual([]);
 
     updateFn.mockClear();
     chatRoom.name = "Lounge";
@@ -114,14 +112,7 @@ describe("subscribeToCoValue", () => {
       expect(updateFn).toHaveBeenCalled();
     });
 
-    expect(updateFn).toHaveBeenCalledWith(
-      expect.objectContaining({
-        id: chatRoom.id,
-        name: "Lounge",
-        messages: expect.any(Array),
-      }),
-      expect.any(Function),
-    );
+    expect(result?.name).toBe("Lounge");
   });
 
   it("shouldn't fire updates until the declared load depth isn't reached", async () => {
@@ -129,6 +120,8 @@ describe("subscribeToCoValue", () => {
 
     const chatRoom = createChatRoom(me, "General");
     const updateFn = vi.fn();
+
+    let result = null as Resolved<ChatRoom, {}> | null;
 
     const unsubscribe = subscribeToCoValue(
       ChatRoom,
@@ -139,7 +132,10 @@ describe("subscribeToCoValue", () => {
           messages: true,
         },
       },
-      updateFn,
+      (value) => {
+        result = value;
+        updateFn();
+      },
     );
 
     onTestFinished(unsubscribe);
@@ -149,14 +145,11 @@ describe("subscribeToCoValue", () => {
     });
 
     expect(updateFn).toHaveBeenCalledTimes(1);
-    expect(updateFn).toHaveBeenCalledWith(
-      expect.objectContaining({
-        id: chatRoom.id,
-        name: "General",
-        messages: expect.any(Array),
-      }),
-      expect.any(Function),
-    );
+    expect(result).toMatchObject({
+      id: chatRoom.id,
+      name: "General",
+      messages: [],
+    });
   });
 
   it("shouldn't fire updates after unsubscribing", async () => {
@@ -263,6 +256,17 @@ describe("subscribeToCoValue", () => {
 
     const updateFn = vi.fn();
 
+    const updates = [] as Resolved<
+      ChatRoom,
+      {
+        messages: {
+          $each: {
+            reactions: true;
+          };
+        };
+      }
+    >[];
+
     const unsubscribe = subscribeToCoValue(
       ChatRoom,
       chatRoom.id,
@@ -276,22 +280,25 @@ describe("subscribeToCoValue", () => {
           },
         },
       },
-      updateFn,
+      (value) => {
+        updates.push(value);
+        updateFn();
+      },
     );
 
     onTestFinished(unsubscribe);
 
     await waitFor(() => {
-      const lastValue = updateFn.mock.lastCall?.[0];
+      const lastValue = updates.at(-1);
 
       expect(lastValue?.messages?.[0]?.text).toBe(message.text);
     });
 
-    const initialValue = updateFn.mock.lastCall?.[0];
+    const initialValue = updates.at(0);
     const initialMessagesList = initialValue?.messages;
     const initialMessage1 = initialValue?.messages[0];
     const initialMessage2 = initialValue?.messages[1];
-    const initialMessageReactions = initialValue?.messages[0].reactions;
+    const initialMessageReactions = initialValue?.messages[0]?.reactions;
 
     message.reactions?.push("👍");
 
@@ -301,11 +308,11 @@ describe("subscribeToCoValue", () => {
       expect(updateFn).toHaveBeenCalled();
     });
 
-    const lastValue = updateFn.mock.lastCall?.[0];
+    const lastValue = updates.at(-1)!;
     expect(lastValue).not.toBe(initialValue);
     expect(lastValue.messages).not.toBe(initialMessagesList);
     expect(lastValue.messages[0]).not.toBe(initialMessage1);
-    expect(lastValue.messages[0].reactions).not.toBe(initialMessageReactions);
+    expect(lastValue.messages[0]?.reactions).not.toBe(initialMessageReactions);
 
     // This shouldn't change
     expect(lastValue.messages[1]).toBe(initialMessage2);
@@ -418,7 +425,7 @@ describe("subscribeToCoValue", () => {
     expect(updateFn).toHaveBeenCalledTimes(1);
   });
 
-  it("should emit when all the items become available", async () => {
+  it("should emit when all the items become accessible", async () => {
     class TestMap extends CoMap {
       value = co.string;
     }
@@ -486,6 +493,82 @@ describe("subscribeToCoValue", () => {
     expect(result[0]?.value).toBe("1");
 
     expect(updateFn).toHaveBeenCalledTimes(1);
+  });
+
+  it("should emit when all the items become available", async () => {
+    class TestMap extends CoMap {
+      value = co.string;
+    }
+
+    class TestList extends CoList.Of(co.ref(TestMap)) {}
+
+    const reader = await createJazzTestAccount({
+      isCurrentActiveAccount: true,
+    });
+
+    const creator = await createJazzTestAccount({
+      isCurrentActiveAccount: true,
+    });
+
+    // Disconnect the creator from the sync server
+    creator._raw.core.node.syncManager.getPeers().forEach((peer) => {
+      peer.gracefulShutdown();
+    });
+
+    const everyone = Group.create(creator);
+    everyone.addMember("everyone", "reader");
+
+    const list = TestList.create(
+      [
+        TestMap.create({ value: "1" }, everyone),
+        TestMap.create({ value: "2" }, everyone),
+      ],
+      everyone,
+    );
+
+    let result = null as Resolved<TestList, { $each: true }> | null;
+
+    const updateFn = vi.fn().mockImplementation((value) => {
+      result = value;
+    });
+    const onUnauthorized = vi.fn();
+    const onUnavailable = vi.fn();
+
+    const unsubscribe = subscribeToCoValue(
+      TestList,
+      list.id,
+      {
+        loadAs: reader,
+        resolve: {
+          $each: true,
+        },
+        onUnauthorized,
+        onUnavailable,
+      },
+      updateFn,
+    );
+
+    onTestFinished(unsubscribe);
+
+    await waitFor(() => {
+      expect(onUnavailable).toHaveBeenCalled();
+    });
+
+    creator._raw.core.node.syncManager.addPeer(
+      getPeerConnectedToTestSyncServer(),
+    );
+
+    await waitFor(() => {
+      expect(updateFn).toHaveBeenCalled();
+    });
+
+    assert(result);
+
+    expect(result[0]?.value).toBe("1");
+
+    // expect(updateFn).toHaveBeenCalledTimes(1);
+    // TODO: Getting an extra update here due to https://github.com/garden-co/jazz/issues/2117
+    expect(updateFn).toHaveBeenCalledTimes(2);
   });
 
   it("should handle null values in lists with required refs", async () => {
@@ -621,6 +704,495 @@ describe("subscribeToCoValue", () => {
     expect(result[0]).toBeNull();
 
     expect(updateFn).toHaveBeenCalledTimes(1);
+  });
+
+  it("should unsubscribe from a nested ref when the value is set to null", async () => {
+    class TestMap extends CoMap {
+      value = co.string;
+    }
+
+    class TestList extends CoList.Of(co.optional.ref(TestMap)) {}
+
+    const creator = await createJazzTestAccount({
+      isCurrentActiveAccount: true,
+    });
+
+    const list = TestList.create(
+      [
+        TestMap.create({ value: "1" }, creator),
+        TestMap.create({ value: "2" }, creator),
+      ],
+      creator,
+    );
+
+    let result = null as Resolved<TestList, { $each: true }> | null;
+
+    const updateFn = vi.fn().mockImplementation((value) => {
+      result = value;
+    });
+
+    const unsubscribe = subscribeToCoValue(
+      TestList,
+      list.id,
+      {
+        loadAs: creator,
+        resolve: {
+          $each: true,
+        },
+      },
+      updateFn,
+    );
+
+    onTestFinished(unsubscribe);
+
+    await waitFor(() => {
+      expect(updateFn).toHaveBeenCalled();
+    });
+
+    assert(result);
+    expect(result[0]?.value).toBe("1");
+    expect(result[1]?.value).toBe("2");
+
+    const firstItem = result[0]!;
+
+    updateFn.mockClear();
+
+    list[0] = null;
+
+    await waitFor(() => {
+      expect(updateFn).toHaveBeenCalled();
+    });
+
+    assert(result);
+    expect(result[0]).toBeNull();
+
+    updateFn.mockClear();
+
+    firstItem.value = "3";
+
+    expect(updateFn).not.toHaveBeenCalled();
+  });
+
+  it("should unsubscribe from a nested ref when the value is changed to a different ref", async () => {
+    class TestMap extends CoMap {
+      value = co.string;
+    }
+
+    class TestList extends CoList.Of(co.ref(TestMap)) {}
+
+    const creator = await createJazzTestAccount({
+      isCurrentActiveAccount: true,
+    });
+
+    const list = TestList.create(
+      [
+        TestMap.create({ value: "1" }, creator),
+        TestMap.create({ value: "2" }, creator),
+      ],
+      creator,
+    );
+
+    let result = null as Resolved<TestList, { $each: true }> | null;
+
+    const updateFn = vi.fn().mockImplementation((value) => {
+      result = value;
+    });
+
+    const unsubscribe = subscribeToCoValue(
+      TestList,
+      list.id,
+      {
+        loadAs: creator,
+        resolve: {
+          $each: true,
+        },
+      },
+      updateFn,
+    );
+
+    onTestFinished(unsubscribe);
+
+    await waitFor(() => {
+      expect(updateFn).toHaveBeenCalled();
+    });
+
+    assert(result);
+    expect(result[0]?.value).toBe("1");
+    expect(result[1]?.value).toBe("2");
+
+    updateFn.mockClear();
+    const firstItem = result[0]!;
+
+    // Replace the first item with a new map
+    const newMap = TestMap.create({ value: "3" }, creator);
+    list[0] = newMap;
+
+    await waitFor(() => {
+      expect(updateFn).toHaveBeenCalled();
+    });
+
+    assert(result);
+    expect(result[0]?.value).toBe("3");
+    expect(result[1]?.value).toBe("2");
+
+    updateFn.mockClear();
+
+    firstItem.value = "4";
+
+    expect(updateFn).not.toHaveBeenCalled();
+
+    newMap.value = "5";
+
+    expect(updateFn).toHaveBeenCalled();
+    expect(result[0]?.value).toBe("5");
+  });
+
+  it("should emit on group changes, even when the amount of totalValidTransactions doesn't change but the content does", async () => {
+    class Person extends CoMap {
+      name = co.string;
+    }
+
+    const creator = await createJazzTestAccount();
+
+    const writer1 = await createJazzTestAccount();
+    const writer2 = await createJazzTestAccount();
+
+    const reader = await createJazzTestAccount();
+
+    await Promise.all([
+      writer1.waitForAllCoValuesSync(),
+      writer2.waitForAllCoValuesSync(),
+      reader.waitForAllCoValuesSync(),
+    ]);
+
+    const group = Group.create(creator);
+    group.addMember(writer1, "writer");
+    group.addMember(writer2, "reader");
+    group.addMember(reader, "reader");
+
+    const person = Person.create({ name: "creator" }, group);
+
+    await person.waitForSync();
+
+    // Disconnect from the sync server, so we can change permissions but not sync them
+    creator._raw.core.node.syncManager.getPeers().forEach((peer) => {
+      peer.gracefulShutdown();
+    });
+
+    group.removeMember(writer1);
+    group.addMember(writer2, "writer");
+
+    let value: Resolved<Person, {}> | null = null as Resolved<
+      Person,
+      {}
+    > | null;
+    const spy = vi.fn((update) => {
+      value = update;
+    });
+
+    const unsubscribe = subscribeToCoValue(
+      Person,
+      person.id,
+      {
+        loadAs: reader,
+      },
+      spy,
+    );
+
+    onTestFinished(unsubscribe);
+
+    await waitFor(() => expect(spy).toHaveBeenCalled());
+    expect(spy).toHaveBeenCalledTimes(1);
+    expect(value?.name).toBe("creator");
+
+    const personOnWriter1 = await Person.load(person.id, {
+      loadAs: writer1,
+    });
+
+    const personOnWriter2 = await Person.load(person.id, {
+      loadAs: writer2,
+    });
+
+    spy.mockClear();
+
+    assert(personOnWriter1);
+    assert(personOnWriter2);
+    personOnWriter1.name = "writer1";
+    personOnWriter2.name = "writer2";
+
+    await waitFor(() => expect(spy).toHaveBeenCalled());
+    expect(spy).toHaveBeenCalledTimes(1);
+    expect(value?.name).toBe("writer1");
+    expect(value?._raw.totalValidTransactions).toBe(2);
+
+    spy.mockClear();
+
+    // Reconnect to the sync server
+    creator._raw.core.node.syncManager.addPeer(
+      getPeerConnectedToTestSyncServer(),
+    );
+
+    await waitFor(() => expect(spy).toHaveBeenCalled());
+    expect(spy).toHaveBeenCalledTimes(1);
+    expect(value?.name).toBe("writer2");
+    expect(value?._raw.totalValidTransactions).toBe(2);
+  });
+
+  it("errors on autoloaded values shouldn't block updates", async () => {
+    class TestMap extends CoMap {
+      value = co.string;
+    }
+
+    class TestList extends CoList.Of(co.ref(TestMap)) {}
+
+    const reader = await createJazzTestAccount({
+      isCurrentActiveAccount: true,
+    });
+
+    const creator = await createJazzTestAccount({
+      isCurrentActiveAccount: true,
+    });
+
+    const everyone = Group.create(creator);
+    everyone.addMember("everyone", "reader");
+
+    const group = Group.create(creator);
+
+    const list = TestList.create(
+      [
+        TestMap.create({ value: "1" }, group),
+        TestMap.create({ value: "2" }, everyone),
+        TestMap.create({ value: "3" }, everyone),
+        TestMap.create({ value: "4" }, everyone),
+        TestMap.create({ value: "5" }, everyone),
+      ],
+      everyone,
+    );
+
+    let result = null as Resolved<TestList, { $each: true }> | null;
+
+    const updateFn = vi.fn().mockImplementation((value) => {
+      result = value;
+    });
+    const onUnauthorized = vi.fn();
+    const onUnavailable = vi.fn();
+
+    const unsubscribe = subscribeToCoValue(
+      TestList,
+      list.id,
+      {
+        loadAs: reader,
+        resolve: true,
+        onUnauthorized,
+        onUnavailable,
+      },
+      updateFn,
+    );
+
+    onTestFinished(unsubscribe);
+
+    await waitFor(() => {
+      expect(updateFn).toHaveBeenCalled();
+    });
+
+    await waitFor(() => {
+      assert(result);
+      expect(result[1]?.value).toBe("2");
+    });
+
+    assert(result);
+    expect(result[0]).toBe(null);
+
+    updateFn.mockClear();
+
+    list[1] = TestMap.create({ value: "updated" }, everyone);
+
+    await waitFor(() => {
+      expect(result?.[1]?.value).toBe("updated");
+    });
+
+    expect(onUnavailable).not.toHaveBeenCalled();
+    expect(onUnauthorized).not.toHaveBeenCalled();
+  });
+
+  it("errors on autoloaded values shouldn't block updates, even when the error comes from a new ref", async () => {
+    class Dog extends CoMap {
+      name = co.string;
+    }
+
+    class Person extends CoMap {
+      name = co.string;
+      dog = co.ref(Dog);
+    }
+
+    class PersonList extends CoList.Of(co.ref(Person)) {}
+
+    const reader = await createJazzTestAccount({
+      isCurrentActiveAccount: true,
+    });
+
+    const creator = await createJazzTestAccount({
+      isCurrentActiveAccount: true,
+    });
+
+    const everyone = Group.create(creator);
+    everyone.addMember("everyone", "reader");
+
+    const list = PersonList.create(
+      [
+        Person.create(
+          { name: "Guido", dog: Dog.create({ name: "Giggino" }, everyone) },
+          everyone,
+        ),
+        Person.create(
+          { name: "John", dog: Dog.create({ name: "Rex" }, everyone) },
+          everyone,
+        ),
+        Person.create(
+          { name: "Jane", dog: Dog.create({ name: "Bella" }, everyone) },
+          everyone,
+        ),
+      ],
+      everyone,
+    );
+
+    let result = null as Resolved<PersonList, { $each: true }> | null;
+
+    const updateFn = vi.fn().mockImplementation((value) => {
+      result = value;
+    });
+    const onUnauthorized = vi.fn();
+    const onUnavailable = vi.fn();
+
+    const unsubscribe = subscribeToCoValue(
+      PersonList,
+      list.id,
+      {
+        loadAs: reader,
+        resolve: {
+          $each: true,
+        },
+        onUnauthorized,
+        onUnavailable,
+      },
+      updateFn,
+    );
+
+    onTestFinished(unsubscribe);
+
+    await waitFor(() => {
+      expect(result?.[0]?.name).toBe("Guido");
+      expect(result?.[0]?.dog?.name).toBe("Giggino");
+    });
+
+    await waitFor(() => {
+      expect(result?.[1]?.name).toBe("John");
+      expect(result?.[1]?.dog?.name).toBe("Rex");
+    });
+
+    await waitFor(() => {
+      expect(result?.[2]?.name).toBe("Jane");
+      expect(result?.[2]?.dog?.name).toBe("Bella");
+    });
+
+    list[0]!.dog = Dog.create({ name: "Ninja" });
+
+    await waitFor(() => {
+      expect(result?.[0]?.dog).toBe(null);
+    });
+
+    list[1]!.dog = Dog.create({ name: "Pinkie" }, everyone);
+
+    await waitFor(() => {
+      expect(result?.[1]?.dog?.name).toBe("Pinkie");
+    });
+
+    expect(onUnavailable).not.toHaveBeenCalled();
+    expect(onUnauthorized).not.toHaveBeenCalled();
+  });
+
+  it("autoload on $each resolve should work on all items", async () => {
+    class Dog extends CoMap {
+      name = co.string;
+    }
+
+    class Person extends CoMap {
+      name = co.string;
+      dog = co.ref(Dog);
+    }
+
+    class PersonList extends CoList.Of(co.ref(Person)) {}
+
+    const reader = await createJazzTestAccount({
+      isCurrentActiveAccount: true,
+    });
+
+    const creator = await createJazzTestAccount({
+      isCurrentActiveAccount: true,
+    });
+
+    const everyone = Group.create(creator);
+    everyone.addMember("everyone", "reader");
+
+    const list = PersonList.create(
+      [
+        Person.create(
+          { name: "Guido", dog: Dog.create({ name: "Giggino" }, everyone) },
+          everyone,
+        ),
+        Person.create(
+          { name: "John", dog: Dog.create({ name: "Rex" }, everyone) },
+          everyone,
+        ),
+        Person.create(
+          { name: "Jane", dog: Dog.create({ name: "Bella" }, everyone) },
+          everyone,
+        ),
+      ],
+      everyone,
+    );
+
+    let result = null as Resolved<PersonList, { $each: true }> | null;
+
+    const updateFn = vi.fn().mockImplementation((value) => {
+      result = value;
+    });
+    const onUnauthorized = vi.fn();
+    const onUnavailable = vi.fn();
+
+    const unsubscribe = subscribeToCoValue(
+      PersonList,
+      list.id,
+      {
+        loadAs: reader,
+        resolve: {
+          $each: true,
+        },
+        onUnauthorized,
+        onUnavailable,
+      },
+      updateFn,
+    );
+
+    onTestFinished(unsubscribe);
+
+    await waitFor(() => {
+      expect(result?.[0]?.name).toBe("Guido");
+      expect(result?.[0]?.dog?.name).toBe("Giggino");
+    });
+
+    await waitFor(() => {
+      expect(result?.[1]?.name).toBe("John");
+      expect(result?.[1]?.dog?.name).toBe("Rex");
+    });
+
+    await waitFor(() => {
+      expect(result?.[2]?.name).toBe("Jane");
+      expect(result?.[2]?.dog?.name).toBe("Bella");
+    });
+
+    expect(onUnavailable).not.toHaveBeenCalled();
+    expect(onUnauthorized).not.toHaveBeenCalled();
   });
 });
 

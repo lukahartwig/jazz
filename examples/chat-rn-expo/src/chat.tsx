@@ -20,6 +20,7 @@ import { Chat, Message } from "./schema";
 export default function ChatScreen({ navigation }: { navigation: any }) {
   const { me, logOut } = useAccount();
   const [chatId, setChatId] = useState<ID<Chat>>();
+  const [chatIdInput, setChatIdInput] = useState<string>();
   const loadedChat = useCoState(Chat, chatId, { resolve: { $each: true } });
   const [message, setMessage] = useState("");
   const profile = useCoState(Profile, me._refs.profile?.id, {});
@@ -57,27 +58,11 @@ export default function ChatScreen({ navigation }: { navigation: any }) {
   };
 
   const joinChat = () => {
-    Alert.prompt(
-      "Join Chat",
-      "Enter the Chat ID (example: co_zBGEHYvRfGuT2YSBraY3njGjnde)",
-      [
-        {
-          text: "Cancel",
-          style: "cancel",
-        },
-        {
-          text: "Join",
-          onPress: (chatId) => {
-            if (chatId) {
-              setChatId(chatId as ID<Chat>);
-            } else {
-              Alert.alert("Error", "Chat ID cannot be empty.");
-            }
-          },
-        },
-      ],
-      "plain-text",
-    );
+    if (chatIdInput) {
+      setChatId(chatIdInput as ID<Chat>);
+    } else {
+      Alert.alert("Error", "Chat ID cannot be empty.");
+    }
   };
 
   const sendMessage = () => {
@@ -160,9 +145,25 @@ export default function ChatScreen({ navigation }: { navigation: any }) {
           >
             <Text className="text-white font-semibold">Start new chat</Text>
           </TouchableOpacity>
+          <Text className="text-m font-bold mt-6">Join existing chat</Text>
+          <TextInput
+            className="rounded h-12 p-2 m-2 mt-4 w-80 border border-gray-200 block"
+            placeholder="Chat ID"
+            value={chatIdInput ?? ""}
+            onChangeText={(value) => {
+              setChatIdInput(value);
+            }}
+            textAlignVertical="center"
+            onSubmitEditing={() => {
+              if (chatIdInput) {
+                setChatId(chatIdInput as ID<Chat>);
+              }
+            }}
+            testID="chat-id-input"
+          />
           <TouchableOpacity
             onPress={joinChat}
-            className="bg-green-500 p-4 rounded-md mt-4"
+            className="bg-green-500 p-4 rounded-md"
           >
             <Text className="text-white font-semibold">Join chat</Text>
           </TouchableOpacity>
@@ -172,7 +173,6 @@ export default function ChatScreen({ navigation }: { navigation: any }) {
           <FlatList
             contentContainerStyle={{
               flexGrow: 1,
-              flex: 1,
               gap: 6,
               padding: 8,
             }}

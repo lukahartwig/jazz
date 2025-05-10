@@ -114,14 +114,13 @@ export class SyncStateManager {
       return undefined;
     }
 
-    const entry = this.syncManager.local.coValuesStore.get(id);
+    const entry = this.syncManager.local.getCoValue(id);
 
     if (!entry.isAvailable()) {
       return undefined;
     }
 
-    const coValue = entry.core;
-    const coValueSessions = coValue.knownState().sessions;
+    const coValueSessions = entry.knownState().sessions;
 
     return {
       peer: peerSessions,

@@ -9,6 +9,8 @@ appId: com.jazz.chatrn
 # - tapOn: "Reload"
 
 # login
+- assertVisible: "Logout"
+- tapOn: "Logout"
 - assertVisible: "Anonymous user"
 - runFlow:
     label: "Erase existing username"
@@ -42,9 +44,11 @@ appId: com.jazz.chatrn
 # logout
 - tapOn: "Logout"
 - assertVisible: "Anonymous user"
-# This doesn't work on CI, maybe because Android has a different alert dialog
-# - tapOn: "Join chat"
-# - inputText: "co_zFs6KFyhxPw4xtw83tcEMzeHUNv" # Use a static id because maestro doesn't have access to the system clipboard
-# - pressKey: "enter"
-# - assertVisible: "boorad"
-# - assertVisible: "bro, low key, it do be like that tho"
+
+# join chat
+- tapOn:
+    id: "chat-id-input"
+- inputText: "co_zFs6KFyhxPw4xtw83tcEMzeHUNv" # Use a static id because maestro doesn't have access to the system clipboard
+- tapOn: "Join chat"
+- assertVisible: "boorad"
+- assertVisible: "bro, low key, it do be like that tho"

@@ -45,6 +45,53 @@ describe("loading coValues from server", () => {
     `);
   });
 
+  test("unavailable coValue retry", async () => {
+    const client = setupTestNode();
+    const client2 = setupTestNode();
+
+    client2.connectToSyncServer({
+      ourName: "client2",
+    });
+
+    const group = client.node.createGroup();
+    const map = group.createMap();
+    map.set("hello", "world", "trusting");
+
+    const promise = loadCoValueOrFail(client2.node, map.id);
+
+    await new Promise((resolve) => setTimeout(resolve, 1));
+
+    client.connectToSyncServer();
+
+    const mapOnClient2 = await promise;
+
+    expect(mapOnClient2.get("hello")).toEqual("world");
+
+    expect(
+      SyncMessagesLog.getMessages({
+        Group: group.core,
+        Map: map.core,
+      }),
+    ).toMatchInlineSnapshot(`
+      [
+        "client2 -> server | LOAD Map sessions: empty",
+        "server -> client2 | KNOWN Map sessions: empty",
+        "client -> server | LOAD Group sessions: header/3",
+        "server -> client | KNOWN Group sessions: empty",
+        "client -> server | LOAD Map sessions: header/1",
+        "server -> client | KNOWN Map sessions: empty",
+        "client -> server | CONTENT Group header: true new: After: 0 New: 3",
+        "server -> client | KNOWN Group sessions: header/3",
+        "client -> server | CONTENT Map header: true new: After: 0 New: 1",
+        "server -> client | KNOWN Map sessions: header/1",
+        "server -> client2 | CONTENT Group header: true new: After: 0 New: 3",
+        "client2 -> server | KNOWN Group sessions: header/3",
+        "server -> client2 | CONTENT Map header: true new: After: 0 New: 1",
+        "client2 -> server | KNOWN Map sessions: header/1",
+      ]
+    `);
+  });
+
   test("coValue with parent groups loading", async () => {
     const client = setupTestNode({
       connected: true,
@@ -150,8 +197,6 @@ describe("loading coValues from server", () => {
     await map.core.waitForSync();
     await mapOnClient.core.waitForSync();
 
-    expect(mapOnClient.get("fromServer")).toEqual("updated");
-    expect(mapOnClient.get("fromClient")).toEqual("updated");
     expect(
       SyncMessagesLog.getMessages({
         Group: group.core,
@@ -170,6 +215,9 @@ describe("loading coValues from server", () => {
         "client -> server | KNOWN Map sessions: header/3",
       ]
     `);
+
+    expect(mapOnClient.get("fromServer")).toEqual("updated");
+    expect(mapOnClient.get("fromClient")).toEqual("updated");
   });
 
   test("wrong optimistic known state should be corrected", async () => {
@@ -189,7 +237,7 @@ describe("loading coValues from server", () => {
     await loadCoValueOrFail(client.node, map.id);
 
     // Forcefully delete the coValue from the client (simulating some data loss)
-    client.node.coValuesStore.coValues.delete(map.id);
+    client.node.internalDeleteCoValue(map.id);
 
     map.set("fromServer", "updated", "trusting");
 
@@ -327,5 +375,35 @@ describe("loading coValues from server", () => {
     `);
   });
 
-  test.todo("should mark the coValue as unavailable if the peer is closed");
+  test("should mark the coValue as unavailable if the peer is closed", async () => {
+    const client = setupTestNode();
+    const { peerState } = client.connectToSyncServer();
+
+    const group = jazzCloud.node.createGroup();
+    group.addMember("everyone", "writer");
+
+    const map = group.createMap({
+      test: "value",
+    });
+
+    const promise = client.node.load(map.id);
+
+    // Close the peer connection
+    peerState.gracefulShutdown();
+
+    expect(await promise).toEqual("unavailable");
+
+    expect(
+      SyncMessagesLog.getMessages({
+        Group: group.core,
+        Map: map.core,
+      }),
+    ).toMatchInlineSnapshot(`
+      [
+        "client -> server | LOAD Map sessions: empty",
+        "server -> client | CONTENT Group header: true new: After: 0 New: 5",
+        "server -> client | CONTENT Map header: true new: After: 0 New: 1",
+      ]
+    `);
+  });
 });

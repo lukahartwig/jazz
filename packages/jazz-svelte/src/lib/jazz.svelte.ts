@@ -160,7 +160,7 @@ export function useAccountOrGuest<R extends RefsToResolve<RegisteredAccount>>(
 
 export function useCoState<V extends CoValue, R extends RefsToResolve<V>>(
   Schema: CoValueClass<V>,
-  id: ID<CoValue> | undefined,
+  id: ID<CoValue> | undefined | (() => ID<CoValue> | undefined),
   options?: { resolve?: RefsToResolveStrict<V, R> }
 ): {
   current: Resolved<V, R> | undefined | null;
@@ -175,15 +175,17 @@ export function useCoState<V extends CoValue, R extends RefsToResolve<V>>(
     // Reset state when dependencies change
     state = undefined;
 
+    const idValue = typeof id === 'function' ? id() : id;
+
     // Return early if no context or id, effectively cleaning up any previous subscription
-    if (!ctx?.current || !id) return;
+    if (!ctx?.current || !idValue) return;
 
     const agent = "me" in ctx.current ? ctx.current.me : ctx.current.guest;
 
     // Setup subscription with current values
     return subscribeToCoValue<V, R>(
       Schema,
-      id,
+      idValue,
       {
         resolve: options?.resolve,
         loadAs: agent,

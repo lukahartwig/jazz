@@ -2,18 +2,18 @@
   export type Props<R extends CoValue> = {
     Schema: CoValueClass<R>;
     id: ID<R>;
-    depth: DepthsIn<R>;
-    setResult: (result: R | undefined) => void;
+    resolve: RefsToResolve<R>;
+    setResult: (result: R | undefined | null) => void;
   };
 </script>
 
 <script lang="ts" generics="R extends CoValue">
   import { useCoState } from '../../jazz.svelte.js';
-  import type { CoValue, CoValueClass, DepthsIn, ID } from 'jazz-tools';
+  import type { CoValue, CoValueClass, RefsToResolve, ID } from 'jazz-tools';
 
-  let { Schema, id, depth, setResult }: Props<R> = $props();
+  let { Schema, id, resolve, setResult }: Props<R> = $props();
 
-  const result = $derived(useCoState(Schema, id, depth));
+  const result = $derived(useCoState(Schema, id, { resolve: resolve as any }));
 
   $effect(() => {
     setResult(result.current);

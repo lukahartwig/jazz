@@ -1,5 +1,85 @@
 # jazz-browser
 
+## 0.13.23
+
+### Patch Changes
+
+- Updated dependencies [6b781cf]
+- Updated dependencies [02a240c]
+  - cojson@0.13.23
+  - jazz-tools@0.13.23
+  - cojson-storage@0.13.23
+  - cojson-transport-ws@0.13.23
+  - jazz-react-core@0.13.23
+
+## 0.13.22
+
+### Patch Changes
+
+- b0c2a5a: Fix the InvalidSignature errors on RNQuickCrypto
+
+## 0.13.21
+
+### Patch Changes
+
+- Updated dependencies [e14e61f]
+  - cojson@0.13.21
+  - cojson-storage@0.13.21
+  - cojson-transport-ws@0.13.21
+  - jazz-react-core@0.13.21
+  - jazz-tools@0.13.21
+
+## 0.13.20
+
+### Patch Changes
+
+- Updated dependencies [adfc9a6]
+- Updated dependencies [1389207]
+- Updated dependencies [d6e143e]
+- Updated dependencies [439f0fe]
+- Updated dependencies [3e6229d]
+  - cojson-storage@0.13.20
+  - cojson@0.13.20
+  - jazz-tools@0.13.20
+  - cojson-transport-ws@0.13.20
+  - jazz-react-core@0.13.20
+
+## 0.13.19
+
+### Patch Changes
+
+- Updated dependencies [80530a4]
+  - jazz-tools@0.13.19
+  - jazz-react-core@0.13.19
+
+## 0.13.18
+
+### Patch Changes
+
+- Updated dependencies [9089252]
+- Updated dependencies [b470f63]
+- Updated dependencies [8b2df0e]
+- Updated dependencies [761759c]
+- Updated dependencies [66373ba]
+- Updated dependencies [f24cad1]
+  - cojson@0.13.18
+  - cojson-storage@0.13.18
+  - jazz-tools@0.13.18
+  - cojson-transport-ws@0.13.18
+  - jazz-react-core@0.13.18
+
+## 0.13.17
+
+### Patch Changes
+
+- Updated dependencies [9fb98e2]
+- Updated dependencies [0b89fad]
+  - cojson@0.13.17
+  - cojson-storage@0.13.17
+  - cojson-transport-ws@0.13.17
+  - jazz-react-core@0.13.17
+  - jazz-tools@0.13.17
+
 ## 0.13.16
 
 ### Patch Changes

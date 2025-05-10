@@ -1,5 +1,5 @@
 import { render } from "@testing-library/svelte";
-import { Account, AnonymousJazzAgent, CoMap, co, type DepthsIn } from "jazz-tools";
+import { Account, AnonymousJazzAgent, CoMap, co, type RefsToResolve } from "jazz-tools";
 import { describe, expect, it } from "vitest";
 import { useAccountOrGuest, type RegisteredAccount } from "../index.js";
 import { createJazzTestAccount, createJazzTestContext, createJazzTestGuest } from "../testing.js";
@@ -7,14 +7,14 @@ import UseAccountOrGuest from "./components/useAccountOrGuest.svelte";
 
 function setup(options: {
   account: RegisteredAccount | { guest: AnonymousJazzAgent };
-  depth?: DepthsIn<RegisteredAccount>;
+  depth?: RefsToResolve<RegisteredAccount>;
 }) {
   const result = { current: undefined } as { current: ReturnType<typeof useAccountOrGuest> | undefined };
 
     render(UseAccountOrGuest, {
       context: createJazzTestContext({ account: options.account }),
       props: {
-        depth: options.depth ?? [],
+        depth: options.depth ?? {},
         setResult: (value) => {
           result.current = value
         },

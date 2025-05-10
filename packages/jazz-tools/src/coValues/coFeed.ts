@@ -30,6 +30,7 @@ import {
   ItemsSym,
   Ref,
   SchemaInit,
+  accessChildById,
   co,
   ensureCoValueLoaded,
   inspect,
@@ -228,6 +229,10 @@ export class CoFeed<Item = any> extends CoValueBase implements CoValue {
       instance.push(...init);
     }
     return instance;
+  }
+
+  getItemsDescriptor() {
+    return this._schema?.[ItemsSym];
   }
 
   /**
@@ -438,9 +443,10 @@ function entryFromRawEntry<Item>(
       } else if ("encoded" in itemField) {
         return itemField.encoded.decode(rawEntry.value);
       } else if (isRefEncoded(itemField)) {
-        return this.ref?.accessFrom(
+        return accessChildById(
           accessFrom,
-          rawEntry.by + rawEntry.tx.sessionID + rawEntry.tx.txIndex + ".value",
+          rawEntry.value as string,
+          itemField,
         ) as NonNullable<Item> extends CoValue ? (CoValue & Item) | null : Item;
       } else {
         throw new Error("Invalid item field schema");
@@ -455,6 +461,7 @@ function entryFromRawEntry<Item>(
           rawId as unknown as ID<CoValue>,
           loadedAs,
           itemField,
+          accessFrom,
         ) as NonNullable<Item> extends CoValue ? Ref<NonNullable<Item>> : never;
       } else {
         return undefined as never;
@@ -463,13 +470,10 @@ function entryFromRawEntry<Item>(
     get by() {
       return (
         accountID &&
-        new Ref<Account>(accountID as unknown as ID<Account>, loadedAs, {
+        accessChildById(accessFrom, accountID, {
           ref: RegisteredSchemas["Account"],
           optional: false,
-        })?.accessFrom(
-          accessFrom,
-          rawEntry.by + rawEntry.tx.sessionID + rawEntry.tx.txIndex + ".by",
-        )
+        })
       );
     },
     madeAt: rawEntry.at,
@@ -728,6 +732,10 @@ export class FileStream extends CoValueBase implements CoValue {
     return new this(parseCoValueCreateOptions(options));
   }
 
+  getMetadata(): BinaryStreamInfo | undefined {
+    return this._raw.getBinaryStreamInfo();
+  }
+
   getChunks(options?: {
     allowUnfinished?: boolean;
   }):
@@ -906,13 +914,24 @@ export class FileStream extends CoValueBase implements CoValue {
    * Subscribe to a `FileStream`, when you have an ID but don't have a `FileStream` instance yet
    * @category Subscription & Loading
    */
-  static subscribe<C extends FileStream>(
-    this: CoValueClass<C>,
-    id: ID<C>,
-    options: { loadAs?: Account | AnonymousJazzAgent },
-    listener: (value: Resolved<C, true>) => void,
+  static subscribe<F extends FileStream, const R extends RefsToResolve<F>>(
+    this: CoValueClass<F>,
+    id: ID<F>,
+    listener: (value: Resolved<F, R>, unsubscribe: () => void) => void,
+  ): () => void;
+  static subscribe<F extends FileStream, const R extends RefsToResolve<F>>(
+    this: CoValueClass<F>,
+    id: ID<F>,
+    options: SubscribeListenerOptions<F, R>,
+    listener: (value: Resolved<F, R>, unsubscribe: () => void) => void,
+  ): () => void;
+  static subscribe<F extends FileStream, const R extends RefsToResolve<F>>(
+    this: CoValueClass<F>,
+    id: ID<F>,
+    ...args: SubscribeRestArgs<F, R>
   ): () => void {
-    return subscribeToCoValueWithoutMe<C, true>(this, id, options, listener);
+    const { options, listener } = parseSubscribeRestArgs(args);
+    return subscribeToCoValueWithoutMe<F, R>(this, id, options, listener);
   }
 
   /**

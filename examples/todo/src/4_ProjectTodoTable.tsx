@@ -15,7 +15,7 @@ import {
 } from "./basicComponents";
 
 import { useCoState } from "jazz-react";
-import { ID } from "jazz-tools";
+import { CoPlainText, ID } from "jazz-tools";
 import { useParams } from "react-router";
 import uniqolor from "uniqolor";
 import { InviteButton } from "./components/InviteButton";
@@ -35,7 +35,11 @@ export function ProjectTodoTable() {
   // content - whether we create edits locally, load persisted data, or receive
   // sync updates from other devices or participants!
   // It also recursively resolves and subsribes to all referenced CoValues.
-  const project = useCoState(TodoProject, projectId);
+  const project = useCoState(TodoProject, projectId, {
+    resolve: {
+      tasks: true,
+    },
+  });
 
   // `createTask` is similar to `createProject` we saw earlier, creating a new CoMap
   // for a new task (in the same group as the project), and then
@@ -46,9 +50,9 @@ export function ProjectTodoTable() {
       const task = Task.create(
         {
           done: false,
-          text,
+          text: CoPlainText.create(text, project._owner),
         },
-        { owner: project._owner },
+        project._owner,
       );
 
       // push will cause useCoState to rerender this component, both here and on other devices

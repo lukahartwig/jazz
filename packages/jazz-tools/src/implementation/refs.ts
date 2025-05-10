@@ -1,4 +1,3 @@
-import { type CoID, RawAccount, type RawCoValue, RawGroup } from "cojson";
 import { type Account } from "../coValues/account.js";
 import type {
   AnonymousJazzAgent,
@@ -7,153 +6,61 @@ import type {
   RefEncoded,
   UnCo,
 } from "../internal.js";
-import {
-  instantiateRefEncoded,
-  isRefEncoded,
-  subscriptionsScopes,
-} from "../internal.js";
-import { coValuesCache } from "../lib/cache.js";
-
-const TRACE_ACCESSES = false;
+import { isRefEncoded } from "../internal.js";
+import { accessChildById, getSubscriptionScope } from "../subscribe/index.js";
 
 export class Ref<out V extends CoValue> {
   constructor(
     readonly id: ID<V>,
     readonly controlledAccount: Account | AnonymousJazzAgent,
     readonly schema: RefEncoded<V>,
+    readonly parent: CoValue,
   ) {
     if (!isRefEncoded(schema)) {
       throw new Error("Ref must be constructed with a ref schema");
     }
   }
 
-  private getNode() {
-    return "node" in this.controlledAccount
-      ? this.controlledAccount.node
-      : this.controlledAccount._raw.core.node;
-  }
+  async load(): Promise<V | null> {
+    const subscriptionScope = getSubscriptionScope(this.parent);
 
-  hasReadAccess() {
-    const node = this.getNode();
+    subscriptionScope.subscribeToId(this.id, this.schema);
 
-    const raw = node.getLoaded(this.id as unknown as CoID<RawCoValue>);
+    const node = subscriptionScope.childNodes.get(this.id);
 
-    if (!raw) {
-      return true;
-    }
-
-    if (raw instanceof RawAccount || raw instanceof RawGroup) {
-      return true;
-    }
-
-    const group = raw.core.getGroup();
-
-    if (group instanceof RawAccount) {
-      if (node.account.id !== group.id) {
-        return false;
-      }
-    } else if (group.myRole() === undefined) {
-      return false;
-    }
-
-    return true;
-  }
-
-  getValueWithoutAccessCheck() {
-    const node = this.getNode();
-    const raw = node.getLoaded(this.id as unknown as CoID<RawCoValue>);
-
-    if (raw) {
-      return coValuesCache.get(raw, () =>
-        instantiateRefEncoded(this.schema, raw),
-      );
-    } else {
-      return null;
-    }
-  }
-
-  get value() {
-    if (!this.hasReadAccess()) {
+    if (!node) {
       return null;
     }
 
-    return this.getValueWithoutAccessCheck();
-  }
+    const value = node.value;
 
-  private async loadHelper(): Promise<V | "unavailable"> {
-    const node =
-      "node" in this.controlledAccount
-        ? this.controlledAccount.node
-        : this.controlledAccount._raw.core.node;
-    const raw = await node.load(this.id as unknown as CoID<RawCoValue>);
-    if (raw === "unavailable") {
-      return "unavailable";
+    if (value?.type === "loaded") {
+      return value.value as V;
     } else {
-      return new Ref(this.id, this.controlledAccount, this.schema).value!;
+      return new Promise((resolve) => {
+        const unsubscribe = node.subscribe((value) => {
+          if (value?.type === "loaded") {
+            unsubscribe();
+            resolve(value.value as V);
+          } else if (value?.type === "unavailable") {
+            unsubscribe();
+            resolve(null);
+          } else if (value?.type === "unauthorized") {
+            unsubscribe();
+            resolve(null);
+          }
+        });
+      });
     }
   }
 
-  syncLoad(): V | undefined {
-    const node =
-      "node" in this.controlledAccount
-        ? this.controlledAccount.node
-        : this.controlledAccount._raw.core.node;
-
-    const entry = node.coValuesStore.get(
-      this.id as unknown as CoID<RawCoValue>,
-    );
-
-    if (entry.highLevelState === "available") {
-      return new Ref(this.id, this.controlledAccount, this.schema).value!;
-    }
-
-    return undefined;
-  }
-
-  async load(): Promise<V | undefined> {
-    const result = await this.loadHelper();
-    if (result === "unavailable") {
-      return undefined;
-    } else {
-      return result;
-    }
-  }
-
-  accessFrom(fromScopeValue: CoValue, key: string | number | symbol): V | null {
-    const subScope = subscriptionsScopes.get(fromScopeValue);
-
-    subScope?.onRefAccessedOrSet(fromScopeValue.id, this.id);
-    TRACE_ACCESSES &&
-      console.log(subScope?.scopeID, "accessing", fromScopeValue, key, this.id);
-
-    if (this.value && subScope) {
-      subscriptionsScopes.set(this.value, subScope);
-    }
-
-    if (subScope) {
-      const cached = subScope.cachedValues[this.id];
-      if (cached) {
-        TRACE_ACCESSES && console.log("cached", cached);
-        return cached as V;
-      } else if (this.value !== null) {
-        const freshValueInstance = instantiateRefEncoded(
-          this.schema,
-          this.value._raw,
-        );
-        TRACE_ACCESSES && console.log("freshValueInstance", freshValueInstance);
-        subScope.cachedValues[this.id] = freshValueInstance;
-        subscriptionsScopes.set(freshValueInstance, subScope);
-        return freshValueInstance as V;
-      } else {
-        return null;
-      }
-    } else {
-      return this.value;
-    }
+  get value(): V | null | undefined {
+    return accessChildById(this.parent, this.id, this.schema);
   }
 }
 
 export function makeRefs<Keys extends string | number>(
+  parent: CoValue,
   getIdForKey: (key: Keys) => ID<CoValue> | undefined,
   getKeysWithIds: () => Keys[],
   controlledAccount: Account | AnonymousJazzAgent,
@@ -175,6 +82,7 @@ export function makeRefs<Keys extends string | number>(
               getIdForKey(key)!,
               controlledAccount,
               refSchemaForKey(key),
+              parent,
             );
           }
         };
@@ -189,6 +97,7 @@ export function makeRefs<Keys extends string | number>(
         id as ID<CoValue>,
         controlledAccount,
         refSchemaForKey(key as Keys),
+        parent,
       );
     },
     ownKeys() {

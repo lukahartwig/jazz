@@ -6,9 +6,15 @@ import {
   MetricReader,
 } from "@opentelemetry/sdk-metrics";
 import { expect, onTestFinished, vi } from "vitest";
-import { ControlledAgent } from "../coValues/account.js";
+import { ControlledAccount, ControlledAgent } from "../coValues/account.js";
 import { WasmCrypto } from "../crypto/WasmCrypto.js";
-import type { CoID, CoValueCore, RawCoValue } from "../exports.js";
+import type {
+  AgentSecret,
+  CoID,
+  CoValueCore,
+  RawAccount,
+  RawCoValue,
+} from "../exports.js";
 import type { SessionID } from "../ids.js";
 import { LocalNode } from "../localNode.js";
 import { connectedPeers } from "../streamUtils.js";
@@ -24,10 +30,7 @@ const syncServer: {
   current: undefined,
 };
 
-export function randomAnonymousAccountAndSessionID(): [
-  ControlledAgent,
-  SessionID,
-] {
+export function randomAgentAndSessionID(): [ControlledAgent, SessionID] {
   const agentSecret = Crypto.newRandomAgentSecret();
 
   const sessionID = Crypto.newRandomSessionID(Crypto.getAgentID(agentSecret));
@@ -35,9 +38,14 @@ export function randomAnonymousAccountAndSessionID(): [
   return [new ControlledAgent(agentSecret, Crypto), sessionID];
 }
 
+export function nodeWithRandomAgentAndSessionID() {
+  const [agent, session] = randomAgentAndSessionID();
+  return new LocalNode(agent.agentSecret, session, Crypto);
+}
+
 export function createTestNode() {
-  const [admin, session] = randomAnonymousAccountAndSessionID();
-  return new LocalNode(admin, session, Crypto);
+  const [admin, session] = randomAgentAndSessionID();
+  return new LocalNode(admin.agentSecret, session, Crypto);
 }
 
 export async function createTwoConnectedNodes(
@@ -145,8 +153,8 @@ export function connectTwoPeers(
   bRole: "client" | "server",
 ) {
   const [aAsPeer, bAsPeer] = connectedPeers(
-    "peer:" + a.account.id,
-    "peer:" + b.account.id,
+    "peer:" + a.getCurrentAgent().id,
+    "peer:" + b.getCurrentAgent().id,
     {
       peer1role: aRole,
       peer2role: bRole,
@@ -158,21 +166,21 @@ export function connectTwoPeers(
 }
 
 export function newGroup() {
-  const [admin, sessionID] = randomAnonymousAccountAndSessionID();
+  const [admin, sessionID] = randomAgentAndSessionID();
 
-  const node = new LocalNode(admin, sessionID, Crypto);
+  const node = new LocalNode(admin.agentSecret, sessionID, Crypto);
 
   const groupCore = node.createCoValue({
     type: "comap",
-    ruleset: { type: "group", initialAdmin: admin.id },
+    ruleset: { type: "group", initialAdmin: node.getCurrentAgent().id },
     meta: null,
     ...Crypto.createdNowUnique(),
   });
 
   const group = expectGroup(groupCore.getCurrentContent());
 
-  group.set(admin.id, "admin", "trusting");
-  expect(group.get(admin.id)).toEqual("admin");
+  group.set(node.getCurrentAgent().id, "admin", "trusting");
+  expect(group.get(node.getCurrentAgent().id)).toEqual("admin");
 
   return { node, groupCore, admin };
 }
@@ -180,7 +188,7 @@ export function newGroup() {
 export function groupWithTwoAdmins() {
   const { groupCore, admin, node } = newGroup();
 
-  const otherAdmin = node.createAccount();
+  const otherAdmin = createAccountInNode(node);
 
   const group = expectGroup(groupCore.getCurrentContent());
 
@@ -196,9 +204,9 @@ export function groupWithTwoAdmins() {
 }
 
 export function newGroupHighLevel() {
-  const [admin, sessionID] = randomAnonymousAccountAndSessionID();
+  const [admin, sessionID] = randomAgentAndSessionID();
 
-  const node = new LocalNode(admin, sessionID, Crypto);
+  const node = new LocalNode(admin.agentSecret, sessionID, Crypto);
 
   const group = node.createGroup();
 
@@ -211,7 +219,7 @@ export function newGroupHighLevel() {
 export function groupWithTwoAdminsHighLevel() {
   const { admin, node, group } = newGroupHighLevel();
 
-  const otherAdmin = node.createAccount();
+  const otherAdmin = createAccountInNode(node);
 
   group.addMember(otherAdmin, "admin");
 
@@ -403,14 +411,77 @@ export class SyncMessagesLog {
   }
 }
 
+export function getSyncServerConnectedPeer(opts: {
+  syncServerName?: string;
+  ourName?: string;
+  syncServer?: LocalNode;
+  peerId: string;
+}) {
+  const currentSyncServer = opts?.syncServer ?? syncServer.current;
+
+  if (!currentSyncServer) {
+    throw new Error("Sync server not initialized");
+  }
+
+  if (currentSyncServer.getCurrentAgent().id === opts.peerId) {
+    throw new Error("Cannot connect to self");
+  }
+
+  const { peer1, peer2 } = connectedPeersWithMessagesTracking({
+    peer1: {
+      id: currentSyncServer.getCurrentAgent().id,
+      role: "server",
+      name: opts.syncServerName,
+    },
+    peer2: {
+      id: opts.peerId,
+      role: "client",
+      name: opts.ourName,
+    },
+  });
+
+  currentSyncServer.syncManager.addPeer(peer2);
+
+  return {
+    peer: peer1,
+    peerStateOnServer: currentSyncServer.syncManager.peers[peer2.id]!,
+    peerOnServer: peer2,
+  };
+}
+
+export function createMockStoragePeer(opts: {
+  ourName?: string;
+  peerId: string;
+}) {
+  const storage = createTestNode();
+
+  const { peer1, peer2 } = connectedPeersWithMessagesTracking({
+    peer1: { id: storage.getCurrentAgent().id, role: "storage" },
+    peer2: {
+      id: opts.peerId,
+      role: "client",
+      name: opts.ourName,
+    },
+  });
+
+  peer1.priority = 100;
+
+  storage.syncManager.addPeer(peer2);
+
+  return {
+    storage,
+    peer: peer1,
+  };
+}
+
 export function setupTestNode(
   opts: {
     isSyncServer?: boolean;
     connected?: boolean;
   } = {},
 ) {
-  const [admin, session] = randomAnonymousAccountAndSessionID();
-  let node = new LocalNode(admin, session, Crypto);
+  const [admin, session] = randomAgentAndSessionID();
+  let node = new LocalNode(admin.agentSecret, session, Crypto);
 
   if (opts.isSyncServer) {
     syncServer.current = node;
@@ -421,53 +492,33 @@ export function setupTestNode(
     ourName?: string;
     syncServer?: LocalNode;
   }) {
-    const currentSyncServer = opts?.syncServer ?? syncServer.current;
+    const { peer, peerStateOnServer, peerOnServer } =
+      getSyncServerConnectedPeer({
+        peerId: node.getCurrentAgent().id,
+        syncServerName: opts?.syncServerName,
+        ourName: opts?.ourName,
+        syncServer: opts?.syncServer,
+      });
 
-    if (!currentSyncServer) {
-      throw new Error("Sync server not initialized");
-    }
-
-    if (currentSyncServer.account.id === node.account.id) {
-      throw new Error("Cannot connect to self");
-    }
-
-    const { peer1, peer2 } = connectedPeersWithMessagesTracking({
-      peer1: {
-        id: currentSyncServer.account.id,
-        role: "server",
-        name: opts?.syncServerName,
-      },
-      peer2: { id: node.account.id, role: "client", name: opts?.ourName },
-    });
-
-    node.syncManager.addPeer(peer1);
-    currentSyncServer.syncManager.addPeer(peer2);
+    node.syncManager.addPeer(peer);
 
     return {
-      peerState: node.syncManager.peers[peer1.id]!,
-      peer: peer1,
-      peerStateOnServer: currentSyncServer.syncManager.peers[peer2.id]!,
-      peerOnServer: peer2,
+      peerState: node.syncManager.peers[peer.id]!,
+      peer: peer,
+      peerStateOnServer: peerStateOnServer,
+      peerOnServer: peerOnServer,
     };
   }
 
   function addStoragePeer(opts: { ourName?: string } = {}) {
-    const storage = createTestNode();
-
-    const { peer1, peer2 } = connectedPeersWithMessagesTracking({
-      peer1: { id: storage.account.id, role: "storage" },
-      peer2: { id: node.account.id, role: "client", name: opts.ourName },
+    const { peer, storage } = createMockStoragePeer({
+      peerId: node.getCurrentAgent().id,
+      ourName: opts.ourName,
     });
 
-    peer1.priority = 100;
+    node.syncManager.addPeer(peer);
 
-    node.syncManager.addPeer(peer1);
-    storage.syncManager.addPeer(peer2);
-
-    return {
-      storage,
-      peer: node.syncManager.peers[peer1.id]!,
-    };
+    return { peer, peerState: node.syncManager.peers[peer.id]!, storage };
   }
 
   if (opts.connected) {
@@ -480,7 +531,7 @@ export function setupTestNode(
     addStoragePeer,
     restart: () => {
       node.gracefulShutdown();
-      ctx.node = node = new LocalNode(admin, session, Crypto);
+      ctx.node = node = new LocalNode(admin.agentSecret, session, Crypto);
 
       if (opts.isSyncServer) {
         syncServer.current = node;
@@ -514,58 +565,38 @@ export async function setupTestAccount(
     ourName?: string;
     syncServer?: LocalNode;
   }) {
-    const currentSyncServer = opts?.syncServer ?? syncServer.current;
+    const { peer, peerStateOnServer, peerOnServer } =
+      getSyncServerConnectedPeer({
+        peerId: ctx.node.getCurrentAgent().id,
+        syncServerName: opts?.syncServerName,
+        ourName: opts?.ourName,
+        syncServer: opts?.syncServer,
+      });
 
-    if (!currentSyncServer) {
-      throw new Error("Sync server not initialized");
-    }
-
-    if (currentSyncServer.account.id === ctx.node.account.id) {
-      throw new Error("Cannot connect to self");
-    }
-
-    const { peer1, peer2 } = connectedPeersWithMessagesTracking({
-      peer1: {
-        id: currentSyncServer.account.id,
-        role: "server",
-        name: opts?.syncServerName,
-      },
-      peer2: { id: ctx.node.account.id, role: "client", name: opts?.ourName },
-    });
-
-    ctx.node.syncManager.addPeer(peer1);
-    currentSyncServer.syncManager.addPeer(peer2);
+    ctx.node.syncManager.addPeer(peer);
 
     function getCurrentPeerState() {
-      return ctx.node.syncManager.peers[peer1.id]!;
+      return ctx.node.syncManager.peers[peer.id]!;
     }
 
     return {
       peerState: getCurrentPeerState(),
-      peer: peer1,
-      peerStateOnServer: currentSyncServer.syncManager.peers[peer2.id]!,
-      peerOnServer: peer2,
+      peer,
+      peerStateOnServer: peerStateOnServer,
+      peerOnServer: peerOnServer,
       getCurrentPeerState,
     };
   }
 
   function addStoragePeer(opts: { ourName?: string } = {}) {
-    const storage = createTestNode();
-
-    const { peer1, peer2 } = connectedPeersWithMessagesTracking({
-      peer1: { id: storage.account.id, role: "storage" },
-      peer2: { id: ctx.node.account.id, role: "client", name: opts.ourName },
+    const { peer, storage } = createMockStoragePeer({
+      peerId: ctx.node.getCurrentAgent().id,
+      ourName: opts.ourName,
     });
 
-    peer1.priority = 100;
+    ctx.node.syncManager.addPeer(peer);
 
-    ctx.node.syncManager.addPeer(peer1);
-    storage.syncManager.addPeer(peer2);
-
-    return {
-      storage,
-      peer: ctx.node.syncManager.peers[peer1.id]!,
-    };
+    return { peer, peerState: ctx.node.syncManager.peers[peer.id]!, storage };
   }
 
   if (opts.connected) {
@@ -620,4 +651,20 @@ export function connectedPeersWithMessagesTracking(opts: {
     peer1,
     peer2,
   };
+}
+
+export function createAccountInNode(node: LocalNode) {
+  const accountOnTempNode = LocalNode.internalCreateAccount({
+    crypto: node.crypto,
+  });
+
+  const accountCoreEntry = node.getCoValue(accountOnTempNode.id);
+  accountCoreEntry.internalMarkMagicallyAvailable(
+    accountOnTempNode.core.verified,
+  );
+
+  return new ControlledAccount(
+    accountCoreEntry.getCurrentContent() as RawAccount,
+    accountOnTempNode.core.node.agentSecret,
+  );
 }

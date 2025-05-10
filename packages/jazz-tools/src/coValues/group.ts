@@ -22,6 +22,7 @@ import type {
 import {
   CoValueBase,
   Ref,
+  accessChildById,
   co,
   ensureCoValueLoaded,
   loadCoValueWithoutMe,
@@ -85,6 +86,7 @@ export class Group extends CoValueBase implements CoValue {
           profileID,
           this._loadedAs,
           this._schema.profile as RefEncoded<NonNullable<this["profile"]>>,
+          this,
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
         ) as any as this["profile"] extends Profile
           ? Ref<this["profile"]>
@@ -95,6 +97,7 @@ export class Group extends CoValueBase implements CoValue {
           rootID,
           this._loadedAs,
           this._schema.root as RefEncoded<NonNullable<this["root"]>>,
+          this,
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
         ) as any as this["root"] extends CoMap ? Ref<this["root"]> : never),
     };
@@ -112,7 +115,7 @@ export class Group extends CoValueBase implements CoValue {
       if (!initOwner) throw new Error("No owner provided");
       if (initOwner._type === "Account" && isControlledAccount(initOwner)) {
         const rawOwner = initOwner._raw;
-        raw = rawOwner.createGroup();
+        raw = rawOwner.core.node.createGroup();
       } else {
         throw new Error("Can only construct group as a controlled account");
       }
@@ -181,12 +184,10 @@ export class Group extends CoValueBase implements CoValue {
           accountID as unknown as ID<RegisteredAccount>,
           this._loadedAs,
           refEncodedAccountSchema,
+          this,
         );
-        const accessRef = () => ref.accessFrom(this, "members." + accountID);
 
-        if (!ref.syncLoad()) {
-          console.warn("Account not loaded", accountID);
-        }
+        const group = this;
 
         members.push({
           id: accountID as unknown as ID<Account>,
@@ -194,7 +195,7 @@ export class Group extends CoValueBase implements CoValue {
           ref,
           get account() {
             // Accounts values are non-nullable because are loaded as dependencies
-            return accessRef() as RegisteredAccount;
+            return accessChildById(group, accountID, refEncodedAccountSchema);
           },
         });
       }

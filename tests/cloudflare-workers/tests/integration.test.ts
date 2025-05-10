@@ -36,6 +36,13 @@ test(
 
       // Make request to server
       const response = await fetch(url);
+
+      if (!response.ok) {
+        throw new Error(
+          `Server returned status ${response.status}. Response: ${await response.text()}`,
+        );
+      }
+
       const data = await response.json();
 
       // Verify response

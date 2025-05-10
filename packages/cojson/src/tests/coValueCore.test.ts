@@ -1,5 +1,6 @@
 import { assert, afterEach, beforeEach, expect, test, vi } from "vitest";
-import { CoValueCore, Transaction } from "../coValueCore.js";
+import { CoValueCore } from "../coValueCore/coValueCore.js";
+import { Transaction } from "../coValueCore/verifiedState.js";
 import { MapOpPayload } from "../coValues/coMap.js";
 import { WasmCrypto } from "../crypto/WasmCrypto.js";
 import { stableStringify } from "../jsonStringify.js";
@@ -10,7 +11,8 @@ import {
   createTestNode,
   createTwoConnectedNodes,
   loadCoValueOrFail,
-  randomAnonymousAccountAndSessionID,
+  nodeWithRandomAgentAndSessionID,
+  randomAgentAndSessionID,
   tearDownTestMetricReader,
 } from "./testUtils.js";
 
@@ -27,8 +29,8 @@ afterEach(() => {
 });
 
 test("Can create coValue with new agent credentials and add transaction to it", () => {
-  const [account, sessionID] = randomAnonymousAccountAndSessionID();
-  const node = new LocalNode(account, sessionID, Crypto);
+  const [agent, sessionID] = randomAgentAndSessionID();
+  const node = new LocalNode(agent.agentSecret, sessionID, Crypto);
 
   const coValue = node.createCoValue({
     type: "costream",
@@ -47,7 +49,7 @@ test("Can create coValue with new agent credentials and add transaction to it", 
     ]),
   };
 
-  const { expectedNewHash } = coValue.expectedNewHashAfter(
+  const { expectedNewHash } = coValue.verified.expectedNewHashAfter(
     node.currentSessionID,
     [transaction],
   );
@@ -58,7 +60,8 @@ test("Can create coValue with new agent credentials and add transaction to it", 
         node.currentSessionID,
         [transaction],
         expectedNewHash,
-        Crypto.sign(account.currentSignerSecret(), expectedNewHash),
+        Crypto.sign(agent.currentSignerSecret(), expectedNewHash),
+        "immediate",
       )
       ._unsafeUnwrap(),
   ).toBe(true);
@@ -66,8 +69,7 @@ test("Can create coValue with new agent credentials and add transaction to it", 
 
 test("transactions with wrong signature are rejected", () => {
   const wrongAgent = Crypto.newRandomAgentSecret();
-  const [agentSecret, sessionID] = randomAnonymousAccountAndSessionID();
-  const node = new LocalNode(agentSecret, sessionID, Crypto);
+  const node = nodeWithRandomAgentAndSessionID();
 
   const coValue = node.createCoValue({
     type: "costream",
@@ -86,7 +88,7 @@ test("transactions with wrong signature are rejected", () => {
     ]),
   };
 
-  const { expectedNewHash } = coValue.expectedNewHashAfter(
+  const { expectedNewHash } = coValue.verified.expectedNewHashAfter(
     node.currentSessionID,
     [transaction],
   );
@@ -98,13 +100,14 @@ test("transactions with wrong signature are rejected", () => {
       [transaction],
       expectedNewHash,
       Crypto.sign(Crypto.getAgentSignerSecret(wrongAgent), expectedNewHash),
+      "immediate",
     )
     ._unsafeUnwrapErr({ withStackTrace: true });
 });
 
 test("transactions with correctly signed, but wrong hash are rejected", () => {
-  const [account, sessionID] = randomAnonymousAccountAndSessionID();
-  const node = new LocalNode(account, sessionID, Crypto);
+  const [agent, sessionID] = randomAgentAndSessionID();
+  const node = new LocalNode(agent.agentSecret, sessionID, Crypto);
 
   const coValue = node.createCoValue({
     type: "costream",
@@ -123,7 +126,7 @@ test("transactions with correctly signed, but wrong hash are rejected", () => {
     ]),
   };
 
-  const { expectedNewHash } = coValue.expectedNewHashAfter(
+  const { expectedNewHash } = coValue.verified.expectedNewHashAfter(
     node.currentSessionID,
     [
       {
@@ -144,14 +147,15 @@ test("transactions with correctly signed, but wrong hash are rejected", () => {
       node.currentSessionID,
       [transaction],
       expectedNewHash,
-      Crypto.sign(account.currentSignerSecret(), expectedNewHash),
+      Crypto.sign(agent.currentSignerSecret(), expectedNewHash),
+      "immediate",
     )
     ._unsafeUnwrapErr({ withStackTrace: true });
 });
 
 test("New transactions in a group correctly update owned values, including subscriptions", async () => {
-  const [account, sessionID] = randomAnonymousAccountAndSessionID();
-  const node = new LocalNode(account, sessionID, Crypto);
+  const [agent, sessionID] = randomAgentAndSessionID();
+  const node = new LocalNode(agent.agentSecret, sessionID, Crypto);
 
   const group = node.createGroup();
 
@@ -175,18 +179,19 @@ test("New transactions in a group correctly update owned values, including subsc
     changes: stableStringify([
       {
         op: "set",
-        key: account.id,
+        key: agent.id,
         value: "revoked",
-      } satisfies MapOpPayload<typeof account.id, Role>,
+      } satisfies MapOpPayload<typeof agent.id, Role>,
     ]),
   } satisfies Transaction;
 
-  const { expectedNewHash } = group.core.expectedNewHashAfter(sessionID, [
-    resignationThatWeJustLearnedAbout,
-  ]);
+  const { expectedNewHash } = group.core.verified.expectedNewHashAfter(
+    sessionID,
+    [resignationThatWeJustLearnedAbout],
+  );
 
   const signature = Crypto.sign(
-    node.account.currentSignerSecret(),
+    node.getCurrentAgent().currentSignerSecret(),
     expectedNewHash,
   );
 
@@ -198,6 +203,7 @@ test("New transactions in a group correctly update owned values, including subsc
       [resignationThatWeJustLearnedAbout],
       expectedNewHash,
       signature,
+      "immediate",
     )
     ._unsafeUnwrap({ withStackTrace: true });
 
@@ -210,8 +216,7 @@ test("New transactions in a group correctly update owned values, including subsc
 });
 
 test("correctly records transactions", async () => {
-  const [account, sessionID] = randomAnonymousAccountAndSessionID();
-  const node = new LocalNode(account, sessionID, Crypto);
+  const node = nodeWithRandomAgentAndSessionID();
 
   const changes1 = stableStringify([{ hello: "world" }]);
   node.syncManager.recordTransactionsSize(
@@ -253,8 +258,7 @@ test("correctly records transactions", async () => {
 });
 
 test("(smoke test) records transactions from local node", async () => {
-  const [account, sessionID] = randomAnonymousAccountAndSessionID();
-  const node = new LocalNode(account, sessionID, Crypto);
+  const node = nodeWithRandomAgentAndSessionID();
 
   node.createGroup();
 
@@ -294,8 +298,7 @@ test("creating a coValue with a group should't trigger automatically a content c
 });
 
 test("loading a coValue core without having the owner group available doesn't crash", () => {
-  const [account, sessionID] = randomAnonymousAccountAndSessionID();
-  const node = new LocalNode(account, sessionID, Crypto);
+  const node = nodeWithRandomAgentAndSessionID();
 
   const otherNode = createTestNode();
 

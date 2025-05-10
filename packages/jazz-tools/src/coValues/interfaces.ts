@@ -3,23 +3,15 @@ import type {
   CojsonInternalTypes,
   RawCoValue,
 } from "cojson";
-import { RawAccount } from "cojson";
+import { ControlledAccount, RawAccount } from "cojson";
 import { activeAccountContext } from "../implementation/activeAccountContext.js";
 import { AnonymousJazzAgent } from "../implementation/anonymousJazzAgent.js";
-import {
-  Ref,
-  SubscriptionScope,
-  inspect,
-  subscriptionsScopes,
-} from "../internal.js";
+import { inspect } from "../internal.js";
 import { coValuesCache } from "../lib/cache.js";
+import { SubscriptionScope } from "../subscribe/SubscriptionScope.js";
+import { SubscriptionValue } from "../subscribe/types.js";
 import { type Account } from "./account.js";
-import {
-  RefsToResolve,
-  RefsToResolveStrict,
-  Resolved,
-  fulfillsDepth,
-} from "./deepLoading.js";
+import { RefsToResolve, RefsToResolveStrict, Resolved } from "./deepLoading.js";
 import { type Group } from "./group.js";
 import { RegisteredSchemas } from "./registeredSchemas.js";
 
@@ -46,6 +38,10 @@ export interface CoValue {
   _owner: Account | Group;
   /** @category Internals */
   _raw: RawCoValue;
+
+  /** @internal */
+  _subscriptionScope?: SubscriptionScope<this>;
+
   /** @internal */
   readonly _loadedAs: Account | AnonymousJazzAgent;
   /** @category Stringifying & Inspection */
@@ -93,27 +89,22 @@ export class CoValueBase implements CoValue {
   declare _instanceID: string;
 
   get _owner(): Account | Group {
-    const owner =
+    const owner = coValuesCache.get(this._raw.group, () =>
       this._raw.group instanceof RawAccount
         ? RegisteredSchemas["Account"].fromRaw(this._raw.group)
-        : RegisteredSchemas["Group"].fromRaw(this._raw.group);
-
-    const subScope = subscriptionsScopes.get(this);
-    if (subScope) {
-      subScope.onRefAccessedOrSet(this.id, owner.id);
-      subscriptionsScopes.set(owner, subScope);
-    }
+        : RegisteredSchemas["Group"].fromRaw(this._raw.group),
+    );
 
     return owner;
   }
 
   /** @private */
   get _loadedAs() {
-    const rawAccount = this._raw.core.node.account;
+    const agent = this._raw.core.node.getCurrentAgent();
 
-    if (rawAccount instanceof RawAccount) {
-      return coValuesCache.get(rawAccount, () =>
-        RegisteredSchemas["Account"].fromRaw(rawAccount),
+    if (agent instanceof ControlledAccount) {
+      return coValuesCache.get(agent.account, () =>
+        RegisteredSchemas["Account"].fromRaw(agent.account),
       );
     }
 
@@ -150,12 +141,7 @@ export class CoValueBase implements CoValue {
   castAs<Cl extends CoValueClass & CoValueFromRaw<CoValue>>(
     cl: Cl,
   ): InstanceType<Cl> {
-    const casted = cl.fromRaw(this._raw) as InstanceType<Cl>;
-    const subscriptionScope = subscriptionsScopes.get(this);
-    if (subscriptionScope) {
-      subscriptionsScopes.set(casted, subscriptionScope);
-    }
-    return casted;
+    return cl.fromRaw(this._raw) as InstanceType<Cl>;
   }
 }
 
@@ -194,6 +180,7 @@ export function loadCoValue<
       {
         resolve: options.resolve,
         loadAs: options.loadAs,
+        syncResolution: true,
         onUnavailable: () => {
           resolve(null);
         },
@@ -317,102 +304,58 @@ export function subscribeToCoValue<
     resolve?: RefsToResolveStrict<V, R>;
     loadAs: Account | AnonymousJazzAgent;
     onUnavailable?: () => void;
-    onUnauthorized?: (errorPath: string[]) => void;
+    onUnauthorized?: () => void;
     syncResolution?: boolean;
   },
   listener: SubscribeListener<V, R>,
 ): () => void {
-  const ref = new Ref(id, options.loadAs, { ref: cls, optional: false });
+  const loadAs = options.loadAs ?? activeAccountContext.get();
+  const node = "node" in loadAs ? loadAs.node : loadAs._raw.core.node;
+
+  const resolve = options.resolve ?? true;
 
   let unsubscribed = false;
-  let unsubscribe: (() => void) | undefined;
 
-  function subscribe() {
-    const value = ref.getValueWithoutAccessCheck();
+  const rootNode = new SubscriptionScope<V>(node, resolve, id as ID<V>, {
+    ref: cls,
+    optional: false,
+  });
 
-    if (!value) {
-      options.onUnavailable?.();
-      return;
-    }
-
+  const handleUpdate = (value: SubscriptionValue<V, any>) => {
     if (unsubscribed) return;
 
-    const subscription = new SubscriptionScope(
-      value,
-      cls as CoValueClass<V> & CoValueFromRaw<V>,
-      (update, subscription) => {
-        if (subscription.syncResolution) return;
+    if (value.type === "unavailable") {
+      options.onUnavailable?.();
 
-        if (!ref.hasReadAccess()) {
-          console.error(
-            "Not enough permissions to load / subscribe to CoValue",
-            id,
-          );
-          options.onUnauthorized?.([]);
-          return;
-        }
+      console.error(value.toString());
+    } else if (value.type === "unauthorized") {
+      options.onUnauthorized?.();
 
-        let result;
-
-        try {
-          subscription.syncResolution = true;
-          result = fulfillsDepth(options.resolve, update);
-        } catch (e) {
-          console.error(
-            "Failed to load / subscribe to CoValue",
-            e,
-            e instanceof Error ? e.stack : undefined,
-          );
-          options.onUnavailable?.();
-          return;
-        } finally {
-          subscription.syncResolution = false;
-        }
-
-        if (result.status === "unauthorized") {
-          console.error(
-            "Not enough permissions to load / subscribe to CoValue",
-            id,
-            "on path",
-            result.path.join("."),
-            "unaccessible value:",
-            result.id,
-          );
-          options.onUnauthorized?.(result.path);
-          return;
-        }
-
-        if (result.status === "fulfilled") {
-          listener(update as Resolved<V, R>, subscription.unsubscribeAll);
-        }
-      },
-    );
-
-    unsubscribe = subscription.unsubscribeAll;
-  }
-
-  const sync = options.syncResolution ? ref.syncLoad() : undefined;
-
-  if (sync) {
-    subscribe();
-  } else {
-    ref
-      .load()
-      .then(() => subscribe())
-      .catch((e) => {
-        console.error(
-          "Failed to load / subscribe to CoValue",
-          e,
-          e instanceof Error ? e.stack : undefined,
-        );
-        options.onUnavailable?.();
-      });
-  }
-
-  return function unsubscribeAtAnyPoint() {
-    unsubscribed = true;
-    unsubscribe && unsubscribe();
+      console.error(value.toString());
+    } else if (value.type === "loaded") {
+      listener(value.value as Resolved<V, R>, unsubscribe);
+    }
   };
+
+  let shouldDefer = !options.syncResolution;
+
+  rootNode.setListener((value) => {
+    if (shouldDefer) {
+      shouldDefer = false;
+      Promise.resolve().then(() => {
+        handleUpdate(value);
+      });
+    } else {
+      handleUpdate(value);
+    }
+  });
+
+  function unsubscribe() {
+    unsubscribed = true;
+    rootNode.destroy();
+  }
+
+  return unsubscribe;
 }
 
 export function createCoValueObservable<

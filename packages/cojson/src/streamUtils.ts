@@ -6,25 +6,19 @@ export function connectedPeers(
   peer1id: PeerID,
   peer2id: PeerID,
   {
-    trace = false,
     peer1role = "client",
     peer2role = "client",
     crashOnClose = false,
     deletePeerStateOnClose = true,
   }: {
-    trace?: boolean;
     peer1role?: Peer["role"];
     peer2role?: Peer["role"];
     crashOnClose?: boolean;
     deletePeerStateOnClose?: boolean;
   } = {},
 ): [Peer, Peer] {
-  const [from1to2Rx, from1to2Tx] = newQueuePair(
-    trace ? { traceAs: `${peer1id} -> ${peer2id}` } : undefined,
-  );
-  const [from2to1Rx, from2to1Tx] = newQueuePair(
-    trace ? { traceAs: `${peer2id} -> ${peer1id}` } : undefined,
-  );
+  const [from1to2Rx, from1to2Tx] = newQueuePair();
+  const [from2to1Rx, from2to1Tx] = newQueuePair();
 
   const peer2AsPeer: Peer = {
     id: peer2id,
@@ -47,32 +41,11 @@ export function connectedPeers(
   return [peer1AsPeer, peer2AsPeer];
 }
 
-export function newQueuePair(
-  options: { traceAs?: string } = {},
-): [AsyncIterable<SyncMessage>, Channel<SyncMessage>] {
+export function newQueuePair(): [
+  AsyncIterable<SyncMessage>,
+  Channel<SyncMessage>,
+] {
   const channel = new Channel<SyncMessage>();
 
-  if (options.traceAs) {
-    return [
-      (async function* () {
-        for await (const msg of channel) {
-          console.debug(
-            options.traceAs,
-            JSON.stringify(
-              msg,
-              (k, v) =>
-                k === "changes" || k === "encryptedChanges"
-                  ? v.slice(0, 20) + "..."
-                  : v,
-              2,
-            ),
-          );
-          yield msg;
-        }
-      })(),
-      channel,
-    ];
-  } else {
-    return [channel.wrap(), channel];
-  }
+  return [channel.wrap(), channel];
 }

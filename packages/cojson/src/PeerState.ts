@@ -23,15 +23,7 @@ export class PeerState {
     });
 
     this._knownStates = knownStates?.clone() ?? new PeerKnownStates();
-
-    // We assume that exchanges with storage peers are always successful
-    // hence we don't need to differentiate between knownStates and optimisticKnownStates
-    if (peer.role === "storage") {
-      this._optimisticKnownStates = "assumeInfallible";
-    } else {
-      this._optimisticKnownStates =
-        knownStates?.clone() ?? new PeerKnownStates();
-    }
+    this._optimisticKnownStates = knownStates?.clone() ?? new PeerKnownStates();
   }
 
   /**
@@ -52,67 +44,53 @@ export class PeerState {
    * The main difference with knownState is that this is updated when the content is sent to the peer without
    * waiting for any acknowledgement from the peer.
    */
-  readonly _optimisticKnownStates: PeerKnownStates | "assumeInfallible";
+  readonly _optimisticKnownStates: PeerKnownStates;
 
   get optimisticKnownStates(): ReadonlyPeerKnownStates {
-    if (this._optimisticKnownStates === "assumeInfallible") {
-      return this.knownStates;
-    }
-
     return this._optimisticKnownStates;
   }
 
   readonly toldKnownState: Set<RawCoID> = new Set();
+  readonly loadRequestSent: Set<RawCoID> = new Set();
+
+  trackLoadRequestSent(id: RawCoID) {
+    this.toldKnownState.add(id);
+    this.loadRequestSent.add(id);
+  }
+
+  trackToldKnownState(id: RawCoID) {
+    this.toldKnownState.add(id);
+  }
 
   updateHeader(id: RawCoID, header: boolean) {
     this._knownStates.updateHeader(id, header);
-
-    if (this._optimisticKnownStates !== "assumeInfallible") {
-      this._optimisticKnownStates.updateHeader(id, header);
-    }
+    this._optimisticKnownStates.updateHeader(id, header);
   }
 
   combineWith(id: RawCoID, value: CoValueKnownState) {
     this._knownStates.combineWith(id, value);
-
-    if (this._optimisticKnownStates !== "assumeInfallible") {
-      this._optimisticKnownStates.combineWith(id, value);
-    }
+    this._optimisticKnownStates.combineWith(id, value);
   }
 
   combineOptimisticWith(id: RawCoID, value: CoValueKnownState) {
-    if (this._optimisticKnownStates === "assumeInfallible") {
-      this._knownStates.combineWith(id, value);
-    } else {
-      this._optimisticKnownStates.combineWith(id, value);
-    }
+    this._optimisticKnownStates.combineWith(id, value);
   }
 
   updateSessionCounter(id: RawCoID, sessionId: SessionID, value: number) {
     this._knownStates.updateSessionCounter(id, sessionId, value);
-
-    if (this._optimisticKnownStates !== "assumeInfallible") {
-      this._optimisticKnownStates.updateSessionCounter(id, sessionId, value);
-    }
+    this._optimisticKnownStates.updateSessionCounter(id, sessionId, value);
   }
 
   setKnownState(id: RawCoID, knownState: CoValueKnownState | "empty") {
     this._knownStates.set(id, knownState);
-
-    if (this._optimisticKnownStates !== "assumeInfallible") {
-      this._optimisticKnownStates.set(id, knownState);
-    }
+    this._optimisticKnownStates.set(id, knownState);
   }
 
   setOptimisticKnownState(
     id: RawCoID,
     knownState: CoValueKnownState | "empty",
   ) {
-    if (this._optimisticKnownStates === "assumeInfallible") {
-      this._knownStates.set(id, knownState);
-    } else {
-      this._optimisticKnownStates.set(id, knownState);
-    }
+    this._optimisticKnownStates.set(id, knownState);
   }
 
   get id() {
@@ -226,6 +204,7 @@ export class PeerState {
       peerId: this.id,
       peerRole: this.role,
     });
+    this.peer.crashOnClose = false;
     this.peer.outgoing.close();
     this.closed = true;
     this.emitClose();

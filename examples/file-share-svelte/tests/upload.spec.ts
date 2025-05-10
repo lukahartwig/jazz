@@ -59,7 +59,7 @@ test('can login with passkey and upload file', async ({ page, browser }) => {
   await fileChooser.setFiles(filePath);
   
   // Verify the uploaded file appears in the list
-  await expect(page.getByText('test-file.txt')).toBeVisible();
+  await expect(page.getByRole("textbox", { name: "File name" })).toHaveValue("test-file.txt");
 
   await page.getByRole('button', { name: 'Share file' }).click();
   const inviteLink = await page.evaluate(() => navigator.clipboard.readText());

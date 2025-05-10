@@ -1,6 +1,6 @@
-import { describe, expect, test } from "vitest";
+import { beforeEach, describe, expect, test } from "vitest";
 import { expectStream } from "../coValue.js";
-import { MAX_RECOMMENDED_TX_SIZE } from "../coValueCore.js";
+import { MAX_RECOMMENDED_TX_SIZE } from "../coValueCore/coValueCore.js";
 import {
   BinaryStreamItem,
   CoStreamItem,
@@ -10,12 +10,22 @@ import {
 import { WasmCrypto } from "../crypto/WasmCrypto.js";
 import { SessionID } from "../ids.js";
 import { LocalNode } from "../localNode.js";
-import { randomAnonymousAccountAndSessionID } from "./testUtils.js";
+import {
+  loadCoValueOrFail,
+  nodeWithRandomAgentAndSessionID,
+  randomAgentAndSessionID,
+  setupTestNode,
+  waitFor,
+} from "./testUtils.js";
 
 const Crypto = await WasmCrypto.create();
 
+beforeEach(async () => {
+  setupTestNode({ isSyncServer: true });
+});
+
 test("Empty CoStream works", () => {
-  const node = new LocalNode(...randomAnonymousAccountAndSessionID(), Crypto);
+  const node = nodeWithRandomAgentAndSessionID();
 
   const coValue = node.createCoValue({
     type: "costream",
@@ -32,7 +42,7 @@ test("Empty CoStream works", () => {
 });
 
 test("Can push into CoStream", () => {
-  const node = new LocalNode(...randomAnonymousAccountAndSessionID(), Crypto);
+  const node = nodeWithRandomAgentAndSessionID();
 
   const coValue = node.createCoValue({
     type: "costream",
@@ -58,7 +68,7 @@ test("Can push into CoStream", () => {
 });
 
 test("Empty RawBinaryCoStream works", () => {
-  const node = new LocalNode(...randomAnonymousAccountAndSessionID(), Crypto);
+  const node = nodeWithRandomAgentAndSessionID();
 
   const coValue = node.createCoValue({
     type: "costream",
@@ -84,7 +94,7 @@ test("Empty RawBinaryCoStream works", () => {
 });
 
 test("Can push into RawBinaryCoStream", () => {
-  const node = new LocalNode(...randomAnonymousAccountAndSessionID(), Crypto);
+  const node = nodeWithRandomAgentAndSessionID();
 
   const coValue = node.createCoValue({
     type: "costream",
@@ -120,7 +130,7 @@ test("Can push into RawBinaryCoStream", () => {
 });
 
 test("When adding large transactions (small fraction of MAX_RECOMMENDED_TX_SIZE), we store an inbetween signature every time we reach MAX_RECOMMENDED_TX_SIZE and split up newContentSince accordingly", () => {
-  const node = new LocalNode(...randomAnonymousAccountAndSessionID(), Crypto);
+  const node = nodeWithRandomAgentAndSessionID();
 
   const coValue = node.createCoValue({
     type: "costream",
@@ -152,7 +162,11 @@ test("When adding large transactions (small fraction of MAX_RECOMMENDED_TX_SIZE)
 
   content.endBinaryStream("trusting");
 
-  const sessionEntry = coValue.sessionLogs.get(node.currentSessionID)!;
+  if (!coValue.isAvailable()) {
+    throw new Error("CoValue is not available");
+  }
+
+  const sessionEntry = coValue.verified.sessions.get(node.currentSessionID)!;
   expect(sessionEntry.transactions.length).toEqual(12);
   expect(sessionEntry.signatureAfter[0]).not.toBeDefined();
   expect(sessionEntry.signatureAfter[1]).not.toBeDefined();
@@ -167,7 +181,7 @@ test("When adding large transactions (small fraction of MAX_RECOMMENDED_TX_SIZE)
   expect(sessionEntry.signatureAfter[10]).not.toBeDefined();
   expect(sessionEntry.signatureAfter[11]).not.toBeDefined();
 
-  const newContent = coValue.newContentSince({
+  const newContent = coValue.verified.newContentSince({
     id: coValue.id,
     header: false,
     sessions: {},
@@ -190,7 +204,7 @@ test("When adding large transactions (small fraction of MAX_RECOMMENDED_TX_SIZE)
 });
 
 test("When adding large transactions (bigger than MAX_RECOMMENDED_TX_SIZE), we store an inbetween signature after every large transaction and split up newContentSince accordingly", () => {
-  const node = new LocalNode(...randomAnonymousAccountAndSessionID(), Crypto);
+  const node = nodeWithRandomAgentAndSessionID();
 
   const coValue = node.createCoValue({
     type: "costream",
@@ -222,7 +236,11 @@ test("When adding large transactions (bigger than MAX_RECOMMENDED_TX_SIZE), we s
 
   content.endBinaryStream("trusting");
 
-  const sessionEntry = coValue.sessionLogs.get(node.currentSessionID)!;
+  if (!coValue.isAvailable()) {
+    throw new Error("CoValue is not available");
+  }
+
+  const sessionEntry = coValue.verified.sessions.get(node.currentSessionID)!;
   expect(sessionEntry.transactions.length).toEqual(5);
   expect(sessionEntry.signatureAfter[0]).not.toBeDefined();
   expect(sessionEntry.signatureAfter[1]).toBeDefined();
@@ -230,7 +248,7 @@ test("When adding large transactions (bigger than MAX_RECOMMENDED_TX_SIZE), we s
   expect(sessionEntry.signatureAfter[3]).toBeDefined();
   expect(sessionEntry.signatureAfter[4]).not.toBeDefined();
 
-  const newContent = coValue.newContentSince({
+  const newContent = coValue.verified.newContentSince({
     id: coValue.id,
     header: false,
     sessions: {},
@@ -252,9 +270,54 @@ test("When adding large transactions (bigger than MAX_RECOMMENDED_TX_SIZE), we s
   );
 });
 
+test("totalValidTransactions should return the number of valid transactions processed", async () => {
+  const client = setupTestNode({
+    connected: true,
+  });
+  const otherClient = setupTestNode({});
+
+  const otherClientConnection = otherClient.connectToSyncServer();
+
+  const group = client.node.createGroup();
+  group.addMember("everyone", "reader");
+
+  const stream = group.createStream();
+  stream.push(1, "trusting");
+
+  const streamOnOtherClient = await loadCoValueOrFail(
+    otherClient.node,
+    stream.id,
+  );
+
+  otherClientConnection.peerState.gracefulShutdown();
+
+  group.addMember("everyone", "writer");
+
+  await new Promise((resolve) => setTimeout(resolve, 50));
+
+  streamOnOtherClient.push(2, "trusting");
+
+  expect(streamOnOtherClient.totalValidTransactions).toEqual(1);
+  expect(Object.keys(streamOnOtherClient.toJSON()).length).toEqual(1);
+
+  otherClient.connectToSyncServer();
+
+  await waitFor(() => {
+    expect(
+      Object.keys(
+        streamOnOtherClient.core.getCurrentContent().toJSON() as object,
+      ).length,
+    ).toEqual(2);
+  });
+
+  expect(
+    streamOnOtherClient.core.getCurrentContent().totalValidTransactions,
+  ).toEqual(2);
+});
+
 describe("isBinaryStreamEnded", () => {
   function setup() {
-    const node = new LocalNode(...randomAnonymousAccountAndSessionID(), Crypto);
+    const node = nodeWithRandomAgentAndSessionID();
 
     const coValue = node.createCoValue({
       type: "costream",
@@ -317,7 +380,7 @@ describe("Binary stream order", () => {
   }
 
   test("sorts by madeAt timestamp first", () => {
-    const node = new LocalNode(...randomAnonymousAccountAndSessionID(), Crypto);
+    const node = nodeWithRandomAgentAndSessionID();
     const coValue = node.createCoValue({
       type: "costream",
       ruleset: { type: "unsafeAllowAll" },
@@ -349,7 +412,7 @@ describe("Binary stream order", () => {
   });
 
   test("sorts by sessionID when timestamps are equal", () => {
-    const node = new LocalNode(...randomAnonymousAccountAndSessionID(), Crypto);
+    const node = nodeWithRandomAgentAndSessionID();
     const coValue = node.createCoValue({
       type: "costream",
       ruleset: { type: "unsafeAllowAll" },
@@ -382,7 +445,7 @@ describe("Binary stream order", () => {
   });
 
   test("sorts by txIndex when timestamps and sessionIDs are equal", () => {
-    const node = new LocalNode(...randomAnonymousAccountAndSessionID(), Crypto);
+    const node = nodeWithRandomAgentAndSessionID();
     const coValue = node.createCoValue({
       type: "costream",
       ruleset: { type: "unsafeAllowAll" },

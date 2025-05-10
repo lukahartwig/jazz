@@ -103,7 +103,6 @@ export class SQLiteReactNative {
       {
         peer1role: "client",
         peer2role: "storage",
-        trace: false,
         crashOnClose: true,
       },
     );

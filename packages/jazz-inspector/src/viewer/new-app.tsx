@@ -1,6 +1,6 @@
-import { CoID, RawCoValue } from "cojson";
+import { CoID, LocalNode, RawAccount, RawCoValue } from "cojson";
 import { styled } from "goober";
-import { useAccount } from "jazz-react-core";
+import { useJazzContext } from "jazz-react-core";
 import React, { useState } from "react";
 import { Button } from "../ui/button.js";
 import { Input } from "../ui/input.js";
@@ -8,6 +8,7 @@ import { Breadcrumbs } from "./breadcrumbs.js";
 import { PageStack } from "./page-stack.js";
 import { usePagePath } from "./use-page-path.js";
 
+import { Account } from "jazz-tools";
 import { GlobalStyles } from "../ui/global-styles.js";
 import { Heading } from "../ui/heading.js";
 import { InspectorButton, type Position } from "./inpsector-button.js";
@@ -59,14 +60,33 @@ const OrText = styled("p")`
 `;
 
 export function JazzInspector({ position = "right" }: { position?: Position }) {
+  const context = useJazzContext<Account>();
+  const localNode = context.node;
+  const me = "me" in context ? context.me : undefined;
+
+  if (process.env.NODE_ENV !== "development") return null;
+
+  return (
+    <JazzInspectorInternal
+      position={position}
+      localNode={localNode}
+      accountId={me?._raw.id}
+    />
+  );
+}
+
+export function JazzInspectorInternal({
+  position = "right",
+  localNode,
+  accountId,
+}: {
+  position?: Position;
+  localNode?: LocalNode;
+  accountId?: CoID<RawAccount>;
+}) {
   const [open, setOpen] = useState(false);
   const [coValueId, setCoValueId] = useState<CoID<RawCoValue> | "">("");
   const { path, addPages, goToIndex, goBack, setPage } = usePagePath();
-
-  const { me } = useAccount();
-  const localNode = me._raw.core.node;
-
-  if (process.env.NODE_ENV !== "development") return;
 
   const handleCoValueIdSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -127,17 +147,21 @@ export function JazzInspector({ position = "right" }: { position?: Position }) {
               Inspect CoValue
             </Button>
 
-            <OrText>or</OrText>
+            {accountId && (
+              <>
+                <OrText>or</OrText>
 
-            <Button
-              variant="secondary"
-              onClick={() => {
-                setCoValueId(me._raw.id);
-                setPage(me._raw.id);
-              }}
-            >
-              Inspect my account
-            </Button>
+                <Button
+                  variant="secondary"
+                  onClick={() => {
+                    setCoValueId(accountId);
+                    setPage(accountId);
+                  }}
+                >
+                  Inspect my account
+                </Button>
+              </>
+            )}
           </InitialForm>
         )}
       </PageStack>

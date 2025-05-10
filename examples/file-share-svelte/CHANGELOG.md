@@ -1,5 +1,61 @@
 # file-share-svelte
 
+## 0.0.74
+
+### Patch Changes
+
+- Updated dependencies [ec546b4]
+  - jazz-svelte@0.13.24
+
+## 0.0.73
+
+### Patch Changes
+
+- Updated dependencies [3431076]
+- Updated dependencies [02a240c]
+  - jazz-svelte@0.13.23
+  - jazz-tools@0.13.23
+  - jazz-inspector-element@0.13.23
+
+## 0.0.72
+
+### Patch Changes
+
+- jazz-inspector-element@0.13.21
+- jazz-svelte@0.13.21
+- jazz-tools@0.13.21
+
+## 0.0.71
+
+### Patch Changes
+
+- Updated dependencies [439f0fe]
+  - jazz-tools@0.13.20
+  - jazz-svelte@0.13.20
+
+## 0.0.70
+
+### Patch Changes
+
+- Updated dependencies [80530a4]
+  - jazz-tools@0.13.19
+  - jazz-svelte@0.13.19
+
+## 0.0.69
+
+### Patch Changes
+
+- Updated dependencies [761759c]
+  - jazz-tools@0.13.18
+  - jazz-svelte@0.13.18
+
+## 0.0.68
+
+### Patch Changes
+
+- jazz-svelte@0.13.17
+- jazz-tools@0.13.17
+
 ## 0.0.67
 
 ### Patch Changes

@@ -1,5 +1,56 @@
 # jazz-tools
 
+## 0.13.23
+
+### Patch Changes
+
+- 02a240c: Add getMetadata to fileStream to easily get file metadata
+- Updated dependencies [6b781cf]
+  - cojson@0.13.23
+
+## 0.13.21
+
+### Patch Changes
+
+- Updated dependencies [e14e61f]
+  - cojson@0.13.21
+
+## 0.13.20
+
+### Patch Changes
+
+- 439f0fe: Adds creation owner and consume-as-string shorthands to `CoPlainText`
+- Updated dependencies [adfc9a6]
+- Updated dependencies [1389207]
+- Updated dependencies [d6e143e]
+- Updated dependencies [3e6229d]
+  - cojson@0.13.20
+
+## 0.13.19
+
+### Patch Changes
+
+- 80530a4: Improve error management for autoloaded values and fix autoloading on $each resolve
+
+## 0.13.18
+
+### Patch Changes
+
+- 761759c: Full rewrite of the subscription engine, bringing more stability and better performance.
+- Updated dependencies [9089252]
+- Updated dependencies [b470f63]
+- Updated dependencies [66373ba]
+- Updated dependencies [f24cad1]
+  - cojson@0.13.18
+
+## 0.13.17
+
+### Patch Changes
+
+- Updated dependencies [9fb98e2]
+- Updated dependencies [0b89fad]
+  - cojson@0.13.17
+
 ## 0.13.16
 
 ### Patch Changes

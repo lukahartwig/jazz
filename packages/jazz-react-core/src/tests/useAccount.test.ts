@@ -150,7 +150,8 @@ describe("useAccount", () => {
     await act(async () => {
       await result.current?.contextManager?.authenticate({
         accountID: accountToAuthenticate.id,
-        accountSecret: accountToAuthenticate._raw.core.node.account.agentSecret,
+        accountSecret:
+          accountToAuthenticate._raw.core.node.getCurrentAgent().agentSecret,
       });
     });
 

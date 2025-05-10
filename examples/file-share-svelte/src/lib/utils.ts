@@ -20,3 +20,13 @@ export function formatFileSize(bytes: number): string {
 export function generateTempFileId(fileName: string | undefined, createdAt: Date | undefined): string {
   return `file-${fileName ?? 'unknown'}-${createdAt?.getTime() ?? 0}`;
 }
+
+export function downloadFileBlob(blob: Blob, fileName: string) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = fileName;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}

@@ -1,5 +1,8 @@
 import { CoID, RawCoValue } from "../coValue.js";
-import { CoValueCore } from "../coValueCore.js";
+import {
+  AvailableCoValueCore,
+  CoValueCore,
+} from "../coValueCore/coValueCore.js";
 import { AgentID, TransactionID } from "../ids.js";
 import { JsonObject, JsonValue } from "../jsonValue.js";
 import { CoValueKnownState } from "../sync.js";
@@ -39,7 +42,7 @@ export class RawCoMapView<
   /** @category 6. Meta */
   type = "comap" as const;
   /** @category 6. Meta */
-  core: CoValueCore;
+  core: AvailableCoValueCore;
   /** @internal */
   latest: {
     [Key in keyof Shape & string]?: MapOp<Key, Shape[Key]>;
@@ -60,9 +63,11 @@ export class RawCoMapView<
   /** @category 6. Meta */
   readonly _shape!: Shape;
 
+  totalValidTransactions = 0;
+
   /** @internal */
   constructor(
-    core: CoValueCore,
+    core: AvailableCoValueCore,
     options?: {
       ignorePrivateTransactions: boolean;
     },
@@ -133,6 +138,8 @@ export class RawCoMapView<
       }
     }
 
+    this.totalValidTransactions += newValidTransactions.length;
+
     for (const entries of changedEntries.values()) {
       entries.sort(this.core.compareTransactions);
     }
@@ -148,7 +155,7 @@ export class RawCoMapView<
 
   /** @category 6. Meta */
   get headerMeta(): Meta {
-    return this.core.header.meta as Meta;
+    return this.core.verified.header.meta as Meta;
   }
 
   /** @category 6. Meta */
@@ -340,8 +347,8 @@ export class RawCoMapView<
 
   /** @category 3. Subscription */
   subscribe(listener: (coMap: this) => void): () => void {
-    return this.core.subscribe((content) => {
-      listener(content as this);
+    return this.core.subscribe((core) => {
+      listener(core.getCurrentContent() as this);
     });
   }
 }

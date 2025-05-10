@@ -1,5 +1,5 @@
 import { createServer } from "node:http";
-import { ControlledAgent, LocalNode } from "cojson";
+import { LocalNode } from "cojson";
 import { WasmCrypto } from "cojson/crypto/WasmCrypto";
 import { type WebSocket, WebSocketServer } from "ws";
 import { createWebSocketPeer } from "../createWebSocketPeer";
@@ -19,7 +19,7 @@ export const startSyncServer = async (port?: number) => {
   const agentID = crypto.getAgentID(agentSecret);
 
   const localNode = new LocalNode(
-    new ControlledAgent(agentSecret, crypto),
+    agentSecret,
     crypto.newRandomSessionID(agentID),
     crypto,
   );

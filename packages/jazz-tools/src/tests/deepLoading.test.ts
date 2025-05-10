@@ -57,7 +57,7 @@ describe("Deep loading with depth arg", async () => {
     await createJazzContextFromExistingCredentials({
       credentials: {
         accountID: me.id,
-        secret: me._raw.agentSecret,
+        secret: me._raw.core.node.getCurrentAgent().agentSecret,
       },
       sessionProvider: randomSessionProvider,
       peersToLoadFrom: [initialAsPeer],
@@ -281,7 +281,7 @@ test("Deep loading a record-like coMap", async () => {
     await createJazzContextFromExistingCredentials({
       credentials: {
         accountID: me.id,
-        secret: me._raw.agentSecret,
+        secret: me._raw.core.node.getCurrentAgent().agentSecret,
       },
       sessionProvider: randomSessionProvider,
       peersToLoadFrom: [initialAsPeer],
@@ -401,8 +401,7 @@ describe("Deep loading with unauthorized account", async () => {
     expect(mapOnAlice).toBe(null);
 
     expect(errorSpy).toHaveBeenCalledWith(
-      "Not enough permissions to load / subscribe to CoValue",
-      map.id,
+      `The current user is not authorized to access this value from ${map.id}`,
     );
 
     errorSpy.mockReset();
@@ -424,12 +423,7 @@ describe("Deep loading with unauthorized account", async () => {
     expect(mapWithListOnAlice).toBe(null);
 
     expect(errorSpy).toHaveBeenCalledWith(
-      "Not enough permissions to load / subscribe to CoValue",
-      map.id,
-      "on path",
-      "list",
-      "unaccessible value:",
-      map.list?.id,
+      `The current user is not authorized to access this value from ${map.id} on path list`,
     );
 
     errorSpy.mockReset();
@@ -463,12 +457,7 @@ describe("Deep loading with unauthorized account", async () => {
     expect(mapOnAlice).toBe(null);
 
     expect(errorSpy).toHaveBeenCalledWith(
-      "Not enough permissions to load / subscribe to CoValue",
-      map.id,
-      "on path",
-      "list.0",
-      "unaccessible value:",
-      map.list?.[0]?.id,
+      `The current user is not authorized to access this value from ${map.id} on path list.0`,
     );
 
     errorSpy.mockReset();
@@ -495,12 +484,7 @@ describe("Deep loading with unauthorized account", async () => {
     expect(mapOnAlice?.optionalRef?.value).toBe(undefined);
 
     expect(errorSpy).toHaveBeenCalledWith(
-      "Not enough permissions to load / subscribe to CoValue",
-      map.id,
-      "on path",
-      "optionalRef",
-      "unaccessible value:",
-      map.optionalRef?.id,
+      `The current user is not authorized to access this value from ${map.id} on path optionalRef`,
     );
 
     errorSpy.mockReset();
@@ -559,12 +543,7 @@ describe("Deep loading with unauthorized account", async () => {
     expect(mapOnAlice).toBe(null);
 
     expect(errorSpy).toHaveBeenCalledWith(
-      "Not enough permissions to load / subscribe to CoValue",
-      map.id,
-      "on path",
-      "list.0.stream",
-      "unaccessible value:",
-      map.list?.[0]?.stream?.id,
+      `The current user is not authorized to access this value from ${map.id} on path list.0.stream`,
     );
 
     errorSpy.mockReset();
@@ -600,12 +579,7 @@ describe("Deep loading with unauthorized account", async () => {
     expect(mapOnAlice).toBe(null);
 
     expect(errorSpy).toHaveBeenCalledWith(
-      "Not enough permissions to load / subscribe to CoValue",
-      map.id,
-      "on path",
-      "list.0.stream." + value.id,
-      "unaccessible value:",
-      value.id,
+      `The current user is not authorized to access this value from ${map.id} on path list.0.stream.${value.id}`,
     );
 
     errorSpy.mockReset();

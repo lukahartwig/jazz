@@ -1,6 +1,6 @@
 import React from "react";
 
-export { JazzInspector } from "./viewer/new-app.js";
+export { JazzInspector, JazzInspectorInternal } from "./viewer/new-app.js";
 export { PageStack } from "./viewer/page-stack.js";
 export { Breadcrumbs } from "./viewer/breadcrumbs.js";
 export { AccountOrGroupText } from "./viewer/account-or-group-text.js";

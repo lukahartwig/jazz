@@ -31,12 +31,12 @@ describe("peer reconciliation", () => {
     ).toMatchInlineSnapshot(`
       [
         "client -> server | LOAD Group sessions: header/3",
-        "client -> server | LOAD Map sessions: header/1",
         "server -> client | KNOWN Group sessions: empty",
-        "client -> server | CONTENT Group header: true new: After: 0 New: 3",
+        "client -> server | LOAD Map sessions: header/1",
         "server -> client | KNOWN Map sessions: empty",
-        "client -> server | CONTENT Map header: true new: After: 0 New: 1",
+        "client -> server | CONTENT Group header: true new: After: 0 New: 3",
         "server -> client | KNOWN Group sessions: header/3",
+        "client -> server | CONTENT Map header: true new: After: 0 New: 1",
         "server -> client | KNOWN Map sessions: header/1",
       ]
     `);
@@ -64,13 +64,13 @@ describe("peer reconciliation", () => {
 
     await map.core.waitForSync();
 
-    const mapOnSyncServer = jazzCloud.node.coValuesStore.get(map.id);
+    const mapOnSyncServer = jazzCloud.node.getCoValue(map.id);
 
     assert(mapOnSyncServer.isAvailable());
 
-    expect(
-      expectMap(mapOnSyncServer.core.getCurrentContent()).get("hello"),
-    ).toEqual("updated");
+    expect(expectMap(mapOnSyncServer.getCurrentContent()).get("hello")).toEqual(
+      "updated",
+    );
 
     expect(
       SyncMessagesLog.getMessages({
@@ -80,10 +80,10 @@ describe("peer reconciliation", () => {
     ).toMatchInlineSnapshot(`
       [
         "client -> server | LOAD Group sessions: header/3",
-        "client -> server | LOAD Map sessions: header/2",
         "server -> client | KNOWN Group sessions: header/3",
-        "client -> server | CONTENT Map header: false new: After: 1 New: 1",
+        "client -> server | LOAD Map sessions: header/2",
         "server -> client | KNOWN Map sessions: header/1",
+        "client -> server | CONTENT Map header: false new: After: 1 New: 1",
         "server -> client | KNOWN Map sessions: header/2",
       ]
     `);
@@ -111,13 +111,13 @@ describe("peer reconciliation", () => {
 
     await map.core.waitForSync();
 
-    const mapOnSyncServer = jazzCloud.node.coValuesStore.get(map.id);
+    const mapOnSyncServer = jazzCloud.node.getCoValue(map.id);
 
     assert(mapOnSyncServer.isAvailable());
 
-    expect(
-      expectMap(mapOnSyncServer.core.getCurrentContent()).get("hello"),
-    ).toEqual("updated");
+    expect(expectMap(mapOnSyncServer.getCurrentContent()).get("hello")).toEqual(
+      "updated",
+    );
 
     expect(peer.outgoing).toMatchObject({
       closed: true,
@@ -136,10 +136,10 @@ describe("peer reconciliation", () => {
       [
         "client -> server | LOAD Group sessions: header/3",
         "client -> server | LOAD Group sessions: header/3",
-        "client -> server | LOAD Map sessions: header/2",
         "server -> client | KNOWN Group sessions: header/3",
-        "client -> server | CONTENT Map header: false new: After: 1 New: 1",
+        "client -> server | LOAD Map sessions: header/2",
         "server -> client | KNOWN Map sessions: header/1",
+        "client -> server | CONTENT Map header: false new: After: 1 New: 1",
         "server -> client | KNOWN Map sessions: header/2",
       ]
     `);
@@ -166,9 +166,9 @@ describe("peer reconciliation", () => {
     client.connectToSyncServer();
 
     await waitFor(() => {
-      const mapOnSyncServer = jazzCloud.node.coValuesStore.get(map.id);
+      const mapOnSyncServer = jazzCloud.node.getCoValue(map.id);
 
-      expect(mapOnSyncServer.highLevelState).toBe("available");
+      expect(mapOnSyncServer.loadingState).toBe("available");
     });
 
     expect(
@@ -179,16 +179,16 @@ describe("peer reconciliation", () => {
     ).toMatchInlineSnapshot(`
       [
         "client -> server | LOAD Group sessions: header/3",
-        "client -> server | LOAD Map sessions: header/2",
         "server -> client | KNOWN Group sessions: empty",
-        "client -> server | CONTENT Group header: true new: After: 0 New: 3",
+        "client -> server | LOAD Map sessions: header/2",
         "server -> client | KNOWN Map sessions: empty",
-        "client -> server | CONTENT Map header: true new: After: 0 New: 2",
+        "client -> server | CONTENT Group header: true new: After: 0 New: 3",
         "server -> client | KNOWN Group sessions: header/3",
+        "client -> server | CONTENT Map header: true new: After: 0 New: 2",
         "server -> client | KNOWN Map sessions: header/2",
         "client -> server | LOAD Group sessions: header/3",
-        "client -> server | LOAD Map sessions: header/2",
         "server -> client | KNOWN Group sessions: header/3",
+        "client -> server | LOAD Map sessions: header/2",
         "server -> client | KNOWN Map sessions: header/2",
       ]
     `);
@@ -210,7 +210,7 @@ describe("peer reconciliation", () => {
 
     SyncMessagesLog.clear();
     client.connectToSyncServer();
-    const mapOnSyncServer = jazzCloud.node.coValuesStore.get(map.id);
+    const mapOnSyncServer = jazzCloud.node.getCoValue(map.id);
 
     await waitFor(() => {
       expect(mapOnSyncServer.isAvailable()).toBe(true);
@@ -232,8 +232,8 @@ describe("peer reconciliation", () => {
       ]
     `);
 
-    expect(
-      expectMap(mapOnSyncServer.core.getCurrentContent()).get("hello"),
-    ).toEqual("updated");
+    expect(expectMap(mapOnSyncServer.getCurrentContent()).get("hello")).toEqual(
+      "updated",
+    );
   });
 });

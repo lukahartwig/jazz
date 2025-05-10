@@ -1,5 +1,5 @@
 import type { JsonValue, RawCoList } from "cojson";
-import { RawAccount } from "cojson";
+import { ControlledAccount, RawAccount } from "cojson";
 import { calcPatch } from "fast-myers-diff";
 import type {
   CoValue,
@@ -21,6 +21,7 @@ import {
   ItemsSym,
   Ref,
   SchemaInit,
+  accessChildByKey,
   co,
   ensureCoValueLoaded,
   inspect,
@@ -31,7 +32,6 @@ import {
   parseSubscribeRestArgs,
   subscribeToCoValueWithoutMe,
   subscribeToExistingCoValue,
-  subscriptionsScopes,
 } from "../internal.js";
 import { coValuesCache } from "../lib/cache.js";
 import { RegisteredAccount } from "../types.js";
@@ -147,6 +147,7 @@ export class CoList<Item = any> extends Array<Item> implements CoValue {
     >;
   } {
     return makeRefs<number>(
+      this,
       (idx) => this._raw.get(idx) as unknown as ID<CoValue>,
       () => Array.from({ length: this._raw.entries().length }, (_, idx) => idx),
       this._loadedAs,
@@ -167,11 +168,11 @@ export class CoList<Item = any> extends Array<Item> implements CoValue {
   }
 
   get _loadedAs() {
-    const rawAccount = this._raw.core.node.account;
+    const agent = this._raw.core.node.getCurrentAgent();
 
-    if (rawAccount instanceof RawAccount) {
-      return coValuesCache.get(rawAccount, () =>
-        RegisteredSchemas["Account"].fromRaw(rawAccount),
+    if (agent instanceof ControlledAccount) {
+      return coValuesCache.get(agent.account, () =>
+        RegisteredSchemas["Account"].fromRaw(agent.account),
       );
     }
 
@@ -180,6 +181,10 @@ export class CoList<Item = any> extends Array<Item> implements CoValue {
 
   static get [Symbol.species]() {
     return Array;
+  }
+
+  getItemsDescriptor() {
+    return this._schema?.[ItemsSym];
   }
 
   constructor(options: { fromRaw: RawCoList } | undefined) {
@@ -526,12 +531,7 @@ export class CoList<Item = any> extends Array<Item> implements CoValue {
   castAs<Cl extends CoValueClass & CoValueFromRaw<CoValue>>(
     cl: Cl,
   ): InstanceType<Cl> {
-    const casted = cl.fromRaw(this._raw) as InstanceType<Cl>;
-    const subscriptionScope = subscriptionsScopes.get(this);
-    if (subscriptionScope) {
-      subscriptionsScopes.set(casted, subscriptionScope);
-    }
-    return casted;
+    return cl.fromRaw(this._raw) as InstanceType<Cl>;
   }
 
   /**
@@ -582,11 +582,7 @@ const CoListProxyHandler: ProxyHandler<CoList> = {
       } else if (isRefEncoded(itemDescriptor)) {
         return rawValue === undefined
           ? undefined
-          : new Ref(
-              rawValue as unknown as ID<CoValue>,
-              target._loadedAs,
-              itemDescriptor,
-            ).accessFrom(receiver, Number(key));
+          : accessChildByKey(target, rawValue as string, key);
       }
     } else if (key === "length") {
       return target._raw.entries().length;

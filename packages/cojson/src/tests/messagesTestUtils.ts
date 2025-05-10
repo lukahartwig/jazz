@@ -1,10 +1,5 @@
-import { CoValueCore, LocalNode, RawControlledAccount } from "../exports";
-import {
-  CoValueKnownState,
-  NewContentMessage,
-  Peer,
-  SyncMessage,
-} from "../sync";
+import { CoValueCore, LocalNode } from "../exports";
+import { CoValueKnownState, NewContentMessage, SyncMessage } from "../sync";
 
 function simplifySessions(msg: CoValueKnownState) {
   const count = Object.values(msg.sessions).reduce(
@@ -64,7 +59,7 @@ export function toSimplifiedMessages(
 }
 
 export function nodeRelatedKnownCoValues(node: LocalNode, name: string) {
-  const account = node.account as RawControlledAccount;
+  const account = node.expectCurrentAccount("relatedKnownCoValues");
   const profileID = account.get("profile");
   const profile = profileID && node.expectCoValueLoaded(profileID);
   return {

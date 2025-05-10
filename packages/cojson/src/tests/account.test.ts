@@ -1,7 +1,9 @@
 import { expect, test } from "vitest";
+import { expectAccount } from "../coValues/account.js";
 import { WasmCrypto } from "../crypto/WasmCrypto.js";
 import { LocalNode } from "../localNode.js";
 import { connectedPeers } from "../streamUtils.js";
+import { createMockStoragePeer } from "./testUtils.js";
 
 const Crypto = await WasmCrypto.create();
 
@@ -84,4 +86,26 @@ test("throws an error if the user tried to create an invite from an account", as
   expect(() => account.createInvite("admin")).toThrow(
     "Cannot create invite from an account",
   );
+});
+
+test("wait for storage sync before resolving withNewlyCreatedAccount", async () => {
+  const { storage, peer } = createMockStoragePeer({
+    peerId: "account-node",
+  });
+
+  const { node, accountID } = await LocalNode.withNewlyCreatedAccount({
+    creationProps: { name: "Hermes Puggington" },
+    crypto: Crypto,
+    peersToLoadFrom: [peer],
+  });
+
+  const account = storage.getCoValue(accountID);
+
+  expect(account.isAvailable()).toBe(true);
+
+  const profile = storage.getCoValue(
+    expectAccount(account.getCurrentContent()).get("profile")!,
+  );
+
+  expect(profile.isAvailable()).toBe(true);
 });

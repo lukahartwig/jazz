@@ -8,7 +8,8 @@
 
 <script lang="ts">
   import { JazzProvider } from 'jazz-svelte';
-  import { PasskeyAuthBasicUI, usePasskeyAuth } from 'jazz-svelte';
+  import "jazz-inspector-element"
+  import { PasskeyAuthBasicUI } from 'jazz-svelte';
   import { Toaster } from 'svelte-sonner';
   import '../app.css';
   import { FileShareAccount } from '$lib/schema';
@@ -29,6 +30,7 @@
     peer: `wss://cloud.jazz.tools/?key=${apiKey}`,
   }}
 >
+  <jazz-inspector></jazz-inspector>
   <PasskeyAuthBasicUI appName="File Share">
     <div class="min-h-screen bg-gray-100">
       {@render children()}
