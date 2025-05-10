@@ -58,7 +58,7 @@ export class CrossDeviceAccountTransfer {
     let handlerUrl = this.origin + this.options.handlerPath;
 
     let transferCore = transfer._raw.core;
-    while (transferCore.header.ruleset.type === "ownedByGroup") {
+    while (transferCore.verified.header.ruleset.type === "ownedByGroup") {
       transferCore = transferCore.getGroup().core;
     }
 
