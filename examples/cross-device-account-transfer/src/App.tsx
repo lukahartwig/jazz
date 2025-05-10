@@ -9,11 +9,11 @@ function App() {
       <Route path="/" element={<HomePage />} />
 
       <Route
-        path="/account-transfer-handler-target/:transferId/:inviteSecret"
+        path="/accept-account-transfer/:transferId/:inviteSecret"
         element={<CrossDeviceAccountTransferHandlerTargetPage />}
       />
       <Route
-        path="/account-transfer-handler-source/:transferId/:inviteSecret"
+        path="/share-current-account/:transferId/:inviteSecret"
         element={<CrossDeviceAccountTransferHandlerSourcePage />}
       />
     </Routes>

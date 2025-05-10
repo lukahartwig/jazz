@@ -45,7 +45,7 @@ export class CrossDeviceAccountTransferCreateAsSource {
 
     let transfer = await this.crossDeviceAccountTransfer.createTransfer();
 
-    const url = this.crossDeviceAccountTransfer.createLink("target", transfer);
+    const url = this.crossDeviceAccountTransfer.createLink(transfer);
 
     const handleFlow = async () => {
       try {

@@ -1,4 +1,4 @@
-import { useCreateCrossDeviceAccountTransfer } from "jazz-react";
+import { useCreateAccountTransfer } from "jazz-react";
 import { useState } from "react";
 import { Button } from "./Button";
 import { QRCode } from "./QRCode";
@@ -6,12 +6,10 @@ import { QRCode } from "./QRCode";
 export function CreateCrossDeviceAccountTransferAsSource() {
   const [link, setLink] = useState<string | undefined>();
 
-  const { status, createLink, confirmationCode } =
-    useCreateCrossDeviceAccountTransfer({
-      as: "source",
-      targetHandlerPath: "/#/account-transfer-handler-target",
-      sourceHandlerPath: "/#/account-transfer-handler-source",
-    });
+  const { status, createLink, confirmationCode } = useCreateAccountTransfer({
+    as: "source",
+    handlerPath: "/#/accept-account-transfer",
+  });
 
   const onCreateLink = () => createLink().then(setLink);
 

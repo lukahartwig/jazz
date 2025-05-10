@@ -10,14 +10,7 @@ export interface CrossDeviceAccountTransferOptions {
    * @returns The generated confirmation code.
    */
   confirmationCodeFn: (crypto: CryptoProvider) => string | Promise<string>;
-  /**
-   * The path to the consumer handler.
-   */
-  targetHandlerPath: string;
-  /**
-   * The path to the provider handler.
-   */
-  sourceHandlerPath: string;
+  handlerPath: string;
 }
 
 /**

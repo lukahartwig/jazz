@@ -1,4 +1,4 @@
-import { useHandleCrossDeviceAccountTransfer } from "jazz-react";
+import { useAcceptAccountTransfer } from "jazz-react";
 import { BackToHomepageContainer } from "../BackToHomepageContainer";
 import { ConfirmationCodeForm } from "../ConfirmationCodeForm";
 
@@ -12,10 +12,9 @@ export default function CrossDeviceAccountTransferHandlerTarget() {
 }
 
 function HandleAccountTransferAsTarget() {
-  const { status, sendConfirmationCode } = useHandleCrossDeviceAccountTransfer({
+  const { status, sendConfirmationCode } = useAcceptAccountTransfer({
     as: "target",
-    targetHandlerPath: "/#/account-transfer-handler-target",
-    sourceHandlerPath: "/#/account-transfer-handler-source",
+    handlerPath: "/#/accept-account-transfer",
     onLoggedIn: () => {
       console.log("logged in!");
     },

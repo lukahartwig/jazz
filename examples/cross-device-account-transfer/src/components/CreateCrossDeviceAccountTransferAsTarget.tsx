@@ -1,4 +1,4 @@
-import { useCreateCrossDeviceAccountTransfer } from "jazz-react";
+import { useCreateAccountTransfer } from "jazz-react";
 import { useState } from "react";
 import { Button } from "./Button";
 import { ConfirmationCodeForm } from "./ConfirmationCodeForm";
@@ -13,13 +13,13 @@ export function CreateCrossDeviceAccountTransferAsTarget({
 }: CreateCrossDeviceAccountTransferAsTargetProps) {
   const [link, setLink] = useState<string | undefined>();
 
-  const { status, createLink, sendConfirmationCode } =
-    useCreateCrossDeviceAccountTransfer({
+  const { status, createLink, sendConfirmationCode } = useCreateAccountTransfer(
+    {
       as: "target",
-      targetHandlerPath: "/#/account-transfer-handler-target",
-      sourceHandlerPath: "/#/account-transfer-handler-source",
+      handlerPath: "/#/share-current-account",
       onLoggedIn,
-    });
+    },
+  );
 
   const onCreateLink = () => createLink().then(setLink);
 

@@ -25,7 +25,7 @@ export type UseCrossDeviceAccountTransferAsSourceOptions =
 export type UseCrossDeviceAccountTransferAsTargetOptions =
   CrossDeviceAccountTransferOptions & CrossDeviceAccountTransferAsTargetOptions;
 
-export function useCreateCrossDeviceAccountTransferAsSource(
+export function useCreateAccountTransferAsSource(
   origin: string,
   {
     expireInMs = DEFAULT_EXPIRE_IN_MS,
@@ -67,7 +67,7 @@ export function useCreateCrossDeviceAccountTransferAsSource(
   } as const;
 }
 
-export function useCreateCrossDeviceAccountTransferAsTarget(
+export function useCreateAccountTransferAsTarget(
   origin: string,
   {
     handlerTimeout = 30 * 1000,
@@ -118,7 +118,7 @@ export function useCreateCrossDeviceAccountTransferAsTarget(
   } as const;
 }
 
-export function useHandleCrossDeviceAccountTransferAsTarget(
+export function useAcceptAccountTransferAsTarget(
   origin: string,
   url: string,
   {
@@ -177,7 +177,7 @@ export function useHandleCrossDeviceAccountTransferAsTarget(
   } as const;
 }
 
-export function useHandleCrossDeviceAccountTransferAsSource(
+export function useAcceptAccountTransferAsSource(
   origin: string,
   url: string,
   {

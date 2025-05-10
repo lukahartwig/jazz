@@ -1,5 +1,5 @@
 import { Button } from "@/basicComponents/ui/button";
-import { useCreateCrossDeviceAccountTransfer } from "jazz-react";
+import { useCreateAccountTransfer } from "jazz-react";
 import { useEffect, useRef, useState } from "react";
 import {
   InputOTP,
@@ -19,12 +19,13 @@ export function CreateAccountTransferLink({
   const [confirmationCode, setConfirmationCode] = useState("");
   const createdLinkRef = useRef<boolean>(false);
 
-  const { status, createLink, sendConfirmationCode } =
-    useCreateCrossDeviceAccountTransfer({
+  const { status, createLink, sendConfirmationCode } = useCreateAccountTransfer(
+    {
       as: "target",
-      sourceHandlerPath: "/#/account-transfer-handler-source",
+      handlerPath: "/#/accept-account-transfer",
       onLoggedIn,
-    });
+    },
+  );
 
   const onCreateLink = () => createLink().then(setLink);
 

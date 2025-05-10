@@ -92,7 +92,7 @@ export default function App() {
       element: <p>Accepting invite...</p>,
     },
     {
-      path: "/account-transfer-handler-source/:x/:y",
+      path: "/accept-account-transfer/:x/:y",
       element: <AccountTransferLinkHandlerPage />,
     },
   ]);

@@ -50,10 +50,7 @@ export class CrossDeviceAccountTransferHandleAsTarget {
     let transfer: CrossDeviceAccountTransferCoMap | undefined;
 
     try {
-      transfer = await this.crossDeviceAccountTransfer.acceptTransferUrl(
-        url,
-        "target",
-      );
+      transfer = await this.crossDeviceAccountTransfer.acceptTransferUrl(url);
 
       this.status = "confirmationCodeRequired";
       this.notify();

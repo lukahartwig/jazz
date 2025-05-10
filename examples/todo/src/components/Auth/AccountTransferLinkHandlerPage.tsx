@@ -1,5 +1,5 @@
 import { Button } from "@/basicComponents/ui/button";
-import { useHandleCrossDeviceAccountTransfer } from "jazz-react";
+import { useAcceptAccountTransfer } from "jazz-react";
 import { useNavigate } from "react-router-dom";
 
 export function AccountTransferLinkHandlerPage() {
@@ -16,9 +16,9 @@ export function AccountTransferLinkHandlerPage() {
 export function AccountTransferHandler() {
   const navigate = useNavigate();
 
-  const { status, confirmationCode } = useHandleCrossDeviceAccountTransfer({
+  const { status, confirmationCode } = useAcceptAccountTransfer({
     as: "source",
-    sourceHandlerPath: "/#/account-transfer-handler-source",
+    handlerPath: "/#/accept-account-transfer",
   });
 
   const handleBackToHome = () => {

@@ -47,10 +47,7 @@ export class CrossDeviceAccountTransferHandleAsSource {
     let transfer: CrossDeviceAccountTransferCoMap | undefined;
 
     try {
-      transfer = await this.crossDeviceAccountTransfer.acceptTransferUrl(
-        url,
-        "source",
-      );
+      transfer = await this.crossDeviceAccountTransfer.acceptTransferUrl(url);
 
       // Generate and set confirmation code
       const code =

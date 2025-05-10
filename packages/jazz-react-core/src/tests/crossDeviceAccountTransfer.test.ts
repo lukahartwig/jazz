@@ -2,10 +2,10 @@
 
 import { beforeEach, describe, expect, it } from "vitest";
 import {
-  useCreateCrossDeviceAccountTransferAsSource,
-  useCreateCrossDeviceAccountTransferAsTarget,
-  useHandleCrossDeviceAccountTransferAsSource,
-  useHandleCrossDeviceAccountTransferAsTarget,
+  useAcceptAccountTransferAsSource,
+  useAcceptAccountTransferAsTarget,
+  useCreateAccountTransferAsSource,
+  useCreateAccountTransferAsTarget,
 } from "../auth/CrossDeviceAccountTransfer.js";
 import {
   createJazzTestAccount,
@@ -19,7 +19,7 @@ beforeEach(async () => {
 });
 
 describe("CrossDeviceAccountTransfer", () => {
-  describe("useCreateCrossDeviceAccountTransferAsProvider", () => {
+  describe("useCreateAccountTransferAsProvider", () => {
     beforeEach(async () => {
       await createJazzTestAccount({ isCurrentActiveAccount: true });
     });
@@ -29,8 +29,7 @@ describe("CrossDeviceAccountTransfer", () => {
 
       expect(() =>
         renderHook(
-          () =>
-            useCreateCrossDeviceAccountTransferAsSource(window.location.origin),
+          () => useCreateAccountTransferAsSource(window.location.origin),
           { account: guestAccount },
         ),
       ).toThrowError(
@@ -42,8 +41,7 @@ describe("CrossDeviceAccountTransfer", () => {
       const account = await createJazzTestAccount({});
 
       const { result: createAsProvider } = renderHook(
-        () =>
-          useCreateCrossDeviceAccountTransferAsSource(window.location.origin),
+        () => useCreateAccountTransferAsSource(window.location.origin),
         { account },
       );
 
@@ -56,8 +54,7 @@ describe("CrossDeviceAccountTransfer", () => {
     it("can create a link and cancel flow", async () => {
       const account = await createJazzTestAccount({});
       const { result: createAsProvider } = renderHook(
-        () =>
-          useCreateCrossDeviceAccountTransferAsSource(window.location.origin),
+        () => useCreateAccountTransferAsSource(window.location.origin),
         { account },
       );
       let link = "";
@@ -65,7 +62,7 @@ describe("CrossDeviceAccountTransfer", () => {
         link = await createAsProvider.current.createLink();
       });
       expect(link).toMatch(
-        /^http:\/\/localhost:3000\/account-transfer-handler-target\/co_[^/]+\/inviteSecret_[^/]+$/,
+        /^http:\/\/localhost:3000\/accept-account-transfer\/co_[^/]+\/inviteSecret_[^/]+$/,
       );
       expect(createAsProvider.current.status).toBe("waitingForHandler");
       act(() => {
@@ -77,7 +74,7 @@ describe("CrossDeviceAccountTransfer", () => {
     });
   });
 
-  describe("useCreateCrossDeviceAccountTransferAsConsumer", () => {
+  describe("useCreateAccountTransferAsConsumer", () => {
     beforeEach(async () => {
       await createJazzTestAccount({ isCurrentActiveAccount: true });
     });
@@ -86,8 +83,7 @@ describe("CrossDeviceAccountTransfer", () => {
       const guestAccount = await createJazzTestGuest();
       expect(() =>
         renderHook(
-          () =>
-            useCreateCrossDeviceAccountTransferAsTarget(window.location.origin),
+          () => useCreateAccountTransferAsTarget(window.location.origin),
           { account: guestAccount },
         ),
       ).toThrowError(
@@ -97,7 +93,7 @@ describe("CrossDeviceAccountTransfer", () => {
 
     it("initializes with idle state", async () => {
       const { result: createAsConsumer } = renderHook(() =>
-        useCreateCrossDeviceAccountTransferAsTarget(window.location.origin),
+        useCreateAccountTransferAsTarget(window.location.origin),
       );
       expect(createAsConsumer.current.status).toBe("idle");
       expect(createAsConsumer.current.createLink).toBeTypeOf("function");
@@ -108,8 +104,7 @@ describe("CrossDeviceAccountTransfer", () => {
     it("can create a link and cancel flow", async () => {
       const account = await createJazzTestAccount({});
       const { result: createAsConsumer } = renderHook(
-        () =>
-          useCreateCrossDeviceAccountTransferAsTarget(window.location.origin),
+        () => useCreateAccountTransferAsTarget(window.location.origin),
         { account },
       );
       let link = "";
@@ -117,7 +112,7 @@ describe("CrossDeviceAccountTransfer", () => {
         link = await createAsConsumer.current.createLink();
       });
       expect(link).toMatch(
-        /^http:\/\/localhost:3000\/account-transfer-handler-source\/co_[^/]+\/inviteSecret_[^/]+$/,
+        /^http:\/\/localhost:3000\/accept-account-transfer\/co_[^/]+\/inviteSecret_[^/]+$/,
       );
       expect(createAsConsumer.current.status).toBe("waitingForHandler");
       act(() => {
@@ -129,7 +124,7 @@ describe("CrossDeviceAccountTransfer", () => {
     });
   });
 
-  describe("useHandleCrossDeviceAccountTransferAsProvider", () => {
+  describe("useAcceptAccountTransferAsProvider", () => {
     beforeEach(async () => {
       await createJazzTestAccount({ isCurrentActiveAccount: true });
     });
@@ -138,7 +133,7 @@ describe("CrossDeviceAccountTransfer", () => {
       const account = await createJazzTestAccount({});
       const { result: handleAsProvider } = renderHook(
         () =>
-          useHandleCrossDeviceAccountTransferAsSource(
+          useAcceptAccountTransferAsSource(
             window.location.origin,
             "invalid-link-gets-ignored",
           ),
@@ -151,7 +146,7 @@ describe("CrossDeviceAccountTransfer", () => {
     it("handles the flow", async () => {
       // Create consumer
       const { result: createAsConsumer } = renderHook(() =>
-        useCreateCrossDeviceAccountTransferAsTarget(window.location.origin),
+        useCreateAccountTransferAsTarget(window.location.origin),
       );
       let link = "";
       await act(async () => {
@@ -164,11 +159,7 @@ describe("CrossDeviceAccountTransfer", () => {
       // Create provider
       const account = await createJazzTestAccount({});
       const { result: handleAsProvider } = renderHook(
-        () =>
-          useHandleCrossDeviceAccountTransferAsSource(
-            window.location.origin,
-            link,
-          ),
+        () => useAcceptAccountTransferAsSource(window.location.origin, link),
         { account },
       );
 
@@ -195,14 +186,14 @@ describe("CrossDeviceAccountTransfer", () => {
     });
   });
 
-  describe("useHandleCrossDeviceAccountTransferAsConsumer", () => {
+  describe("useAcceptAccountTransferAsConsumer", () => {
     beforeEach(async () => {
       await createJazzTestAccount({ isCurrentActiveAccount: true });
     });
 
     it("initializes with idle state", async () => {
       const { result: handleAsConsumer } = renderHook(() =>
-        useHandleCrossDeviceAccountTransferAsTarget(
+        useAcceptAccountTransferAsTarget(
           window.location.origin,
           "invalid-link-gets-ignored",
         ),
@@ -214,7 +205,7 @@ describe("CrossDeviceAccountTransfer", () => {
     it("handles the flow", async () => {
       // Create consumer
       const { result: createAsConsumer } = renderHook(() =>
-        useCreateCrossDeviceAccountTransferAsTarget(window.location.origin),
+        useCreateAccountTransferAsTarget(window.location.origin),
       );
       let link = "";
       await act(async () => {
@@ -227,11 +218,7 @@ describe("CrossDeviceAccountTransfer", () => {
       // Create provider
       const account = await createJazzTestAccount({});
       const { result: handleAsProvider } = renderHook(
-        () =>
-          useHandleCrossDeviceAccountTransferAsSource(
-            window.location.origin,
-            link,
-          ),
+        () => useAcceptAccountTransferAsSource(window.location.origin, link),
         { account },
       );
 
