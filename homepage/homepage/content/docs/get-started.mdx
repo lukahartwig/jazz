@@ -1,0 +1,333 @@
+export const metadata = { title: "Get Started" };
+
+import { CodeGroup } from "@/components/forMdx";
+
+# Get Started with Jazz
+
+Build your first collaborative app with Jazz in minutes. This guide walks you through creating a new Jazz project, understanding the key components, and experiencing real-time collaboration.
+
+## Before you begin
+
+You'll need:
+- Node.js 22
+- `pnpm` (or another package manager of your choice)
+
+## Create your first Jazz app
+
+Start by creating a new Jazz project with our CLI tool:
+
+<CodeGroup>
+```bash
+npx create-jazz-app@latest my-first-jazz-app --api-key you@example.com
+Let's create your Jazz app! 🎷
+
+? Choose a framework: React
+? Choose an authentication method: Passkey auth (easiest to start with)
+? Choose a package manager: pnpm
+✔ Template cloned successfully
+✔ Package versions fetched successfully
+✔ Package versions fetched successfully
+✔ Dependencies updated
+✔ API key updated
+✔ Dependencies installed
+✔ .cursor directory added successfully
+? Initialize git repository? Yes
+✔ Git repository initialized
+
+✨ Project setup completed! ✨
+
+To get started:
+  cd my-first-jazz-app
+  pnpm run dev
+```
+</CodeGroup>
+
+This creates a new Jazz project and starts a development server at `http://localhost:5173`.
+
+## Understanding your project
+
+Let's explore what's in your new Jazz app:
+
+<CodeGroup>
+```bash
+my-first-jazz-app/
+├── src/
+│   ├── apiKey.ts # Your API key
+│   ├── App.tsx # Root app component
+│   ├── main.tsx # Provider setup
+│   └── schema.ts # Your data models
+├── tests/
+├── package.json # Your package manager config.
+└── ... # Project files
+```
+</CodeGroup>
+
+The most important files for understanding Jazz are:
+- `src/schema.ts` - Your data models
+- `src/App.tsx` - The root app component
+
+## Defining your data with schemas
+
+Jazz uses schemas to define the structure of your collaborative data. Schemas can live anywhere, but we recommend starting with `schema.ts`.
+
+After installation, we're already storing first name and date of birth for our user. Let's add a public email address and a private notes section.
+
+<CodeGroup>
+```ts twoslash
+// schema.ts
+import { co, CoMap, CoList } from "jazz-tools";
+
+// A simple todo item with text and completion status
+export class TodoItem extends CoMap {
+  text = co.string;
+  completed = co.boolean;
+}
+
+// A list of TodoItems
+export class ListOfTodoItems extends CoList.Of(co.ref(TodoItem)) {}
+
+// A collection of todo items with a title
+export class TodoList extends CoMap {
+  title = co.string;
+  items = co.ref(ListOfTodoItems);
+}
+```
+</CodeGroup>
+
+This schema defines two types:
+- `TodoItem`: A record with text content and completion status
+- `TodoList`: A collection of todo items with a title
+
+## Jazz provider setup
+
+For collaboration to work, Jazz needs a provider. This is already set up for you in `src/main.tsx`:
+
+<CodeGroup>
+```tsx twoslash
+// @filename: schema.ts
+import { Account } from "jazz-tools";
+export class JazzAccount extends Account {}
+
+// @filename: App.tsx
+import * as React from "react";
+export default function App() {
+  return <div>Hello, world!</div>;
+}
+
+// @filename: main.tsx
+// @noErrors: 5097
+import * as React from "react";
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+const apiKey = "you@example.com";
+import { JazzInspector } from "jazz-inspector";
+// ---cut---
+// main.tsx
+// ...
+import { JazzProvider } from "jazz-react";
+import App from "./App.tsx";
+import { JazzAccount } from "./schema.ts";
+
+// We use this to identify the app in the passkey auth
+export const APPLICATION_NAME = "Jazz starter";
+
+declare module "jazz-react" {
+  export interface Register {
+    Account: JazzAccount;
+  }
+}
+
+createRoot(document.getElementById("root")!).render(
+  <StrictMode>
+    <JazzProvider
+      sync={{
+        peer: `wss://cloud.jazz.tools/?key=${apiKey}`,
+      }}
+      AccountSchema={JazzAccount}
+    >
+      <App />
+      <JazzInspector />
+    </JazzProvider>
+  </StrictMode>,
+);
+```
+</CodeGroup>
+
+The provider manages the synchronization of your data between different users and devices.
+
+## Reading collaborative data
+
+To read data from a CoValue (collaborative value), use the `useValue` hook:
+
+<CodeGroup>
+```tsx twoslash
+// @filename: schema.ts
+import { co, CoMap } from "jazz-tools";
+
+export class Person extends CoMap {
+  name = co.string;
+}
+
+// @filename: App.tsx
+import { useValue } from "jazz-react";
+import { Person } from "../schema";
+
+function TodoApp() {
+  // Get or create a TodoList with a specific ID
+  const todoList = jazz.get(TodoList, "my-todos");
+  
+  // Read the current value
+  const { title, items } = useValue(todoList);
+  
+  return (
+    <div>
+      <h1>{title}</h1>
+      <ul>
+        {items.map((item, index) => (
+          <li key={index}>
+            {item.text} - {item.completed ? "Done" : "Pending"}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+```
+</CodeGroup>
+
+## Editing collaborative data
+
+Making changes to your data is straightforward with the `edit` method:
+
+<CodeGroup>
+```tsx
+function TodoItemComponent({ item }) {
+  const handleToggle = () => {
+    item.edit(draft => {
+      draft.completed = !draft.completed;
+    });
+  };
+  
+  const handleTextChange = (newText) => {
+    item.edit(draft => {
+      draft.text = newText;
+    });
+  };
+  
+  return (
+    <div>
+      <input 
+        type="checkbox" 
+        checked={item.completed} 
+        onChange={handleToggle} 
+      />
+      <input 
+        type="text" 
+        value={item.text} 
+        onChange={(e) => handleTextChange(e.target.value)} 
+      />
+    </div>
+  );
+}
+```
+</CodeGroup>
+
+Changes are automatically synchronized across all connected clients.
+
+## Making it collaborative
+
+One of the most powerful features of Jazz is that collaboration works automatically. Every change you make is instantly synced to all connected clients.
+
+To experience real-time collaboration:
+
+1. Open your app in two browser windows side by side
+2. Make changes in one window
+3. Watch as they appear instantly in the other window
+
+This works across different devices and users too. To share with others:
+
+<CodeGroup>
+```tsx
+import { Group } from "@jazz-tools/jazz";
+
+function createSharedTodoList() {
+  // Create a group for access control
+  const group = Group.create();
+  
+  // Add "everyone" as a writer (can read and write)
+  group.addMember("everyone", "writer");
+  
+  // Create a TodoList owned by this group
+  const todoList = TodoList.create(
+    {
+      title: "Shared Todo List",
+      items: []
+    },
+    { owner: group }
+  );
+  
+  return todoList;
+}
+```
+</CodeGroup>
+
+## Going deeper: references and complex data structures
+
+For more complex apps, you'll often need to reference other collaborative values. Let's expand our schema to include projects with multiple todo lists:
+
+<CodeGroup>
+```ts
+// A list of TodoList references
+export class ListOfTodoLists extends co.List.Of(co.ref(TodoList)) {}
+
+// A project containing multiple todo lists
+export class Project extends co.Record {
+  name = co.string;
+  todoLists = co.ref(ListOfTodoLists);
+}
+```
+</CodeGroup>
+
+You can then create, read, and edit these nested structures:
+
+<CodeGroup>
+```tsx
+function ProjectComponent({ projectId }) {
+  const project = useCoState(Project, projectId);
+  
+  const addNewTodoList = () => {
+    // Create a new TodoList with the same owner as the project
+    const newList = TodoList.create({
+      title: "New List",
+      items: []
+    }, project._owner);
+    
+    // Add it to the project's todoLists
+    project.todoLists.push(newList);
+  };
+  
+  return project ? (
+    <div>
+      <h1>{project.name}</h1>
+      {project.todoLists.map(list => (
+        <TodoListComponent key={list.id} todoList={list} />
+      ))}
+      <button onClick={addNewTodoList}>Add List</button>
+    </div>
+  ) : (
+    <div>Loading project...</div>
+  );
+}
+```
+</CodeGroup>
+
+## Next steps
+
+Now that you've built your first Jazz app, you can:
+
+- Explore the [example apps](/examples) to see more complex implementations
+- Learn about [authentication and sharing](/docs/sync-and-storage)
+- Dive into [collaborative values](/docs/schemas/covalues) to understand more advanced schema patterns
+- Set up [sync and storage](/docs/sync-and-storage) for production use
+
+If you have any questions or need help, join our [Discord community](https://discord.gg/utDMjHYg42).

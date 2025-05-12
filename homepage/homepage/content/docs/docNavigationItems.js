@@ -10,6 +10,11 @@ export const docNavigationItems = [
         done: 100,
       },
       {
+        name: "Get Started",
+        href: "/docs/get-started",
+        done: 100,
+      },
+      {
         name: "Guide",
         href: "/docs/guide",
         done: {
