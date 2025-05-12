@@ -1,6 +1,8 @@
-import { BubbleTeaOrder } from "./schema.ts";
+import { BubbleTeaOrder, BubbleTeaOrder_v1 } from "./schema.ts";
 
-export function OrderThumbnail({ order }: { order: BubbleTeaOrder }) {
+export function OrderThumbnail({
+  order,
+}: { order: BubbleTeaOrder | BubbleTeaOrder_v1 }) {
   const { id, baseTea, addOns, instructions, deliveryDate, withMilk } = order;
   const date = deliveryDate.toLocaleDateString();
 
