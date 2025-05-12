@@ -1,0 +1,28 @@
+{
+  "name": "jazz-mcp-server",
+  "version": "0.0.1",
+  "type": "module",
+  "main": "./src/index.js",
+  "bin": {
+    "jazz": "./build/index.js"
+  },
+  "scripts": {
+    "build": "tsc && chmod 755 build/index.js",
+    "inspect": "pnpx @modelcontextprotocol/inspector node build/index.js"
+  },
+  "files": [
+    "build"
+  ],
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.11.1",
+    "cojson": "workspace:*",
+    "dotenv": "^16.5.0",
+    "jazz-tools": "workspace:*",
+    "zod": "^3.24.4"
+  },
+  "devDependencies": {
+    "@modelcontextprotocol/inspector": "^0.11.0",
+    "@types/node": "^22.5.1",
+    "typescript": "^5.8.3"
+  }
+}
