@@ -1,6 +1,6 @@
 import { useCallback } from "react";
 
-import { Task, TodoProject } from "./1_schema";
+import { Task, Task_v1, TodoProject } from "./1_schema";
 
 import {
   Checkbox,
@@ -97,7 +97,7 @@ export function ProjectTodoTable() {
   );
 }
 
-export function TaskRow({ task }: { task: Task | undefined }) {
+export function TaskRow({ task }: { task: Task | Task_v1 | undefined }) {
   return (
     <TableRow>
       <TableCell>

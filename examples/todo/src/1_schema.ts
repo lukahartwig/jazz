@@ -1,3 +1,4 @@
+import type { RawCoMap } from "cojson";
 import { Account, CoList, CoMap, CoPlainText, Profile, co } from "jazz-tools";
 
 /** Walkthrough: Defining the data model with CoJSON
@@ -11,12 +12,28 @@ import { Account, CoList, CoMap, CoPlainText, Profile, co } from "jazz-tools";
  **/
 
 /** An individual task which collaborators can tick or rename */
+export class Task_v1 extends CoMap {
+  done = co.boolean;
+  text = co.string;
+}
+
 export class Task extends CoMap {
   done = co.boolean;
   text = co.ref(CoPlainText);
 }
 
-export class ListOfTasks extends CoList.Of(co.ref(Task)) {}
+export class ListOfTasks extends CoList.Of(
+  co.ref((raw: RawCoMap) => {
+    const text = raw.get("text");
+
+    // Detect if the task text is a simple string or a CoPlainText
+    if (text && typeof text === "string" && !text.startsWith("co_z")) {
+      return Task_v1;
+    }
+
+    return Task;
+  }),
+) {}
 
 /** Our top level object: a project with a title, referencing a list of tasks */
 export class TodoProject extends CoMap {
