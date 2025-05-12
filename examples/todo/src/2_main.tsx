@@ -21,7 +21,6 @@ import {
 import { AccountTransferLinkHandlerPage } from "./components/Auth/AccountTransferLinkHandlerPage";
 import { PasskeyAndCrossDeviceAccountTransferAuth } from "./components/Auth/PasskeyAndCrossDeviceAccountTransferAuth";
 import { TaskGenerator } from "./components/TaskGenerator.tsx";
-import { wordlist } from "./wordlist.ts";
 
 /**
  * Walkthrough: The top-level provider `<JazzProvider/>`
