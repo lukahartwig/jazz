@@ -15,5 +15,3 @@ import "@azure/core-asynciterator-polyfill";
 import "@bacons/text-decoder/install";
 
 import "react-native-get-random-values";
-
-import "@formatjs/intl-segmenter/polyfill";
