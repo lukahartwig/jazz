@@ -1,3 +1,4 @@
+import { RawCoMap } from "cojson";
 import { Account, CoList, CoMap, CoPlainText, co } from "jazz-tools";
 
 export const BubbleTeaAddOnTypes = [
@@ -23,6 +24,16 @@ export class ListOfBubbleTeaAddOns extends CoList.Of(
   }
 }
 
+// v1 schema
+export class BubbleTeaOrder_v1 extends CoMap {
+  baseTea = co.literal(...BubbleTeaBaseTeaTypes);
+  addOns = co.ref(ListOfBubbleTeaAddOns);
+  deliveryDate = co.Date;
+  withMilk = co.boolean;
+  instructions = co.string;
+}
+
+// v2 schema
 export class BubbleTeaOrder extends CoMap {
   baseTea = co.literal(...BubbleTeaBaseTeaTypes);
   addOns = co.ref(ListOfBubbleTeaAddOns);
@@ -31,12 +42,25 @@ export class BubbleTeaOrder extends CoMap {
   instructions = co.optional.ref(CoPlainText);
 }
 
-export class DraftBubbleTeaOrder extends CoMap {
+function selectOrderSchema(raw: RawCoMap) {
+  const instructions = raw.get("instructions");
+
+  if (
+    instructions &&
+    typeof instructions === "string" &&
+    !instructions.startsWith("co_z")
+  ) {
+    return BubbleTeaOrder_v1;
+  }
+
+  return BubbleTeaOrder;
+}
+
+// Draft schemas
+export class DraftBubbleTeaOrderBase extends CoMap {
   baseTea = co.optional.literal(...BubbleTeaBaseTeaTypes);
   addOns = co.optional.ref(ListOfBubbleTeaAddOns);
   deliveryDate = co.optional.Date;
-  withMilk = co.optional.boolean;
-  instructions = co.optional.ref(CoPlainText);
 
   get hasChanges() {
     return Object.keys(this._edits).length > 1 || this.addOns?.hasChanges;
@@ -57,12 +81,46 @@ export class DraftBubbleTeaOrder extends CoMap {
   }
 }
 
-export class ListOfBubbleTeaOrders extends CoList.Of(co.ref(BubbleTeaOrder)) {}
+// v1 draft schema
+export class DraftBubbleTeaOrder_v1 extends DraftBubbleTeaOrderBase {
+  baseTea = co.optional.literal(...BubbleTeaBaseTeaTypes);
+  addOns = co.optional.ref(ListOfBubbleTeaAddOns);
+  deliveryDate = co.optional.Date;
+  withMilk = co.optional.boolean;
+  instructions = co.optional.string;
+}
+
+// v2 draft schema
+export class DraftBubbleTeaOrder extends DraftBubbleTeaOrderBase {
+  baseTea = co.optional.literal(...BubbleTeaBaseTeaTypes);
+  addOns = co.optional.ref(ListOfBubbleTeaAddOns);
+  deliveryDate = co.optional.Date;
+  withMilk = co.optional.boolean;
+  instructions = co.optional.ref(CoPlainText);
+}
+
+function selectDraftSchema(raw: RawCoMap) {
+  const instructions = raw.get("instructions");
+
+  if (
+    instructions &&
+    typeof instructions === "string" &&
+    !instructions.startsWith("co_z")
+  ) {
+    return DraftBubbleTeaOrder_v1;
+  }
+
+  return DraftBubbleTeaOrder;
+}
+
+export class ListOfBubbleTeaOrders extends CoList.Of(
+  co.ref(selectOrderSchema),
+) {}
 
 /** The root is an app-specific per-user private `CoMap`
  *  where you can store top-level objects for that user */
 export class AccountRoot extends CoMap {
-  draft = co.ref(DraftBubbleTeaOrder);
+  draft = co.ref(selectDraftSchema);
   orders = co.ref(ListOfBubbleTeaOrders);
 }
 

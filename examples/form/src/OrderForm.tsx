@@ -3,14 +3,20 @@ import {
   BubbleTeaAddOnTypes,
   BubbleTeaBaseTeaTypes,
   BubbleTeaOrder,
+  BubbleTeaOrder_v1,
   DraftBubbleTeaOrder,
+  DraftBubbleTeaOrder_v1,
 } from "./schema.ts";
 
 export function OrderForm({
   order,
   onSave,
 }: {
-  order: BubbleTeaOrder | DraftBubbleTeaOrder;
+  order:
+    | BubbleTeaOrder
+    | DraftBubbleTeaOrder
+    | BubbleTeaOrder_v1
+    | DraftBubbleTeaOrder_v1;
   onSave?: (e: React.FormEvent<HTMLFormElement>) => void;
 }) {
   // Handles updates to the instructions field of the order.
@@ -19,9 +25,10 @@ export function OrderForm({
   const handleInstructionsChange = (
     e: React.ChangeEvent<HTMLTextAreaElement>,
   ) => {
-    if (order.instructions) {
+    if (order.instructions && order.instructions instanceof CoPlainText) {
       return order.instructions.applyDiff(e.target.value);
     }
+
     order.instructions = CoPlainText.create(e.target.value, order._owner);
   };
 

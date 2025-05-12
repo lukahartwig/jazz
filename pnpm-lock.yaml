@@ -758,6 +758,9 @@ importers:
 
   examples/form:
     dependencies:
+      cojson:
+        specifier: workspace:*
+        version: link:../../packages/cojson
       hash-slash:
         specifier: workspace:*
         version: link:../../packages/hash-slash

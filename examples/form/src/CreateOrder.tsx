@@ -8,6 +8,7 @@ import { OrderForm } from "./OrderForm.tsx";
 import {
   BubbleTeaOrder,
   DraftBubbleTeaOrder,
+  DraftBubbleTeaOrder_v1,
   ListOfBubbleTeaAddOns,
 } from "./schema.ts";
 
@@ -20,7 +21,7 @@ export function CreateOrder() {
 
   if (!me?.root) return;
 
-  const onSave = (draft: DraftBubbleTeaOrder) => {
+  const onSave = (draft: DraftBubbleTeaOrder | DraftBubbleTeaOrder_v1) => {
     // validate if the draft is a valid order
     const validation = draft.validate();
     setErrors(validation.errors);
@@ -58,7 +59,7 @@ function CreateOrderForm({
   id,
   onSave,
 }: {
-  id: ID<DraftBubbleTeaOrder>;
+  id: ID<DraftBubbleTeaOrder | DraftBubbleTeaOrder_v1>;
   onSave: (draft: DraftBubbleTeaOrder) => void;
 }) {
   const draft = useCoState(DraftBubbleTeaOrder, id, {
