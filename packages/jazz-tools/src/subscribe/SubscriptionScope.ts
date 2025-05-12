@@ -72,12 +72,12 @@ export class SubscriptionScope<D extends CoValue> {
       return;
     }
 
-    const owner = getOwnerFromRawValue(update);
-
     const ruleset = update.core.verified.header.ruleset;
 
     // Groups and accounts are accessible by everyone, for the other coValues we use the role to check access
-    const hasAccess = ruleset.type === "group" || owner.myRole() !== undefined;
+    const hasAccess =
+      ruleset.type !== "ownedByGroup" ||
+      getOwnerFromRawValue(update).myRole() !== undefined;
 
     if (!hasAccess) {
       if (this.value.type !== "unauthorized") {

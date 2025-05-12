@@ -1,11 +1,17 @@
-import { expect, test } from "vitest";
+import { LocalNode } from "cojson";
+import { assert, beforeEach, expect, test } from "vitest";
 import { Account, CoMap, Group, co } from "../exports.js";
 import {
   createJazzTestAccount,
   linkAccounts,
   setActiveAccount,
+  setupJazzTestSync,
 } from "../testing.js";
 import { setupTwoNodes } from "./utils.js";
+
+beforeEach(async () => {
+  await setupJazzTestSync();
+});
 
 test("waitForAllCoValuesSync should resolve when all the values are synced", async () => {
   class TestMap extends CoMap {
@@ -97,4 +103,39 @@ test("accounts should sync correctly", async () => {
 
   expect(members[0]?.account.profile!.name).toBe("test 1");
   expect(members[1]?.account.profile!.name).toBe("test 2");
+});
+
+test("loading accounts should work", async () => {
+  const account = await createJazzTestAccount({
+    creationProps: {
+      name: "test 1",
+    },
+  });
+
+  const otherAccount = await createJazzTestAccount();
+
+  const loadedAccount = await Account.load(account.id, {
+    loadAs: otherAccount,
+    resolve: {
+      profile: true,
+    },
+  });
+
+  assert(loadedAccount);
+  expect(loadedAccount.profile.name).toBe("test 1");
+});
+
+test("loading raw accounts should work", async () => {
+  const account = await createJazzTestAccount({
+    creationProps: {
+      name: "test 1",
+    },
+  });
+
+  const loadedAccount = await Account.load(account.id, {
+    loadAs: account,
+  });
+
+  assert(loadedAccount);
+  expect(loadedAccount.profile!.name).toBe("test 1");
 });

@@ -1,13 +1,13 @@
-import { RawAccount, RawCoValue, RawGroup } from "cojson";
+import { RawAccount, RawCoValue } from "cojson";
 import { RegisteredSchemas } from "../coValues/registeredSchemas.js";
 import { CoValue, RefEncoded, instantiateRefEncoded } from "../internal.js";
 import { coValuesCache } from "../lib/cache.js";
 import { SubscriptionScope } from "./SubscriptionScope.js";
 
 export function getOwnerFromRawValue(raw: RawCoValue) {
-  let owner = raw instanceof RawGroup ? raw : raw.group;
+  const owner = raw.group;
 
-  return coValuesCache.get(owner as any, () =>
+  return coValuesCache.get(owner, () =>
     owner instanceof RawAccount
       ? RegisteredSchemas["Account"].fromRaw(owner)
       : RegisteredSchemas["Group"].fromRaw(owner as any),
