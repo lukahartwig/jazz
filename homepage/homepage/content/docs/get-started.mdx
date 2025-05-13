@@ -6,14 +6,14 @@ import { CodeGroup } from "@/components/forMdx";
 
 Build your first collaborative app with Jazz in minutes. This guide walks you through creating a new Jazz project, understanding the key components, and experiencing real-time collaboration.
 
-We're going to build a simple profile app. You'll see how to:
+You're going to build a simple profile app. You'll see how to:
 
 - Create a new Jazz project with `create-jazz-app`
 - Define your data with schemas
 - Read and write data with hooks
 - See Jazz's easy persistence and real-time collaboration
 
-By the end of this guide, you'll have a simple app that you can use as a starting point for your own projects. If you'd like to see the complete example of what we'll build, see the [complete example app](https://github.com/garden-co/my-first-jazz-app).
+By the end of this guide, you'll have a simple app that you can use as a starting point for your own projects. If you'd like to see the complete example of what you'll build, see the [complete example app](https://github.com/garden-co/my-first-jazz-app).
 
 If you would like to learn more about how Jazz works, check out the [overview](/docs/overview).
 
@@ -25,7 +25,7 @@ You'll need:
 
 ## Create your first Jazz app
 
-Start by creating a new Jazz project with our CLI tool:
+Start by creating a new Jazz project with the CLI tool:
 
 <CodeGroup>
 ```bash
@@ -55,13 +55,13 @@ To get started:
 
 You have now created your first Jazz app! 🎉
 
-Start the developlment server with `pnpm run dev`. You should see the app running in your browser.
+Start the development server with `pnpm run dev`. You should see the app running in your browser. (We've used `pnpm` in this example, but any package manager will work.)
 
-Now, let's have a look at what's in your new Jazz app, and add some new fields.
+Now, let's examine what's in your new Jazz app, and add some new fields.
 
 ## Understanding your project
 
-Review your project structure, it should look a bit like this (we've ommited some files to focus on the important ones):
+Take a look at your project structure. It should look like this (with some files omitted to focus on the important ones):
 
 <CodeGroup>
 ```bash
@@ -84,9 +84,9 @@ The most important files for understanding Jazz are:
 
 ## Defining your data with schemas
 
-Jazz uses schemas to define the structure of your CoValues (collaborative values). Schemas can live anywhere, but we recommend starting with `schema.ts`.
+Jazz uses schemas to define the structure of your CoValues (collaborative values). Schemas can live anywhere, but you should start with `schema.ts`.
 
-From the starter app, you're already storing first name and date of birth for your users. Let's add a public email address and a private notes section.
+Your starter app already stores first name and date of birth for users. Now you'll add a public email address and a private notes section.
 
 <CodeGroup>
 ```ts twoslash
@@ -117,7 +117,7 @@ export class AccountRoot extends CoMap {
 ```
 </CodeGroup>
 
-We also need to add to the migration to add the new fields to any live profiles.
+You'll also need to add the new fields to the migration to update any live profiles:
 
 <CodeGroup>
 ```ts twoslash
@@ -189,9 +189,9 @@ export class JazzAccount extends Account {
 ```
 </CodeGroup>
 
-Great, you've now added the `email` field to the public profile and the `notes` field to the private root.
+Great! You've now added the `email` field to the public profile and the `notes` field to the private root.
 
-For more detail about CoValues read [schemas](/docs/schemas/covalues).
+For more detail about CoValues, check out [schemas](/docs/schemas/covalues).
 
 ## Jazz provider setup
 
@@ -369,9 +369,9 @@ export function Form() {
 
 Excellent! You've now added the `email` and `notes` fields to the form.
 
-But the notes field is creating a new `CoPlainText` every time you type. We can update it instead.
+But there's a problem: the notes field is creating a new `CoPlainText` every time you type. Instead you can use `CoPlainText.applyDiff()` to intelligently update it instead.
 
-We'll start by adding a new function to handle the change, then update the form to use it:
+Start by adding a new function to handle the change, then update the form to use it:
 
 <CodeGroup>
 ```tsx twoslash
@@ -424,9 +424,7 @@ const handleNotesChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
 ```
 </CodeGroup>
 
-We can insert that into the form component, and you'll end up with changes like this:
-
-// TODO: Fix the cuts in JSX
+Now insert that into the form component. Your changes will look like this:
 
 <CodeGroup>
 ```tsx twoslash
@@ -548,7 +546,7 @@ export function Form() {
 
 ## Persisting data
 
-Now we've added the `notes` field, try refreshing the page. You'll see that the notes you added are still there.
+Now that you've added the `notes` field, try refreshing the page. You'll see that the notes you added are still there. Jazz automatically persists your data without any additional configuration.
 
 ## Real-time collaboration
 
@@ -566,14 +564,15 @@ This works across different devices and users too.
 
 Congratulations! You've built your first Jazz app.
 
-For a complete example of what we've built, see the [complete example app](https://github.com/garden-co/my-first-jazz-app).
+For a complete example of what you've built, see the [complete example app](https://github.com/garden-co/my-first-jazz-app).
 
-- We've created a simple app with `create-jazz-app`
-- We've added new fields to the profile and root
-- We've seen where Jazz configures the sync and storage
-- We've seen how to add new fields to a component
+You've accomplished several important things:
+- You've created a simple app with `create-jazz-app`
+- You've added new fields to the profile and root
+- You've seen where Jazz configures the sync and storage
+- You've learned how to add new fields to a component
 
-We've only scratched the surface of what Jazz can do.
+You've only scratched the surface of what Jazz can do.
 
 ## Next steps
 
