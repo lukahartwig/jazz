@@ -6,6 +6,15 @@ import { CodeGroup } from "@/components/forMdx";
 
 Build your first collaborative app with Jazz in minutes. This guide walks you through creating a new Jazz project, understanding the key components, and experiencing real-time collaboration.
 
+We're going to build a simple profile app. You'll learn how to:
+
+- Create a new Jazz project with `create-jazz-app`
+- Define your data with schemas
+- Read and write data with hooks
+- Experience real-time collaboration
+
+If you would like to learn more about how Jazz works, check out the [overview](/docs/overview).
+
 ## Before you begin
 
 You'll need:
@@ -42,11 +51,15 @@ To get started:
 ```
 </CodeGroup>
 
-This creates a new Jazz project and starts a development server at `http://localhost:5173`.
+You have now created your first Jazz app! 🎉
+
+Start the developlment server with `pnpm run dev`. You should see the app running in your browser.
+
+Now, let's have a look at what's in your new Jazz app, and add some new fields.
 
 ## Understanding your project
 
-Let's explore what's in your new Jazz app:
+Review your project structure, it should look a bit like this (we've ommited some files to focus on the important ones):
 
 <CodeGroup>
 ```bash
@@ -64,39 +77,119 @@ my-first-jazz-app/
 
 The most important files for understanding Jazz are:
 - `src/schema.ts` - Your data models
-- `src/App.tsx` - The root app component
+- `src/main.tsx` - Your provider setup
+- `src/App.tsx` - Your root app component
 
 ## Defining your data with schemas
 
-Jazz uses schemas to define the structure of your collaborative data. Schemas can live anywhere, but we recommend starting with `schema.ts`.
+Jazz uses schemas to define the structure of your CoValues (collaborative values). Schemas can live anywhere, but we recommend starting with `schema.ts`.
 
-After installation, we're already storing first name and date of birth for our user. Let's add a public email address and a private notes section.
+From the starter app, you're already storing first name and date of birth for your users. Let's add a public email address and a private notes section.
 
 <CodeGroup>
 ```ts twoslash
 // schema.ts
-import { co, CoMap, CoList } from "jazz-tools";
+import {
+  co,
+  CoMap,
+  CoList,
+  Profile,
+  CoPlainText, // [!code ++]
+} from "jazz-tools";
 
-// A simple todo item with text and completion status
-export class TodoItem extends CoMap {
-  text = co.string;
-  completed = co.boolean;
+// ...
+
+export class JazzProfile extends Profile {
+  firstName = co.string;
+  email = co.string; // [!code ++]
 }
 
-// A list of TodoItems
-export class ListOfTodoItems extends CoList.Of(co.ref(TodoItem)) {}
+// ...
 
-// A collection of todo items with a title
-export class TodoList extends CoMap {
-  title = co.string;
-  items = co.ref(ListOfTodoItems);
+export class AccountRoot extends CoMap {
+  dateOfBirth = co.Date;
+  notes = co.optional.ref(CoPlainText); // [!code ++]
+}
+
+// ...
+```
+</CodeGroup>
+
+We also need to add to the migration to add the new fields to any live profiles.
+
+<CodeGroup>
+```ts twoslash
+// schema.ts
+import {
+  Account,
+  Group,
+  co,
+  CoMap,
+  CoList,
+  Profile,
+  CoPlainText,
+} from "jazz-tools";
+
+// ...
+
+export class JazzProfile extends Profile {
+  firstName = co.string;
+  email = co.string; // [!code ++]
+}
+
+// ...
+
+export class AccountRoot extends CoMap {
+  dateOfBirth = co.Date;
+  notes = co.optional.ref(CoPlainText); // [!code ++]
+}
+
+
+// ---cut---
+// schema.ts
+// ...
+
+export class JazzAccount extends Account {
+  profile = co.ref(JazzProfile);
+  root = co.ref(AccountRoot);
+
+  /** The account migration is run on account creation and on every log-in.
+   *  You can use it to set up the account root and any other initial CoValues you need.
+   */
+  migrate(this: JazzAccount) {
+    if (this.root === undefined) {
+      const group = Group.create();
+
+      this.root = AccountRoot.create(
+        {
+          dateOfBirth: new Date("1/1/1990"),
+          notes: CoPlainText.create(""), // [!code ++]
+        },
+        group,
+      );
+    }
+
+    if (this.profile === undefined) {
+      const group = Group.create();
+      group.addMember("everyone", "reader"); // The profile info is visible to everyone
+
+      this.profile = JazzProfile.create(
+        {
+          name: "Anonymous user",
+          firstName: "",
+          email: "", // [!code ++]
+        },
+        group,
+      );
+    }
+  }
 }
 ```
 </CodeGroup>
 
-This schema defines two types:
-- `TodoItem`: A record with text content and completion status
-- `TodoList`: A collection of todo items with a title
+Great, you've now added the `email` field to the public profile and the `notes` field to the private root.
+
+For more detail about CoValues read [schemas](/docs/schemas/covalues).
 
 ## Jazz provider setup
 
@@ -137,6 +230,10 @@ declare module "jazz-react" {
   }
 }
 
+// ---cut---
+// main.tsx
+// ...
+
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <JazzProvider
@@ -153,173 +250,328 @@ createRoot(document.getElementById("root")!).render(
 ```
 </CodeGroup>
 
-The provider manages the synchronization of your data between different users and devices.
+Out of the box, your provider is configured to use the Jazz Cloud, and you don't have to do anything to get started. Easy!
 
-## Reading collaborative data
+For more details about Providers and configuration, see [Providers](/docs/project-setup/providers).
 
-To read data from a CoValue (collaborative value), use the `useValue` hook:
+
+## Adding to the form
+
+Let's put the `email` and `notes` fields to use. There are already some fields in the form.
 
 <CodeGroup>
 ```tsx twoslash
 // @filename: schema.ts
-import { co, CoMap } from "jazz-tools";
+import { Account, CoMap, CoPlainText, Group, Profile, co } from "jazz-tools";
+export class JazzProfile extends Profile {
+  firstName = co.string;
+  email = co.string;
+}
 
-export class Person extends CoMap {
-  name = co.string;
+export class AccountRoot extends CoMap {
+  dateOfBirth = co.Date;
+  notes = co.ref(CoPlainText)
+
+  get age() {
+    if (!this.dateOfBirth) return null;
+
+    return new Date().getFullYear() - this.dateOfBirth.getFullYear();
+  }
+}
+
+export class JazzAccount extends Account {
+  profile = co.ref(JazzProfile);
+  root = co.ref(AccountRoot);
 }
 
 // @filename: App.tsx
-import { useValue } from "jazz-react";
-import { Person } from "../schema";
+// @noErrors: 5097
+import { JazzAccount } from "./schema.ts";
+declare module "jazz-react" {
+  export interface Register {
+    Account: JazzAccount;
+  }
+}
+// @filename: form.tsx
+import * as React from "react";
+// ---cut---
+// form.tsx
+import { useAccount } from "jazz-react";
+import { CoPlainText } from "jazz-tools";
 
-function TodoApp() {
-  // Get or create a TodoList with a specific ID
-  const todoList = jazz.get(TodoList, "my-todos");
-  
-  // Read the current value
-  const { title, items } = useValue(todoList);
-  
+export function Form() {
+  const { me } = useAccount({ resolve: { profile: true, root: true } });
+
+  if (!me) return null;
+
   return (
-    <div>
-      <h1>{title}</h1>
-      <ul>
-        {items.map((item, index) => (
-          <li key={index}>
-            {item.text} - {item.completed ? "Done" : "Pending"}
-          </li>
-        ))}
-      </ul>
+    <div className="grid gap-4 border p-8">
+      <div className="flex items-center gap-3">
+        <label htmlFor="firstName" className="sm:w-32">
+          First name
+        </label>
+        <input
+          type="text"
+          id="firstName"
+          placeholder="Enter your first name here..."
+          className="border border-stone-300 rounded shadow-sm py-1 px-2 flex-1"
+          value={me.profile.firstName || ""}
+          onChange={(e) => (me.profile.firstName = e.target.value)}
+        />
+      </div>
+
+      <div className="flex items-center gap-3"> {/* [!code ++:14] */}
+        <label htmlFor="email" className="sm:w-32">
+          Email
+        </label>
+        <input
+          type="text"
+          id="email"
+          placeholder="eg. you@example.com"
+          className="border border-stone-300 rounded shadow-sm py-1 px-2 flex-1"
+          value={me.profile.email || ""}
+          onChange={(e) => (me.profile.email = e.target.value)}
+        />
+      </div>
+
+      <div className="flex items-center gap-3">
+        <label htmlFor="dateOfBirth" className="sm:w-32">
+          Date of birth
+        </label>
+        <input
+          type="date"
+          id="dateOfBirth"
+          className="border border-stone-300 rounded shadow-sm py-1 px-2 flex-1"
+          value={me.root.dateOfBirth?.toISOString().split("T")[0] || ""}
+          onChange={(e) => (me.root.dateOfBirth = new Date(e.target.value))}
+        />
+      </div>
+
+      {/*Add more fields here*/} {/* [!code --] */}
+      <div className="flex items-center gap-3"> {/* [!code ++:11] */}
+        <label htmlFor="notes" className="sm:w-32">
+          Private Notes
+        </label>
+        <textarea
+          id="notes"
+          className="border border-stone-300 rounded shadow-sm py-1 px-2 flex-1"
+          value={me.root.notes?.toString() || ""}
+          onChange={(e) => (me.root.notes = CoPlainText.create(e.target.value))}
+        />
+      </div>
     </div>
   );
 }
 ```
 </CodeGroup>
 
-## Editing collaborative data
+Excellent! You've now added the `email` and `notes` fields to the form.
 
-Making changes to your data is straightforward with the `edit` method:
+But the notes field is creating a new `CoPlainText` every time you type. We can update it instead.
+
+We'll start by adding a new function to handle the change, then update the form to use it:
 
 <CodeGroup>
-```tsx
-function TodoItemComponent({ item }) {
-  const handleToggle = () => {
-    item.edit(draft => {
-      draft.completed = !draft.completed;
-    });
-  };
+```tsx twoslash
+// @filename: form.tsx
+// @noErrors: 2339
+import { useAccount } from "jazz-react";
+import { Account, CoMap, CoPlainText, Profile, co } from "jazz-tools";
   
-  const handleTextChange = (newText) => {
-    item.edit(draft => {
-      draft.text = newText;
-    });
+class AccountRoot extends CoMap {
+  notes = co.ref(CoPlainText);
+}
+
+class JazzProfile extends Profile {
+  firstName = co.string;
+  email = co.string;
+}
+
+export class JazzAccount extends Account {
+  root = co.ref(AccountRoot);
+  profile = co.ref(JazzProfile);
+};
+
+declare module "jazz-react" {
+  export interface Register {
+    Account: JazzAccount;
+  }
+}
+
+// ...
+
+function Form() {
+  const me = useAccount({ resolve: { profile: true, root: true } });
+
+  if (!me) return null;
+// ---cut-before---
+// form.tsx
+
+const handleNotesChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+  const text = e.target.value.trim();
+  if (me.root.notes) { // If the notes field already exists
+    // Apply the change to the existing field
+    me.root.notes.applyDiff(text);
+  } else {
+    // Create a new field if it doesn't exist
+    me.root.notes = CoPlainText.create(text); 
+  }
+};
+// ---cut-after---
+}
+```
+</CodeGroup>
+
+We can insert that into the form component, and you'll end up with changes like this:
+
+// TODO: Fix the cuts in JSX
+
+<CodeGroup>
+```tsx twoslash
+// @filename: schema.ts
+import { Account, CoMap, CoPlainText, Group, Profile, co } from "jazz-tools";
+export class JazzProfile extends Profile {
+  firstName = co.string;
+  email = co.string;
+}
+
+export class AccountRoot extends CoMap {
+  dateOfBirth = co.Date;
+  notes = co.ref(CoPlainText)
+
+  get age() {
+    if (!this.dateOfBirth) return null;
+
+    return new Date().getFullYear() - this.dateOfBirth.getFullYear();
+  }
+}
+
+export class JazzAccount extends Account {
+  profile = co.ref(JazzProfile);
+  root = co.ref(AccountRoot);
+}
+
+// @filename: App.tsx
+// @noErrors: 5097 1005
+import { JazzAccount } from "./schema.ts";
+declare module "jazz-react" {
+  export interface Register {
+    Account: JazzAccount;
+  }
+}
+// @filename: form.tsx
+import * as React from "react";
+// form.tsx
+import { useAccount } from "jazz-react";
+import { CoPlainText } from "jazz-tools";
+
+// ---cut---
+// form.tsx
+// ...
+
+export function Form() {
+  const { me } = useAccount({ resolve: { profile: true, root: true } });
+
+  if (!me) return null;
+
+  const handleNotesChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => { {/* [!code ++:8] */}
+    const text = e.target.value.trim();
+    if (me.root.notes) {
+      me.root.notes.applyDiff(text);
+    } else {
+      me.root.notes = CoPlainText.create(text);
+    }
   };
-  
+
   return (
-    <div>
-      <input 
-        type="checkbox" 
-        checked={item.completed} 
-        onChange={handleToggle} 
-      />
-      <input 
-        type="text" 
-        value={item.text} 
-        onChange={(e) => handleTextChange(e.target.value)} 
-      />
+    <div className="grid gap-4 border p-8">
+      <div className="flex items-center gap-3">
+        <label htmlFor="firstName" className="sm:w-32">
+          First name
+        </label>
+        <input
+          type="text"
+          id="firstName"
+          placeholder="Enter your first name here..."
+          className="border border-stone-300 rounded shadow-sm py-1 px-2 flex-1"
+          value={me.profile.firstName || ""}
+          onChange={(e) => (me.profile.firstName = e.target.value)}
+        />
+      </div>
+
+      <div className="flex items-center gap-3">
+        <label htmlFor="email" className="sm:w-32">
+          Email
+        </label>
+        <input
+          type="text"
+          id="email"
+          placeholder="eg. you@example.com"
+          className="border border-stone-300 rounded shadow-sm py-1 px-2 flex-1"
+          value={me.profile.email || ""}
+          onChange={(e) => (me.profile.email = e.target.value)}
+        />
+      </div>
+
+      <div className="flex items-center gap-3">
+        <label htmlFor="dateOfBirth" className="sm:w-32">
+          Date of birth
+        </label>
+        <input
+          type="date"
+          id="dateOfBirth"
+          className="border border-stone-300 rounded shadow-sm py-1 px-2 flex-1"
+          value={me.root.dateOfBirth?.toISOString().split("T")[0] || ""}
+          onChange={(e) => (me.root.dateOfBirth = new Date(e.target.value))}
+        />
+      </div>
+
+      <div className="flex items-center gap-3">
+        <label htmlFor="notes" className="sm:w-32">
+          Private Notes
+        </label>
+        <textarea
+          id="notes"
+          className="border border-stone-300 rounded shadow-sm py-1 px-2 flex-1"
+          value={me.root.notes?.toString() || ""}
+          onChange={(e) => (me.root.notes = CoPlainText.create(e.target.value))} {/* [!code --] */}
+          onChange={handleNotesChange} {/* [!code ++] */}
+        />
+      </div>
     </div>
   );
 }
 ```
 </CodeGroup>
 
-Changes are automatically synchronized across all connected clients.
+## Persisting data
 
-## Making it collaborative
+Now we've added the `notes` field, try refreshing the page. You'll see that the notes you added are still there.
 
-One of the most powerful features of Jazz is that collaboration works automatically. Every change you make is instantly synced to all connected clients.
+## Real-time collaboration
+
+One of the most powerful features of Jazz is that collaboration works automatically. Every change you make is synced to all connected clients.
 
 To experience real-time collaboration:
 
-1. Open your app in two browser windows side by side
+1. Open your app in two browser windows side-by-side
 2. Make changes in one window
 3. Watch as they appear instantly in the other window
 
-This works across different devices and users too. To share with others:
+This works across different devices and users too.
 
-<CodeGroup>
-```tsx
-import { Group } from "@jazz-tools/jazz";
+## Complete
 
-function createSharedTodoList() {
-  // Create a group for access control
-  const group = Group.create();
-  
-  // Add "everyone" as a writer (can read and write)
-  group.addMember("everyone", "writer");
-  
-  // Create a TodoList owned by this group
-  const todoList = TodoList.create(
-    {
-      title: "Shared Todo List",
-      items: []
-    },
-    { owner: group }
-  );
-  
-  return todoList;
-}
-```
-</CodeGroup>
+Congratulations! You've built your first Jazz app.
 
-## Going deeper: references and complex data structures
+For a complete example of what we've built, see the [example app](/examples/profile).
 
-For more complex apps, you'll often need to reference other collaborative values. Let's expand our schema to include projects with multiple todo lists:
+- We've created a simple app with `create-jazz-app`
+- We've added new fields to the profile and root
+- We've seen where Jazz configures the sync and storage
+- We've seen how to add new fields to a component
 
-<CodeGroup>
-```ts
-// A list of TodoList references
-export class ListOfTodoLists extends co.List.Of(co.ref(TodoList)) {}
-
-// A project containing multiple todo lists
-export class Project extends co.Record {
-  name = co.string;
-  todoLists = co.ref(ListOfTodoLists);
-}
-```
-</CodeGroup>
-
-You can then create, read, and edit these nested structures:
-
-<CodeGroup>
-```tsx
-function ProjectComponent({ projectId }) {
-  const project = useCoState(Project, projectId);
-  
-  const addNewTodoList = () => {
-    // Create a new TodoList with the same owner as the project
-    const newList = TodoList.create({
-      title: "New List",
-      items: []
-    }, project._owner);
-    
-    // Add it to the project's todoLists
-    project.todoLists.push(newList);
-  };
-  
-  return project ? (
-    <div>
-      <h1>{project.name}</h1>
-      {project.todoLists.map(list => (
-        <TodoListComponent key={list.id} todoList={list} />
-      ))}
-      <button onClick={addNewTodoList}>Add List</button>
-    </div>
-  ) : (
-    <div>Loading project...</div>
-  );
-}
-```
-</CodeGroup>
+We've only scratched the surface of what Jazz can do.
 
 ## Next steps
 
