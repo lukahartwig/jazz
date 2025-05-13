@@ -26,3 +26,29 @@ export function waitFor(callback: () => boolean | void) {
     }, 100);
   });
 }
+export function createPingTimeoutListener(
+  enabled: boolean,
+  timeout: number,
+  callback: () => void,
+) {
+  if (!enabled) {
+    return {
+      reset() {},
+      clear() {},
+    };
+  }
+
+  let pingTimeout: ReturnType<typeof setTimeout> | null = null;
+
+  return {
+    reset() {
+      pingTimeout && clearTimeout(pingTimeout);
+      pingTimeout = setTimeout(() => {
+        callback();
+      }, timeout);
+    },
+    clear() {
+      pingTimeout && clearTimeout(pingTimeout);
+    },
+  };
+}

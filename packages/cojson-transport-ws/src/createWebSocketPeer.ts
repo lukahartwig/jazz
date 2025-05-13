@@ -6,9 +6,10 @@ import {
   cojsonInternals,
   logger,
 } from "cojson";
-import { BatchedOutgoingMessages } from "./BatchedOutgoingMessages.js";
 import { deserializeMessages } from "./serialization.js";
+import { createPingTimeoutListener } from "./tests/utils.js";
 import type { AnyWebSocket } from "./types.js";
+import { createOutgoingMessagesManager } from "./utils.js";
 
 export const BUFFER_LIMIT = 100_000;
 export const BUFFER_LIMIT_POLLING_INTERVAL = 10;
@@ -24,97 +25,6 @@ export type CreateWebSocketPeerOpts = {
   onClose?: () => void;
   onSuccess?: () => void;
 };
-
-function createPingTimeoutListener(
-  enabled: boolean,
-  timeout: number,
-  callback: () => void,
-) {
-  if (!enabled) {
-    return {
-      reset() {},
-      clear() {},
-    };
-  }
-
-  let pingTimeout: ReturnType<typeof setTimeout> | null = null;
-
-  return {
-    reset() {
-      pingTimeout && clearTimeout(pingTimeout);
-      pingTimeout = setTimeout(() => {
-        callback();
-      }, timeout);
-    },
-    clear() {
-      pingTimeout && clearTimeout(pingTimeout);
-    },
-  };
-}
-
-function waitForWebSocketOpen(websocket: AnyWebSocket) {
-  return new Promise<void>((resolve) => {
-    if (websocket.readyState === 1) {
-      resolve();
-    } else {
-      websocket.addEventListener("open", () => resolve(), { once: true });
-    }
-  });
-}
-
-function createOutgoingMessagesManager(
-  websocket: AnyWebSocket,
-  batchingByDefault: boolean,
-) {
-  let closed = false;
-  const outgoingMessages = new BatchedOutgoingMessages((messages) => {
-    if (websocket.readyState === 1) {
-      websocket.send(messages);
-    }
-  });
-
-  let batchingEnabled = batchingByDefault;
-
-  async function sendMessage(msg: SyncMessage) {
-    if (closed) {
-      return Promise.reject(new Error("WebSocket closed"));
-    }
-
-    if (websocket.readyState !== 1) {
-      await waitForWebSocketOpen(websocket);
-    }
-
-    while (
-      websocket.bufferedAmount > BUFFER_LIMIT &&
-      websocket.readyState === 1
-    ) {
-      await new Promise<void>((resolve) =>
-        setTimeout(resolve, BUFFER_LIMIT_POLLING_INTERVAL),
-      );
-    }
-
-    if (websocket.readyState !== 1) {
-      return;
-    }
-
-    if (!batchingEnabled) {
-      websocket.send(JSON.stringify(msg));
-    } else {
-      outgoingMessages.push(msg);
-    }
-  }
-
-  return {
-    sendMessage,
-    setBatchingEnabled(enabled: boolean) {
-      batchingEnabled = enabled;
-    },
-    close() {
-      closed = true;
-      outgoingMessages.close();
-    },
-  };
-}
 
 function createClosedEventEmitter(callback = () => {}) {
   let disconnected = false;
@@ -136,7 +46,7 @@ export function createWebSocketPeer({
   pingTimeout = 10_000,
   onSuccess,
   onClose,
-}: CreateWebSocketPeerOpts): Peer {
+}: CreateWebSocketPeerOpts) {
   const incoming = new cojsonInternals.Channel<
     SyncMessage | DisconnectedError | PingTimeoutError
   >();
@@ -251,5 +161,5 @@ export function createWebSocketPeer({
     role,
     crashOnClose: false,
     deletePeerStateOnClose,
-  };
+  } satisfies Peer;
 }

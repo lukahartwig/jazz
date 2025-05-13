@@ -1,6 +1,6 @@
 import { LocalNode, Peer, RawAccountID } from "cojson";
 import { IDBStorage } from "cojson-storage-indexeddb";
-import { WebSocketPeerWithReconnection } from "cojson-transport-ws";
+import { createWebSocketPeerWithReconnection } from "cojson-transport-ws";
 import { WasmCrypto } from "cojson/crypto/WasmCrypto";
 import {
   Account,
@@ -32,19 +32,6 @@ export type BaseBrowserContextOptions = {
   authSecretStorage: AuthSecretStorage;
 };
 
-class BrowserWebSocketPeerWithReconnection extends WebSocketPeerWithReconnection {
-  onNetworkChange(callback: (connected: boolean) => void): () => void {
-    const handler = () => callback(navigator.onLine);
-    window.addEventListener("online", handler);
-    window.addEventListener("offline", handler);
-
-    return () => {
-      window.removeEventListener("online", handler);
-      window.removeEventListener("offline", handler);
-    };
-  }
-}
-
 async function setupPeers(options: BaseBrowserContextOptions) {
   const crypto = options.crypto || (await WasmCrypto.create());
   let node: LocalNode | undefined = undefined;
@@ -66,26 +53,25 @@ async function setupPeers(options: BaseBrowserContextOptions) {
     };
   }
 
-  const wsPeer = new BrowserWebSocketPeerWithReconnection({
-    peer: options.sync.peer,
-    reconnectionTimeout: options.reconnectionTimeout,
-    addPeer: (peer) => {
-      if (node) {
-        node.syncManager.addPeer(peer);
-      } else {
-        peersToLoadFrom.push(peer);
-      }
-    },
-    removePeer: (peer) => {
-      peersToLoadFrom.splice(peersToLoadFrom.indexOf(peer), 1);
-    },
+  const url = options.sync.peer;
+
+  let wsPeer: Peer | undefined = createWebSocketPeerWithReconnection({
+    url,
+    role: "server",
+    id: "upstream",
   });
 
   function toggleNetwork(enabled: boolean) {
-    if (enabled) {
-      wsPeer.enable();
-    } else {
-      wsPeer.disable();
+    if (enabled && !wsPeer) {
+      wsPeer = createWebSocketPeerWithReconnection({
+        url,
+        role: "server",
+        id: "upstream",
+      });
+      node?.syncManager.addPeer(wsPeer);
+    } else if (!enabled && wsPeer) {
+      wsPeer.outgoing.close();
+      wsPeer = undefined;
     }
   }
 

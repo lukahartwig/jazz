@@ -1,5 +1,8 @@
 import { AgentSecret, CryptoProvider, LocalNode } from "cojson";
-import { type AnyWebSocketConstructor } from "cojson-transport-ws";
+import {
+  type AnyWebSocketConstructor,
+  createWebSocketPeerWithReconnection,
+} from "cojson-transport-ws";
 import { WasmCrypto } from "cojson/crypto/WasmCrypto";
 import {
   Account,
@@ -9,7 +12,6 @@ import {
   createJazzContextFromExistingCredentials,
   randomSessionProvider,
 } from "jazz-tools";
-import { webSocketWithReconnection } from "./webSocketWithReconnection.js";
 
 type WorkerOptions<Acc extends Account> = {
   accountID?: string;
@@ -32,13 +34,13 @@ export async function startWorker<Acc extends Account>(
   } = options;
 
   let node: LocalNode | undefined = undefined;
-  const wsPeer = webSocketWithReconnection(
-    syncServer,
-    (peer) => {
-      node?.syncManager.addPeer(peer);
-    },
-    options.WebSocket,
-  );
+
+  const wsPeer = createWebSocketPeerWithReconnection({
+    url: syncServer,
+    role: "server",
+    id: "upstream",
+    WebSocketConstructor: options.WebSocket,
+  });
 
   if (!accountID) {
     throw new Error("No accountID provided");
@@ -61,7 +63,7 @@ export async function startWorker<Acc extends Account>(
     AccountSchema,
     // TODO: locked sessions similar to browser
     sessionProvider: randomSessionProvider,
-    peersToLoadFrom: [wsPeer.peer],
+    peersToLoadFrom: [wsPeer],
     crypto: options.crypto ?? (await WasmCrypto.create()),
   });
 
@@ -77,7 +79,6 @@ export async function startWorker<Acc extends Account>(
   async function done() {
     await context.account.waitForAllCoValuesSync();
 
-    wsPeer.done();
     context.done();
   }
 
