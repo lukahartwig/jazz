@@ -55,7 +55,10 @@ To get started:
 
 You have now created your first Jazz app! 🎉
 
-Start the development server with `pnpm run dev`. You should see the app running in your browser. (We've used `pnpm` in this example, but any package manager will work.)
+Start the development server with `pnpm run dev`. You should see the app running in your browser.
+
+**Key Concepts:**
+- `create-jazz-app` is a command-line tool that scaffolds a complete Jazz application with authentication, schema definition, and provider setup already configured. The generated app is ready to run and develop further.
 
 Now, let's examine what's in your new Jazz app, and add some new fields.
 
@@ -81,6 +84,12 @@ The most important files for understanding Jazz are:
 - `src/schema.ts` - Your data models
 - `src/main.tsx` - Your provider setup
 - `src/App.tsx` - Your root app component
+
+**Key Concepts:**
+- A Jazz application has three essential components:
+  - Schemas (data models)
+  - A provider (for sync/storage)
+  - Hooks that interact with your collaborative data
 
 ## Defining your data with schemas
 
@@ -191,11 +200,17 @@ export class JazzAccount extends Account {
 
 Great! You've now added the `email` field to the public profile and the `notes` field to the private root.
 
+**Key Concepts:** 
+- Schemas in Jazz define your data structure using classes that extend base types like `CoMap` and properties defined with the `co` namespace.
+- The `migrate` function initializes fields when users log in, ensuring data consistency.
+
 For more detail about CoValues, check out [schemas](/docs/schemas/covalues).
+
+For more on migrations, check out [migrations](/docs/schemas/accounts-and-migrations).
 
 ## Jazz provider setup
 
-For collaboration to work, Jazz needs a provider. This is already set up for you in `src/main.tsx`:
+For persistence and collaboration, Jazz needs a provider. This is already set up for you in `src/main.tsx`:
 
 <CodeGroup>
 ```tsx twoslash
@@ -254,8 +269,10 @@ createRoot(document.getElementById("root")!).render(
 
 Out of the box, your provider is configured to use the Jazz Cloud, and you don't have to do anything to get started. Easy!
 
-For more details about Providers and configuration, see [Providers](/docs/project-setup/providers).
+**Key Concepts:** 
+- `<JazzProvider />` wraps your application and handles synchronization of data. It takes a sync configuration that determines how data is sent between peers and persisted. The default sync configuration connects to [Jazz Cloud](https://cloud.jazz.tools).
 
+For more details about Providers and configuration, see [Providers](/docs/project-setup/providers).
 
 ## Adding to the form
 
@@ -544,9 +561,22 @@ export function Form() {
 ```
 </CodeGroup>
 
+**Key Concepts:**
+- The `useAccount` hook provides access to the current user's account and its associated data.
+- Jazz allows direct mutation of CoValues with assignment operations, but for more nuanced values like `CoPlainText`, specialized methods like `applyDiff()` can optimize updates by only sending the changes instead of creating new instances.
+
+TODO: Link to UseAccount/UseCoState hook docs
+
 ## Persisting data
 
 Now that you've added the `notes` field, try refreshing the page. You'll see that the notes you added are still there. Jazz automatically persists your data without any additional configuration.
+
+**Key Concepts:**
+- Jazz provides automatic persistence of all your data. By default, every CoValue you create is automatically saved to local storage and synchronized with the cloud when changes are made. You don't need to write any code to handle saving or loading.
+
+For more on persistence, check out [Sync and Storage](/docs/sync-and-storage/).
+
+TODO: Sync and Storage docs don't talk about persistence
 
 ## Real-time collaboration
 
@@ -559,6 +589,9 @@ To experience real-time collaboration:
 3. Watch as they appear instantly in the other window
 
 This works across different devices and users too.
+
+**Key Concept:**
+- Real-time collaboration is built into Jazz at the core. When you make changes to a CoValue, Jazz automatically handles synchronizing those changes to all connected clients. This happens without you having to write any additional code for syncing or conflict resolution.
 
 ## Complete
 
@@ -574,13 +607,22 @@ You've accomplished several important things:
 
 You've only scratched the surface of what Jazz can do.
 
+**Key Concepts Review:**
+
+Through this tutorial, you've experienced the core concepts of Jazz:
+- **Schemas** define your data structure using CoValues
+- **Providers** handle synchronization and persistence
+- **Hooks** like `useAccount` connect your React components to your data
+- **Editing** CoValues updates your data everywhere instantly
+- **Automatic persistence** saves your data without extra code
+
 ## Next steps
 
 Now that you've built your first Jazz app, you can:
 
+- Add [authentication and sharing](/docs/authentication/overview)
+- Add [groups and permissions](/docs/groups/intro)
 - Explore the [example apps](/examples) to see more complex implementations
-- Learn about [authentication and sharing](/docs/sync-and-storage)
 - Dive into [collaborative values](/docs/schemas/covalues) to understand more advanced schema patterns
-- Set up [sync and storage](/docs/sync-and-storage) for production use
 
 If you have any questions or need help, join our [Discord community](https://discord.gg/utDMjHYg42).
