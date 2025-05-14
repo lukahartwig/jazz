@@ -1,0 +1,32 @@
+{
+  "name": "soul-dev",
+  "module": "dist/index.js",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./dist/*": "./dist/*",
+    "./src/*": "./src/*"
+  },
+  "type": "module",
+  "license": "MIT",
+  "version": "0.0.1",
+  "devDependencies": {
+    "typescript": "catalog:"
+  },
+  "dependencies": {
+    "@huggingface/transformers": "^3.5.1",
+    "jazz-tools": "workspace:*"
+  },
+  "scripts": {
+    "dev": "tsc --watch --sourceMap --outDir dist",
+    "test": "vitest --run --root ../../ --project soul-dev",
+    "test:watch": "vitest --watch --root ../../ --project cojson",
+    "format-and-lint": "biome check .",
+    "format-and-lint:fix": "biome check . --write",
+    "build": "rm -rf ./dist && tsc --sourceMap --outDir dist"
+  }
+}
