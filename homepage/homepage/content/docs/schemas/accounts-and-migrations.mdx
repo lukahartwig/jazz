@@ -20,8 +20,13 @@ These root references are modeled explicitly in your schema, distinguishing betw
 Every Jazz app that wants to refer to per-user data needs to define a custom root `CoMap` schema and declare it in a custom `Account` schema as the `root` field:
 
 <CodeGroup>
-{/* prettier-ignore */}
-```ts
+```ts twoslash
+import { co, CoList } from "jazz-tools";
+class Chat extends CoMap {};
+class ListOfChats extends CoList.Of(Chat) {};
+class ListOfAccounts extends CoList.Of(Account) {};
+import "jazz-react";
+// ---cut---
 import { Account, CoMap } from "jazz-tools";
 
 export class MyAppAccount extends Account {
@@ -50,9 +55,11 @@ that is set up for you based on the username the `AuthMethod` provides on accoun
 Their pre-defined schemas roughly look like this:
 
 <CodeGroup>
-{/* prettier-ignore */}
-```ts
-// ...somehwere in jazz-tools itself...
+```ts twoslash
+// @noErrors: 2416
+import { co, Group, CoMap } from "jazz-tools";
+// ---cut---
+// ...somewhere in jazz-tools itself...
 export class Account extends Group {
   profile = co.ref(Profile);
 }
@@ -68,8 +75,10 @@ If you want to keep the default `Profile` schema, but customise your account's p
 (You don't have to explicitly re-define the `profile` field, but it makes it more readable that the Account contains both `profile` and `root`)
 
 <CodeGroup>
-{/* prettier-ignore */}
-```ts
+```ts twoslash
+import { co, CoMap } from "jazz-tools";
+class MyAppRoot extends CoMap {};
+// ---cut---
 import { Account, Profile } from "jazz-tools";
 
 export class MyAppAccount extends Account {
@@ -78,11 +87,17 @@ export class MyAppAccount extends Account {
 }
 ```
 </CodeGroup>
+
 If you want to extend the `profile` to contain additional fields (such as an avatar `ImageDefinition`), you can declare your own profile schema class that extends `Profile`:
 
 <CodeGroup>
-{/* prettier-ignore */}
-```ts
+```ts twoslash
+import "jazz-react";
+import { co, CoMap, CoList } from "jazz-tools";
+class Chat extends CoMap {};
+class ListOfChats extends CoList.Of(Chat) {};
+class ListOfAccounts extends CoList.Of(Account) {};
+// ---cut---
 import { Account, Profile, ImageDefinition } from "jazz-tools"; // [!code ++]
 
 export class MyAppAccount extends Account {
@@ -102,9 +117,9 @@ export class MyAppProfile extends Profile { // [!code ++:4]
 
 // Register the Account schema so `useAccount` returns our custom `MyAppAccount` 
 declare module "jazz-react" {
-    interface Register {
-        Account: MyAppAccount;
-    }
+  interface Register {
+    Account: MyAppAccount;
+  }
 }
 ```
 </CodeGroup>
@@ -115,23 +130,65 @@ declare module "jazz-react" {
 To use per-user data in your app, you typically use `useAccount` somewhere in a high-level component, specifying which references to resolve using a resolve query (see [Subscribing & deep loading](/docs/using-covalues/subscription-and-loading)).
 
 <CodeGroup>
-{/* prettier-ignore */}
-```tsx
+```tsx twoslash
+import * as React from "react";
+import { Account, co, CoMap, Profile, CoList } from "jazz-tools";
+
+class Chat extends CoMap {};
+class ListOfChats extends CoList.Of(co.ref(Chat)) {};
+class ListOfAccounts extends CoList.Of(co.ref(Account)) {};
+
+class MyAppRoot extends CoMap {
+  myChats = co.ref(ListOfChats);
+  myContacts = co.ref(ListOfAccounts);
+};
+class MyAppProfile extends Profile {};
+
+class MyAppAccount extends Account {
+  root = co.ref(MyAppRoot);
+  profile = co.ref(MyAppProfile);
+};
+
+declare module "jazz-react" {
+  interface Register {
+    Account: MyAppAccount;
+  }
+}
+
+class ChatPreview extends React.Component<{ chat: Chat }> {};
+class ContactPreview extends React.Component<{ contact: Account }> {};
+// ---cut---
 import { useAccount } from "jazz-react";
 
 function DashboardPageComponent() {
-  const { me } = useAccount({ resolve: { profile: true, root: { myChats: true, myContacts: true }}});
+  const { me } = useAccount({ resolve: {
+    profile: true,
+    root: {
+      myChats: { $each: true },
+      myContacts: { $each: true }
+    }
+  }});
 
-  return <div>
-    <h1>Dashboard</h1>
-    {me ? <div>
-      <p>Logged in as {me.profile.name}</p>
-      <h2>My chats</h2>
-      {me.root.myChats.map((chat) => <ChatPreview key={chat.id} chat={chat} />)}
-      <h2>My contacts</h2>
-      {me.root.myContacts.map((contact) => <ContactPreview key={contact.id} contact={contact} />)}
-    </div> : "Loading..."}
-  </div>
+  return (
+    <div>
+      <h1>Dashboard</h1>
+      {me ? (
+        <div>
+          <p>Logged in as {me.profile.name}</p>
+          <h2>My chats</h2>
+          {me.root.myChats.map((chat) => (
+            <ChatPreview key={chat.id} chat={chat} />
+          ))}
+          <h2>My contacts</h2>
+          {me.root.myContacts.map((contact) => (
+            <ContactPreview key={contact.id} contact={contact} />
+          ))}
+        </div>
+      ) : (
+        "Loading..."
+      )}
+    </div>
+  );
 }
 
 ```
@@ -156,8 +213,21 @@ Jazz waits for the migration to finish before passing the account to your app's 
 ### Initialising user data after account creation
 
 <CodeGroup>
-{/* prettier-ignore */}
-```ts
+```ts twoslash
+import { Account, co, Group, CoList, CoMap, Profile } from "jazz-tools";
+class Chat extends CoMap {};
+class Bookmark extends CoMap {};
+
+class ListOfChats extends CoList.Of(co.ref(Chat)) {};
+class ListOfAccounts extends CoList.Of(co.ref(Account)) {};
+class ListOfBookmarks extends CoList.Of(co.ref(Bookmark)) {};
+
+class MyAppRoot extends CoMap {};
+class MyAppProfile extends Profile {
+  name = co.string;
+  bookmarks = co.ref(ListOfBookmarks);
+};
+// ---cut---
 export class MyAppAccount extends Account {
   root = co.ref(MyAppRoot);
   profile = co.ref(MyAppProfile);
@@ -181,7 +251,7 @@ export class MyAppAccount extends Account {
       profileGroup.addMember("everyone", "reader");
 
       this.profile = MyAppProfile.create({
-        name: creationProps?.name,
+        name: creationProps?.name ?? "New user",
         bookmarks: ListOfBookmarks.create([], profileGroup),
       }, profileGroup);
     }
@@ -200,8 +270,22 @@ To do deeply nested migrations, you might need to use the asynchronous `ensureLo
 Now let's say we want to add a `myBookmarks` field to the `root` schema:
 
 <CodeGroup>
-{/* prettier-ignore */}
-```ts
+```ts twoslash
+import { Account, co, Group, CoList, CoMap, Profile } from "jazz-tools";
+class Chat extends CoMap {};
+class Bookmark extends CoMap {};
+
+class ListOfChats extends CoList.Of(co.ref(Chat)) {};
+class ListOfAccounts extends CoList.Of(co.ref(Account)) {};
+class ListOfBookmarks extends CoList.Of(co.ref(Bookmark)) {};
+
+class MyAppRoot extends CoMap {
+  myChats = co.ref(ListOfChats);
+  myContacts = co.ref(ListOfAccounts);
+  myBookmarks = co.optional.ref(ListOfBookmarks);
+};
+
+// ---cut---
 export class MyAppAccount extends Account {
     root = co.ref(MyAppRoot);
 
