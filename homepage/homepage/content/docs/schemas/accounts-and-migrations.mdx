@@ -120,7 +120,7 @@ To use per-user data in your app, you typically use `useAccount` somewhere in a 
 import { useAccount } from "jazz-react";
 
 function DashboardPageComponent() {
-  const { me } = useAccount({ profile: {}, root: { myChats: {}, myContacts: {}}});
+  const { me } = useAccount({ resolve: { profile: true, root: { myChats: true, myContacts: true }}});
 
   return <div>
     <h1>Dashboard</h1>

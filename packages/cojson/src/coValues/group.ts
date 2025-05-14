@@ -773,7 +773,10 @@ export class RawGroup<
   ) {
     const memberKey = typeof account === "string" ? account : account.id;
 
-    this.rotateReadKey(memberKey);
+    if (this.myRole() === "admin") {
+      this.rotateReadKey(memberKey);
+    }
+
     this.set(memberKey, "revoked", "trusting");
   }
 

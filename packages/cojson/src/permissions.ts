@@ -452,7 +452,12 @@ function determineValidTransactionsForGroup(
       change.key === transactor &&
       change.value === "admin";
 
-    if (!isFirstSelfAppointment) {
+    const currentAccountId = coValue.node.getCurrentAccountOrAgentID();
+
+    const isSelfRevoke =
+      currentAccountId === change.key && change.value === "revoked";
+
+    if (!isFirstSelfAppointment && !isSelfRevoke) {
       if (memberState[transactor] === "admin") {
         if (
           memberState[affectedMember] === "admin" &&

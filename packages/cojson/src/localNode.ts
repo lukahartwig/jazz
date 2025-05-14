@@ -104,8 +104,12 @@ export class LocalNode {
     this.coValues.delete(id);
   }
 
+  getCurrentAccountOrAgentID(): RawAccountID | AgentID {
+    return accountOrAgentIDfromSessionID(this.currentSessionID);
+  }
+
   getCurrentAgent(): ControlledAccountOrAgent {
-    const accountOrAgent = accountOrAgentIDfromSessionID(this.currentSessionID);
+    const accountOrAgent = this.getCurrentAccountOrAgentID();
     if (isAgentID(accountOrAgent)) {
       return new ControlledAgent(this.agentSecret, this.crypto);
     }
@@ -118,7 +122,7 @@ export class LocalNode {
   }
 
   expectCurrentAccountID(reason: string): RawAccountID {
-    const accountOrAgent = accountOrAgentIDfromSessionID(this.currentSessionID);
+    const accountOrAgent = this.getCurrentAccountOrAgentID();
     if (isAgentID(accountOrAgent)) {
       throw new Error(
         "Current account is an agent, but expected an account: " + reason,

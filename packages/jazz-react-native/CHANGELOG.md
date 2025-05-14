@@ -1,5 +1,15 @@
 # jazz-browser
 
+## 0.13.27
+
+### Patch Changes
+
+- Updated dependencies [6357052]
+  - cojson@0.13.27
+  - cojson-storage@0.13.27
+  - jazz-react-native-core@0.13.27
+  - jazz-tools@0.13.27
+
 ## 0.13.26
 
 ### Patch Changes

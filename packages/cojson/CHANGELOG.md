@@ -1,5 +1,11 @@
 # cojson
 
+## 0.13.27
+
+### Patch Changes
+
+- 6357052: Allow accounts to self-remove from groups
+
 ## 0.13.25
 
 ### Patch Changes
