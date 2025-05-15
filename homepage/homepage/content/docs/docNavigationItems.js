@@ -10,15 +10,20 @@ export const docNavigationItems = [
         done: 100,
       },
       {
-        name: "Get Started",
-        href: "/docs/get-started",
+        name: "Basic Jazz",
+        href: "/docs/tutorials/basic-jazz",
         done: 100,
+      },
+      {
+        name: "Advanced Jazz",
+        href: "/docs/tutorials/advanced-jazz",
+        done: 0,
       },
       {
         name: "Guide",
         href: "/docs/guide",
         done: {
-          react: 100,
+          react: 50,
         },
       },
       {
