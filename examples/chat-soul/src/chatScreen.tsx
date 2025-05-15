@@ -2,7 +2,7 @@ import { createImage, useAccount, useCoState } from "jazz-react";
 import { Account, CoPlainText, ID } from "jazz-tools";
 import { MicIcon } from "lucide-react";
 import { useEffect, useState } from "react";
-import { participate, record, run } from "soul-dev";
+import { chatLikeGenerate, record } from "soul-dev";
 import { Chat, Message } from "./schema.ts";
 import {
   BubbleBody,
@@ -22,16 +22,49 @@ export function ChatScreen(props: { chatID: ID<Chat> }) {
   const account = useAccount();
   const [showNLastMessages, setShowNLastMessages] = useState(30);
 
-  // useEffect(() => {
-  //   if (!props.chatID) {
-  //     return
-  //   }
+  const [agentAccount, setAgentAccount] = useState<Account | null>(null);
 
-  //   return participate(Chat, props.chatID, {
-  //     resolve: { $each: true },
-  //     prompt: "Succinctly describe the mood of the messages so far, in a couple words."
-  //   })
-  // }, [props.chatID])
+  useEffect(() => {
+    Account.createAs(account.me, {
+      creationProps: {
+        name: "Agent",
+      },
+    }).then(setAgentAccount);
+  }, []);
+
+  useEffect(() => {
+    if (!props.chatID || !chat || !agentAccount) {
+      return;
+    }
+
+    return chatLikeGenerate(Chat, props.chatID, {
+      resolve: { $each: { text: true } },
+      mapToChat: (update) => {
+        return update.map((message) => ({
+          content: message.text?.toString() || "",
+          role:
+            message?._edits.text.by?.id === agentAccount.id
+              ? "assistant"
+              : "user",
+          name: message?._edits.text.by?.profile?.name,
+        }));
+      },
+      prompt: "Cheerfully respond to the user's message.",
+      onResponseStart: (chatAsAgent, response) => {
+        const message = Message.create(
+          { text: CoPlainText.create(response, chatAsAgent._owner) },
+          chatAsAgent._owner,
+        );
+
+        chatAsAgent.push(message);
+        return message;
+      },
+      onResponseUpdate: (response, existing) => {
+        existing.text?.applyDiff(response);
+      },
+      agentAccount,
+    });
+  }, [props.chatID, chat?.length > 0, agentAccount]);
 
   if (!chat)
     return (
@@ -97,10 +130,6 @@ export function ChatScreen(props: { chatID: ID<Chat> }) {
         />
 
         <button
-          type="button"
-          aria-label="Transcribe"
-          title="Transcribe"
-          className="text-stone-500 p-1.5 rounded-full hover:bg-stone-100 hover:text-stone-800 dark:hover:bg-stone-800 dark:hover:text-stone-200 transition-colors"
           onClick={() =>
             record({
               onNewChunk: (text) => {

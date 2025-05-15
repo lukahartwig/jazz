@@ -20,6 +20,7 @@ export {
   type AccountClass,
   type AccountCreationProps,
 } from "./coValues/account.js";
+export { activeAccountContext } from "./implementation/activeAccountContext.js";
 export {
   BinaryCoStream,
   CoFeed,
