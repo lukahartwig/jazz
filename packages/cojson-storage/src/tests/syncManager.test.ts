@@ -14,9 +14,9 @@ import type {
   SessionID,
   SyncMessage,
 } from "cojson";
-import { SyncManager } from "../syncManager.js";
+import { StorageManagerAsync as SyncManager } from "../managerAsync.js";
 import { getDependedOnCoValues } from "../syncUtils.js";
-import type { DBClientInterface } from "../types.js";
+import type { DBClientInterfaceAsync as DBClientInterface } from "../types.js";
 import { fixtures } from "./fixtureMessages.js";
 
 type RawCoID = CojsonInternalTypes.RawCoID;

@@ -1,27 +1,11 @@
 import { afterEach, expect, test, vi } from "vitest";
 import { expectPlainText } from "../coValue.js";
 import { WasmCrypto } from "../crypto/WasmCrypto.js";
-import { LocalNode } from "../localNode.js";
-import {
-  nodeWithRandomAgentAndSessionID,
-  randomAgentAndSessionID,
-} from "./testUtils.js";
+import { nodeWithRandomAgentAndSessionID } from "./testUtils.js";
 
 const Crypto = await WasmCrypto.create();
 
 afterEach(() => void vi.unstubAllGlobals());
-
-test("should throw on creation if Intl.Segmenter is not available", () => {
-  vi.stubGlobal("Intl", {
-    Segmenter: undefined,
-  });
-
-  const node = nodeWithRandomAgentAndSessionID();
-  const group = node.createGroup();
-  expect(() => group.createPlainText()).toThrow(
-    "Intl.Segmenter is not supported. Use a polyfill to get coPlainText support in Jazz. (eg. https://formatjs.github.io/docs/polyfills/intl-segmenter/)",
-  );
-});
 
 test("Empty CoPlainText works", () => {
   const node = nodeWithRandomAgentAndSessionID();
@@ -86,7 +70,7 @@ test("Can insert and delete in CoPlainText", () => {
   content.insertBefore(2, "😍", "trusting");
   expect(content.toString()).toEqual("He😍llo, world");
 
-  content.deleteRange({ from: 2, to: 4 }, "trusting");
+  content.deleteRange({ from: 2, to: 3 }, "trusting");
   expect(content.toString()).toEqual("Hello, world");
 });
 
@@ -203,4 +187,81 @@ test("insertBefore and insertAfter work as expected", () => {
   // Insert '!' at start
   content.insertBefore(0, "!", "trusting"); // "!hey"
   expect(content.toString()).toEqual("!hey");
+});
+
+test("Can delete a single grapheme", () => {
+  const node = nodeWithRandomAgentAndSessionID();
+  const coValue = node.createCoValue({
+    type: "coplaintext",
+    ruleset: { type: "unsafeAllowAll" },
+    meta: null,
+    ...Crypto.createdNowUnique(),
+  });
+  const content = expectPlainText(coValue.getCurrentContent());
+
+  content.insertAfter(0, "a̐éö̲", "trusting"); // 3 graphemes
+  content.deleteRange({ from: 1, to: 2 }, "trusting"); // delete the second grapheme
+  expect(content.toString()).toEqual("a̐ö̲");
+});
+
+test("Handles complex grapheme clusters correctly", () => {
+  const node = nodeWithRandomAgentAndSessionID();
+  const coValue = node.createCoValue({
+    type: "coplaintext",
+    ruleset: { type: "unsafeAllowAll" },
+    meta: null,
+    ...Crypto.createdNowUnique(),
+  });
+  const content = expectPlainText(coValue.getCurrentContent());
+
+  // Combining marks (should be treated as one grapheme each)
+  const combining = "a̐éö̲"; // 3 graphemes: [a̐][é][ö̲]
+  content.insertAfter(0, combining, "trusting");
+  expect(content.toString()).toEqual(combining);
+  content.deleteRange({ from: 1, to: 2 }, "trusting");
+  expect(content.toString()).toEqual("a̐ö̲");
+
+  // ZWJ emoji (family)
+  const family = "👨‍👩‍👧‍👦"; // 1 grapheme
+  content.insertAfter(2, family, "trusting");
+  expect(content.toString()).toEqual("a̐ö̲👨‍👩‍👧‍👦");
+  content.deleteRange({ from: 2, to: 3 }, "trusting");
+  expect(content.toString()).toEqual("a̐ö̲");
+
+  // Flag emoji (regional indicators)
+  const flag = "🇺🇸"; // 1 grapheme
+  content.insertAfter(2, flag, "trusting");
+  expect(content.toString()).toEqual("a̐ö̲🇺🇸");
+  content.deleteRange({ from: 2, to: 3 }, "trusting");
+  expect(content.toString()).toEqual("a̐ö̲");
+
+  // Emoji with skin tone modifier
+  const thumbsUp = "👍🏽"; // 1 grapheme
+  content.insertAfter(2, thumbsUp, "trusting");
+  expect(content.toString()).toEqual("a̐ö̲👍🏽");
+  content.deleteRange({ from: 2, to: 3 }, "trusting");
+  expect(content.toString()).toEqual("a̐ö̲");
+});
+
+test("Handle deletion of complex grapheme clusters correctly", () => {
+  const node = nodeWithRandomAgentAndSessionID();
+  const coValue = node.createCoValue({
+    type: "coplaintext",
+    ruleset: { type: "unsafeAllowAll" },
+    meta: null,
+    ...Crypto.createdNowUnique(),
+  });
+  const content = expectPlainText(coValue.getCurrentContent());
+
+  // Combining marks (should be treated as one grapheme each)
+  content.insertAfter(0, "👋 안녕!", "trusting");
+  expect(content.toString()).toEqual("👋 안녕!");
+
+  // Delete the first grapheme
+  content.deleteRange({ from: 0, to: 1 }, "trusting");
+  expect(content.toString()).toEqual(" 안녕!");
+
+  // Delete the second grapheme
+  content.deleteRange({ from: 1, to: 2 }, "trusting");
+  expect(content.toString()).toEqual(" 녕!");
 });

@@ -1,5 +1,19 @@
 # cojson
 
+## 0.13.29
+
+### Patch Changes
+
+- eef1a5d: Load: increase the coValue retry delay and stop waiting as soon as the value becomes available
+- 191ae38: Upgrade @noble/ciphers to 1.3.0, @noble/curves to 1.9.1 and @noble/hashes to 1.8.0
+- daee7b9: Correctly rotate the readKey when downgrading a member to writeOnly
+
+## 0.13.28
+
+### Patch Changes
+
+- e7ccb2c: Recover missing dependencies when getting new content
+
 ## 0.13.27
 
 ### Patch Changes

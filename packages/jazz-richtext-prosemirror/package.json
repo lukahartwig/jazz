@@ -1,6 +1,6 @@
 {
   "name": "jazz-richtext-prosemirror",
-  "version": "0.1.14",
+  "version": "0.1.16",
   "description": "ProseMirror integration for Jazz rich text editing",
   "main": "dist/index.js",
   "types": "src/index.ts",

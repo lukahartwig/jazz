@@ -1,5 +1,22 @@
 # cojson-storage
 
+## 0.13.29
+
+### Patch Changes
+
+- e2d6ba3: Create specialized Sync and Async storage managers
+- Updated dependencies [eef1a5d]
+- Updated dependencies [191ae38]
+- Updated dependencies [daee7b9]
+  - cojson@0.13.29
+
+## 0.13.28
+
+### Patch Changes
+
+- Updated dependencies [e7ccb2c]
+  - cojson@0.13.28
+
 ## 0.13.27
 
 ### Patch Changes

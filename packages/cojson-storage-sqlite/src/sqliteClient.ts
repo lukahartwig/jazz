@@ -6,7 +6,7 @@ import {
   logger,
 } from "cojson";
 import type {
-  DBClientInterface,
+  DBClientInterfaceSync,
   SessionRow,
   SignatureAfterRow,
   StoredCoValueRow,
@@ -33,7 +33,7 @@ export function getErrorMessage(error: unknown) {
   return error instanceof Error ? error.message : "Unknown error";
 }
 
-export class SQLiteClient implements DBClientInterface {
+export class SQLiteClient implements DBClientInterfaceSync {
   private readonly db: DatabaseT;
   private readonly toLocalNode: OutgoingSyncQueue;
 

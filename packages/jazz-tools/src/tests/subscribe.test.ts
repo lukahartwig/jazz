@@ -30,6 +30,8 @@ import {
 } from "../testing.js";
 import { setupAccount, waitFor } from "./utils.js";
 
+cojsonInternals.setCoValueLoadingRetryDelay(300);
+
 class ChatRoom extends CoMap {
   messages = co.ref(MessagesList);
   name = co.string;

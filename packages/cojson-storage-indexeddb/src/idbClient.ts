@@ -1,7 +1,7 @@
 import type { CojsonInternalTypes, RawCoID, SessionID } from "cojson";
 import type {
   CoValueRow,
-  DBClientInterface,
+  DBClientInterfaceAsync,
   SessionRow,
   SignatureAfterRow,
   StoredCoValueRow,
@@ -10,7 +10,7 @@ import type {
 } from "cojson-storage";
 import { CoJsonIDBTransaction } from "./CoJsonIDBTransaction.js";
 
-export class IDBClient implements DBClientInterface {
+export class IDBClient implements DBClientInterfaceAsync {
   private db;
 
   activeTransaction: CoJsonIDBTransaction | undefined;

@@ -46,7 +46,9 @@ a new CoValue.
 A `DraftBubbleTeaOrder` is essentially a copy of `BubbleTeaOrder`, but with all the fields made optional.
 
 <CodeGroup>
-```tsx
+```tsx twoslash
+import { co, CoMap } from "jazz-tools";
+// ---cut---
 // schema.ts
 export class BubbleTeaOrder extends CoMap {
   name = co.string;
@@ -63,7 +65,18 @@ export class DraftBubbleTeaOrder extends CoMap {
 Let's write the form component that will be used for both create and update.
 
 <CodeGroup>
-```tsx
+```tsx twoslash
+import { co, CoMap } from "jazz-tools";
+import * as React from "react";
+
+export class BubbleTeaOrder extends CoMap {
+  name = co.string;
+}
+
+export class DraftBubbleTeaOrder extends CoMap {
+  name = co.optional.string;
+}
+// ---cut---
 // OrderForm.tsx
 export function OrderForm({
   order,
@@ -96,10 +109,46 @@ export function OrderForm({
 To make the edit form, simply pass the `BubbleTeaOrder`.
 
 <CodeGroup>
-```tsx
+```tsx twoslash
+import { co, CoMap, ID } from "jazz-tools";
+import { useCoState } from "jazz-react";
+import * as React from "react";
+
+export class BubbleTeaOrder extends CoMap {
+  name = co.string;
+}
+
+export class DraftBubbleTeaOrder extends CoMap {
+  name = co.optional.string;
+}
+
+export function OrderForm({
+  order,
+  onSave,
+}: {
+  order: BubbleTeaOrder | DraftBubbleTeaOrder;
+  onSave?: (e: React.FormEvent<HTMLFormElement>) => void;
+}) {
+  return (
+    <form onSubmit={onSave}>
+      <label>
+        Name
+        <input
+          type="text"
+          value={order.name}
+          onChange={(e) => (order.name = e.target.value)}
+          required
+        />
+      </label>
+
+      {onSave && <button type="submit">Submit</button>}
+    </form>
+  );
+}
+// ---cut---
 // EditOrder.tsx
 export function EditOrder(props: { id: ID<BubbleTeaOrder> }) {
-  const order = useCoState(BubbleTeaOrder, props.id, []);
+  const order = useCoState(BubbleTeaOrder, props.id);
 
   if (!order) return;
 
@@ -118,7 +167,58 @@ For the create form, we need to:
 Here's how that looks like:
 
 <CodeGroup>
-```tsx
+```tsx twoslash
+import { co, CoMap, ID, Account } from "jazz-tools";
+import { useCoState, useAccount } from "jazz-react";
+import * as React from "react";
+import { useState, useEffect } from "react";
+
+export class BubbleTeaOrder extends CoMap {
+  name = co.string;
+}
+
+export class DraftBubbleTeaOrder extends CoMap {
+  name = co.optional.string;
+}
+
+export class AccountRoot extends CoMap {
+  draft = co.ref(DraftBubbleTeaOrder);
+}
+
+export class JazzAccount extends Account {
+  root = co.ref(AccountRoot);
+}
+
+declare module "jazz-react" {
+  interface Register {
+    Account: JazzAccount;
+  }
+}
+
+export function OrderForm({
+  order,
+  onSave,
+}: {
+  order: BubbleTeaOrder | DraftBubbleTeaOrder;
+  onSave?: (e: React.FormEvent<HTMLFormElement>) => void;
+}) {
+  return (
+    <form onSubmit={onSave}>
+      <label>
+        Name
+        <input
+          type="text"
+          value={order.name}
+          onChange={(e) => (order.name = e.target.value)}
+          required
+        />
+      </label>
+
+      {onSave && <button type="submit">Submit</button>}
+    </form>
+  );
+}
+// ---cut---
 // CreateOrder.tsx
 export function CreateOrder() {
   const { me } = useAccount();
@@ -151,7 +251,9 @@ In a `BubbleTeaOrder`, the `name` field is required, so it would be a good idea 
 Update the schema to include a `validate` method.
 
 <CodeGroup>
-```ts
+```ts twoslash
+import { co, CoMap } from "jazz-tools";
+// ---cut---
 // schema.ts
 export class DraftBubbleTeaOrder extends CoMap {
   name = co.optional.string;
@@ -172,7 +274,68 @@ export class DraftBubbleTeaOrder extends CoMap {
 Then perform the validation on submit.
 
 <CodeGroup>
-```tsx
+```tsx twoslash
+import { co, CoMap, ID, Account } from "jazz-tools";
+import { useCoState, useAccount } from "jazz-react";
+import * as React from "react";
+import { useState, useEffect } from "react";
+
+export class BubbleTeaOrder extends CoMap {
+  name = co.string;
+}
+
+export class DraftBubbleTeaOrder extends CoMap {
+  name = co.optional.string;
+
+  validate() {
+    const errors: string[] = [];
+
+    if (!this.name) {
+      errors.push("Please enter a name.");
+    }
+
+    return { errors };
+  }
+}
+
+export class AccountRoot extends CoMap {
+  draft = co.ref(DraftBubbleTeaOrder);
+}
+
+export class JazzAccount extends Account {
+  root = co.ref(AccountRoot);
+}
+
+declare module "jazz-react" {
+  interface Register {
+    Account: JazzAccount;
+  }
+}
+
+export function OrderForm({
+  order,
+  onSave,
+}: {
+  order: BubbleTeaOrder | DraftBubbleTeaOrder;
+  onSave?: (e: React.FormEvent<HTMLFormElement>) => void;
+}) {
+  return (
+    <form onSubmit={onSave}>
+      <label>
+        Name
+        <input
+          type="text"
+          value={order.name}
+          onChange={(e) => (order.name = e.target.value)}
+          required
+        />
+      </label>
+
+      {onSave && <button type="submit">Submit</button>}
+    </form>
+  );
+}
+// ---cut---
 // CreateOrder.tsx
 export function CreateOrder() {
   const { me } = useAccount();
@@ -211,7 +374,9 @@ It turns out that using this pattern also provides a UX improvement.
 By storing the draft in the user's account, they can come back to it anytime without losing their work. 🙌
 
 <CodeGroup>
-```ts
+```ts twoslash
+import { co, CoMap, Account } from "jazz-tools";
+// ---cut---
 // schema.ts
 export class BubbleTeaOrder extends CoMap {
   name = co.string;
@@ -242,7 +407,36 @@ export class JazzAccount extends Account {
 Let's not forget to update the `AccountSchema`.
 
 <CodeGroup>
-```ts
+```ts twoslash
+// @filename: schema.tsx
+import { co, CoMap, Account } from "jazz-tools";
+export class BubbleTeaOrder extends CoMap {
+  name = co.string;
+}
+
+export class DraftBubbleTeaOrder extends CoMap {
+  name = co.optional.string;
+}
+
+export class AccountRoot extends CoMap { // [!code ++:15]
+  draft = co.ref(DraftBubbleTeaOrder);
+}
+
+export class JazzAccount extends Account {
+  root = co.ref(AccountRoot);
+
+  migrate(this: JazzAccount, creationProps?: { name: string }) {
+    if (this.root === undefined) {
+      const draft = DraftBubbleTeaOrder.create({});
+
+      this.root = AccountRoot.create({ draft });
+    }
+  }
+}
+
+// @filename: App.tsx
+import * as React from "react";
+// ---cut---
 import { JazzProvider } from "jazz-react";
 import { JazzAccount } from "./schema"; // [!code ++]
 
@@ -269,10 +463,86 @@ declare module "jazz-react" { // [!code ++:5]
 Instead of creating a new draft every time we use the create form, let's use the draft from the account root.
 
 <CodeGroup>
-```tsx
+```tsx twoslash
+// @filename: schema.ts
+import { co, CoMap, Account } from "jazz-tools";
+
+export class BubbleTeaOrder extends CoMap {
+  name = co.string;
+}
+
+export class DraftBubbleTeaOrder extends CoMap {
+  name = co.optional.string;
+
+  validate() {
+    const errors: string[] = [];
+
+    if (!this.name) {
+      errors.push("Plese enter a name.");
+    }
+
+    return { errors };
+  }
+}
+
+export class AccountRoot extends CoMap {
+  draft = co.ref(DraftBubbleTeaOrder);
+}
+
+export class JazzAccount extends Account {
+  root = co.ref(AccountRoot);
+
+  migrate(this: JazzAccount, creationProps?: { name: string }) {
+    if (this.root === undefined) {
+      const draft = DraftBubbleTeaOrder.create({});
+
+      this.root = AccountRoot.create({ draft });
+    }
+  }
+}
+
+declare module "jazz-react" {
+  interface Register {
+    Account: JazzAccount;
+  }
+}
+
+// @filename: CreateOrder.tsx
+import * as React from "react";
+import { useCoState, useAccount } from "jazz-react";
+import { BubbleTeaOrder, DraftBubbleTeaOrder } from "schema";
+import { ID } from "jazz-tools";
+
+export function OrderForm({
+  order,
+  onSave,
+}: {
+  order: BubbleTeaOrder | DraftBubbleTeaOrder;
+  onSave?: (e: React.FormEvent<HTMLFormElement>) => void;
+}) {
+  return (
+    <form onSubmit={onSave}>
+      <label>
+        Name
+        <input
+          type="text"
+          value={order.name}
+          onChange={(e) => (order.name = e.target.value)}
+          required
+        />
+      </label>
+
+      {onSave && <button type="submit">Submit</button>}
+    </form>
+  );
+}
+
+// ---cut---
 // CreateOrder.tsx
 export function CreateOrder() {
-  const { me } = useAccount({ root: { draft: {} } }); // [!code ++:3]
+  const { me } = useAccount({ // [!code ++:5]
+    resolve: { root: { draft: true } },
+  });
 
   if (!me?.root) return;
 
@@ -328,7 +598,9 @@ To improve the UX even further, in just a few more steps, we can tell the user t
 Simply add a `hasChanges` checker to your schema.
 
 <CodeGroup>
-```ts
+```ts twoslash
+import { co, CoMap } from "jazz-tools";
+// ---cut---
 // schema.ts
 export class DraftBubbleTeaOrder extends CoMap {
   name = co.optional.string;
@@ -353,11 +625,59 @@ export class DraftBubbleTeaOrder extends CoMap {
 In the UI, you can choose how you want to show the draft indicator.
 
 <CodeGroup>
-```tsx
+```tsx twoslash
+import { co, CoMap, Account } from "jazz-tools";
+import { useCoState, useAccount } from "jazz-react";
+import * as React from "react";
+
+export class BubbleTeaOrder extends CoMap {
+  name = co.string;
+}
+
+export class DraftBubbleTeaOrder extends CoMap {
+  name = co.optional.string;
+
+  validate() {
+    const errors: string[] = [];
+
+    if (!this.name) {
+      errors.push("Plese enter a name.");
+    }
+
+    return { errors };
+  }
+
+  get hasChanges() { // [!code ++:3]
+    return Object.keys(this._edits).length;
+  }
+}
+
+export class AccountRoot extends CoMap {
+  draft = co.ref(DraftBubbleTeaOrder);
+}
+
+export class JazzAccount extends Account {
+  root = co.ref(AccountRoot);
+
+  migrate(this: JazzAccount, creationProps?: { name: string }) {
+    if (this.root === undefined) {
+      const draft = DraftBubbleTeaOrder.create({});
+
+      this.root = AccountRoot.create({ draft });
+    }
+  }
+}
+
+declare module "jazz-react" {
+  interface Register {
+    Account: JazzAccount;
+  }
+}
+// ---cut---
 // DraftIndicator.tsx
 export function DraftIndicator() {
   const { me } = useAccount({
-    root: { draft: {} },
+    resolve: { root: { draft: true } },
   });
 
   if (me?.root.draft?.hasChanges) {
@@ -390,7 +710,30 @@ how to handle single-select, multi-select, date, and boolean inputs.
 [See the full example here.](https://github.com/garden-co/jazz/tree/main/examples/form)
 
 <CodeGroup>
-```tsx
+```tsx twoslash
+import { CoList, CoMap, CoPlainText, co } from "jazz-tools";
+
+export const BubbleTeaAddOnTypes = [
+  "Pearl",
+  "Lychee jelly",
+  "Red bean",
+  "Brown sugar",
+  "Taro",
+] as const;
+
+export const BubbleTeaBaseTeaTypes = [
+  "Black",
+  "Oolong",
+  "Jasmine",
+  "Thai",
+] as const;
+
+export class ListOfBubbleTeaAddOns extends CoList.Of(
+  co.literal(...BubbleTeaAddOnTypes),
+) {}
+
+// ---cut---
+// schema.ts
 export class BubbleTeaOrder extends CoMap {
   baseTea = co.literal(...BubbleTeaBaseTeaTypes);
   addOns = co.ref(ListOfBubbleTeaAddOns);

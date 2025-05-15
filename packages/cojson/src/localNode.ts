@@ -345,6 +345,10 @@ export class LocalNode {
     while (true) {
       const coValue = this.getCoValue(id);
 
+      if (coValue.isAvailable()) {
+        return coValue;
+      }
+
       if (
         coValue.loadingState === "unknown" ||
         coValue.loadingState === "unavailable"
@@ -365,6 +369,7 @@ export class LocalNode {
       }
 
       const result = await coValue.waitForAvailableOrUnavailable();
+
       if (
         result.isAvailable() ||
         retries >= CO_VALUE_LOADING_CONFIG.MAX_RETRIES
@@ -372,9 +377,12 @@ export class LocalNode {
         return result;
       }
 
-      await new Promise((resolve) =>
-        setTimeout(resolve, CO_VALUE_LOADING_CONFIG.RETRY_DELAY),
-      );
+      await Promise.race([
+        new Promise((resolve) =>
+          setTimeout(resolve, CO_VALUE_LOADING_CONFIG.RETRY_DELAY),
+        ),
+        coValue.waitForAvailable(), // Stop waiting if the coValue becomes available
+      ]);
 
       retries++;
     }

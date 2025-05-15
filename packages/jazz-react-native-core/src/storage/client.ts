@@ -5,7 +5,7 @@ import type {
   SessionID,
 } from "cojson";
 import type {
-  DBClientInterface,
+  DBClientInterfaceAsync,
   SessionRow,
   SignatureAfterRow,
   StoredCoValueRow,
@@ -14,7 +14,7 @@ import type {
 } from "cojson-storage";
 import { SQLiteAdapter } from "./sqlite-adapter.js";
 
-export class SQLiteClient implements DBClientInterface {
+export class SQLiteClient implements DBClientInterfaceAsync {
   private readonly adapter: SQLiteAdapter;
   private initializationPromise: Promise<void> | null = null;
   private isInitialized = false;

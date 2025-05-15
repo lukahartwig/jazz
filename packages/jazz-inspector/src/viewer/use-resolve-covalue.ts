@@ -195,7 +195,7 @@ export function useResolvedCoValues(
       const unsubscribe = subscribeToCoValue(coValueId, node, (newResult) => {
         if (isMounted) {
           setResults((prevResults) => {
-            const newResults = [...prevResults];
+            const newResults = prevResults.slice(0, coValueIds.length);
             newResults[index] = newResult;
             return newResults;
           });

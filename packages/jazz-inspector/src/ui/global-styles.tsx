@@ -43,7 +43,6 @@ export const GlobalStyles = styled("div")`
 
   @media (prefers-color-scheme: dark) {
     --j-text-color: var(--j-neutral-400);
-    --j-link-color: #5870f1;
     --j-border-color: var(--j-neutral-900);
     --j-background: var(--j-neutral-950);
     --j-foreground: var(--j-neutral-925);

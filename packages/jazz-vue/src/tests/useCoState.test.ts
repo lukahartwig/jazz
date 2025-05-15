@@ -11,10 +11,7 @@ beforeEach(async () => {
   await setupJazzTestSync();
 });
 
-beforeEach(() => {
-  cojsonInternals.CO_VALUE_LOADING_CONFIG.MAX_RETRIES = 1;
-  cojsonInternals.CO_VALUE_LOADING_CONFIG.TIMEOUT = 1;
-});
+cojsonInternals.setCoValueLoadingRetryDelay(300);
 
 describe("useCoState", () => {
   it("should return the correct value", async () => {

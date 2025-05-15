@@ -88,7 +88,19 @@ export const startSyncServer = async ({
     }
   });
 
+  server.on("close", () => {
+    localNode.gracefulShutdown();
+  });
+
   server.listen(port ? parseInt(port) : undefined);
+
+  const _close = server.close;
+
+  server.close = () => {
+    localNode.gracefulShutdown();
+
+    return _close.call(server);
+  };
 
   return server;
 };

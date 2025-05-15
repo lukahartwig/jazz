@@ -103,6 +103,9 @@ export const cojsonInternals = {
   getGroupDependentKey,
   disablePermissionErrors,
   CO_VALUE_LOADING_CONFIG,
+  setCoValueLoadingRetryDelay(delay: number) {
+    CO_VALUE_LOADING_CONFIG.RETRY_DELAY = delay;
+  },
 };
 
 export {

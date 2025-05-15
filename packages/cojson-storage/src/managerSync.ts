@@ -9,7 +9,7 @@ import {
   logger,
 } from "cojson";
 import { collectNewTxs, getDependedOnCoValues } from "./syncUtils.js";
-import type { DBClientInterface, StoredSessionRow } from "./types.js";
+import type { DBClientInterfaceSync, StoredSessionRow } from "./types.js";
 import NewContentMessage = CojsonInternalTypes.NewContentMessage;
 import KnownStateMessage = CojsonInternalTypes.KnownStateMessage;
 import RawCoID = CojsonInternalTypes.RawCoID;
@@ -19,13 +19,13 @@ type OutputMessageMap = Record<
   { knownMessage: KnownStateMessage; contentMessages?: NewContentMessage[] }
 >;
 
-export class SyncManager {
+export class StorageManagerSync {
   private readonly toLocalNode: OutgoingSyncQueue;
-  private readonly dbClient: DBClientInterface;
+  private readonly dbClient: DBClientInterfaceSync;
 
   private loadedCoValues = new Set<RawCoID>();
 
-  constructor(dbClient: DBClientInterface, toLocalNode: OutgoingSyncQueue) {
+  constructor(dbClient: DBClientInterfaceSync, toLocalNode: OutgoingSyncQueue) {
     this.toLocalNode = toLocalNode;
     this.dbClient = dbClient;
   }
@@ -33,16 +33,16 @@ export class SyncManager {
   async handleSyncMessage(msg: SyncMessage) {
     switch (msg.action) {
       case "load":
-        await this.handleLoad(msg);
+        this.handleLoad(msg);
         break;
       case "content":
-        await this.handleContent(msg);
+        this.handleContent(msg);
         break;
       case "known":
-        await this.handleKnown(msg);
+        this.handleKnown(msg);
         break;
       case "done":
-        await this.handleDone(msg);
+        this.handleDone(msg);
         break;
     }
   }
@@ -63,7 +63,7 @@ export class SyncManager {
 
     const firstNewTxIdx = peerKnownState.sessions[sessionRow.sessionID] || 0;
 
-    const newTxsInSession = await this.dbClient.getNewTransactionInSession(
+    const newTxsInSession = this.dbClient.getNewTransactionInSession(
       sessionRow.rowID,
       firstNewTxIdx,
     );
@@ -76,11 +76,9 @@ export class SyncManager {
     });
   }
 
-  async sendNewContent(
-    coValueKnownState: CojsonInternalTypes.CoValueKnownState,
-  ): Promise<void> {
+  sendNewContent(coValueKnownState: CojsonInternalTypes.CoValueKnownState) {
     const outputMessages: OutputMessageMap =
-      await this.collectCoValueData(coValueKnownState);
+      this.collectCoValueData(coValueKnownState);
 
     // reverse it to send the top level id the last in the order
     const collectedMessages = Object.values(outputMessages).reverse();
@@ -95,7 +93,7 @@ export class SyncManager {
     }
   }
 
-  private async collectCoValueData(
+  private collectCoValueData(
     peerKnownState: CojsonInternalTypes.CoValueKnownState,
     messageMap: OutputMessageMap = {},
     asDependencyOf?: CojsonInternalTypes.RawCoID,
@@ -104,7 +102,7 @@ export class SyncManager {
       return messageMap;
     }
 
-    const coValueRow = await this.dbClient.getCoValue(peerKnownState.id);
+    const coValueRow = this.dbClient.getCoValue(peerKnownState.id);
 
     if (!coValueRow) {
       const emptyKnownMessage: KnownStateMessage = {
@@ -118,7 +116,7 @@ export class SyncManager {
       return messageMap;
     }
 
-    const allCoValueSessions = await this.dbClient.getCoValueSessions(
+    const allCoValueSessions = this.dbClient.getCoValueSessions(
       coValueRow.rowID,
     );
 
@@ -138,18 +136,15 @@ export class SyncManager {
       },
     ];
 
-    await Promise.all(
-      allCoValueSessions.map((sessionRow) => {
-        newCoValueKnownState.sessions[sessionRow.sessionID] =
-          sessionRow.lastIdx;
-        // Collect new sessions data into newContentMessages
-        return this.handleSessionUpdate({
-          sessionRow,
-          peerKnownState,
-          newContentMessages,
-        });
-      }),
-    );
+    allCoValueSessions.map((sessionRow) => {
+      newCoValueKnownState.sessions[sessionRow.sessionID] = sessionRow.lastIdx;
+      // Collect new sessions data into newContentMessages
+      this.handleSessionUpdate({
+        sessionRow,
+        peerKnownState,
+        newContentMessages,
+      });
+    });
 
     this.loadedCoValues.add(coValueRow.id);
 
@@ -170,23 +165,21 @@ export class SyncManager {
       contentMessages: newContentMessages,
     };
 
-    await Promise.all(
-      dependedOnCoValuesList.map((dependedOnCoValue) => {
-        if (this.loadedCoValues.has(dependedOnCoValue)) {
-          return;
-        }
+    dependedOnCoValuesList.map((dependedOnCoValue) => {
+      if (this.loadedCoValues.has(dependedOnCoValue)) {
+        return;
+      }
 
-        return this.collectCoValueData(
-          {
-            id: dependedOnCoValue,
-            header: false,
-            sessions: {},
-          },
-          messageMap,
-          asDependencyOf || coValueRow.id,
-        );
-      }),
-    );
+      return this.collectCoValueData(
+        {
+          id: dependedOnCoValue,
+          header: false,
+          sessions: {},
+        },
+        messageMap,
+        asDependencyOf || coValueRow.id,
+      );
+    });
 
     return messageMap;
   }
@@ -195,8 +188,8 @@ export class SyncManager {
     return this.sendNewContent(msg);
   }
 
-  async handleContent(msg: CojsonInternalTypes.NewContentMessage) {
-    const coValueRow = await this.dbClient.getCoValue(msg.id);
+  handleContent(msg: CojsonInternalTypes.NewContentMessage) {
+    const coValueRow = this.dbClient.getCoValue(msg.id);
 
     // We have no info about coValue header
     const invalidAssumptionOnHeaderPresence = !msg.header && !coValueRow;
@@ -213,7 +206,7 @@ export class SyncManager {
 
     const storedCoValueRowID: number = coValueRow
       ? coValueRow.rowID
-      : await this.dbClient.addCoValue(msg);
+      : this.dbClient.addCoValue(msg);
 
     const ourKnown: CojsonInternalTypes.CoValueKnownState = {
       id: msg.id,
@@ -224,8 +217,8 @@ export class SyncManager {
     let invalidAssumptions = false;
 
     for (const sessionID of Object.keys(msg.new) as SessionID[]) {
-      await this.dbClient.transaction(async () => {
-        const sessionRow = await this.dbClient.getSingleCoValueSession(
+      this.dbClient.transaction(() => {
+        const sessionRow = this.dbClient.getSingleCoValueSession(
           storedCoValueRowID,
           sessionID,
         );
@@ -237,7 +230,7 @@ export class SyncManager {
         if ((sessionRow?.lastIdx || 0) < (msg.new[sessionID]?.after || 0)) {
           invalidAssumptions = true;
         } else {
-          const newLastIdx = await this.putNewTxs(
+          const newLastIdx = this.putNewTxs(
             msg,
             sessionID,
             sessionRow,
@@ -262,7 +255,7 @@ export class SyncManager {
     }
   }
 
-  private async putNewTxs(
+  private putNewTxs(
     msg: CojsonInternalTypes.NewContentMessage,
     sessionID: SessionID,
     sessionRow: StoredSessionRow | undefined,
@@ -308,23 +301,21 @@ export class SyncManager {
       bytesSinceLastSignature: newBytesSinceLastSignature,
     };
 
-    const sessionRowID: number = await this.dbClient.addSessionUpdate({
+    const sessionRowID: number = this.dbClient.addSessionUpdate({
       sessionUpdate,
       sessionRow,
     });
 
     if (shouldWriteSignature) {
-      await this.dbClient.addSignatureAfter({
+      this.dbClient.addSignatureAfter({
         sessionRowID,
         idx: newLastIdx - 1,
         signature: msg.new[sessionID].lastSignature,
       });
     }
 
-    await Promise.all(
-      actuallyNewTransactions.map((newTransaction, i) =>
-        this.dbClient.addTransaction(sessionRowID, nextIdx + i, newTransaction),
-      ),
+    actuallyNewTransactions.map((newTransaction, i) =>
+      this.dbClient.addTransaction(sessionRowID, nextIdx + i, newTransaction),
     );
 
     return newLastIdx;
@@ -336,12 +327,12 @@ export class SyncManager {
 
   handleDone(_msg: CojsonInternalTypes.DoneMessage) {}
 
-  async sendStateMessage(
+  sendStateMessage(
     msg:
       | CojsonInternalTypes.KnownStateMessage
       | CojsonInternalTypes.NewContentMessage,
-  ): Promise<unknown> {
-    return this.toLocalNode.push(msg).catch((e) =>
+  ) {
+    this.toLocalNode.push(msg).catch((e) =>
       logger.error(`Error sending ${msg.action} state, id ${msg.id}`, {
         err: e,
       }),

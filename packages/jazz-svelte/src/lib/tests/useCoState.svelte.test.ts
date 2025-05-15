@@ -16,10 +16,7 @@ beforeEach(async () => {
   await setupJazzTestSync();
 });
 
-beforeEach(() => {
-  cojsonInternals.CO_VALUE_LOADING_CONFIG.MAX_RETRIES = 1;
-  cojsonInternals.CO_VALUE_LOADING_CONFIG.TIMEOUT = 1;
-});
+cojsonInternals.setCoValueLoadingRetryDelay(300);
 
 function setup<T extends CoValue>(options: { account: Account; map: T; resolve?: RefsToResolve<T> }) {
   const result = { current: undefined } as { current: T | undefined };
