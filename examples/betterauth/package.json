@@ -24,6 +24,7 @@
 		"jazz-react": "workspace:*",
 		"jazz-react-auth-betterauth": "workspace:*",
 		"jazz-tools": "workspace:*",
+		"jazz-cloud-ui": "workspace:*",
 		"next": "15.3.1",
 		"react": "^18.0.0",
 		"react-dom": "^18.0.0"

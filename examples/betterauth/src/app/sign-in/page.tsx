@@ -1,7 +1,16 @@
 "use client";
 
-import SignInForm from "@/components/forms/SignIn";
+import { LoginForm } from "jazz-cloud-ui";
 
 export default function SignInPage() {
-  return <SignInForm providers={["github"]} />;
+  const props = {
+    operation: "sign-in" as Parameters<typeof LoginForm>["0"]["operation"],
+    supportOtp: true,
+    providers: ["github"] as Parameters<typeof LoginForm>["0"]["providers"],
+    signUpUrl: "/sign-up",
+    forgotPasswordUrl: "/forgot",
+    ssoCallbackUrl: `${window.location.origin}/social/logIn`,
+    magicLinkCallbackUrl: `${window.location.origin}/magic-link/logIn`,
+  };
+  return <LoginForm {...props} />;
 }
