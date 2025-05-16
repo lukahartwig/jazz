@@ -164,7 +164,7 @@ export default function SignUpForm({
           {providers?.map((x) => {
             return (
               <SSOButton
-                callbackURL={`${window.location.origin}/social/signIn`}
+                callbackURL={`${window.location.origin}`}
                 provider={x}
                 setLoading={setLoading}
                 setError={setError}
@@ -181,7 +181,7 @@ export default function SignUpForm({
                 auth.authClient as FullAuthClient
               ).signIn.magicLink({
                 email: email,
-                callbackURL: `${window.location.origin}/magic-link/signIn`,
+                callbackURL: `${window.location.origin}`,
               });
               const errorMessage = error?.message ?? error?.statusText;
               setError(

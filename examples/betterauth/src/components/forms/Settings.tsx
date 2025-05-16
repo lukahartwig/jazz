@@ -48,7 +48,7 @@ export default function SettingsForm({
         logOut();
         router.push("/");
       });
-  }, [logOut, authClient]);
+  }, [logOut, router, authClient]);
 
   return (
     <>
@@ -213,7 +213,7 @@ export default function SettingsForm({
           <DeleteAccountButton
             setLoading={setLoading}
             setError={setError}
-            callbackURL={`${window.location.origin}/delete-account`}
+            callbackURL={`${window.location.origin}`}
           />
         </div>
       </div>
