@@ -9,14 +9,15 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   src?: InstanceType<typeof Image>["src"];
   alt?: InstanceType<typeof Image>["alt"];
   provider: SSOProviderType;
-  link?: boolean;
+  operation: "sign-in" | "sign-up" | "link" | "unlink";
+  accountId?: string;
   callbackURL?: string;
   setLoading: React.Dispatch<React.SetStateAction<boolean>>;
   setError: React.Dispatch<React.SetStateAction<Error | undefined>>;
 }
 
 export const SSOButton = forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ provider, link = false, callbackURL, setLoading, setError }) => {
+  ({ provider, operation, accountId, callbackURL, setLoading, setError }) => {
     const auth = useAuth();
     const providerName = socialProviderNames[provider];
     const providerIcon = ssoIcons[provider];
@@ -29,14 +30,19 @@ export const SSOButton = forwardRef<HTMLButtonElement, ButtonProps>(
           e.preventDefault();
           setLoading(true);
           const { error } = await (async () => {
-            if (link) {
+            if (operation === "link") {
               return await auth.authClient.linkSocial({
                 provider: provider,
               });
-            } else {
+            } else if (operation === "sign-in" || operation === "sign-up") {
               return await auth.authClient.signIn.social({
                 provider: provider,
                 callbackURL: callbackURL,
+              });
+            } else {
+              return await auth.authClient.unlinkAccount({
+                providerId: provider,
+                accountId: accountId,
               });
             }
           })();
@@ -51,9 +57,12 @@ export const SSOButton = forwardRef<HTMLButtonElement, ButtonProps>(
         }}
       >
         {providerIcon}
-        {link
-          ? `Link ${providerName} account`
-          : `Continue with ${providerName}`}
+        {(() => {
+          if (operation === "sign-in") return `Login with ${providerName}`;
+          if (operation === "sign-up") return `Register with ${providerName}`;
+          if (operation === "link") return "Link";
+          if (operation === "unlink") return "Unlink";
+        })()}
       </Button>
     );
   },

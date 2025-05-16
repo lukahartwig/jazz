@@ -32,6 +32,7 @@ import { SendOtpButton } from "./ui/send-otp-button.js";
 type LoginFormProps = {
   operation: "sign-in" | "sign-up";
   supportOtp: boolean;
+  supportMagicLink: boolean;
   providers?: SSOProviderType[];
   redirectUrl?: string;
   footer?: React.ReactNode;
@@ -46,8 +47,9 @@ export function LoginForm({
   className,
   operation,
   supportOtp = false,
+  supportMagicLink = false,
   providers,
-  redirectUrl = "/",
+  redirectUrl,
   footer,
   ssoCallbackUrl,
   magicLinkCallbackUrl,
@@ -78,8 +80,7 @@ export function LoginForm({
         },
         {
           onSuccess: async () => {
-            await auth.logIn();
-            router.push(redirectUrl);
+            if (redirectUrl) router.push(redirectUrl);
           },
           onError: (error) => {
             setError(error.error);
@@ -106,8 +107,7 @@ export function LoginForm({
             }
           : undefined,
       );
-      if (data) {
-        await auth.logIn();
+      if (data && redirectUrl) {
         router.push(redirectUrl);
       }
     }
@@ -128,8 +128,7 @@ export function LoginForm({
         },
         {
           onSuccess: async () => {
-            await auth.signIn();
-            router.push(redirectUrl);
+            if (redirectUrl) router.push(redirectUrl);
           },
           onError: (error) => {
             setError(error.error);
@@ -156,8 +155,7 @@ export function LoginForm({
             }
           : undefined,
       );
-      if (data) {
-        await auth.signIn();
+      if (data && redirectUrl) {
         router.push(redirectUrl);
       }
     }
@@ -201,7 +199,7 @@ export function LoginForm({
             }}
           >
             <div className="grid gap-6">
-              {(supportOtp || providers || magicLinkCallbackUrl) && (
+              {(supportOtp || providers || supportMagicLink) && (
                 <div className="flex flex-col gap-4">
                   {supportOtp && (
                     <SendOtpButton
@@ -212,7 +210,7 @@ export function LoginForm({
                       setError={setError}
                     />
                   )}
-                  {magicLinkCallbackUrl && (
+                  {supportMagicLink && (
                     <MagicLinkButton
                       callbackURL={magicLinkCallbackUrl}
                       operation={operation}
@@ -226,6 +224,7 @@ export function LoginForm({
                       <SSOButton
                         key={useId()}
                         callbackURL={ssoCallbackUrl}
+                        operation={operation}
                         provider={x}
                         setLoading={setLoading}
                         setError={setError}

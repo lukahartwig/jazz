@@ -1,19 +1,16 @@
 "use client";
 
 import { Button } from "@/components/Button";
+import { LogoutButton } from "jazz-cloud-ui";
 import { useAccount, useIsAuthenticated } from "jazz-react";
 import { useAuth } from "jazz-react-auth-betterauth";
 import Image from "next/image";
-import { useCallback } from "react";
 
 export default function Home() {
-  const { authClient, account, state } = useAuth();
+  const { account, state } = useAuth();
   const hasCredentials = state !== "anonymous";
-  const { me, logOut } = useAccount({ resolve: { profile: {} } });
+  const { me } = useAccount({ resolve: { profile: {} } });
   const isAuthenticated = useIsAuthenticated();
-  const signOut = useCallback(() => {
-    authClient.signOut().catch(console.error).finally(logOut);
-  }, [logOut, authClient]);
   console.log("me", me);
   console.log("account", account);
   console.log("state", state);
@@ -26,7 +23,7 @@ export default function Home() {
         <div className="float-start flex gap-4">
           {me && hasCredentials && isAuthenticated && (
             <>
-              <Button onClick={signOut}>Sign out</Button>
+              <LogoutButton className="w-fit" />
               <Button href="/settings">Settings</Button>
             </>
           )}
