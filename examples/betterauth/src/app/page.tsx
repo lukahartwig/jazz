@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/Button";
-import { LogoutButton } from "jazz-cloud-ui";
+import { LogoutButton, UserButton } from "jazz-cloud-ui";
 import { useAccount, useIsAuthenticated } from "jazz-react";
 import { useAuth } from "jazz-react-auth-betterauth";
 import Image from "next/image";
@@ -22,10 +22,11 @@ export default function Home() {
       <header className="absolute p-4 top-0 left-0 w-full z-10 flex items-center justify-between gap-4">
         <div className="float-start flex gap-4">
           {me && hasCredentials && isAuthenticated && (
-            <>
-              <LogoutButton className="w-fit" />
-              <Button href="/settings">Settings</Button>
-            </>
+            // <>
+            //   <LogoutButton className="w-fit" />
+            //   <Button href="/settings">Settings</Button>
+            // </>
+            <UserButton settingsUrl="/settings" />
           )}
         </div>
         <div className="float-end flex gap-4">

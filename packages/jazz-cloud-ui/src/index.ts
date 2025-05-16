@@ -12,7 +12,9 @@ export * from "./components/ui/magic-link-button.js";
 export * from "./components/ui/providers-card.js";
 export * from "./components/ui/send-otp-button.js";
 export * from "./components/ui/sso-button.js";
+export * from "./components/ui/user-button.js";
 
 // Forms
 export * from "./components/login-form.js";
+export * from "./components/reset-password-form.js";
 export * from "./components/settings-form.js";
