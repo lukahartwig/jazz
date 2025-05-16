@@ -20,6 +20,7 @@
   "dependencies": {
     "@huggingface/inference": "^3.13.1",
     "@huggingface/transformers": "^3.5.1",
+    "@ricky0123/vad-web": "^0.0.24",
     "cojson": "workspace:^",
     "jazz-tools": "workspace:^"
   },

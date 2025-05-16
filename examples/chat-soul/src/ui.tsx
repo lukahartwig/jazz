@@ -144,7 +144,10 @@ export function ImageInput({
   );
 }
 
-export function TextInput(props: { onSubmit: (text: string) => void }) {
+export function TextInput(props: {
+  onSubmit: (text: string) => void;
+  disabled?: boolean;
+}) {
   const inputId = useId();
 
   return (
@@ -157,6 +160,7 @@ export function TextInput(props: { onSubmit: (text: string) => void }) {
         className="rounded-full py-1 px-3 border block w-full placeholder:text-stone-500 dark:bg-stone-925 dark:text-white dark:border-stone-900"
         placeholder="Type a message and press Enter"
         maxLength={2048}
+        disabled={props.disabled}
         onKeyDown={({ key, currentTarget: input }) => {
           if (key !== "Enter" || !input.value) return;
           props.onSubmit(input.value);
