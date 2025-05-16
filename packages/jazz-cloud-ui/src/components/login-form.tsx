@@ -201,21 +201,21 @@ export function LoginForm({
             }}
           >
             <div className="grid gap-6">
-              {supportOtp && (
-                <SendOtpButton
-                  operation="sign-in"
-                  email={email}
-                  setOtpStatus={setOtpStatus}
-                  setLoading={setLoading}
-                  setError={setError}
-                />
-              )}
-              {(providers || magicLinkCallbackUrl) && (
+              {(supportOtp || providers || magicLinkCallbackUrl) && (
                 <div className="flex flex-col gap-4">
+                  {supportOtp && (
+                    <SendOtpButton
+                      operation={operation}
+                      email={email}
+                      setOtpStatus={setOtpStatus}
+                      setLoading={setLoading}
+                      setError={setError}
+                    />
+                  )}
                   {magicLinkCallbackUrl && (
                     <MagicLinkButton
                       callbackURL={magicLinkCallbackUrl}
-                      operation="sign-in"
+                      operation={operation}
                       email={email}
                       setLoading={setLoading}
                       setError={setError}
@@ -271,14 +271,16 @@ export function LoginForm({
                     {supportOtp && otpStatus && (
                       <Label htmlFor="otp">One-time password</Label>
                     )}
-                    {!otpStatus && forgotPasswordUrl && (
-                      <a
-                        href={forgotPasswordUrl}
-                        className="ml-auto text-sm underline-offset-4 hover:underline"
-                      >
-                        Forgot your password?
-                      </a>
-                    )}
+                    {!otpStatus &&
+                      forgotPasswordUrl &&
+                      operation === "sign-in" && (
+                        <a
+                          href={forgotPasswordUrl}
+                          className="ml-auto text-sm underline-offset-4 hover:underline"
+                        >
+                          Forgot your password?
+                        </a>
+                      )}
                   </div>
                   {!otpStatus && (
                     <Input
@@ -309,14 +311,19 @@ export function LoginForm({
                       </InputOTPGroup>
                     </InputOTP>
                   )}
-                  <Label htmlFor="remember-me">Remember me</Label>
-                  <Input
-                    id="remember-me"
-                    type="checkbox"
-                    checked={rememberMe}
-                    disabled={loading}
-                    onChange={(e) => setRememberMe(e.target.checked)}
-                  />
+                  {operation === "sign-in" && (
+                    <div className="flex items-center">
+                      <Label htmlFor="remember-me">Remember me</Label>
+                      <Input
+                        id="remember-me"
+                        type="checkbox"
+                        className="w-1/6 ml-auto"
+                        checked={rememberMe}
+                        disabled={loading}
+                        onChange={(e) => setRememberMe(e.target.checked)}
+                      />
+                    </div>
+                  )}
                 </div>
                 {!otpStatus && operation === "sign-up" && (
                   <div className="grid gap-3">

@@ -16,6 +16,7 @@ export const MagicLinkButton = forwardRef<HTMLButtonElement, ButtonProps>(
     const auth = useAuth();
     return (
       <Button
+        type="button"
         variant="outline"
         className="w-full"
         onClick={async (e) => {

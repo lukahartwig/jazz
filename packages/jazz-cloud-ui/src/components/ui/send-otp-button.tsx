@@ -26,6 +26,7 @@ export const SendOtpButton = forwardRef<HTMLButtonElement, ButtonProps>(
       })() ?? "sign-in";
     return (
       <Button
+        type="button"
         variant="outline"
         className="w-full"
         onClick={async (e) => {

@@ -22,6 +22,7 @@ export const SSOButton = forwardRef<HTMLButtonElement, ButtonProps>(
     const providerIcon = ssoIcons[provider];
     return (
       <Button
+        type="button"
         variant="outline"
         className="w-full"
         onClick={async (e) => {
