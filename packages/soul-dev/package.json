@@ -18,6 +18,7 @@
     "typescript": "catalog:"
   },
   "dependencies": {
+    "@huggingface/inference": "^3.13.1",
     "@huggingface/transformers": "^3.5.1",
     "jazz-tools": "workspace:*"
   },

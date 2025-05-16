@@ -2,7 +2,7 @@ import { createImage, useAccount, useCoState } from "jazz-react";
 import { Account, CoPlainText, ID } from "jazz-tools";
 import { MicIcon } from "lucide-react";
 import { useEffect, useState } from "react";
-import { chatLikeGenerate, record } from "soul-dev";
+import { chatLikeGenerate, collaborate, record } from "soul-dev";
 import { Chat, Message } from "./schema.ts";
 import {
   BubbleBody,
@@ -33,38 +33,17 @@ export function ChatScreen(props: { chatID: ID<Chat> }) {
   }, []);
 
   useEffect(() => {
-    if (!props.chatID || !chat || !agentAccount) {
-      return;
-    }
+    if (!props.chatID || !chat || !agentAccount) return;
 
-    return chatLikeGenerate(Chat, props.chatID, {
+    return collaborate(Chat, props.chatID, {
       resolve: { $each: { text: true } },
-      mapToChat: (update) => {
-        return update.map((message) => ({
-          content: message.text?.toString() || "",
-          role:
-            message?._edits.text.by?.id === agentAccount.id
-              ? "assistant"
-              : "user",
-          name: message?._edits.text.by?.profile?.name,
-        }));
-      },
-      prompt: "Cheerfully respond to the user's message.",
-      onResponseStart: (chatAsAgent, response) => {
-        const message = Message.create(
-          { text: CoPlainText.create(response, chatAsAgent._owner) },
-          chatAsAgent._owner,
-        );
-
-        chatAsAgent.push(message);
-        return message;
-      },
-      onResponseUpdate: (response, existing) => {
-        existing.text?.applyDiff(response);
-      },
       agentAccount,
+      prompt: `Cheerfully respond to the user's messages by
+        taking part in the conversation, creating your own messages.
+        Delete offensive messages.`,
+      apiKey: import.meta.env.VITE_HF_API_KEY,
     });
-  }, [props.chatID, chat?.length > 0, agentAccount]);
+  }, [props.chatID, chat && chat.length > 0, agentAccount]);
 
   if (!chat)
     return (
