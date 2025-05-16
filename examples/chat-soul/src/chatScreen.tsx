@@ -2,7 +2,7 @@ import { createImage, useAccount, useCoState } from "jazz-react";
 import { Account, CoPlainText, ID } from "jazz-tools";
 import { MicIcon } from "lucide-react";
 import { useEffect, useState } from "react";
-import { chatLikeGenerate, collaborate, record } from "soul-dev";
+import { collaborate, record } from "soul-dev";
 import { Chat, Message } from "./schema.ts";
 import {
   BubbleBody,
