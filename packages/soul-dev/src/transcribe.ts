@@ -66,11 +66,9 @@ function simpleSimilarity(a: string, b: string): number {
 
 export async function record<C extends CoValue>({
   onNewChunk,
-  onChunkEdited,
   onStatusChange,
 }: {
   onNewChunk: (text: string) => C;
-  onChunkEdited: (newText: string, chunk: C) => void;
   onStatusChange?: (status: TranscriptionStatus) => void;
 }): Promise<TranscriptionController> {
   // Start timer for logging elapsed time
@@ -123,7 +121,6 @@ export async function record<C extends CoValue>({
 
   let longSpeechBuffer: Float32Array | null = null;
   let isProcessingLongSpeech = false;
-  const processedSentences = new Set<string>();
   let createdPieces: { text: string; coValue: C }[] = [];
 
   // Function to process audio with Whisper
@@ -231,31 +228,6 @@ export async function record<C extends CoValue>({
       );
   }
 
-  // Check if a string is very similar to any in the set
-  function isDuplicate(text: string, existingTexts: Set<string>): boolean {
-    // Very short sentences are often noise
-    if (text.length < 3) return true;
-
-    // Noise patterns to filter out
-    if (
-      text.match(/^[A-Z],\s*$/i) ||
-      text.match(/^[A-Z],\s*[A-Z],\s*$/i) ||
-      text.match(/^\(\w+\)$/i) ||
-      text.match(/^\s*$/)
-    ) {
-      return true;
-    }
-
-    // Check similarity against existing entries
-    for (const existing of existingTexts) {
-      if (simpleSimilarity(text, existing) > SIMILARITY_THRESHOLD) {
-        return true;
-      }
-    }
-
-    return false;
-  }
-
   // Process transcription and extract new sentences
   function processTranscription(transcription: string) {
     if (!transcription) return;
@@ -263,15 +235,10 @@ export async function record<C extends CoValue>({
     // Clean up the transcription and get proper segments
     const currentPieces = cleanTranscription(transcription);
 
-    // Filter for new, non-duplicate content
     const newPieces: string[] = [];
 
     for (const piece of currentPieces) {
-      // Only add pieces that haven't been processed before and aren't too similar to existing ones
-      if (!isDuplicate(piece, processedSentences)) {
-        processedSentences.add(piece);
-        newPieces.push(piece);
-      }
+      newPieces.push(piece);
     }
 
     console.log(

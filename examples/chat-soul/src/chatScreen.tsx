@@ -92,9 +92,6 @@ export function ChatScreen(props: { chatID: ID<Chat> }) {
           chat.push(message);
           return message;
         },
-        onChunkEdited: (newText, chunk: Message) => {
-          chunk.text?.applyDiff(newText);
-        },
         onStatusChange: (status) => {
           setRecordingStatus(status);
 
@@ -162,8 +159,12 @@ export function ChatScreen(props: { chatID: ID<Chat> }) {
             disabled
             title={recordingStatus.message}
           >
-            <LoaderIcon size={24} className="animate-spin" strokeWidth={1.5} />
-            <span className="text-xs">Loading...</span>
+            <LoaderIcon
+              size={24}
+              className="animate-spin text-gray-900"
+              strokeWidth={1.5}
+            />
+            <span className="text-xs text-gray-700">Loading...</span>
           </button>
         );
 
@@ -187,7 +188,7 @@ export function ChatScreen(props: { chatID: ID<Chat> }) {
             title="Click to stop recording"
           >
             <StopCircleIcon size={24} strokeWidth={1.5} />
-            <span className="text-xs">Recording</span>
+            <span className="text-xs">Listening</span>
           </button>
         );
 
@@ -220,11 +221,17 @@ export function ChatScreen(props: { chatID: ID<Chat> }) {
         return (
           <button
             onClick={startRecording}
-            className="flex items-center space-x-1 px-2 py-1 hover:bg-gray-100 rounded-md transition-colors"
+            className="flex items-center space-x-1 px-2 py-1 hover:bg-gray-100 rounded-md transition-colors group"
             title="Start voice recording"
           >
-            <MicIcon size={24} strokeWidth={1.5} />
-            <span className="text-xs ml-1">Record</span>
+            <MicIcon
+              size={24}
+              strokeWidth={1.5}
+              className="text-gray-600 group-hover:text-gray-900"
+            />
+            <span className="text-xs ml-1 text-gray-600 group-hover:text-gray-900">
+              Record
+            </span>
           </button>
         );
     }
