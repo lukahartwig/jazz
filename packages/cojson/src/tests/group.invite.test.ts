@@ -323,6 +323,10 @@ describe("Group invites", () => {
 
     expect(groupOnMemberNode.roleOf(member.accountID)).toEqual("reader");
 
+    await waitFor(() => {
+      expect(group.roleOf(member.accountID)).toEqual("reader");
+    });
+
     // Verify read access is restored
     const personOnMemberNode = await loadCoValueOrFail(member.node, person.id);
     expect(personOnMemberNode.get("name")).toEqual("John Doe");

@@ -548,6 +548,7 @@ export class LocalNode {
     group.processNewTransactions();
 
     group.core.notifyUpdate("immediate");
+    this.syncManager.requestCoValueSync(group.core);
   }
 
   /** @internal */
