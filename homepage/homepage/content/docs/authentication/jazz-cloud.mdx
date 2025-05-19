@@ -43,10 +43,18 @@ Take note of the `API Key` and `Authentication URL`, as you will need them in th
 
 ### 3. Installation
 
-<ContentByFramework framework={["react", "react-native-expo"]}>
+<ContentByFramework framework={["react"]}>
   <CodeGroup>
     ```sh
     pnpm add jazz-react-auth-betterauth
+    ```
+  </CodeGroup>
+</ContentByFramework>
+
+<ContentByFramework framework={["react-native-expo"]}>
+  <CodeGroup>
+    ```sh
+    pnpm add jazz-react-auth-betterauth @better-auth/expo expo-secure-store
     ```
   </CodeGroup>
 </ContentByFramework>
@@ -62,7 +70,7 @@ Take note of the `API Key` and `Authentication URL`, as you will need them in th
 
 ### 4. Configure the Auth Provider
 
-<ContentByFramework framework={["react", "react-native-expo"]}>
+<ContentByFramework framework={["react"]}>
   <CodeGroup>
     ```tsx twoslash
     import * as React from "react";
@@ -88,8 +96,54 @@ Take note of the `API Key` and `Authentication URL`, as you will need them in th
         >
           <AuthProvider
             options={{
-
               baseURL: "https://auth.jazz.tools/<YOUR_API_KEY>/api/auth/"
+            }}
+          >
+            {children}
+          </AuthProvider> 
+        </JazzProvider>
+      );
+    }
+    ```
+  </CodeGroup>
+</ContentByFramework>
+
+<ContentByFramework framework={["react-native-expo"]}>
+  <CodeGroup>
+    ```tsx twoslash
+    import * as React from "react";
+    declare const authUrl: string;
+    // ---cut---
+    // src/components/JazzAndAuth.tsx
+    import { JazzProvider } from "jazz-react";
+    import { AuthProvider } from "jazz-react-auth-betterauth";
+    import { type ReactNode } from "react";
+    import * as SecureStore from "expo-secure-store";
+    import { expoClient } from "@better-auth/expo/client";
+
+    interface Props {
+      children: ReactNode;
+    }
+
+    // @annotate: Set the base URL to the authentication URL as specified in the Jazz Cloud Dashboard.
+    
+    export function JazzAndAuth({ children }: Props) {
+      return (
+        <JazzProvider
+          sync={{
+            peer: "wss://cloud.jazz.tools/?key=<YOUR_API_KEY>",
+          }}
+        >
+          <AuthProvider
+            options={{
+              baseURL: "https://auth.jazz.tools/<YOUR_API_KEY>/api/auth/",
+              plugins: [
+                expoClient({
+                  scheme: "my-app",
+                  storagePrefix: "my-app",
+                  storage: SecureStore,
+                })
+              ],
             }}
           >
             {children}
@@ -234,7 +288,7 @@ in the Jazz Cloud Dashboard. Once configured, you may trigger social-sign on usi
   import { useBetterAuth } from "jazz-react-auth-betterauth";
   declare const authUrl: string;
   const auth = useBetterAuth({ baseURL: authUrl });
-  const providerName = "github" as Parameters<typeof auth.authClient.signIn.social>[0]["provider"];
+  declare const providerName: Parameters<typeof auth.authClient.signIn.social>[0]["provider"];
   // ---cut---
   // @annotate: Sign-in with SSO provider
 
