@@ -50,7 +50,8 @@
     "overrides": {
       "react": "18.3.1",
       "react-dom": "18.3.1",
-      "esbuild": "0.24.0"
+      "esbuild": "0.24.0",
+      "zod": "3.25.0-beta.20250518T002810"
     },
     "patchedDependencies": {
       "expo-router": "patches/expo-router.patch"
