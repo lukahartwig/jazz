@@ -345,18 +345,6 @@ function determineValidTransactionsForGroup(
       validTransactions.push({ txID: { sessionID, txIndex }, tx });
       continue;
     } else if (isChildExtension(change.key)) {
-      if (
-        memberState[transactor] !== "admin" &&
-        memberState[transactor] !== "writer" &&
-        memberState[transactor] !== "reader" &&
-        memberState[transactor] !== "writeOnly"
-      ) {
-        logPermissionError(
-          "Only admins, writers, readers and writeOnly can set child extensions",
-        );
-        continue;
-      }
-
       validTransactions.push({ txID: { sessionID, txIndex }, tx });
       continue;
     } else if (isWriteKeyForMember(change.key)) {

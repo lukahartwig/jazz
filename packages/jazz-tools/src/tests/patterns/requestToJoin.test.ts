@@ -21,6 +21,7 @@ class Organization extends CoMap {
   statuses = co.ref(RequestsStatus);
   projects = co.ref(ProjectsList);
   mainGroup = co.ref(Group);
+  adminsGroup = co.ref(Group);
 }
 
 async function setup() {
@@ -66,6 +67,7 @@ async function setup() {
       // but this is the source of truth for admins
       statuses: RequestsStatus.create({}, adminsGroup),
       mainGroup: organizationGroup,
+      adminsGroup,
     },
     publicGroup,
   );
@@ -88,7 +90,7 @@ async function sendRequestToJoin(
   account: Account,
 ) {
   const organization = await Organization.load(organizationId, {
-    resolve: { requests: true },
+    resolve: { requests: true, adminsGroup: true },
     loadAs: account,
   });
 
@@ -96,12 +98,15 @@ async function sendRequestToJoin(
     throw new Error("RequestsMap not found");
   }
 
+  const group = Group.create(account);
+  group.extend(organization.adminsGroup);
+
   const request = RequestToJoin.create(
     {
       account,
       status: "pending",
     },
-    organization.requests._owner,
+    group,
   );
 
   organization.requests[account.id] = request;
@@ -264,8 +269,6 @@ describe("Request to join", () => {
 
     // With the writeOnly permission, the user can download the request
     // but not it's content
-    assert(requestOnUser2);
-    expect(requestOnUser2.status).toBe(undefined);
-    expect(requestOnUser2.account).toBe(undefined);
+    expect(requestOnUser2).toBeNull();
   });
 });

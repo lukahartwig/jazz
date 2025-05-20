@@ -1,4 +1,5 @@
 import { describe, expect, test } from "vitest";
+import { LogLevel, logger } from "../logger";
 import {
   createThreeConnectedNodes,
   createTwoConnectedNodes,
@@ -156,6 +157,31 @@ describe("extend", () => {
     childGroup.extend(group);
 
     expect(childGroup.roleOf(node2.accountID)).toEqual(undefined);
+  });
+
+  test("should be possible to extend a group without having membership in the parent group", async () => {
+    logger.setLevel(LogLevel.DEBUG);
+
+    const { node1, node2, node3 } = await createThreeConnectedNodes(
+      "server",
+      "server",
+      "server",
+    );
+
+    const parentGroup = node1.node.createGroup();
+    const childGroup = node2.node.createGroup();
+
+    const alice = await loadCoValueOrFail(node1.node, node3.accountID);
+    parentGroup.addMember(alice, "writer");
+
+    const parentGroupOnNode2 = await loadCoValueOrFail(
+      node2.node,
+      parentGroup.id,
+    );
+
+    childGroup.extend(parentGroupOnNode2);
+
+    expect(childGroup.roleOf(alice.id)).toBe("writer");
   });
 });
 
