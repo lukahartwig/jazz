@@ -1682,58 +1682,6 @@ test("WriteOnlyInvites can set writeKeys", () => {
   expect(groupAsInvite.get(`writeKeyFor_${admin.id}`)).toEqual(readKeyID);
 });
 
-test("Invites can't override key revelations", () => {
-  const { groupCore, admin } = newGroup();
-
-  const inviteSecret = Crypto.newRandomAgentSecret();
-  const inviteID = Crypto.getAgentID(inviteSecret);
-
-  const group = expectGroup(groupCore.getCurrentContent());
-
-  const { secret: readKey, id: readKeyID } = Crypto.newRandomKeySecret();
-  const revelation = Crypto.seal({
-    message: readKey,
-    from: admin.currentSealerSecret(),
-    to: admin.currentSealerID(),
-    nOnceMaterial: {
-      in: groupCore.id,
-      tx: groupCore.nextTransactionID(),
-    },
-  });
-
-  group.set(`${readKeyID}_for_${admin.id}`, revelation, "trusting");
-  group.set("readKey", readKeyID, "trusting");
-
-  group.set(inviteID, "readerInvite", "trusting");
-
-  expect(group.get(inviteID)).toEqual("readerInvite");
-
-  const revelationForInvite = Crypto.seal({
-    message: readKey,
-    from: admin.currentSealerSecret(),
-    to: Crypto.getAgentSealerID(inviteID),
-    nOnceMaterial: {
-      in: groupCore.id,
-      tx: groupCore.nextTransactionID(),
-    },
-  });
-
-  group.set(`${readKeyID}_for_${inviteID}`, revelationForInvite, "trusting");
-
-  const groupAsInvite = expectGroup(
-    groupCore.contentInClonedNodeWithDifferentAccount(
-      new ControlledAgent(inviteSecret, Crypto),
-    ),
-  );
-
-  groupAsInvite.set(
-    `${readKeyID}_for_${admin.id}`,
-    "Evil change" as any,
-    "trusting",
-  );
-  expect(groupAsInvite.get(`${readKeyID}_for_${admin.id}`)).toBe(revelation);
-});
-
 test("WriteOnlyInvites can't override writeKeys", () => {
   const { groupCore, admin } = newGroup();
 
@@ -2032,40 +1980,6 @@ test("Writers, readers and writeOnly can set child extensions", () => {
 
   groupAsReader.set(`child_${childGroup.id}`, "extend", "trusting");
   expect(groupAsReader.get(`child_${childGroup.id}`)).toEqual("extend");
-});
-
-test("Invitees can not set child extensions", () => {
-  const { group, node } = newGroupHighLevel();
-  const childGroup = node.createGroup();
-
-  const adminInvite = createAccountInNode(node);
-  const writerInvite = createAccountInNode(node);
-  const readerInvite = createAccountInNode(node);
-
-  group.addMember(adminInvite, "adminInvite");
-  group.addMember(writerInvite, "writerInvite");
-  group.addMember(readerInvite, "readerInvite");
-
-  const groupAsAdminInvite = expectGroup(
-    group.core.contentInClonedNodeWithDifferentAccount(adminInvite),
-  );
-
-  groupAsAdminInvite.set(`child_${childGroup.id}`, "extend", "trusting");
-  expect(groupAsAdminInvite.get(`child_${childGroup.id}`)).toBeUndefined();
-
-  const groupAsWriterInvite = expectGroup(
-    group.core.contentInClonedNodeWithDifferentAccount(writerInvite),
-  );
-
-  groupAsWriterInvite.set(`child_${childGroup.id}`, "extend", "trusting");
-  expect(groupAsWriterInvite.get(`child_${childGroup.id}`)).toBeUndefined();
-
-  const groupAsReaderInvite = expectGroup(
-    group.core.contentInClonedNodeWithDifferentAccount(readerInvite),
-  );
-
-  groupAsReaderInvite.set(`child_${childGroup.id}`, "extend", "trusting");
-  expect(groupAsReaderInvite.get(`child_${childGroup.id}`)).toBeUndefined();
 });
 
 test("Member roles are inherited by child groups (except invites)", () => {

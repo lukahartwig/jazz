@@ -1,13 +1,12 @@
 import { Playlist } from "@/1_schema";
 import { updatePlaylistTitle } from "@/4_actions";
 import { useCoState } from "jazz-react";
-import { ID } from "jazz-tools";
 import { ChangeEvent, useState } from "react";
 
 export function PlaylistTitleInput({
   playlistId,
 }: {
-  playlistId: ID<Playlist> | undefined;
+  playlistId: string | undefined;
 }) {
   const playlist = useCoState(Playlist, playlistId);
   const [isEditing, setIsEditing] = useState(false);

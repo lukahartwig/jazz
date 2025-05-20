@@ -3,26 +3,24 @@ import { useNavigate } from "react-router";
 
 import { ProgressiveImg } from "jazz-react";
 import { createImage, useAccount, useCoState } from "jazz-react";
-import { CoMap, Group, ID, ImageDefinition, co } from "jazz-tools";
-import { PetPost, PetReactions } from "./1_schema";
+import { Group, Loaded, co, z } from "jazz-tools";
+import { PetAccount, PetPost, PetReactions } from "./1_schema";
 import { Button, Input } from "./basicComponents";
 
 /** Walkthrough: TODO
  */
 
-class PartialPetPost extends CoMap {
-  name = co.string;
-  image = co.ref(ImageDefinition, { optional: true });
-  reactions = co.ref(PetReactions);
-}
+const PartialPetPost = co.map({
+  name: z.string(),
+  image: z.optional(co.image()),
+  reactions: PetReactions,
+});
 
 export function NewPetPostForm() {
-  const { me } = useAccount();
+  const { me } = useAccount(PetAccount);
   const navigate = useNavigate();
 
-  const [newPostId, setNewPostId] = useState<ID<PartialPetPost> | undefined>(
-    undefined,
-  );
+  const [newPostId, setNewPostId] = useState<string | undefined>(undefined);
 
   const newPetPost = useCoState(PartialPetPost, newPostId);
 
@@ -57,7 +55,7 @@ export function NewPetPostForm() {
         owner: newPetPost._owner,
       });
 
-      newPetPost.image = image;
+      newPetPost.image = image as any; // TODO: fix this
     },
     [newPetPost],
   );
@@ -70,7 +68,11 @@ export function NewPetPostForm() {
       throw new Error("No posts list found");
     }
 
-    myPosts.push(newPetPost as PetPost);
+    if (!newPetPost.image) {
+      throw new Error("No image found");
+    }
+
+    myPosts.push(newPetPost as Loaded<typeof PetPost>);
 
     navigate("/pet/" + newPetPost.id);
   }, [me?.root?.posts, newPetPost, navigate]);
@@ -87,7 +89,7 @@ export function NewPetPostForm() {
       />
 
       {newPetPost?.image ? (
-        <ProgressiveImg image={newPetPost.image}>
+        <ProgressiveImg image={newPetPost.image as any /* TODO: fix this */}>
           {({ src }) => <img className="w-80 max-w-full rounded" src={src} />}
         </ProgressiveImg>
       ) : (

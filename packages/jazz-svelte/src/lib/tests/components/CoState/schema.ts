@@ -1,17 +1,17 @@
-import { Account, co, CoMap } from "jazz-tools";
+import { Account, coField, CoMap } from "jazz-tools";
 
 export class Dog extends CoMap {
-    name = co.string;
+    name = coField.string;
   }
 
 export class Person extends CoMap {
-    name = co.string;
-    age = co.number;
-    dog = co.ref(Dog);
+    name = coField.string;
+    age = coField.number;
+    dog = coField.ref(Dog);
 }
 
 export class MyAccount extends Account {
-    root = co.ref(Person);
+    root = coField.ref(Person);
 
     migrate() {
         if (!this._refs.root) {

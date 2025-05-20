@@ -1,5 +1,67 @@
 # chat-rn
 
+## 1.0.120
+
+### Patch Changes
+
+- Updated dependencies [c8b33ad]
+- Updated dependencies [cdfc105]
+  - cojson@0.14.1
+  - jazz-tools@0.14.1
+  - cojson-transport-ws@0.14.1
+  - jazz-react-native@0.14.1
+
+## 1.0.119
+
+### Patch Changes
+
+- Updated dependencies [5835ed1]
+- Updated dependencies [5835ed1]
+  - cojson@0.14.0
+  - jazz-tools@0.14.0
+  - cojson-transport-ws@0.14.0
+  - jazz-react-native@0.14.0
+
+## 1.0.118
+
+### Patch Changes
+
+- jazz-react-native@0.13.32
+
+## 1.0.117
+
+### Patch Changes
+
+- Updated dependencies [e5b170f]
+- Updated dependencies [d63716a]
+- Updated dependencies [d5edad7]
+  - jazz-tools@0.13.31
+  - cojson@0.13.31
+  - jazz-react-native@0.13.31
+  - cojson-transport-ws@0.13.31
+
+## 1.0.116
+
+### Patch Changes
+
+- Updated dependencies [07dd2c5]
+  - cojson@0.13.30
+  - cojson-transport-ws@0.13.30
+  - jazz-react-native@0.13.30
+  - jazz-tools@0.13.30
+
+## 1.0.115
+
+### Patch Changes
+
+- Updated dependencies [eef1a5d]
+- Updated dependencies [191ae38]
+- Updated dependencies [daee7b9]
+  - cojson@0.13.29
+  - jazz-react-native@0.13.29
+  - cojson-transport-ws@0.13.29
+  - jazz-tools@0.13.29
+
 ## 1.0.114
 
 ### Patch Changes

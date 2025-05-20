@@ -1,9 +1,10 @@
 import { useAccount } from "jazz-react";
 import { UserIcon } from "lucide-react";
+import { JazzAccount } from "./schema";
 
 export function Layout({ children }: { children: React.ReactNode }) {
-  const { me, logOut } = useAccount({
-    resolve: { root: { draftOrganization: true } },
+  const { me, logOut } = useAccount(JazzAccount, {
+    resolve: { profile: true },
   });
 
   return (
@@ -16,7 +17,20 @@ export function Layout({ children }: { children: React.ReactNode }) {
             <span className="bg-stone-500 pt-1 size-6 flex items-center justify-center rounded-full">
               <UserIcon size={20} className="stroke-white" />
             </span>
-            {me?.profile?.name}
+            <label htmlFor="profile-name" className="sr-only">
+              Profile name
+            </label>
+            <input
+              id="profile-name"
+              type="text"
+              value={me?.profile.name ?? ""}
+              className="rounded-md shadow-sm dark:bg-transparent text-sm py-1.5 px-3"
+              onChange={(e) => {
+                if (me) {
+                  me.profile.name = e.target.value;
+                }
+              }}
+            />
           </span>
 
           <button

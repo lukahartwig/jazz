@@ -53,12 +53,6 @@ function JazzAndAuth({ children }: { children: React.ReactNode }) {
   );
 }
 
-declare module "jazz-react" {
-  interface Register {
-    Account: TodoAccount;
-  }
-}
-
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <JazzAndAuth>
@@ -125,7 +119,7 @@ export default function App() {
 }
 
 function HomeScreen() {
-  const { me } = useAccount({
+  const { me } = useAccount(TodoAccount, {
     resolve: { root: { projects: { $each: true } } },
   });
   const navigate = useNavigate();

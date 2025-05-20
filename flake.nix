@@ -22,7 +22,7 @@
             
             # JS development
             nodejs_22
-            nodePackages.pnpm
+            pnpm_9
           ];
 
           shellHook = ''

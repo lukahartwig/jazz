@@ -1,6 +1,6 @@
 import Clipboard from "@react-native-clipboard/clipboard";
 import { useAccount, useCoState } from "jazz-react-native";
-import { CoPlainText, Group, ID, Profile } from "jazz-tools";
+import { CoPlainText, Group, ID, Loaded, Profile } from "jazz-tools";
 import { useEffect, useState } from "react";
 import {
   Alert,
@@ -18,7 +18,7 @@ import { Chat, Message } from "./schema";
 
 export function ChatScreen({ navigation }: { navigation: any }) {
   const { me, logOut } = useAccount();
-  const [chatId, setChatId] = useState<ID<Chat>>();
+  const [chatId, setChatId] = useState<string>();
   const loadedChat = useCoState(Chat, chatId, { resolve: { $each: true } });
   const [message, setMessage] = useState("");
   const profile = useCoState(Profile, me._refs.profile?.id, {});
@@ -68,7 +68,7 @@ export function ChatScreen({ navigation }: { navigation: any }) {
           text: "Join",
           onPress: (chatId) => {
             if (chatId) {
-              setChatId(chatId as ID<Chat>);
+              setChatId(chatId);
             } else {
               Alert.alert("Error", "Chat ID cannot be empty.");
             }
@@ -92,7 +92,9 @@ export function ChatScreen({ navigation }: { navigation: any }) {
     }
   };
 
-  const renderMessageItem = ({ item }: { item: Message }) => {
+  const renderMessageItem = ({
+    item,
+  }: { item: Loaded<typeof Message, { text: true }> }) => {
     const isMe = item._edits?.text?.by?.isMe;
     return (
       <View

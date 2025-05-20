@@ -86,13 +86,14 @@ export class SQLiteClient implements DBClientInterfaceSync {
 
   getNewTransactionInSession(
     sessionRowId: number,
-    firstNewTxIdx: number,
+    fromIdx: number,
+    toIdx: number,
   ): TransactionRow[] {
     const txs = this.db
-      .prepare<[number, number]>(
-        "SELECT * FROM transactions WHERE ses = ? AND idx >= ?",
+      .prepare<[number, number, number]>(
+        "SELECT * FROM transactions WHERE ses = ? AND idx >= ? AND idx <= ?",
       )
-      .all(sessionRowId, firstNewTxIdx) as RawTransactionRow[];
+      .all(sessionRowId, fromIdx, toIdx) as RawTransactionRow[];
 
     try {
       return txs.map((transactionRow) => ({

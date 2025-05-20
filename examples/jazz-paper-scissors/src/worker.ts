@@ -1,14 +1,13 @@
 import {
   Game,
   InboxMessage,
-  JoinGameRequest,
   NewGameIntent,
   PlayIntent,
   Player,
   WaitingRoom,
 } from "@/schema";
 import { startWorker } from "jazz-nodejs";
-import { Account, Group, type ID } from "jazz-tools";
+import { Account, Group, type Loaded, co } from "jazz-tools";
 import { determineWinner } from "./lib/utils";
 
 if (!process.env.VITE_JAZZ_WORKER_ACCOUNT || !process.env.JAZZ_WORKER_SECRET) {
@@ -26,18 +25,18 @@ const {
 inbox.subscribe(
   InboxMessage,
   async (message, senderID) => {
-    const playerAccount = await Account.load(senderID, { loadAs: worker });
+    const playerAccount = await co.account().load(senderID, { loadAs: worker });
     if (!playerAccount) {
       return;
     }
 
     switch (message.type) {
       case "play":
-        handlePlayIntent(senderID, message.castAs(PlayIntent));
+        handlePlayIntent(senderID, message);
         break;
 
       case "newGame":
-        handleNewGameIntent(senderID, message.castAs(NewGameIntent));
+        handleNewGameIntent(senderID, message);
         break;
 
       case "createGame":
@@ -52,7 +51,7 @@ inbox.subscribe(
         return waitingRoom;
 
       case "joinGame":
-        const joinGameRequest = message.castAs(JoinGameRequest);
+        const joinGameRequest = message;
         if (
           !joinGameRequest.waitingRoom ||
           !joinGameRequest.waitingRoom.account1
@@ -60,11 +59,13 @@ inbox.subscribe(
           console.error("No waiting room in join game request");
           return;
         }
+
+        // @ts-expect-error - https://github.com/garden-co/jazz/issues/1332
         joinGameRequest.waitingRoom.account2 = playerAccount;
 
         const game = await createGame({
           account1: joinGameRequest.waitingRoom.account1,
-          account2: joinGameRequest.waitingRoom.account2,
+          account2: joinGameRequest.waitingRoom.account2!,
         });
         console.log("game created with id:", game.id);
 
@@ -115,7 +116,7 @@ function createPlayer({ account }: CreatePlayerParams) {
 
   const player = Player.create(
     {
-      account,
+      account: account,
     },
     { owner: publicRead },
   );
@@ -123,10 +124,13 @@ function createPlayer({ account }: CreatePlayerParams) {
   return player;
 }
 
-async function handleNewGameIntent(_: ID<Account>, message: NewGameIntent) {
+async function handleNewGameIntent(
+  _: string,
+  message: Loaded<typeof NewGameIntent>,
+) {
   const gameId = message.gameId;
 
-  const game = await Game.load(gameId as ID<Game>, {
+  const game = await Game.load(gameId, {
     loadAs: worker,
     resolve: {
       player1: true,
@@ -148,7 +152,7 @@ async function handleNewGameIntent(_: ID<Account>, message: NewGameIntent) {
   }
 }
 
-async function handlePlayIntent(_: ID<Account>, message: PlayIntent) {
+async function handlePlayIntent(_: string, message: Loaded<typeof PlayIntent>) {
   // determine current player, update game with outcome
   const gameId = message.gameId;
   if (!gameId) {
@@ -156,7 +160,7 @@ async function handlePlayIntent(_: ID<Account>, message: PlayIntent) {
     return;
   }
 
-  const game = await Game.load(gameId as ID<Game>, {
+  const game = await Game.load(gameId, {
     loadAs: worker,
     resolve: {
       player1: true,

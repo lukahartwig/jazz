@@ -1,6 +1,6 @@
 import clsx from "clsx";
 import * as Clipboard from "expo-clipboard";
-import { Group, ID, Profile } from "jazz-tools";
+import { Group, ID, Loaded, Profile } from "jazz-tools";
 import { useEffect, useState } from "react";
 import React, {
   Button,
@@ -19,7 +19,7 @@ import { Chat, Message } from "./schema";
 
 export default function ChatScreen({ navigation }: { navigation: any }) {
   const { me, logOut } = useAccount();
-  const [chatId, setChatId] = useState<ID<Chat>>();
+  const [chatId, setChatId] = useState<string>();
   const [chatIdInput, setChatIdInput] = useState<string>();
   const loadedChat = useCoState(Chat, chatId, { resolve: { $each: true } });
   const [message, setMessage] = useState("");
@@ -59,7 +59,7 @@ export default function ChatScreen({ navigation }: { navigation: any }) {
 
   const joinChat = () => {
     if (chatIdInput) {
-      setChatId(chatIdInput as ID<Chat>);
+      setChatId(chatIdInput);
     } else {
       Alert.alert("Error", "Chat ID cannot be empty.");
     }
@@ -75,7 +75,7 @@ export default function ChatScreen({ navigation }: { navigation: any }) {
     }
   };
 
-  const renderMessageItem = ({ item }: { item: Message }) => {
+  const renderMessageItem = ({ item }: { item: Loaded<typeof Message> }) => {
     const isMe = item._edits?.text?.by?.isMe;
     return (
       <View
@@ -156,7 +156,7 @@ export default function ChatScreen({ navigation }: { navigation: any }) {
             textAlignVertical="center"
             onSubmitEditing={() => {
               if (chatIdInput) {
-                setChatId(chatIdInput as ID<Chat>);
+                setChatId(chatIdInput);
               }
             }}
             testID="chat-id-input"

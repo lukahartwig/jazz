@@ -1,5 +1,3 @@
-"use client";
-
 import { HelpLinks } from "@/components/docs/HelpLinks";
 import { TableOfContents } from "@/components/docs/TableOfContents";
 import { JazzMobileNav } from "@/components/nav";

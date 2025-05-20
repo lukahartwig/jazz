@@ -1,10 +1,11 @@
+import { Loaded } from "jazz-tools";
 import { useState } from "react";
 import { Organization, Project } from "../schema.ts";
 
 export function CreateProject({
   organization,
 }: {
-  organization: Organization;
+  organization: Loaded<typeof Organization>;
 }) {
   const [name, setName] = useState<string>("");
 

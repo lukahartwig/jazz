@@ -5,9 +5,12 @@ import { PetPost } from "../1_schema";
 import { createInviteLink, useAccount } from "jazz-react";
 import QRCode from "qrcode";
 
+import { Loaded } from "jazz-tools";
 import { Button, useToast } from "../basicComponents";
 
-export function ShareButton({ petPost }: { petPost?: PetPost | null }) {
+export function ShareButton({
+  petPost,
+}: { petPost?: Loaded<typeof PetPost> | null }) {
   const [existingInviteLink, setExistingInviteLink] = useState<string>();
   const { toast } = useToast();
   const { me } = useAccount();

@@ -1,13 +1,18 @@
 import { useAccount, useCoState } from "jazz-react";
-import { Group, ID } from "jazz-tools";
+import { Group, Loaded, co } from "jazz-tools";
 import { useState } from "react";
 import { useNavigate } from "react-router";
-import { DraftOrganization, ListOfProjects, Organization } from "../schema.ts";
+import {
+  DraftOrganization,
+  JazzAccount,
+  Organization,
+  Project,
+} from "../schema.ts";
 import { Errors } from "./Errors.tsx";
 import { OrganizationForm } from "./OrganizationForm.tsx";
 
 export function CreateOrganization() {
-  const { me } = useAccount({
+  const { me } = useAccount(JazzAccount, {
     resolve: { root: { draftOrganization: true, organizations: true } },
   });
   const [errors, setErrors] = useState<string[]>([]);
@@ -15,9 +20,9 @@ export function CreateOrganization() {
 
   if (!me?.root?.organizations) return;
 
-  const onSave = (draft: DraftOrganization) => {
+  const onSave = (draft: Loaded<typeof DraftOrganization>) => {
     // validate if the draft is a valid organization
-    const validation = draft.validate();
+    const validation = DraftOrganization.validate(draft);
     setErrors(validation.errors);
     if (validation.errors.length > 0) {
       return;
@@ -25,11 +30,11 @@ export function CreateOrganization() {
 
     const group = Group.create();
 
-    me.root.organizations.push(draft as Organization);
+    me.root.organizations.push(draft as Loaded<typeof Organization>);
 
     me.root.draftOrganization = DraftOrganization.create(
       {
-        projects: ListOfProjects.create([], { owner: group }),
+        projects: co.list(Project).create([], { owner: group }),
       },
       { owner: group },
     );
@@ -52,8 +57,8 @@ function CreateOrganizationForm({
   id,
   onSave,
 }: {
-  id: ID<DraftOrganization>;
-  onSave: (draft: DraftOrganization) => void;
+  id: string;
+  onSave: (draft: Loaded<typeof DraftOrganization>) => void;
 }) {
   const draft = useCoState(DraftOrganization, id);
 

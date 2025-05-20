@@ -1,14 +1,10 @@
 // @vitest-environment happy-dom
 
 import { cojsonInternals } from "cojson";
-import { CoList, CoMap, CoValue, Group, ID, co } from "jazz-tools";
-import { beforeEach, describe, expect, expectTypeOf, it } from "vitest";
+import { Account, CoValue, Group, ID, Loaded, co, z } from "jazz-tools";
+import { assert, beforeEach, describe, expect, expectTypeOf, it } from "vitest";
 import { useCoState } from "../index.js";
-import {
-  createJazzTestAccount,
-  linkAccounts,
-  setupJazzTestSync,
-} from "../testing.js";
+import { createJazzTestAccount, setupJazzTestSync } from "../testing.js";
 import { act, renderHook, waitFor } from "./testUtils.js";
 
 beforeEach(async () => {
@@ -23,9 +19,9 @@ cojsonInternals.setCoValueLoadingRetryDelay(300);
 
 describe("useCoState", () => {
   it("should return the correct value", async () => {
-    class TestMap extends CoMap {
-      value = co.string;
-    }
+    const TestMap = co.map({
+      value: z.string(),
+    });
 
     const account = await createJazzTestAccount({
       isCurrentActiveAccount: true,
@@ -43,9 +39,9 @@ describe("useCoState", () => {
   });
 
   it("should update the value when the coValue changes", async () => {
-    class TestMap extends CoMap {
-      value = co.string;
-    }
+    const TestMap = co.map({
+      value: z.string(),
+    });
 
     const account = await createJazzTestAccount({
       isCurrentActiveAccount: true,
@@ -69,14 +65,14 @@ describe("useCoState", () => {
   });
 
   it("should load nested values if requested", async () => {
-    class TestNestedMap extends CoMap {
-      value = co.string;
-    }
+    const TestNestedMap = co.map({
+      value: z.string(),
+    });
 
-    class TestMap extends CoMap {
-      value = co.string;
-      nested = co.ref(TestNestedMap);
-    }
+    const TestMap = co.map({
+      value: z.string(),
+      nested: TestNestedMap,
+    });
 
     const account = await createJazzTestAccount({
       isCurrentActiveAccount: true,
@@ -106,14 +102,14 @@ describe("useCoState", () => {
   });
 
   it("should load nested values on access even if not requested", async () => {
-    class TestNestedMap extends CoMap {
-      value = co.string;
-    }
+    const TestNestedMap = co.map({
+      value: z.string(),
+    });
 
-    class TestMap extends CoMap {
-      value = co.string;
-      nested = co.ref(TestNestedMap);
-    }
+    const TestMap = co.map({
+      value: z.string(),
+      nested: TestNestedMap,
+    });
 
     const account = await createJazzTestAccount({
       isCurrentActiveAccount: true,
@@ -135,9 +131,9 @@ describe("useCoState", () => {
   });
 
   it("should return null if the coValue is not found", async () => {
-    class TestMap extends CoMap {
-      value = co.string;
-    }
+    const TestMap = co.map({
+      value: z.string(),
+    });
 
     const map = TestMap.create({
       value: "123",
@@ -162,9 +158,9 @@ describe("useCoState", () => {
   });
 
   it("should return null if the coValue is not accessible", async () => {
-    class TestMap extends CoMap {
-      value = co.string;
-    }
+    const TestMap = co.map({
+      value: z.string(),
+    });
 
     const someoneElse = await createJazzTestAccount({
       isCurrentActiveAccount: true,
@@ -193,9 +189,9 @@ describe("useCoState", () => {
   });
 
   it("should not return null if the coValue is shared with everyone", async () => {
-    class TestMap extends CoMap {
-      value = co.string;
-    }
+    const TestMap = co.map({
+      value: z.string(),
+    });
 
     const someoneElse = await createJazzTestAccount({
       isCurrentActiveAccount: true,
@@ -227,9 +223,9 @@ describe("useCoState", () => {
   });
 
   it("should return a value when the coValue becomes accessible", async () => {
-    class TestMap extends CoMap {
-      value = co.string;
-    }
+    const TestMap = co.map({
+      value: z.string(),
+    });
 
     const someoneElse = await createJazzTestAccount({
       isCurrentActiveAccount: true,
@@ -268,9 +264,9 @@ describe("useCoState", () => {
   });
 
   it("should return a null value when the coValue becomes inaccessible", async () => {
-    class TestMap extends CoMap {
-      value = co.string;
-    }
+    const TestMap = co.map({
+      value: z.string(),
+    });
 
     const someoneElse = await createJazzTestAccount({
       isCurrentActiveAccount: true,
@@ -311,9 +307,9 @@ describe("useCoState", () => {
   });
 
   it("should return a null value when the coValue becomes inaccessible", async () => {
-    class TestMap extends CoMap {
-      value = co.string;
-    }
+    const TestMap = co.map({
+      value: z.string(),
+    });
 
     const { result } = renderHook(() => useCoState(TestMap, undefined));
 
@@ -321,10 +317,12 @@ describe("useCoState", () => {
   });
 
   it("should update when an inner coValue is updated", async () => {
-    class TestMap extends CoMap {
-      value = co.string;
-      nested = co.optional.ref(TestMap);
-    }
+    const TestMap = co.map({
+      value: z.string(),
+      get nested(): z.ZodOptional<typeof TestMap> {
+        return z.optional(TestMap);
+      },
+    });
 
     const someoneElse = await createJazzTestAccount({
       isCurrentActiveAccount: true,
@@ -378,9 +376,9 @@ describe("useCoState", () => {
   });
 
   it("should return the same type as Schema", () => {
-    class TestMap extends CoMap {
-      value = co.string;
-    }
+    const TestMap = co.map({
+      value: z.string(),
+    });
 
     const map = TestMap.create({
       value: "123",
@@ -390,14 +388,14 @@ describe("useCoState", () => {
       useCoState(TestMap, map.id as ID<CoValue>),
     );
     expectTypeOf(result).toEqualTypeOf<{
-      current: TestMap | null | undefined;
+      current: Loaded<typeof TestMap> | null | undefined;
     }>();
   });
 
   it("should set the value to undefined when the id is set to undefined", () => {
-    class TestMap extends CoMap {
-      value = co.string;
-    }
+    const TestMap = co.map({
+      value: z.string(),
+    });
 
     const map = TestMap.create({
       value: "123",
@@ -418,11 +416,11 @@ describe("useCoState", () => {
   });
 
   it("should only render twice when loading a list of values", async () => {
-    class TestMap extends CoMap {
-      value = co.string;
-    }
+    const TestMap = co.map({
+      value: z.string(),
+    });
 
-    class TestList extends CoList.Of(co.ref(TestMap)) {}
+    const TestList = co.list(TestMap);
 
     const account = await createJazzTestAccount({
       isCurrentActiveAccount: true,
@@ -451,5 +449,52 @@ describe("useCoState", () => {
     await new Promise((resolve) => setTimeout(resolve, 100));
 
     expect(renderCount).toBe(2);
+  });
+
+  it("should manage correctly the group.members[number].account.profile?.name autoload", async () => {
+    const Dog = co.map({
+      name: z.string(),
+    });
+
+    const john = await createJazzTestAccount({
+      isCurrentActiveAccount: true,
+      creationProps: {
+        name: "John Doe",
+      },
+    });
+
+    const jane = await createJazzTestAccount({
+      creationProps: {
+        name: "Jane Doe",
+      },
+    });
+
+    const janeOnJohn = await Account.load(jane.id, {
+      loadAs: john,
+    });
+
+    assert(janeOnJohn);
+
+    const group = Group.create(john);
+    group.addMember(janeOnJohn, "reader");
+
+    const dog = Dog.create(
+      {
+        name: "Rex",
+      },
+      group,
+    );
+
+    const { result } = renderHook(
+      () => useCoState(Dog, dog.id)?._owner.castAs(Group).members,
+      {
+        account: john,
+      },
+    );
+
+    await waitFor(() => {
+      expect(result.current?.[0]?.account?.profile?.name).toBe("John Doe");
+      expect(result.current?.[1]?.account?.profile?.name).toBe("Jane Doe");
+    });
   });
 });

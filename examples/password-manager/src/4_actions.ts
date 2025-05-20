@@ -1,15 +1,12 @@
 import { createInviteLink } from "jazz-react";
-import { Group, ID } from "jazz-tools";
-import { CoMapInit } from "jazz-tools";
-import {
-  Folder,
-  PasswordItem,
-  PasswordList,
-  PasswordManagerAccount,
-} from "./1_schema";
+import { Group, Loaded, co } from "jazz-tools";
+import { InitFor } from "jazz-tools";
+import { Folder, PasswordItem, PasswordManagerAccount } from "./1_schema";
 import { PasswordItemFormValues } from "./types";
 
-export const saveItem = (item: CoMapInit<PasswordItem>): PasswordItem => {
+export const saveItem = (
+  item: InitFor<typeof PasswordItem>,
+): Loaded<typeof PasswordItem> => {
   const passwordItem = PasswordItem.create(item, {
     owner: item.folder!._owner,
   });
@@ -18,14 +15,14 @@ export const saveItem = (item: CoMapInit<PasswordItem>): PasswordItem => {
 };
 
 export const updateItem = (
-  item: PasswordItem,
+  item: Loaded<typeof PasswordItem>,
   values: PasswordItemFormValues,
-): PasswordItem => {
-  item.applyDiff(values as Partial<CoMapInit<PasswordItem>>);
+): Loaded<typeof PasswordItem> => {
+  item.applyDiff(values as Partial<InitFor<typeof PasswordItem>>);
   return item;
 };
 
-export const deleteItem = (item: PasswordItem): void => {
+export const deleteItem = (item: Loaded<typeof PasswordItem>): void => {
   const found = item.folder?.items?.findIndex(
     (passwordItem) => passwordItem?.id === item.id,
   );
@@ -34,11 +31,14 @@ export const deleteItem = (item: PasswordItem): void => {
 
 export const createFolder = (
   folderName: string,
-  me: PasswordManagerAccount,
-): Folder => {
+  me: Loaded<typeof PasswordManagerAccount>,
+): Loaded<typeof Folder> => {
   const group = Group.create({ owner: me });
   const folder = Folder.create(
-    { name: folderName, items: PasswordList.create([], { owner: group }) },
+    {
+      name: folderName,
+      items: co.list(PasswordItem).create([], { owner: group }),
+    },
     { owner: group },
   );
   me.root?.folders?.push(folder);
@@ -46,7 +46,7 @@ export const createFolder = (
 };
 
 export const shareFolder = (
-  folder: Folder,
+  folder: Loaded<typeof Folder>,
   permission: "reader" | "writer" | "admin",
 ): string | undefined => {
   if (folder._owner && folder.id) {
@@ -56,8 +56,8 @@ export const shareFolder = (
 };
 
 export async function addSharedFolder(
-  sharedFolderId: ID<Folder>,
-  me: PasswordManagerAccount,
+  sharedFolderId: string,
+  me: Loaded<typeof PasswordManagerAccount>,
 ) {
   const [sharedFolder, account] = await Promise.all([
     Folder.load(sharedFolderId),

@@ -12,10 +12,12 @@ import type {
 import { MAX_RECOMMENDED_TX_SIZE, cojsonInternals } from "cojson";
 import type {
   AnonymousJazzAgent,
+  AnyAccountSchema,
   CoValue,
   CoValueClass,
+  Group,
   ID,
-  IfCo,
+  InstanceOfSchema,
   RefsToResolve,
   RefsToResolveStrict,
   Resolved,
@@ -23,15 +25,17 @@ import type {
   SchemaFor,
   SubscribeListenerOptions,
   SubscribeRestArgs,
-  UnCo,
 } from "../internal.js";
 import {
+  Account,
   CoValueBase,
   ItemsSym,
   Ref,
+  RegisteredSchemas,
   SchemaInit,
   accessChildById,
-  co,
+  anySchemaToCoSchema,
+  coField,
   ensureCoValueLoaded,
   inspect,
   isRefEncoded,
@@ -41,10 +45,6 @@ import {
   subscribeToCoValueWithoutMe,
   subscribeToExistingCoValue,
 } from "../internal.js";
-import { RegisteredAccount } from "../types.js";
-import { type Account } from "./account.js";
-import { type Group } from "./group.js";
-import { RegisteredSchemas } from "./registeredSchemas.js";
 
 /** @deprecated Use CoFeedEntry instead */
 export type CoStreamEntry<Item> = CoFeedEntry<Item>;
@@ -59,7 +59,7 @@ export type SingleCoStreamEntry<Item> = SingleCoFeedEntry<Item>;
 export type SingleCoFeedEntry<Item> = {
   value: NonNullable<Item> extends CoValue ? NonNullable<Item> | null : Item;
   ref: NonNullable<Item> extends CoValue ? Ref<NonNullable<Item>> : never;
-  by?: RegisteredAccount | null;
+  by: Account | null;
   madeAt: Date;
   tx: CojsonInternalTypes.TransactionID;
 };
@@ -83,22 +83,27 @@ export { CoFeed as CoStream };
  *
  * @category CoValues
  */
-export class CoFeed<Item = any> extends CoValueBase implements CoValue {
+export class CoFeed<out Item = any> extends CoValueBase implements CoValue {
   /**
-   * Declare a `CoFeed` by subclassing `CoFeed.Of(...)` and passing the item schema using a `co` primitive or a `co.ref`.
+   * Declare a `CoFeed` by subclassing `CoFeed.Of(...)` and passing the item schema using a `co` primitive or a `coField.ref`.
    *
    * @example
    * ```ts
-   * class ColorFeed extends CoFeed.Of(co.string) {}
-   * class AnimalFeed extends CoFeed.Of(co.ref(Animal)) {}
+   * class ColorFeed extends CoFeed.Of(coField.string) {}
+   * class AnimalFeed extends CoFeed.Of(coField.ref(Animal)) {}
    * ```
    *
    * @category Declaration
    */
-  static Of<Item>(item: IfCo<Item, Item>): typeof CoFeed<Item> {
-    return class CoFeedOf extends CoFeed<Item> {
-      [co.items] = item;
+  static Of<Item>(item: Item): typeof CoFeed<Item> {
+    const cls = class CoFeedOf extends CoFeed<Item> {
+      [coField.items] = item;
     };
+
+    cls._schema ||= {};
+    cls._schema[ItemsSym] = (item as any)[SchemaInit];
+
+    return cls;
   }
 
   /**
@@ -120,9 +125,20 @@ export class CoFeed<Item = any> extends CoValueBase implements CoValue {
   static _schema: any;
   /** @internal */
   get _schema(): {
-    [ItemsSym]: SchemaFor<Item>;
+    [ItemsSym]: SchemaFor<Item> | any;
   } {
     return (this.constructor as typeof CoFeed)._schema;
+  }
+  /**
+   * The current account's view of this `CoFeed`
+   * @category Content
+   */
+  get byMe(): CoFeedEntry<Item> | undefined {
+    if (this._loadedAs._type === "Account") {
+      return this.perAccount[this._loadedAs.id];
+    } else {
+      return undefined;
+    }
   }
 
   /**
@@ -147,27 +163,24 @@ export class CoFeed<Item = any> extends CoValueBase implements CoValue {
    *
    * @category Content
    */
-  [key: ID<Account>]: CoFeedEntry<Item>;
-
-  /**
-   * The current account's view of this `CoFeed`
-   * @category Content
-   */
-  get byMe(): CoFeedEntry<Item> | undefined {
-    if (this._loadedAs._type === "Account") {
-      return this[this._loadedAs.id];
-    } else {
-      return undefined;
-    }
+  get perAccount(): {
+    [key: ID<Account>]: CoFeedEntry<Item>;
+  } {
+    return new Proxy({}, CoStreamPerAccountProxyHandler(this)) as any;
   }
 
   /**
    * The per-session view of this `CoFeed`
    * @category Content
    */
-  perSession!: {
+  get perSession(): {
     [key: SessionID]: CoFeedEntry<Item>;
-  };
+  } {
+    return new Proxy(
+      {},
+      CoStreamPerSessionProxyHandler(this, this) as any,
+    ) as any;
+  }
 
   /**
    * The current session's view of this `CoFeed`
@@ -201,7 +214,7 @@ export class CoFeed<Item = any> extends CoValueBase implements CoValue {
       });
     }
 
-    return new Proxy(this, CoStreamProxyHandler as ProxyHandler<this>);
+    return this;
   }
 
   /**
@@ -210,7 +223,7 @@ export class CoFeed<Item = any> extends CoValueBase implements CoValue {
    */
   static create<S extends CoFeed>(
     this: CoValueClass<S>,
-    init: S extends CoFeed<infer Item> ? UnCo<Item>[] : never,
+    init: S extends CoFeed<infer Item> ? Item[] : never,
     options?: { owner: Account | Group } | Account | Group,
   ) {
     const { owner } = parseCoValueCreateOptions(options);
@@ -471,7 +484,7 @@ function entryFromRawEntry<Item>(
       return (
         accountID &&
         accessChildById(accessFrom, accountID, {
-          ref: RegisteredSchemas["Account"],
+          ref: Account,
           optional: false,
         })
       );
@@ -485,23 +498,25 @@ function entryFromRawEntry<Item>(
  * The proxy handler for `CoFeed` instances
  * @internal
  */
-export const CoStreamProxyHandler: ProxyHandler<CoFeed> = {
-  get(target, key, receiver) {
+export const CoStreamPerAccountProxyHandler = (
+  innerTarget: CoFeed,
+): ProxyHandler<{}> => ({
+  get(_target, key, receiver) {
     if (typeof key === "string" && key.startsWith("co_")) {
-      const rawEntry = target._raw.lastItemBy(key as RawAccountID);
+      const rawEntry = innerTarget._raw.lastItemBy(key as RawAccountID);
 
       if (!rawEntry) return;
       const entry = entryFromRawEntry(
         receiver,
         rawEntry,
-        target._loadedAs,
+        innerTarget._loadedAs,
         key as unknown as ID<Account>,
-        target._schema[ItemsSym],
+        innerTarget._schema[ItemsSym],
       );
 
       Object.defineProperty(entry, "all", {
         get: () => {
-          const allRawEntries = target._raw.itemsBy(key as RawAccountID);
+          const allRawEntries = innerTarget._raw.itemsBy(key as RawAccountID);
           return (function* () {
             while (true) {
               const rawEntry = allRawEntries.next();
@@ -509,9 +524,9 @@ export const CoStreamProxyHandler: ProxyHandler<CoFeed> = {
               yield entryFromRawEntry(
                 receiver,
                 rawEntry.value,
-                target._loadedAs,
+                innerTarget._loadedAs,
                 key as unknown as ID<Account>,
-                target._schema[ItemsSym],
+                innerTarget._schema[ItemsSym],
               );
             }
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -520,47 +535,14 @@ export const CoStreamProxyHandler: ProxyHandler<CoFeed> = {
       });
 
       return entry;
-    } else if (key === "perSession") {
-      return new Proxy({}, CoStreamPerSessionProxyHandler(target, receiver));
     } else {
-      return Reflect.get(target, key, receiver);
+      return Reflect.get(innerTarget, key, receiver);
     }
   },
-  set(target, key, value, receiver) {
-    if (key === ItemsSym && typeof value === "object" && SchemaInit in value) {
-      (target.constructor as typeof CoFeed)._schema ||= {};
-      (target.constructor as typeof CoFeed)._schema[ItemsSym] =
-        value[SchemaInit];
-      return true;
-    } else {
-      return Reflect.set(target, key, value, receiver);
-    }
+  ownKeys(_target) {
+    return Array.from(innerTarget._raw.accounts());
   },
-  defineProperty(target, key, descriptor) {
-    if (
-      descriptor.value &&
-      key === ItemsSym &&
-      typeof descriptor.value === "object" &&
-      SchemaInit in descriptor.value
-    ) {
-      (target.constructor as typeof CoFeed)._schema ||= {};
-      (target.constructor as typeof CoFeed)._schema[ItemsSym] =
-        descriptor.value[SchemaInit];
-      return true;
-    } else {
-      return Reflect.defineProperty(target, key, descriptor);
-    }
-  },
-  ownKeys(target) {
-    const keys = Reflect.ownKeys(target);
-
-    for (const accountID of target._raw.accounts()) {
-      keys.push(accountID);
-    }
-
-    return keys;
-  },
-  getOwnPropertyDescriptor(target, key) {
+  getOwnPropertyDescriptor(_target, key) {
     if (typeof key === "string" && key.startsWith("co_")) {
       return {
         configurable: true,
@@ -568,10 +550,10 @@ export const CoStreamProxyHandler: ProxyHandler<CoFeed> = {
         writable: false,
       };
     } else {
-      return Reflect.getOwnPropertyDescriptor(target, key);
+      return Reflect.getOwnPropertyDescriptor(innerTarget, key);
     }
   },
-};
+});
 
 /**
  * The proxy handler for the per-session view of a `CoFeed`
@@ -652,10 +634,10 @@ export { FileStream as BinaryCoStream };
  * `FileStream` can be referenced in schemas.
  *
  * ```ts
- * import { co, FileStream } from "jazz-tools";
+ * import { coField, FileStream } from "jazz-tools";
  *
  * class MyCoMap extends CoMap {
- *   file = co.ref(FileStream);
+ *   file = coField.ref(FileStream);
  * }
  * ```
  *
@@ -817,7 +799,7 @@ export class FileStream extends CoValueBase implements CoValue {
    *
    * @example
    * ```ts
-   * import { co, FileStream } from "jazz-tools";
+   * import { coField, FileStream } from "jazz-tools";
    *
    * const fileStream = await FileStream.createFromBlob(file, {owner: group})
    * ```

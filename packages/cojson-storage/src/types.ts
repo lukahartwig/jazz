@@ -47,7 +47,8 @@ export interface DBClientInterfaceAsync {
 
   getNewTransactionInSession(
     sessionRowId: number,
-    firstNewTxIdx: number,
+    fromIdx: number,
+    toIdx: number,
   ): Promise<TransactionRow[]>;
 
   getSignatures(
@@ -96,13 +97,14 @@ export interface DBClientInterfaceSync {
 
   getNewTransactionInSession(
     sessionRowId: number,
-    firstNewTxIdx: number,
+    fromIdx: number,
+    toIdx: number,
   ): TransactionRow[];
 
   getSignatures(
     sessionRowId: number,
     firstNewTxIdx: number,
-  ): SignatureAfterRow[];
+  ): Pick<SignatureAfterRow, "idx" | "signature">[];
 
   addCoValue(msg: CojsonInternalTypes.NewContentMessage): number;
 

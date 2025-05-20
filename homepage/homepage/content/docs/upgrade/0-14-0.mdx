@@ -1,0 +1,207 @@
+import { ContentByFramework, CodeGroup } from '@/components/forMdx'
+
+# Jazz 0.14.0 Introducing Zod-based schemas
+
+We're excited to move from our own schema syntax to using Zod v4.
+
+This is the first step in a series of releases to make Jazz more familiar and to make CoValues look more like regular data structures.
+
+**Note: This is a huge release that we're still cleaning up and documenting.**
+
+<small className="leading-tight">
+We're still in the process of:
+- updating all our docs
+- double-checking all our framework bindings
+- completing all the details of this upgrade guide
+</small>
+
+**Note: React Native is currently broken based on an [underlying Zod v4 issue](https://github.com/colinhacks/zod/issues/4148).**
+
+If you see something broken, please let us know on [Discord](https://discord.gg/utDMjHYg42) and check back in a couple hours.
+
+Thanks for your patience!
+
+## Overview:
+
+So far, Jazz has relied on our own idiosyncratic schema definition syntax where you had to extend classes and be careful to use `co.ref` for references.
+
+<CodeGroup>
+```ts
+// BEFORE
+import { co, CoMap, CoList, CoPlainText, ImageDefinition } from "jazz-tools";
+
+export class Message extends CoMap {
+  text = co.ref(CoPlainText);
+  image = co.optional.ref(ImageDefinition);
+  important = co.boolean;
+}
+
+export class Chat extends CoList.Of(co.ref(Message)) {}
+```
+</CodeGroup>
+
+While this had certain ergonomic benefits it relied on unclean hacks to work.
+
+In addition, many of our adopters expressed a preference for avoiding class syntax, and LLMs consistently expected to be able to use Zod.
+
+For this reason, we completely overhauled how you define and use CoValue schemas:
+
+<CodeGroup>
+```ts twoslash
+// AFTER
+import { co, z } from "jazz-tools";
+
+export const Message = co.map({
+  text: co.plainText(),
+  image: z.optional(co.image()),
+  important: z.boolean(),
+});
+
+export const Chat = co.list(Message);
+```
+</CodeGroup>
+
+## Major breaking changes
+
+### Schema definitions
+
+You now define CoValue schemas using two new exports from `jazz-tools`:
+
+- a new `co` definer that mirrors Zod's object/record/array syntax to define CoValue types
+  - `co.map()`, `co.record()`, `co.list()`, `co.feed()`
+  - `co.account()`, `co.profile()`
+  - `co.plainText()`, `co.richText()`,
+  - `co.fileStream()`, `co.image()`
+  - see the updated [Defining CoValue Schemas](/docs/schemas/covalues)
+- `z` re-exported from Zod v4
+  - primitives like `z.string()`, `z.number()`, `z.literal()`
+    - **note**: additional constraints like `z.min()` and `z.max()` are not yet enforced, we'll add validation in future releases
+  - complex types like `z.object()` and `z.array()` to define JSON-like fields without internal collaboration
+  - combinators like `z.optional()` and `z.discriminatedUnion()`
+    - these also work on CoValue types!
+  - see the updated [Docs on Primitive Fields](/docs/schemas/covalues#primitive-fields),
+    [Docs on Optional References](/docs/schemas/covalues#optional-references)
+    and [Docs on Unions of CoMaps](/docs/schemas/covalues#unions-of-comaps-declaration)
+
+Similar to Zod v4's new object syntax, recursive and mutually recursive types are now [much easier to express](/docs/react/schemas/covalues#recursive-references).
+
+### How to pass loaded CoValues
+
+Calls to `useCoState()` work just the same, but they return a slightly different type than before.
+
+And while you can still read from the type just as before...
+
+<CodeGroup>
+```tsx twoslash
+import React from "react";
+// ---cut---
+import { z, co } from "jazz-tools";
+import { useCoState } from "jazz-react";
+
+const Pet = co.map({
+  name: z.string(),
+  age: z.number(),
+});
+
+const Person = co.map({
+  name: z.string(),
+  age: z.number(),
+  pets: co.list(Pet),
+});
+
+function MyComponent({ id }: { id: string }) {
+  const person = useCoState(Person, id);
+
+  return person && <div>{person.name}</div>;
+}
+```
+</CodeGroup>
+
+...you now need to specify the type differently **when passing CoValues as a parameter** or
+**whenever you need to refer to the type of a loaded CoValue instance:**
+
+<CodeGroup>
+```tsx twoslash
+import React from "react";
+// ---cut---
+import { z, co, Loaded } from "jazz-tools"; // [!code ++]
+import { useCoState } from "jazz-react";
+
+const Pet = co.map({
+  name: z.string(),
+  age: z.number(),
+});
+
+const Person = co.map({
+  name: z.string(),
+  age: z.number(),
+  pets: co.list(Pet),
+});
+
+function MyComponent({ id }: { id: string }) {
+  const person = useCoState(Person, id);
+
+  return person && <PersonName person={person} />;
+}
+
+function PersonName({ person }: { person: Loaded<typeof Person> }) { // [!code ++]
+  return <div>{person.name}</div>;
+}
+```
+</CodeGroup>
+
+`Loaded` can also take a second argument to specify the loading depth of the expected CoValue, mirroring the `resolve` options for `useCoState`, `load`, `subscribe`, etc.
+
+<CodeGroup>
+```tsx twoslash
+import React from "react";
+// ---cut---
+import { z, co, Loaded } from "jazz-tools";
+import { useCoState } from "jazz-react";
+
+const Pet = co.map({
+  name: z.string(),
+  age: z.number(),
+});
+
+const Person = co.map({
+  name: z.string(),
+  age: z.number(),
+  pets: co.list(Pet),
+});
+
+function MyComponent({ id }: { id: string }) {
+  const personWithPets = useCoState(Person, id, {
+    resolve: { pets: { $each: true } }  // [!code ++]
+  });
+
+  return personWithPets && <PersonAndFirstPetName person={personWithPets} />;
+}
+
+function PersonAndFirstPetName({ person }: {
+  person: Loaded<typeof Person, { pets: { $each: true } }> // [!code ++]
+}) {
+  return <div>{person.name} & {person.pets[0].name}</div>;
+}
+```
+</CodeGroup>
+
+### Defining migrations
+
+TODO
+
+### Defining Schema helper methods
+
+TODO
+
+### Removing AccountSchema registration
+
+TODO
+
+## Minor breaking changes
+
+### `_refs` and `_edits` are now potentially null
+
+TODO
+
+### `members` and `by` now return basic `Account`s

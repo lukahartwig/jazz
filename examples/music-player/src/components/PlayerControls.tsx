@@ -1,4 +1,4 @@
-import { MusicTrack } from "@/1_schema";
+import { MusicTrack, MusicaAccount } from "@/1_schema";
 import { MediaPlayer } from "@/5_useMediaPlayer";
 import { useMediaEndListener } from "@/lib/audio/useMediaEndListener";
 import { usePlayState } from "@/lib/audio/usePlayState";
@@ -11,7 +11,7 @@ export function PlayerControls({ mediaPlayer }: { mediaPlayer: MediaPlayer }) {
   const playState = usePlayState();
   const isPlaying = playState.value === "play";
 
-  const activePlaylist = useAccount({
+  const activePlaylist = useAccount(MusicaAccount, {
     resolve: { root: { activePlaylist: true } },
   }).me?.root.activePlaylist;
 

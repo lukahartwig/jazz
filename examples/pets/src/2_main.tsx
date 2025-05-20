@@ -32,12 +32,6 @@ const peer =
 
 const appName = "Jazz Rate My Pet Example";
 
-declare module "jazz-react" {
-  interface Register {
-    Account: PetAccount;
-  }
-}
-
 /** Walkthrough: The top-level provider `<JazzProvider/>`
  *
  *  This shows how to use the top-level provider `<JazzProvider/>`,
@@ -117,7 +111,7 @@ function AcceptInvite() {
 }
 
 export function PostOverview() {
-  const { me } = useAccount();
+  const { me } = useAccount(PetAccount);
 
   const myPosts = me?.root?.posts;
 

@@ -1,4 +1,6 @@
-export const metadata = { title: "CoFeeds" };
+export const metadata = {
+  description: "CoFeeds are append-only data structures that track entries from different user sessions and accounts. Best for activity logs, presence indicators, notifications, and more."
+};
 
 import { CodeGroup, ComingSoon, ContentByFramework } from "@/components/forMdx";
 
@@ -19,14 +21,14 @@ CoFeeds are defined by specifying the type of items they'll contain, similar to 
 <CodeGroup>
 ```ts
 // Define a schema for feed items
-class Activity extends CoMap {
-  timestamp = co.Date;
-  action = co.literal("watering", "planting", "harvesting", "maintenance");
-  notes = co.optional.string;
-}
+const Activity = co.map({
+  timestamp: z.date(),
+  action: z.literal(["watering", "planting", "harvesting", "maintenance"]),
+  notes: z.optional(z.string()),
+});
 
 // Define a feed of garden activities
-class ActivityFeed extends CoFeed.Of(co.ref(Activity)) {}
+const ActivityFeed = co.feed(Activity);
 
 // Create a feed instance
 const activityFeed = ActivityFeed.create([]);
@@ -39,18 +41,18 @@ Like other CoValues, you can specify ownership when creating CoFeeds.
 
 <CodeGroup>
 ```ts twoslash
-import { Group, co, CoMap, CoFeed } from "jazz-tools";
+import { Group, co, z } from "jazz-tools";
 import { createJazzTestAccount } from 'jazz-tools/testing';
 const me = await createJazzTestAccount();
 const colleagueAccount = await createJazzTestAccount();
 
-class Activity extends CoMap {
-  timestamp = co.Date;
-  action = co.literal("watering", "planting", "harvesting", "maintenance");
-  notes = co.optional.string;
-}
+const Activity = co.map({
+  timestamp: z.date(),
+  action: z.literal(["watering", "planting", "harvesting", "maintenance"]),
+  notes: z.optional(z.string()),
+});
 
-class ActivityFeed extends CoFeed.Of(co.ref(Activity)) {}
+const ActivityFeed = co.feed(Activity);
 
 // ---cut---
 const teamGroup = Group.create();
@@ -94,12 +96,12 @@ console.log(currentSessionFeed.value.action); // "harvesting"
 
 ### Per-Account Access
 
-To retrieve entries from a specific account you can use bracket notation with the account ID:
+To retrieve entries from a specific account (with entries from all sessions combined) use `perAccount`:
 
 <CodeGroup>
 ```ts
 // Get the feed for a specific account
-const accountFeed = activityFeed[accountId];
+const accountFeed = activityFeed.perAccount[accountId];
 
 // Latest entry from the account
 console.log(accountFeed.value.action); // "watering"
@@ -127,7 +129,7 @@ To retrieve all entries from a CoFeed:
 <CodeGroup>
 ```ts
 // Get the feeds for a specific account and session
-const accountFeed = activityFeed[accountId];
+const accountFeed = activityFeed.perAccount[accountId];
 const sessionFeed = activityFeed.perSession[sessionId];
 
 // Iterate over all entries from the account
@@ -151,11 +153,11 @@ To retrieve the latest entry from a CoFeed, ie. the last update:
 // Get the latest entry from the current account
 const latestEntry = activityFeed.byMe;
 
-console.log(`My last action was ${latestEntry.value.action}`); 
+console.log(`My last action was ${latestEntry.value.action}`);
   // "My last action was harvesting"
 
 // Get the latest entry from each account
-const latestEntriesByAccount = Object.values(activityFeed).map(entry => ({
+const latestEntriesByAccount = Object.values(activityFeed.perAccount).map(entry => ({
   accountName: entry.by?.profile?.name,
   value: entry.value,
 }));
@@ -208,7 +210,7 @@ fromBrowserFeed.push(Activity.create({
 
 ## Metadata
 
-CoFeeds support metadata, which is useful for tracking information about the feed itself. 
+CoFeeds support metadata, which is useful for tracking information about the feed itself.
 
 ### By
 
@@ -216,7 +218,7 @@ The `by` property is the account that made the entry.
 
 <CodeGroup>
 ```ts
-const accountFeed = activityFeed[accountId];  
+const accountFeed = activityFeed.perAccount[accountId];
 
 // Get the account that made the last entry
 console.log(accountFeed?.by);
@@ -229,7 +231,7 @@ The `madeAt` property is a timestamp of when the entry was added to the feed.
 
 <CodeGroup>
 ```ts
-const accountFeed = activityFeed[accountId];
+const accountFeed = activityFeed.perAccount[accountId];
 
 // Get the timestamp of the last update
 console.log(accountFeed?.madeAt);

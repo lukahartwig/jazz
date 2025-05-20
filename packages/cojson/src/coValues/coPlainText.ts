@@ -1,7 +1,5 @@
-import {
-  AvailableCoValueCore,
-  CoValueCore,
-} from "../coValueCore/coValueCore.js";
+import { splitGraphemes } from "unicode-segmenter/grapheme";
+import { AvailableCoValueCore } from "../coValueCore/coValueCore.js";
 import { JsonObject } from "../jsonValue.js";
 import { DeletionOpPayload, OpID, RawCoList } from "./coList.js";
 
@@ -57,8 +55,6 @@ export class RawCoPlainText<
   /** @category 6. Meta */
   type = "coplaintext" as const;
 
-  private _segmenter: Intl.Segmenter;
-
   _cachedMapping: WeakMap<
     NonNullable<typeof this._cachedEntries>,
     PlaintextIdxMapping
@@ -67,11 +63,6 @@ export class RawCoPlainText<
   constructor(core: AvailableCoValueCore) {
     super(core);
     this._cachedMapping = new WeakMap();
-    if (!Intl.Segmenter) {
-      throw new Error(
-        "Intl.Segmenter is not supported. Use a polyfill to get coPlainText support in Jazz. (eg. https://formatjs.github.io/docs/polyfills/intl-segmenter/)",
-      );
-    }
 
     // Use locale from meta if provided, fallback to browser locale, or 'en' as last resort
     const effectiveLocale =
@@ -81,10 +72,6 @@ export class RawCoPlainText<
         ? (core.verified.header.meta.locale as string)
         : undefined) ||
       (typeof navigator !== "undefined" ? navigator.language : "en");
-
-    this._segmenter = new Intl.Segmenter(effectiveLocale, {
-      granularity: "grapheme",
-    });
   }
 
   get mapping() {
@@ -104,7 +91,7 @@ export class RawCoPlainText<
     let idxBefore = 0;
 
     for (const entry of entries) {
-      const idxAfter = idxBefore + entry.value.length;
+      const idxAfter = idxBefore + 1;
 
       mapping.opIDafterIdx[idxBefore] = entry.opID;
       mapping.opIDbeforeIdx[idxAfter] = entry.opID;
@@ -138,7 +125,7 @@ export class RawCoPlainText<
     text: string,
     privacy: "private" | "trusting" = "private",
   ) {
-    const graphemes = [...this._segmenter.segment(text)].map((g) => g.segment);
+    const graphemes = [...splitGraphemes(text)];
 
     if (idx === 0) {
       // For insertions at start, prepend each character in reverse
@@ -164,8 +151,12 @@ export class RawCoPlainText<
     text: string,
     privacy: "private" | "trusting" = "private",
   ) {
-    const graphemes = [...this._segmenter.segment(text)].map((g) => g.segment);
-    this.appendItems(graphemes, idx, privacy);
+    const graphemes = [...splitGraphemes(text)];
+    if (idx >= this.entries().length) {
+      this.appendItems(graphemes, idx - 1, privacy);
+    } else {
+      this.appendItems(graphemes, idx, privacy);
+    }
   }
 
   deleteRange(

@@ -1,5 +1,49 @@
 # jazz-tools
 
+## 0.14.1
+
+### Patch Changes
+
+- cdfc105: Make the profile access on Group members trigger updates correctly
+- Updated dependencies [c8b33ad]
+  - cojson@0.14.1
+
+## 0.14.0
+
+### Minor Changes
+
+- 5835ed1: Switch to using Zod to define CoValue schemas
+
+### Patch Changes
+
+- Updated dependencies [5835ed1]
+  - cojson@0.14.0
+
+## 0.13.31
+
+### Patch Changes
+
+- e5b170f: Add $onError option to resolve, to be able to catch errors inside of the deep loading
+- Updated dependencies [d63716a]
+- Updated dependencies [d5edad7]
+  - cojson@0.13.31
+
+## 0.13.30
+
+### Patch Changes
+
+- Updated dependencies [07dd2c5]
+  - cojson@0.13.30
+
+## 0.13.29
+
+### Patch Changes
+
+- Updated dependencies [eef1a5d]
+- Updated dependencies [191ae38]
+- Updated dependencies [daee7b9]
+  - cojson@0.13.29
+
 ## 0.13.28
 
 ### Patch Changes
@@ -363,7 +407,7 @@
 
 ### Patch Changes
 
-- d8582fc: Fixes co.optional.Date throwing when assigned undefined
+- d8582fc: Fixes coField.optional.Date throwing when assigned undefined
 
 ## 0.10.2
 
@@ -755,7 +799,7 @@
 ### Patch Changes
 
 - c3f4e6b: Fix order of exports fields in package.json
-- d9152ed: Allow interface types as generic argument in co.json
+- d9152ed: Allow interface types as generic argument in coField.json
 - Updated dependencies [c3f4e6b]
 - Updated dependencies [d9152ed]
   - cojson@0.8.5
@@ -806,7 +850,7 @@
 ### Patch Changes
 
 - 49a8b54: Fix on CoMapInit to not allow null values on required refs
-- 6f80282: fix: handle null values for co.refs
+- 6f80282: fix: handle null values for coField.refs
 - 35bbcd9: Fix loadAsBlob resolving too early
 - f350e90: Added a priority system for the sync messages
 - Updated dependencies [35bbcd9]

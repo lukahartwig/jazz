@@ -1,6 +1,7 @@
 import DocsLayout from "@/components/docs/DocsLayout";
 import { DocNav } from "@/components/docs/DocsNav";
 import { HelpLinks } from "@/components/docs/HelpLinks";
+import { PreviousNextLinks } from "@/components/docs/PreviousNextLinks";
 import { Separator } from "@garden-co/design-system/src/components/atoms/Separator";
 import { Prose } from "@garden-co/design-system/src/components/molecules/Prose";
 import { Toc } from "@stefanprobst/rehype-extract-toc";
@@ -24,19 +25,25 @@ export async function getDocMetadata(framework: string, slug?: string[]) {
 
   try {
     const mdxSource = await getMdxSource(framework, slugPath);
-    const title = mdxSource.tableOfContents?.[0].value || "Documentation";
+
+    const title =
+      mdxSource.metadata.title ||
+      mdxSource.tableOfContents?.[0].value ||
+      "Documentation";
 
     return {
       title,
+      description: mdxSource.metadata.description,
       openGraph: {
         title,
       },
     };
   } catch (error) {
+    const title = "Documentation";
     return {
-      title: "Documentation",
+      title,
       openGraph: {
-        title: "Documentation",
+        title,
       },
     };
   }
@@ -65,9 +72,11 @@ export async function DocPage({
         <DocProse>
           <Content />
 
-          <Separator className="mt-12 mb-4 lg:hidden" />
+          <div className="divide-y mt-12">
+            <HelpLinks className="lg:hidden pb-4" />
 
-          <HelpLinks className="lg:hidden" />
+            <PreviousNextLinks slug={slug} framework={framework} />
+          </div>
         </DocProse>
       </DocsLayout>
     );
@@ -107,6 +116,7 @@ export async function getMdxWithToc(framework: string, slug?: string[]) {
     tocItems,
   };
 }
+
 function filterTocItemsForFramework(
   tocItems: Toc,
   framework: string,

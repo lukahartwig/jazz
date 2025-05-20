@@ -33,10 +33,8 @@ Open [http://localhost:5173](http://localhost:5173) with your browser to see the
 
 ## Learning Jazz
 
-You can start by playing with the form, adding a new field in [./src/schema.ts](./src/schema.ts), 
+You can start by playing with the form, adding a new field in [./src/schema.ts](./src/schema.ts),
 and seeing how easy it is to structure your data, and perform basic operations.
-
-To learn more, check out the [full tutorial](https://jazz.tools/docs/react/guide).
 
 ## Questions / problems / feedback
 

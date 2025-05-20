@@ -252,4 +252,52 @@ describe("Group.removeMember", () => {
 
     expect(groupOnReaderNode.roleOf(otherMember.accountID)).toEqual("writer");
   });
+
+  test("removing a member when inheriting a group where the user lacks read rights", async () => {
+    const admin = await setupTestAccount({
+      connected: true,
+    });
+
+    const childAdmin = await setupTestAccount({
+      connected: true,
+    });
+
+    const reader = await setupTestAccount({
+      connected: true,
+    });
+
+    const childAdminOnAdminNode = await loadCoValueOrFail(
+      admin.node,
+      childAdmin.accountID,
+    );
+
+    const readerOnAdminNode = await loadCoValueOrFail(
+      admin.node,
+      reader.accountID,
+    );
+
+    const group = admin.node.createGroup();
+
+    const childGroup = admin.node.createGroup();
+    childGroup.addMember(childAdminOnAdminNode, "admin");
+    childGroup.addMember(readerOnAdminNode, "reader");
+
+    childGroup.extend(group);
+
+    const readerOnChildAdminNode = await loadCoValueOrFail(
+      childAdmin.node,
+      reader.accountID,
+    );
+
+    const childGroupOnChildAdminNode = await loadCoValueOrFail(
+      childAdmin.node,
+      childGroup.id,
+    );
+
+    await childGroupOnChildAdminNode.removeMember(readerOnChildAdminNode);
+
+    expect(childGroupOnChildAdminNode.roleOf(reader.accountID)).toEqual(
+      undefined,
+    );
+  });
 });

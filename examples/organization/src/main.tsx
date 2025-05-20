@@ -28,12 +28,6 @@ function Router() {
   return <RouterProvider router={router}></RouterProvider>;
 }
 
-declare module "jazz-react" {
-  interface Register {
-    Account: JazzAccount;
-  }
-}
-
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <JazzProvider

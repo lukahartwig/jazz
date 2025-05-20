@@ -12,12 +12,6 @@ import { JazzAccount } from "./schema.ts";
 // We use this to identify the app in the passkey auth
 export const APPLICATION_NAME = "Jazz richtext Tiptap example";
 
-declare module "jazz-react" {
-  export interface Register {
-    Account: JazzAccount;
-  }
-}
-
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <JazzProvider

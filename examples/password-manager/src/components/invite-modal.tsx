@@ -1,4 +1,4 @@
-import { Group } from "jazz-tools";
+import { Group, Loaded } from "jazz-tools";
 import React, { useState } from "react";
 import { Folder } from "../1_schema";
 import { shareFolder } from "../4_actions";
@@ -8,7 +8,7 @@ import Button from "./button";
 interface InviteModalProps {
   isOpen: boolean;
   onClose: () => void;
-  selectedFolder: Folder | undefined;
+  selectedFolder: Loaded<typeof Folder> | undefined;
 }
 
 const InviteModal: React.FC<InviteModalProps> = ({

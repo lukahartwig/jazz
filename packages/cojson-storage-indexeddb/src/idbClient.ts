@@ -67,16 +67,14 @@ export class IDBClient implements DBClientInterfaceAsync {
 
   async getNewTransactionInSession(
     sessionRowId: number,
-    firstNewTxIdx: number,
+    fromIdx: number,
+    toIdx: number,
   ): Promise<TransactionRow[]> {
     return this.makeRequest<TransactionRow[]>((tx) =>
       tx
         .getObjectStore("transactions")
         .getAll(
-          IDBKeyRange.bound(
-            [sessionRowId, firstNewTxIdx],
-            [sessionRowId, Number.POSITIVE_INFINITY],
-          ),
+          IDBKeyRange.bound([sessionRowId, fromIdx], [sessionRowId, toIdx]),
         ),
     );
   }
@@ -161,7 +159,7 @@ export class IDBClient implements DBClientInterfaceAsync {
         ses: sessionRowID,
         idx,
         signature,
-      } satisfies SignatureAfterRow),
+      }),
     );
   }
 

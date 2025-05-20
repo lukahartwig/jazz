@@ -61,12 +61,6 @@ const peer =
     "peer",
   ) as `ws://${string}`) ?? `wss://cloud.jazz.tools/?key=${apiKey}`;
 
-declare module "jazz-react" {
-  interface Register {
-    Account: MusicaAccount;
-  }
-}
-
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <JazzProvider

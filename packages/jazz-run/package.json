@@ -3,7 +3,7 @@
   "bin": "./dist/index.js",
   "type": "module",
   "license": "MIT",
-  "version": "0.13.28",
+  "version": "0.14.1",
   "exports": {
     "./startSyncServer": {
       "import": "./dist/startSyncServer.js",

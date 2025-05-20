@@ -1,9 +1,4 @@
 import {
-  CodeExampleTabs as CodeExampleTabsClient,
-  CodeExampleTabsProps,
-} from "@/components/examples/CodeExampleTabs";
-
-import {
   ContentByFramework as ContentByFrameworkClient,
   ContentByFrameworkProps,
 } from "@/components/docs/ContentByFramework";
@@ -13,10 +8,6 @@ import { AnchorHTMLAttributes, DetailedHTMLProps } from "react";
 import { FileDownloadLink as FileDownloadLinkClient } from "./FileDownloadLink";
 import { Framework as FrameworkClient } from "./docs/Framework";
 import { IssueTrackerPreview as IssueTrackerPreviewClient } from "./docs/IssueTrackerPreview";
-
-export function CodeExampleTabs(props: CodeExampleTabsProps) {
-  return <CodeExampleTabsClient {...props} />;
-}
 
 export function CodeGroup(props: { children: React.ReactNode }) {
   return <CodeGroupClient {...props}></CodeGroupClient>;

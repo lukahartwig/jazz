@@ -1,13 +1,14 @@
 import { useAcceptInvite, useAccount } from "jazz-react";
-import { ID } from "jazz-tools";
 import { useNavigate } from "react-router";
-import { Organization } from "./schema.ts";
+import { JazzAccount, Organization } from "./schema.ts";
 
 export function AcceptInvitePage() {
   const navigate = useNavigate();
-  const { me } = useAccount({ resolve: { root: { organizations: true } } });
+  const { me } = useAccount(JazzAccount, {
+    resolve: { root: { organizations: true } },
+  });
 
-  const onAccept = (organizationId: ID<Organization>) => {
+  const onAccept = (organizationId: string) => {
     if (me?.root?.organizations) {
       Organization.load(organizationId).then((organization) => {
         if (organization) {

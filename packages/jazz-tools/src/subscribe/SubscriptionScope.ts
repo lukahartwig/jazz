@@ -1,6 +1,8 @@
 import type { LocalNode, RawCoValue } from "cojson";
-import type { CoFeed, CoList, CoMap } from "../exports.js";
 import {
+  CoFeed,
+  CoList,
+  CoMap,
   type CoValue,
   type ID,
   type RefEncoded,
@@ -28,6 +30,7 @@ export class SubscriptionScope<D extends CoValue> {
   idsSubscribed = new Set<string>();
   autoloaded = new Set<string>();
   autoloadedKeys = new Set<string>();
+  skipInvalidKeys = new Set<string>();
   totalValidTransactions = 0;
 
   silenceUpdates = false;
@@ -140,13 +143,21 @@ export class SubscriptionScope<D extends CoValue> {
         continue;
       }
 
+      if (this.skipInvalidKeys.has(key)) {
+        continue;
+      }
+
       errorType = value.type;
       if (value.issues) {
         issues.push(...value.issues);
       }
     }
 
-    for (const value of this.validationErrors.values()) {
+    for (const [key, value] of this.validationErrors.entries()) {
+      if (this.skipInvalidKeys.has(key)) {
+        continue;
+      }
+
       errorType = value.type;
       if (value.issues) {
         issues.push(...value.issues);
@@ -252,8 +263,10 @@ export class SubscriptionScope<D extends CoValue> {
       return;
     }
 
+    const resolve = this.resolve as Record<string, any>;
+
     // Adding the key to the resolve object to resolve the key when calling loadChildren
-    this.resolve[key as keyof typeof this.resolve] = true;
+    resolve[key] = true;
     // Track the keys that are autoloaded to flag any id on that key as autoloaded
     this.autoloadedKeys.add(key);
 
@@ -419,6 +432,10 @@ export class SubscriptionScope<D extends CoValue> {
   }
 
   loadCoMapKey(map: CoMap, key: string, depth: Record<string, any> | true) {
+    if (key === "$onError") {
+      return undefined;
+    }
+
     const id = map._raw.get(key) as string | undefined;
     const descriptor = map.getDescriptor(key);
 
@@ -511,6 +528,16 @@ export class SubscriptionScope<D extends CoValue> {
 
     if (key && this.autoloadedKeys.has(key)) {
       this.autoloaded.add(id);
+    }
+
+    const skipInvalid = typeof query === "object" && query.$onError === null;
+
+    if (skipInvalid) {
+      if (key) {
+        this.skipInvalidKeys.add(key);
+      }
+
+      this.skipInvalidKeys.add(id);
     }
 
     // Cloning the resolve objects to avoid mutating the original object when tracking autoloaded values

@@ -1,31 +1,29 @@
-import { Account, CoFeed, CoMap, Group, Profile, co } from "jazz-tools";
-import type { Camera, Cursor } from "./types";
+import { Group, co, z } from "jazz-tools";
+import { Camera, Cursor } from "./types";
 
-export class CursorFeed extends CoFeed.Of(co.json<Cursor>()) {}
+export const CursorFeed = co.feed(Cursor);
 
-export class CursorProfile extends Profile {
-  name = co.string;
-}
+export const CursorProfile = co.profile({
+  name: z.string(),
+});
 
-export class CursorRoot extends CoMap {
-  camera = co.json<Camera>();
-  cursors = co.ref(CursorFeed);
-}
+export const CursorRoot = co.map({
+  camera: Camera,
+  cursors: CursorFeed,
+});
 
-export class CursorContainer extends CoMap {
-  cursorFeed = co.ref(CursorFeed);
-}
+export const CursorContainer = co.map({
+  cursorFeed: CursorFeed,
+});
 
-export class CursorAccount extends Account {
-  profile = co.ref(CursorProfile);
-  root = co.ref(CursorRoot);
-
-  /** The account migration is run on account creation and on every log-in.
-   *  You can use it to set up the account root and any other initial CoValues you need.
-   */
-  migrate(this: CursorAccount) {
-    if (this.root === undefined) {
-      this.root = CursorRoot.create({
+export const CursorAccount = co
+  .account({
+    profile: CursorProfile,
+    root: CursorRoot,
+  })
+  .withMigration((account) => {
+    if (account.root === undefined) {
+      account.root = CursorRoot.create({
         camera: {
           position: {
             x: 0,
@@ -36,16 +34,15 @@ export class CursorAccount extends Account {
       });
     }
 
-    if (this.profile === undefined) {
+    if (account.profile === undefined) {
       const group = Group.create();
       group.addMember("everyone", "reader"); // The profile info is visible to everyone
 
-      this.profile = CursorProfile.create(
+      account.profile = CursorProfile.create(
         {
           name: "Anonymous user",
         },
         group,
       );
     }
-  }
-}
+  });

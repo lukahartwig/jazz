@@ -13,32 +13,33 @@ import type {
 
 export function collectNewTxs({
   newTxsInSession,
-  newContentMessages,
+  contentMessage,
   sessionRow,
   firstNewTxIdx,
+  signature,
 }: {
   newTxsInSession: TransactionRow[];
-  newContentMessages: CojsonInternalTypes.NewContentMessage[];
+  contentMessage: CojsonInternalTypes.NewContentMessage;
   sessionRow: StoredSessionRow;
+  signature: CojsonInternalTypes.Signature;
   firstNewTxIdx: number;
 }) {
-  for (const tx of newTxsInSession) {
-    const lastMessage = newContentMessages[newContentMessages.length - 1];
-    if (!lastMessage) return;
+  let sessionEntry = contentMessage.new[sessionRow.sessionID];
 
-    let sessionEntry = lastMessage.new[sessionRow.sessionID];
-    if (!sessionEntry) {
-      sessionEntry = {
-        after: firstNewTxIdx,
-        lastSignature: "WILL_BE_REPLACED" as CojsonInternalTypes.Signature,
-        newTransactions: [],
-      };
-      lastMessage.new[sessionRow.sessionID] = sessionEntry;
-    }
-
-    sessionEntry.newTransactions.push(tx.tx);
-    sessionEntry.lastSignature = sessionRow.lastSignature;
+  if (!sessionEntry) {
+    sessionEntry = {
+      after: firstNewTxIdx,
+      lastSignature: "WILL_BE_REPLACED" as CojsonInternalTypes.Signature,
+      newTransactions: [],
+    };
+    contentMessage.new[sessionRow.sessionID] = sessionEntry;
   }
+
+  for (const tx of newTxsInSession) {
+    sessionEntry.newTransactions.push(tx.tx);
+  }
+
+  sessionEntry.lastSignature = signature;
 }
 
 export function getDependedOnCoValues({

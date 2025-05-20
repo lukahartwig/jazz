@@ -1,11 +1,12 @@
-export const metadata = { title: "Organization design pattern" };
+export const metadata = {
+  description: "Learn how to share a set of data between users through organizations."
+};
 
 import { CodeGroup } from "@/components/forMdx";
 
-# Sharing data through Organizations
+# How to share data between users through Organizations
 
-Organizations are a way to share a set of data between users.
-Different apps have different names for this concept, such as "teams" or "workspaces".
+This guide shows you how to share a set of CoValues between users. Different apps have different names for this concept, such as "teams" or "workspaces".
 
 We'll use the term Organization.
 
@@ -23,19 +24,19 @@ import { co, CoMap, CoList } from "jazz-tools";
 // ---cut---
 // schema.ts
 export class Project extends CoMap {
-  name = co.string;
+  name = coField.string;
 }
 
-export class ListOfProjects extends CoList.Of(co.ref(Project)) {}
+export class ListOfProjects extends CoList.Of(coField.ref(Project)) {}
 
 export class Organization extends CoMap {
-  name = co.string;
+  name = coField.string;
 
   // shared data between users of each organization
-  projects = co.ref(ListOfProjects);
+  projects = coField.ref(ListOfProjects);
 }
 
-export class ListOfOrganizations extends CoList.Of(co.ref(Organization)) {}
+export class ListOfOrganizations extends CoList.Of(coField.ref(Organization)) {}
 ```
 </CodeGroup>
 
@@ -65,11 +66,11 @@ export class ListOfOrganizations extends CoList.Of(co.ref(Organization)) {}
 // ---cut---
 // schema.ts
 export class JazzAccountRoot extends CoMap {
-  organizations = co.ref(ListOfOrganizations);
+  organizations = coField.ref(ListOfOrganizations);
 }
 
 export class JazzAccount extends Account {
-  root = co.ref(JazzAccountRoot);
+  root = coField.ref(JazzAccountRoot);
 
   async migrate() {
     if (this.root === undefined) {
@@ -102,12 +103,16 @@ This schema now allows users to create `Organization`s and add `Project`s to the
 
 [See the schema for the example app here.](https://github.com/garden-co/jazz/blob/main/examples/organization/src/schema.ts)
 
-## Adding other users to an Organization
+## Adding members to an Organization
 
-To give users access to an `Organization`, you can either send them an invite link, or
-add their `Account` manually.
+Here are different ways to add members to an `Organization`.
 
-### Adding users through invite links
+- Send users an invite link.
+- [The user requests to join.](/docs/groups/sharing#requesting-invites)
+
+This guide and the example app show you the first method.
+
+### Adding members through invite links
 
 Here's how you can generate an [invite link](/docs/groups/sharing#invites).
 
@@ -148,10 +153,12 @@ declare module "jazz-react" {
 }
 // ---cut---
 export function AcceptInvitePage() {
-  const { me } = useAccount({ resolve: { root: { organizations: true } } });
+  const { me } = useAccount({
+    resolve: { root: { organizations: { $each: { $onError: null } } } },
+  });
 
   const onAccept = (organizationId: ID<Organization>) => {
-    if (me?.root?.organizations) {
+    if (me) {
       Organization.load(organizationId).then((organization) => {
         if (organization) {
           // avoid duplicates
@@ -176,6 +183,7 @@ export function AcceptInvitePage() {
 ```
 </CodeGroup>
 
-### Adding users through their Account ID
+## Further reading
 
-...more on this coming soon
+- [Allowing users to request an invite to join a Group](/docs/groups/sharing#requesting-invites)
+- [Groups as permission scopes](/docs/groups/intro#adding-group-members-by-id)

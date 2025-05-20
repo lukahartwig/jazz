@@ -1,5 +1,55 @@
 # richtext
 
+## 0.0.87
+
+### Patch Changes
+
+- Updated dependencies [cdfc105]
+  - jazz-tools@0.14.1
+  - jazz-react@0.14.1
+  - jazz-richtext-prosemirror@0.1.21
+
+## 0.0.86
+
+### Patch Changes
+
+- Updated dependencies [5835ed1]
+  - jazz-tools@0.14.0
+  - jazz-react@0.14.0
+  - jazz-richtext-prosemirror@0.1.20
+
+## 0.0.85
+
+### Patch Changes
+
+- jazz-react@0.13.32
+- jazz-richtext-prosemirror@0.1.19
+
+## 0.0.84
+
+### Patch Changes
+
+- Updated dependencies [e5b170f]
+  - jazz-tools@0.13.31
+  - jazz-react@0.13.31
+  - jazz-richtext-prosemirror@0.1.18
+
+## 0.0.83
+
+### Patch Changes
+
+- jazz-react@0.13.30
+- jazz-tools@0.13.30
+- jazz-richtext-prosemirror@0.1.17
+
+## 0.0.82
+
+### Patch Changes
+
+- jazz-react@0.13.29
+- jazz-tools@0.13.29
+- jazz-richtext-prosemirror@0.1.16
+
 ## 0.0.81
 
 ### Patch Changes

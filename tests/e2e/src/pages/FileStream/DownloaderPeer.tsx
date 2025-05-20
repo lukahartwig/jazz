@@ -1,14 +1,14 @@
 import { useAccount, useCoState } from "jazz-react";
-import { Account, FileStream, ID } from "jazz-tools";
+import { Account, FileStream } from "jazz-tools";
 import { useEffect, useState } from "react";
 import { UploadedFile } from "./schema";
-export function DownloaderPeer(props: { testCoMapId: ID<UploadedFile> }) {
+export function DownloaderPeer(props: { testCoMapId: string }) {
   const account = useAccount();
   const testCoMap = useCoState(UploadedFile, props.testCoMapId, {});
   const [synced, setSynced] = useState(false);
 
   useEffect(() => {
-    async function run(me: Account, uploadedFileId: ID<UploadedFile>) {
+    async function run(me: Account, uploadedFileId: string) {
       const uploadedFile = await UploadedFile.load(uploadedFileId, {
         loadAs: me,
       });
@@ -23,7 +23,7 @@ export function DownloaderPeer(props: { testCoMapId: ID<UploadedFile> }) {
 
       uploadedFile.coMapDownloaded = true;
 
-      await FileStream.loadAsBlob(uploadedFile._refs.file.id, {
+      await FileStream.loadAsBlob(uploadedFile._refs.file!.id, {
         loadAs: me,
       });
 

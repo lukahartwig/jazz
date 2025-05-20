@@ -7,9 +7,10 @@ import { addListNodes } from "prosemirror-schema-list";
 import { EditorState } from "prosemirror-state";
 import { EditorView } from "prosemirror-view";
 import { useEffect, useRef } from "react";
+import { JazzAccount } from "./schema";
 
 export function Editor() {
-  const { me } = useAccount({
+  const { me } = useAccount(JazzAccount, {
     resolve: { profile: { bio: true }, root: true },
   });
   const editorRef = useRef<HTMLDivElement>(null);

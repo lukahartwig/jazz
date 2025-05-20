@@ -3,13 +3,14 @@
 import { SideNav, SideNavBody, SideNavHeader } from "@/components/SideNav";
 import { SideNavSection } from "@/components/SideNavSection";
 import { FrameworkSelect } from "@/components/docs/FrameworkSelect";
-import { docNavigationItems } from "@/content/docs/docNavigationItems.js";
+import { docNavigationItems } from "@/content/docs/docNavigationItems";
+import { DocNavigationSection } from "@/content/docs/docNavigationItemsTypes";
 import { useFramework } from "@/lib/use-framework";
 import React from "react";
 
 export function DocNav() {
   const framework = useFramework();
-  const items = docNavigationItems.map((headerItem) => {
+  const items = (docNavigationItems as DocNavigationSection[]).map((headerItem) => {
     return {
       ...headerItem,
       items: headerItem.items

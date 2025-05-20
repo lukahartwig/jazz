@@ -6,9 +6,9 @@ import NewItemModal from "./components/new-item-modal";
 import Table from "./components/table";
 
 import { useAccount, useCoState } from "jazz-react";
-import { CoMapInit, ID } from "jazz-tools";
+import { Loaded, co } from "jazz-tools";
 import { useNavigate, useParams } from "react-router-dom";
-import { Folder, FolderList, PasswordItem } from "./1_schema";
+import { Folder, PasswordItem, PasswordManagerAccount } from "./1_schema";
 import {
   addSharedFolder,
   createFolder,
@@ -20,9 +20,8 @@ import { Alert, AlertDescription } from "./components/alert";
 import { PasswordItemFormValues } from "./types";
 
 const VaultPage: React.FC = () => {
-  const { me, logOut } = useAccount();
-  const sharedFolderId = useParams<{ sharedFolderId: ID<Folder> }>()
-    .sharedFolderId;
+  const { me, logOut } = useAccount(PasswordManagerAccount);
+  const sharedFolderId = useParams<{ sharedFolderId: string }>().sharedFolderId;
 
   const navigate = useNavigate();
 
@@ -43,18 +42,22 @@ const VaultPage: React.FC = () => {
         (item): item is Exclude<typeof item, null> => !!item,
       ) || [],
   );
-  const folders = useCoState(FolderList, me.root?._refs.folders?.id, {
+  const folders = useCoState(co.list(Folder), me.root?._refs.folders?.id, {
     resolve: {
       $each: { items: { $each: true } },
     },
   });
 
-  const [selectedFolder, setSelectedFolder] = useState<Folder | undefined>();
+  const [selectedFolder, setSelectedFolder] = useState<
+    Loaded<typeof Folder> | undefined
+  >();
   const [isNewItemModalOpen, setIsNewItemModalOpen] = useState(false);
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [isNewFolderInputVisible, setIsNewFolderInputVisible] = useState(false);
   const [newFolderName, setNewFolderName] = useState("");
-  const [editingItem, setEditingItem] = useState<PasswordItem | null>(null);
+  const [editingItem, setEditingItem] = useState<Loaded<
+    typeof PasswordItem
+  > | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const filteredItems = selectedFolder
@@ -65,7 +68,7 @@ const VaultPage: React.FC = () => {
 
   const handleSaveNewItem = async (newItem: PasswordItemFormValues) => {
     try {
-      saveItem(newItem as CoMapInit<PasswordItem>);
+      saveItem(newItem);
     } catch (err: any) {
       setError("Failed to save new item. Please try again.");
       throw new Error(err);
@@ -83,7 +86,7 @@ const VaultPage: React.FC = () => {
     }
   };
 
-  const handleDeleteItem = async (item: PasswordItem) => {
+  const handleDeleteItem = async (item: Loaded<typeof PasswordItem>) => {
     try {
       deleteItem(item);
     } catch (err) {
@@ -131,7 +134,7 @@ const VaultPage: React.FC = () => {
     {
       header: "Actions",
       accessor: "id" as const,
-      render: (item: PasswordItem) => (
+      render: (item: Loaded<typeof PasswordItem>) => (
         <div className="flex flex-wrap gap-2">
           <Button onClick={() => navigator.clipboard.writeText(item.password)}>
             Copy Password
@@ -235,7 +238,9 @@ const VaultPage: React.FC = () => {
           folders={folders}
           selectedFolder={selectedFolder}
           initialValues={
-            editingItem && editingItem.folder ? { ...editingItem } : undefined
+            editingItem && editingItem.folder
+              ? { ...editingItem, folder: editingItem.folder! }
+              : undefined
           }
         />
       ) : null}

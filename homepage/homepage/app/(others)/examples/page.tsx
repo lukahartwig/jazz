@@ -1,5 +1,4 @@
 import { ExampleCard } from "@/components/examples/ExampleCard";
-import { ExampleDemo } from "@/components/examples/ExampleDemo";
 import { ClerkFullLogo } from "@/components/icons/ClerkFullLogo";
 import { ReactLogo } from "@/components/icons/ReactLogo";
 import { ReactNativeLogo } from "@/components/icons/ReactNativeLogo";
@@ -508,16 +507,16 @@ const reactExamples: Example[] = [
     demoUrl: "https://music-demo.jazz.tools",
     illustration: <MusicIllustration />,
   },
-  {
-    name: "Jazz paper scissors",
-    slug: "jazz-paper-scissors",
-    description:
-      "A game that shows how to communicate with other accounts through the experimental Inbox API.",
-    tech: [tech.react],
-    features: [features.serverWorker, features.inbox],
-    illustration: <JazzPaperScissorsIllustration />,
-    demoUrl: "https://jazz-paper-scissors.vercel.app",
-  },
+  // {
+  //   name: "Jazz paper scissors",
+  //   slug: "jazz-paper-scissors",
+  //   description:
+  //     "A game that shows how to communicate with other accounts through the experimental Inbox API.",
+  //   tech: [tech.react],
+  //   features: [features.serverWorker, features.inbox],
+  //   illustration: <JazzPaperScissorsIllustration />,
+  //   demoUrl: "https://jazz-paper-scissors.vercel.app",
+  // },
   {
     name: "Clerk",
     slug: "clerk",
@@ -680,17 +679,13 @@ export default function Page() {
             </div>
 
             <GappedGrid>
-              {category.examples.map((example) =>
-                example.showDemo ? (
-                  <ExampleDemo key={example.slug} example={example} />
-                ) : (
-                  <ExampleCard
-                    className="border bg-stone-50 shadow-sm p-3 rounded-lg dark:bg-stone-950"
-                    key={example.slug}
-                    example={example}
-                  />
-                ),
-              )}
+              {category.examples.map((example) => (
+                <ExampleCard
+                  className="border bg-stone-50 shadow-sm p-3 rounded-lg dark:bg-stone-950"
+                  key={example.slug}
+                  example={example}
+                />
+              ))}
             </GappedGrid>
           </div>
         ))}

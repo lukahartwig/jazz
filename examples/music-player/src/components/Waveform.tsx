@@ -2,12 +2,16 @@ import { MusicTrack, MusicTrackWaveform } from "@/1_schema";
 import { usePlayerCurrentTime } from "@/lib/audio/usePlayerCurrentTime";
 import { cn } from "@/lib/utils";
 import { useCoState } from "jazz-react";
+import { Loaded } from "jazz-tools";
 
-export function Waveform(props: { track: MusicTrack; height: number }) {
+export function Waveform(props: {
+  track: Loaded<typeof MusicTrack>;
+  height: number;
+}) {
   const { track, height } = props;
   const waveformData = useCoState(
     MusicTrackWaveform,
-    track._refs.waveform.id,
+    track._refs.waveform?.id,
   )?.data;
   const duration = track.duration;
 

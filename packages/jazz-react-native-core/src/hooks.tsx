@@ -1,9 +1,8 @@
 import { useEffect } from "react";
 
 import { useJazzContext } from "jazz-react-core";
-import { CoValue, CoValueClass, ID, parseInviteLink } from "jazz-tools";
+import { CoValueOrZodSchema, parseInviteLink } from "jazz-tools";
 import { Linking } from "react-native";
-import { RegisteredAccount } from "./provider.js";
 
 export {
   useCoState,
@@ -17,19 +16,13 @@ export {
   useAccountOrGuest,
 } from "jazz-react-core";
 
-declare module "jazz-react-core" {
-  export interface Register {
-    Account: RegisteredAccount;
-  }
-}
-
-export function useAcceptInvite<V extends CoValue>({
+export function useAcceptInvite<S extends CoValueOrZodSchema>({
   invitedObjectSchema,
   onAccept,
   forValueHint,
 }: {
-  invitedObjectSchema: CoValueClass<V>;
-  onAccept: (projectID: ID<V>) => void;
+  invitedObjectSchema: S;
+  onAccept: (projectID: string) => void;
   forValueHint?: string;
 }): void {
   const context = useJazzContext();
@@ -42,7 +35,7 @@ export function useAcceptInvite<V extends CoValue>({
 
   useEffect(() => {
     const handleDeepLink = ({ url }: { url: string }) => {
-      const result = parseInviteLink<V>(url);
+      const result = parseInviteLink(url);
       if (result && result.valueHint === forValueHint) {
         context.me
           .acceptInvite(

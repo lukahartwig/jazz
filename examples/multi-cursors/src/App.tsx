@@ -1,9 +1,7 @@
 import { useAccount } from "jazz-react";
-import { Group, type ID } from "jazz-tools";
 import { useEffect, useState } from "react";
 import { Logo } from "./Logo";
 import Container from "./components/Container";
-import { CursorFeed } from "./schema";
 import { getName } from "./utils/getName";
 import { loadCursorContainer } from "./utils/loadCursorContainer";
 
@@ -13,7 +11,7 @@ const groupIDToLoad = import.meta.env.VITE_GROUP_ID;
 function App() {
   const { me } = useAccount();
   const [loaded, setLoaded] = useState(false);
-  const [cursorFeedID, setCursorFeedID] = useState<ID<CursorFeed> | null>(null);
+  const [cursorFeedID, setCursorFeedID] = useState<string | null>(null);
 
   useEffect(() => {
     console.log("Loading cursor feed...", me.id);
@@ -21,8 +19,8 @@ function App() {
     const loadCursorFeed = async () => {
       const id = await loadCursorContainer(
         me,
-        cursorFeedIDToLoad as ID<CursorFeed>,
-        groupIDToLoad as ID<Group>,
+        cursorFeedIDToLoad,
+        groupIDToLoad,
       );
       if (id) {
         setCursorFeedID(id);

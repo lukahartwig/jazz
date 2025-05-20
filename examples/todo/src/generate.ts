@@ -1,13 +1,15 @@
 import { faker } from "@faker-js/faker";
-import { CoPlainText } from "jazz-tools";
-import { ListOfTasks, Task, TodoProject } from "./1_schema";
+import { CoPlainText, Loaded, co } from "jazz-tools";
+import { Task, TodoProject } from "./1_schema";
 
-export function generateRandomProject(numTasks: number): TodoProject {
+export function generateRandomProject(
+  numTasks: number,
+): Loaded<typeof TodoProject> {
   // Generate a random project title
   const projectTitle = faker.company.catchPhrase();
 
   // Create a list of tasks
-  const tasks = ListOfTasks.create([]);
+  const tasks = co.list(Task).create([]);
 
   // Generate random tasks
   for (let i = 0; i < numTasks; i++) {

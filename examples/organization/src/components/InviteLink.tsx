@@ -1,9 +1,12 @@
 import { createInviteLink } from "jazz-react";
+import { Loaded } from "jazz-tools";
 import { CheckIcon, CopyIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Organization } from "../schema.ts";
 
-export function InviteLink({ organization }: { organization: Organization }) {
+export function InviteLink({
+  organization,
+}: { organization: Loaded<typeof Organization> }) {
   const [inviteLink, setInviteLink] = useState<string>();
   let [copyCount, setCopyCount] = useState(0);
   let copied = copyCount > 0;

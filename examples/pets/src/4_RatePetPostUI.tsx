@@ -1,10 +1,10 @@
 import { useParams } from "react-router";
 
-import { PetPost, PetReactions, ReactionTypes } from "./1_schema";
+import { PetAccount, PetPost, PetReactions, ReactionTypes } from "./1_schema";
 
 import { ProgressiveImg, useAccount } from "jazz-react";
 import { useCoState } from "jazz-react";
-import { ID } from "jazz-tools";
+import { Loaded } from "jazz-tools";
 import uniqolor from "uniqolor";
 import { Button, Skeleton } from "./basicComponents";
 import { ShareButton } from "./components/ShareButton";
@@ -24,9 +24,9 @@ const reactionEmojiMap: {
 };
 
 export function RatePetPostUI() {
-  const petPostID = useParams<{ petPostId: ID<PetPost> }>().petPostId;
+  const petPostID = useParams<{ petPostId: string }>().petPostId;
 
-  const { me } = useAccount();
+  const { me } = useAccount(PetAccount);
   const petPost = useCoState(PetPost, petPostID);
 
   return (
@@ -36,7 +36,7 @@ export function RatePetPostUI() {
         <ShareButton petPost={petPost} />
       </div>
 
-      <ProgressiveImg image={petPost?.image}>
+      <ProgressiveImg image={petPost?.image as any /* TODO: fix this */}>
         {({ src }) => <img className="w-80 max-w-full rounded" src={src} />}
       </ProgressiveImg>
 
@@ -68,15 +68,17 @@ export function RatePetPostUI() {
   );
 }
 
-function ReactionOverview({ petReactions }: { petReactions: PetReactions }) {
+function ReactionOverview({
+  petReactions,
+}: { petReactions: Loaded<typeof PetReactions> }) {
   return (
     <div>
       <h2>Reactions</h2>
       <div className="flex flex-col gap-1">
         {ReactionTypes.map((reactionType) => {
-          const reactionsOfThisType = Object.values(petReactions).filter(
-            (entry) => entry.value === reactionType,
-          );
+          const reactionsOfThisType = Object.values(
+            petReactions.perAccount,
+          ).filter((entry) => entry.value === reactionType);
 
           if (reactionsOfThisType.length === 0) return null;
 
@@ -87,10 +89,10 @@ function ReactionOverview({ petReactions }: { petReactions: PetReactions }) {
                 reaction.by?.profile?.name ? (
                   <span
                     className="rounded-full py-0.5 px-2 text-xs"
-                    style={uniqueColoring(reaction.by.id)}
-                    key={reaction.by.id}
+                    style={uniqueColoring(reaction.by?.id ?? "")}
+                    key={reaction.by?.id ?? ""}
                   >
-                    {reaction.by.profile.name}
+                    {reaction.by?.profile?.name}
                   </span>
                 ) : (
                   <Skeleton

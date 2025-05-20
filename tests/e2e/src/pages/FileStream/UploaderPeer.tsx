@@ -1,5 +1,5 @@
 import { useAccount, useCoState } from "jazz-react";
-import { ID } from "jazz-tools";
+import { zodSchemaToCoSchema } from "jazz-tools";
 import { useEffect, useState } from "react";
 import { createCredentiallessIframe } from "../../lib/createCredentiallessIframe";
 import { waitForCoValue } from "../../lib/waitForCoValue";
@@ -10,9 +10,9 @@ import { getDefaultFileSize, getIsAutoUpload } from "./lib/searchParams";
 import { UploadedFile } from "./schema";
 export function UploaderPeer() {
   const account = useAccount();
-  const [uploadedFileId, setUploadedFileId] = useState<
-    ID<UploadedFile> | undefined
-  >(undefined);
+  const [uploadedFileId, setUploadedFileId] = useState<string | undefined>(
+    undefined,
+  );
   const [syncDuration, setSyncDuration] = useState<number | null>(null);
   const [bytes, setBytes] = useState(getDefaultFileSize);
   const [synced, setSynced] = useState(false);
@@ -44,7 +44,7 @@ export function UploaderPeer() {
     // The downloader peer will set the syncCompleted to true when the download is complete.
     // We use this to measure the sync duration.
     await waitForCoValue(
-      UploadedFile,
+      zodSchemaToCoSchema(UploadedFile),
       file.id,
       (value) => value.syncCompleted,
       { loadAs: account.me },

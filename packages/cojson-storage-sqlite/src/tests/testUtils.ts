@@ -42,3 +42,32 @@ export function trackMessages(node: LocalNode) {
     restore,
   };
 }
+export function waitFor(
+  callback: () => boolean | undefined | Promise<boolean | undefined>,
+) {
+  return new Promise<void>((resolve, reject) => {
+    const checkPassed = async () => {
+      try {
+        return { ok: await callback(), error: null };
+      } catch (error) {
+        return { ok: false, error };
+      }
+    };
+
+    let retries = 0;
+
+    const interval = setInterval(async () => {
+      const { ok, error } = await checkPassed();
+
+      if (ok !== false) {
+        clearInterval(interval);
+        resolve();
+      }
+
+      if (++retries > 10) {
+        clearInterval(interval);
+        reject(error);
+      }
+    }, 100);
+  });
+}

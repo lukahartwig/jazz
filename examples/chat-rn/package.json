@@ -1,6 +1,6 @@
 {
   "name": "chat-rn",
-  "version": "1.0.114",
+  "version": "1.0.120",
   "main": "index.js",
   "scripts": {
     "android": "react-native run-android",
@@ -24,7 +24,7 @@
     "jazz-react-native": "workspace:*",
     "jazz-tools": "workspace:*",
     "react": "18.3.1",
-    "react-native": "0.76.7",
+    "react-native": "0.79.2",
     "react-native-get-random-values": "^1.11.0",
     "react-native-mmkv": "^3.2.0",
     "react-native-polyfill-globals": "^3.1.0",

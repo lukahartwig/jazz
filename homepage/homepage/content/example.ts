@@ -6,7 +6,6 @@ export type Example = {
   tech?: string[];
   features?: string[];
   demoUrl?: string;
-  showDemo?: boolean;
   imageUrl?: string;
   codeSamples?: { name: string; content: React.ReactNode }[];
 };

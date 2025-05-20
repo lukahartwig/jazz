@@ -7,7 +7,7 @@ import { useLocalSearchParams } from "expo-router";
 import { useAccount, useCoState } from "jazz-expo";
 import { ProgressiveImg } from "jazz-expo";
 import { createImage } from "jazz-react-native-media-images";
-import { CoPlainText, Group, ID } from "jazz-tools";
+import { CoPlainText, Group, Loaded } from "jazz-tools";
 import { useEffect, useLayoutEffect, useState } from "react";
 import React, {
   SafeAreaView,
@@ -26,7 +26,7 @@ import React, {
 export default function Conversation() {
   const { chatId } = useLocalSearchParams();
   const { me } = useAccount();
-  const [chat, setChat] = useState<Chat>();
+  const [chat, setChat] = useState<Loaded<typeof Chat>>();
   const [message, setMessage] = useState("");
   const loadedChat = useCoState(Chat, chat?.id, { resolve: { $each: true } });
   const navigation = useNavigation();
@@ -37,7 +37,7 @@ export default function Conversation() {
     if (chatId === "new") {
       createChat();
     } else {
-      loadChat(chatId as ID<Chat>);
+      loadChat(chatId as string);
     }
   }, [chat]);
 
@@ -69,7 +69,7 @@ export default function Conversation() {
     setChat(chat);
   };
 
-  const loadChat = async (chatId: ID<Chat>) => {
+  const loadChat = async (chatId: string) => {
     try {
       const chat = await Chat.load(chatId);
       if (chat) setChat(chat);
@@ -123,8 +123,8 @@ export default function Conversation() {
     }
   };
 
-  const renderMessageItem = ({ item }: { item: Message }) => {
-    const isMe = item._edits.text.by?.isMe;
+  const renderMessageItem = ({ item }: { item: Loaded<typeof Message> }) => {
+    const isMe = item._edits.text?.by?.isMe;
     return (
       <View
         className={clsx(
@@ -139,7 +139,7 @@ export default function Conversation() {
               isMe ? "text-right" : "text-left",
             )}
           >
-            {item._edits.text.by?.profile?.name}
+            {item._edits.text?.by?.profile?.name}
           </Text>
         ) : null}
         <View
@@ -175,8 +175,8 @@ export default function Conversation() {
               !isMe ? "mt-2 text-gray-500" : "mt-1 text-gray-200",
             )}
           >
-            {item._edits.text.madeAt?.getHours().toString().padStart(2, "0")}:
-            {item._edits.text.madeAt?.getMinutes().toString().padStart(2, "0")}
+            {item._edits.text?.madeAt?.getHours().toString().padStart(2, "0")}:
+            {item._edits.text?.madeAt?.getMinutes().toString().padStart(2, "0")}
           </Text>
         </View>
       </View>

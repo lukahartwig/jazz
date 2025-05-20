@@ -7,23 +7,29 @@ import React, {
 
 import {
   Account,
+  AccountClass,
   AnonymousJazzAgent,
+  AnyAccountSchema,
   CoValue,
   CoValueClass,
+  CoValueOrZodSchema,
   ID,
   InboxSender,
+  InstanceOfSchema,
+  InstanceOfSchemaCoValuesNullable,
   JazzContextManager,
   JazzContextType,
+  Loaded,
   RefsToResolve,
   RefsToResolveStrict,
+  ResolveQuery,
+  ResolveQueryStrict,
   Resolved,
+  anySchemaToCoSchema,
   createCoValueObservable,
+  z,
 } from "jazz-tools";
-import {
-  JazzContext,
-  JazzContextManagerContext,
-  RegisteredAccount,
-} from "./provider.js";
+import { JazzContext, JazzContextManagerContext } from "./provider.js";
 import { getCurrentAccountFromContextManager } from "./utils.js";
 import { subscribeToContextManager } from "./utils.js";
 
@@ -82,10 +88,10 @@ export function useIsAuthenticated() {
 }
 
 function useCoValueObservable<
-  V extends CoValue,
-  const R extends RefsToResolve<V>,
+  S extends CoValueOrZodSchema,
+  const R extends ResolveQuery<S>,
 >() {
-  const [initialValue] = React.useState(() => createCoValueObservable<V, R>());
+  const [initialValue] = React.useState(() => createCoValueObservable<S, R>());
   const ref = useRef(initialValue);
 
   return {
@@ -96,25 +102,27 @@ function useCoValueObservable<
       return ref.current;
     },
     reset(initialValue?: undefined | null) {
-      ref.current = createCoValueObservable<V, R>(initialValue);
+      ref.current = createCoValueObservable<S, R>(initialValue);
     },
   };
 }
 
 export function useCoState<
-  V extends CoValue,
-  const R extends RefsToResolve<V> = true,
+  S extends CoValueOrZodSchema,
+  const R extends ResolveQuery<S> = true,
 >(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  Schema: CoValueClass<V>,
-  id: ID<CoValue> | undefined,
-  options?: { resolve?: RefsToResolveStrict<V, R> },
-): Resolved<V, R> | undefined | null {
+  Schema: S,
+  id: string | undefined,
+  options?: {
+    resolve?: ResolveQueryStrict<S, R>;
+  },
+): Loaded<S, R> | undefined | null {
   const contextManager = useJazzContextManager();
 
-  const observable = useCoValueObservable<V, R>();
+  const observable = useCoValueObservable<S, R>();
 
-  const value = React.useSyncExternalStore<Resolved<V, R> | undefined | null>(
+  const value = React.useSyncExternalStore<Loaded<S, R> | undefined | null>(
     React.useCallback(
       (callback) => {
         if (!id) {
@@ -155,24 +163,35 @@ export function useCoState<
   return value;
 }
 
-function useAccount<A extends RegisteredAccount>(): {
-  me: A;
+function useAccount<A extends AccountClass<Account> | AnyAccountSchema>(
+  AccountSchema?: A,
+): {
+  me: Loaded<A, true>;
   logOut: () => void;
 };
 function useAccount<
-  A extends RegisteredAccount,
-  R extends RefsToResolve<A>,
->(options?: {
-  resolve?: RefsToResolveStrict<A, R>;
-}): { me: Resolved<A, R> | undefined | null; logOut: () => void };
+  A extends AccountClass<Account> | AnyAccountSchema,
+  R extends ResolveQuery<A>,
+>(
+  AccountSchema: A,
+  options?: {
+    resolve?: ResolveQueryStrict<A, R>;
+  },
+): { me: Loaded<A, R> | undefined | null; logOut: () => void };
 function useAccount<
-  A extends RegisteredAccount,
-  R extends RefsToResolve<A>,
->(options?: {
-  resolve?: RefsToResolveStrict<A, R>;
-}): { me: A | Resolved<A, R> | undefined | null; logOut: () => void } {
-  const context = useJazzContext<A>();
-  const contextManager = useJazzContextManager<A>();
+  A extends AccountClass<Account> | AnyAccountSchema,
+  R extends ResolveQuery<A>,
+>(
+  AccountSchema: A = Account as unknown as A,
+  options?: {
+    resolve?: ResolveQueryStrict<A, R>;
+  },
+): {
+  me: Loaded<A, true> | Loaded<A, R> | undefined | null;
+  logOut: () => void;
+} {
+  const context = useJazzContext<InstanceOfSchema<A>>();
+  const contextManager = useJazzContextManager<InstanceOfSchema<A>>();
 
   if (!("me" in context)) {
     throw new Error(
@@ -182,7 +201,7 @@ function useAccount<
 
   const observable = useCoValueObservable<A, R>();
 
-  const me = React.useSyncExternalStore<Resolved<A, R> | undefined | null>(
+  const me = React.useSyncExternalStore<Loaded<A, R> | undefined | null>(
     React.useCallback(
       (callback) => {
         return subscribeToContextManager(contextManager, () => {
@@ -196,11 +215,9 @@ function useAccount<
 
           observable.reset();
 
-          const Schema = agent.constructor as CoValueClass<A>;
-
           return observable.getCurrentObservable().subscribe(
-            Schema,
-            (agent as A).id,
+            AccountSchema,
+            agent.id,
             {
               loadAs: agent,
               resolve: options?.resolve,
@@ -214,37 +231,51 @@ function useAccount<
       },
       [contextManager],
     ),
-    () => observable.getCurrentValue(),
-    () => observable.getCurrentValue(),
+    () => observable.getCurrentValue() as Loaded<A, R> | undefined | null,
+    () => observable.getCurrentValue() as Loaded<A, R> | undefined | null,
   );
 
   return {
-    me: options?.resolve === undefined ? me || context.me : me,
+    me:
+      options?.resolve === undefined ? me || (context.me as Loaded<A, R>) : me,
     logOut: contextManager.logOut,
   };
 }
 
-function useAccountOrGuest<A extends RegisteredAccount>(): {
-  me: A | AnonymousJazzAgent;
+function useAccountOrGuest<A extends AccountClass<Account> | AnyAccountSchema>(
+  AccountSchema?: A,
+): {
+  me: Loaded<A, true> | AnonymousJazzAgent;
 };
 function useAccountOrGuest<
-  A extends RegisteredAccount,
-  R extends RefsToResolve<A>,
->(options?: { resolve?: RefsToResolveStrict<A, R> }): {
-  me: Resolved<A, R> | undefined | null | AnonymousJazzAgent;
+  A extends AccountClass<Account> | AnyAccountSchema,
+  R extends ResolveQuery<A>,
+>(
+  AccountSchema?: A,
+  options?: { resolve?: ResolveQueryStrict<A, R> },
+): {
+  me: Loaded<A, R> | undefined | null | AnonymousJazzAgent;
 };
 function useAccountOrGuest<
-  A extends RegisteredAccount,
-  R extends RefsToResolve<A>,
->(options?: { resolve?: RefsToResolveStrict<A, R> }): {
-  me: A | Resolved<A, R> | undefined | null | AnonymousJazzAgent;
+  A extends AccountClass<Account> | AnyAccountSchema,
+  R extends ResolveQuery<A>,
+>(
+  AccountSchema: A = Account as unknown as A,
+  options?: { resolve?: ResolveQueryStrict<A, R> },
+): {
+  me:
+    | InstanceOfSchema<A>
+    | Loaded<A, R>
+    | undefined
+    | null
+    | AnonymousJazzAgent;
 } {
-  const context = useJazzContext<A>();
-  const contextManager = useJazzContextManager<A>();
+  const context = useJazzContext<InstanceOfSchema<A>>();
+  const contextManager = useJazzContextManager<InstanceOfSchema<A>>();
 
   const observable = useCoValueObservable<A, R>();
 
-  const me = React.useSyncExternalStore<Resolved<A, R> | undefined | null>(
+  const me = React.useSyncExternalStore<Loaded<A, R> | undefined | null>(
     React.useCallback(
       (callback) => {
         return subscribeToContextManager(contextManager, () => {
@@ -256,11 +287,9 @@ function useAccountOrGuest<
 
           observable.reset();
 
-          const Schema = agent.constructor as CoValueClass<A>;
-
           return observable.getCurrentObservable().subscribe(
-            Schema,
-            (agent as A).id,
+            AccountSchema,
+            agent.id,
             {
               loadAs: agent,
               resolve: options?.resolve,
@@ -292,7 +321,7 @@ export { useAccount, useAccountOrGuest };
 export function experimental_useInboxSender<
   I extends CoValue,
   O extends CoValue | undefined,
->(inboxOwnerID: ID<RegisteredAccount> | undefined) {
+>(inboxOwnerID: string | undefined) {
   const context = useJazzContext();
 
   if (!("me" in context)) {
@@ -315,7 +344,6 @@ export function experimental_useInboxSender<
 
       let inbox = await inboxRef.current;
 
-      // @ts-expect-error inbox.owner.id is typed as RawAccount id
       if (inbox.owner.id !== inboxOwnerID) {
         const req = InboxSender.load<I, O>(inboxOwnerID, me);
         inboxRef.current = req;

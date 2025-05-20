@@ -1,5 +1,5 @@
 import { useCoState } from "jazz-react";
-import { ID } from "jazz-tools";
+import { Loaded } from "jazz-tools";
 import { ReactionType, ReactionTypes, Reactions } from "./schema.ts";
 
 const reactionEmojiMap: {
@@ -13,7 +13,7 @@ const reactionEmojiMap: {
   chonkers: "🐘",
 };
 
-export function ReactionsScreen(props: { id: ID<Reactions> }) {
+export function ReactionsScreen(props: { id: string }) {
   const reactions = useCoState(Reactions, props.id);
 
   if (!reactions) return;
@@ -33,7 +33,9 @@ export function ReactionsScreen(props: { id: ID<Reactions> }) {
   );
 }
 
-const ReactionButtons = ({ reactions }: { reactions: Reactions }) => (
+const ReactionButtons = ({
+  reactions,
+}: { reactions: Loaded<typeof Reactions> }) => (
   <div className="reaction-buttons">
     {ReactionTypes.map((reactionType) => (
       <button
@@ -52,10 +54,12 @@ const ReactionButtons = ({ reactions }: { reactions: Reactions }) => (
   </div>
 );
 
-const ReactionOverview = ({ reactions }: { reactions: Reactions }) => (
+const ReactionOverview = ({
+  reactions,
+}: { reactions: Loaded<typeof Reactions> }) => (
   <>
-    {Object.values(reactions).map((reaction) => (
-      <div key={reaction.by?.profile?.name} className="reaction-row">
+    {Object.values(reactions.perAccount).map((reaction) => (
+      <div key={reaction.by?.id} className="reaction-row">
         {reactionEmojiMap[reaction.value as ReactionType]}{" "}
         {reaction.by?.profile?.name}
       </div>

@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { WORKER_ID } from "@/constants";
 import { JoinGameRequest, WaitingRoom } from "@/schema";
 import { createFileRoute, redirect } from "@tanstack/react-router";
-import { Group, type ID, InboxSender } from "jazz-tools";
+import { Group, InboxSender, type Loaded } from "jazz-tools";
 import { ClipboardCopyIcon, Loader2Icon } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -19,20 +19,20 @@ export const Route = createFileRoute(
 )({
   component: RouteComponent,
   loader: async ({ context: { me }, params: { waitingRoomId } }) => {
-    const waitingRoom = await WaitingRoom.load(
-      waitingRoomId as ID<WaitingRoom>,
-      {
-        resolve: {
-          game: true,
-        },
+    const waitingRoom = await WaitingRoom.load(waitingRoomId, {
+      resolve: {
+        game: true,
       },
-    );
+    });
 
     if (!waitingRoom) {
       throw redirect({ to: "/" });
     }
     if (!waitingRoom?.account1?.isMe) {
-      const sender = await InboxSender.load<JoinGameRequest, WaitingRoom>(
+      const sender = await InboxSender.load<
+        Loaded<typeof JoinGameRequest>,
+        Loaded<typeof WaitingRoom>
+      >(
         WORKER_ID,
         me,
         // { account1: {}, account2: {}, me, game: {} },

@@ -3,7 +3,7 @@ import { createAuthEndpoint, sessionMiddleware } from "better-auth/api";
 import { symmetricDecrypt, symmetricEncrypt } from "better-auth/crypto";
 import type { AgentSecret } from "cojson";
 import type { Account, AuthCredentials, ID } from "jazz-tools";
-import { z } from "zod";
+import { z } from "zod/v4";
 import type { UserWithJazz } from "./types.js";
 
 export const jazzPlugin = () => {

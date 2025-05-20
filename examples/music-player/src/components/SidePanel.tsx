@@ -1,3 +1,4 @@
+import { MusicaAccount } from "@/1_schema";
 import { deletePlaylist } from "@/4_actions";
 import { useAccount } from "jazz-react";
 import { Trash2 } from "lucide-react";
@@ -7,7 +8,7 @@ import { LocalOnlyTag } from "./LocalOnlyTag";
 export function SidePanel() {
   const { playlistId } = useParams();
   const navigate = useNavigate();
-  const { me } = useAccount({
+  const { me } = useAccount(MusicaAccount, {
     resolve: { root: { playlists: { $each: true } } },
   });
 
