@@ -155,10 +155,6 @@ export class JazzContextManager<
     return this.value;
   }
 
-  setCurrentValue(value: JazzContextType<Acc>) {
-    this.value = value;
-  }
-
   getAuthSecretStorage() {
     return this.authSecretStorage;
   }

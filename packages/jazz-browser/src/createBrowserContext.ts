@@ -29,7 +29,7 @@ setupInspector();
 export type BaseBrowserContextOptions = {
   sync: SyncConfig;
   reconnectionTimeout?: number;
-  storage?: "indexedDB" | "disabled";
+  storage?: StorageConfig;
   crypto?: CryptoProvider;
   authSecretStorage: AuthSecretStorage;
 };
@@ -51,9 +51,11 @@ async function setupPeers(options: BaseBrowserContextOptions) {
   const crypto = options.crypto || (await WasmCrypto.create());
   let node: LocalNode | undefined = undefined;
 
+  const { useIndexedDB } = getStorageOptions(options.storage);
+
   const peersToLoadFrom: Peer[] = [];
 
-  if (options.storage !== "disabled") {
+  if (useIndexedDB) {
     peersToLoadFrom.push(await IDBStorage.asPeer());
   }
 
