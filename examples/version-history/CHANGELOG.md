@@ -1,5 +1,13 @@
 # version-history
 
+## 0.0.94
+
+### Patch Changes
+
+- jazz-inspector@0.13.33
+- jazz-react@0.13.33
+- jazz-tools@0.13.33
+
 ## 0.0.93
 
 ### Patch Changes

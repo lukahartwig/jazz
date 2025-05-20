@@ -1,5 +1,13 @@
 # jazz-richtext-tiptap
 
+## 0.1.9
+
+### Patch Changes
+
+- jazz-browser@0.13.33
+- jazz-tools@0.13.33
+- jazz-richtext-prosemirror@0.1.20
+
 ## 0.1.8
 
 ### Patch Changes

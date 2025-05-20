@@ -1,5 +1,11 @@
 # cojson
 
+## 0.13.33
+
+### Patch Changes
+
+- 267c269: Force sync of the group after acceptInvite
+
 ## 0.13.31
 
 ### Patch Changes

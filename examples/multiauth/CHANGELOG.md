@@ -1,5 +1,13 @@
 # multiauth
 
+## 0.0.40
+
+### Patch Changes
+
+- jazz-react@0.13.33
+- jazz-react-auth-clerk@0.13.33
+- jazz-tools@0.13.33
+
 ## 0.0.39
 
 ### Patch Changes
