@@ -1,5 +1,13 @@
 # minimal-auth-clerk
 
+## 0.0.100
+
+### Patch Changes
+
+- jazz-react@0.13.34
+- jazz-react-auth-clerk@0.13.34
+- jazz-tools@0.13.34
+
 ## 0.0.99
 
 ### Patch Changes

@@ -1,5 +1,12 @@
 # chat-rn-expo
 
+## 1.0.112
+
+### Patch Changes
+
+- jazz-expo@0.13.34
+- jazz-tools@0.13.34
+
 ## 1.0.111
 
 ### Patch Changes

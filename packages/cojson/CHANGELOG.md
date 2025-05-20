@@ -1,5 +1,11 @@
 # cojson
 
+## 0.13.34
+
+### Patch Changes
+
+- Fix broken backport
+
 ## 0.13.33
 
 ### Patch Changes
