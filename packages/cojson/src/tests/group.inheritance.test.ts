@@ -1,5 +1,4 @@
 import { describe, expect, test } from "vitest";
-import { LogLevel, logger } from "../logger";
 import {
   createThreeConnectedNodes,
   createTwoConnectedNodes,
@@ -160,8 +159,6 @@ describe("extend", () => {
   });
 
   test("should be possible to extend a group without having membership in the parent group", async () => {
-    logger.setLevel(LogLevel.DEBUG);
-
     const { node1, node2, node3 } = await createThreeConnectedNodes(
       "server",
       "server",
@@ -215,6 +212,78 @@ describe("unextend", () => {
     await childGroup.revokeExtend(parentGroup);
     expect(childGroup.roleOf(bob.id)).toBe("reader");
     expect(childGroup.roleOf(alice.id)).toBe(undefined);
+  });
+
+  test("should work when the account has no access to the parent group but owns the writeKey", async () => {
+    const { node1, node2, node3 } = await createThreeConnectedNodes(
+      "server",
+      "server",
+      "server",
+    );
+
+    const parentGroup = node1.node.createGroup();
+    const childGroup = node2.node.createGroup();
+
+    const alice = await loadCoValueOrFail(node1.node, node3.accountID);
+    parentGroup.addMember(alice, "writer");
+
+    const parentGroupOnNode2 = await loadCoValueOrFail(
+      node2.node,
+      parentGroup.id,
+    );
+
+    childGroup.extend(parentGroupOnNode2);
+
+    expect(childGroup.roleOf(alice.id)).toBe("writer");
+
+    // `childGroup` no longer has `parentGroup`'s members
+    await childGroup.revokeExtend(parentGroup);
+    expect(childGroup.roleOf(alice.id)).toBe(undefined);
+
+    const map = childGroup.createMap();
+    map.set("test", "Hello!");
+
+    const mapOnAlice = await loadCoValueOrFail(node3.node, map.id);
+
+    expect(mapOnAlice.get("test")).toEqual(undefined);
+  });
+
+  test("should work when the account has no access to the parent group and not owns the writeKey", async () => {
+    const {
+      node1: bobNode,
+      node2: johnNode,
+      node3: aliceNode,
+    } = await createThreeConnectedNodes("server", "server", "server");
+
+    const parentGroup = bobNode.node.createGroup();
+    const childGroup = johnNode.node.createGroup();
+
+    const parentGroupOnJohn = await loadCoValueOrFail(
+      johnNode.node,
+      parentGroup.id,
+    );
+
+    childGroup.extend(parentGroupOnJohn);
+
+    const bob = await loadCoValueOrFail(johnNode.node, bobNode.accountID);
+    const alice = await loadCoValueOrFail(johnNode.node, aliceNode.accountID);
+    childGroup.addMember(alice, "admin");
+
+    const childGroupOnAlice = await loadCoValueOrFail(
+      aliceNode.node,
+      childGroup.id,
+    );
+
+    // `childGroup` no longer has `parentGroup`'s members
+    await childGroupOnAlice.revokeExtend(parentGroup);
+    expect(childGroupOnAlice.roleOf(bob.id)).toBe(undefined);
+
+    const map = childGroupOnAlice.createMap();
+    map.set("test", "Hello!");
+
+    const mapOnBob = await loadCoValueOrFail(bobNode.node, map.id);
+
+    expect(mapOnBob.get("test")).toEqual(undefined);
   });
 
   test("should do nothing if applied to a group that is not extended", async () => {

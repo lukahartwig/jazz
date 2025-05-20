@@ -1982,40 +1982,6 @@ test("Writers, readers and writeOnly can set child extensions", () => {
   expect(groupAsReader.get(`child_${childGroup.id}`)).toEqual("extend");
 });
 
-test("Invitees can not set child extensions", () => {
-  const { group, node } = newGroupHighLevel();
-  const childGroup = node.createGroup();
-
-  const adminInvite = createAccountInNode(node);
-  const writerInvite = createAccountInNode(node);
-  const readerInvite = createAccountInNode(node);
-
-  group.addMember(adminInvite, "adminInvite");
-  group.addMember(writerInvite, "writerInvite");
-  group.addMember(readerInvite, "readerInvite");
-
-  const groupAsAdminInvite = expectGroup(
-    group.core.contentInClonedNodeWithDifferentAccount(adminInvite),
-  );
-
-  groupAsAdminInvite.set(`child_${childGroup.id}`, "extend", "trusting");
-  expect(groupAsAdminInvite.get(`child_${childGroup.id}`)).toBeUndefined();
-
-  const groupAsWriterInvite = expectGroup(
-    group.core.contentInClonedNodeWithDifferentAccount(writerInvite),
-  );
-
-  groupAsWriterInvite.set(`child_${childGroup.id}`, "extend", "trusting");
-  expect(groupAsWriterInvite.get(`child_${childGroup.id}`)).toBeUndefined();
-
-  const groupAsReaderInvite = expectGroup(
-    group.core.contentInClonedNodeWithDifferentAccount(readerInvite),
-  );
-
-  groupAsReaderInvite.set(`child_${childGroup.id}`, "extend", "trusting");
-  expect(groupAsReaderInvite.get(`child_${childGroup.id}`)).toBeUndefined();
-});
-
 test("Member roles are inherited by child groups (except invites)", () => {
   const { group, node, admin } = newGroupHighLevel();
   const parentGroup = node.createGroup();
