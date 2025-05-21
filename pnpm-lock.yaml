@@ -2976,6 +2976,9 @@ importers:
       install:
         specifier: ^0.13.0
         version: 0.13.0
+      jazz-inspector-element:
+        specifier: workspace:*
+        version: link:../../packages/jazz-inspector-element
       jazz-svelte:
         specifier: workspace:*
         version: link:../../packages/jazz-svelte

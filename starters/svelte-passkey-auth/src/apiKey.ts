@@ -1,1 +1,1 @@
-export const apiKey = "minimal-svelte-auth-passkey@garden.co";
+export const apiKey = "jazz-svelte-starter@garden.co";
