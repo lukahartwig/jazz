@@ -1,5 +1,16 @@
 # jazz-browser
 
+## 0.14.2
+
+### Patch Changes
+
+- Updated dependencies [3d1027f]
+- Updated dependencies [c240eed]
+  - jazz-tools@0.14.2
+  - jazz-auth-clerk@0.14.2
+  - jazz-react-core@0.14.2
+  - jazz-react-native-core@0.14.2
+
 ## 0.14.1
 
 ### Patch Changes

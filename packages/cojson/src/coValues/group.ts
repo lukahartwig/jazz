@@ -451,7 +451,9 @@ export class RawGroup<
   }
 
   getCurrentReadKeyId() {
-    if (this.myRole() === "writeOnly") {
+    const myRole = this.myRole();
+
+    if (myRole === "writeOnly") {
       const accountId = this.core.node.getCurrentAgent().id;
 
       const key = this.get(`writeKeyFor_${accountId}`) as KeyID;
@@ -467,6 +469,16 @@ export class RawGroup<
       }
 
       return key;
+    }
+
+    if (!myRole) {
+      const accountId = this.core.node.getCurrentAgent().id;
+
+      const key = this.get(`writeKeyFor_${accountId}`) as KeyID;
+
+      if (key) {
+        return key;
+      }
     }
 
     return this.get("readKey");
@@ -670,21 +682,23 @@ export class RawGroup<
       );
     }
 
+    const value = role === "inherit" ? "extend" : role;
+
+    this.set(`parent_${parent.id}`, value, "trusting");
+    parent.set(`child_${this.id}`, "extend", "trusting");
+
     if (
       parent.myRole() !== "admin" &&
       parent.myRole() !== "writer" &&
       parent.myRole() !== "reader" &&
       parent.myRole() !== "writeOnly"
     ) {
-      throw new Error(
-        "To extend a group, the current account must be a member of the parent group",
+      // Create a writeOnly key in the parent group to be able to reveal the current child key to the parent group
+      parent.internalCreateWriteOnlyKeyForMember(
+        this.core.node.getCurrentAgent().id,
+        this.core.node.getCurrentAgent().currentAgentID(),
       );
     }
-
-    const value = role === "inherit" ? "extend" : role;
-
-    this.set(`parent_${parent.id}`, value, "trusting");
-    parent.set(`child_${this.id}`, "extend", "trusting");
 
     const { id: parentReadKeyID, secret: parentReadKeySecret } =
       parent.core.getCurrentReadKey();

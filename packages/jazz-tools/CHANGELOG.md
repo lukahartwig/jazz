@@ -1,5 +1,12 @@
 # jazz-tools
 
+## 0.14.2
+
+### Patch Changes
+
+- 3d1027f: Make possible to extend a group without having access to it
+- c240eed: Fix custom AccountSchema support in testing utils
+
 ## 0.14.1
 
 ### Patch Changes

@@ -3,17 +3,16 @@
   import {  CoState } from 'jazz-svelte';
   import { SharedFile } from '$lib/schema';
   import { File, FileDown, Link2 } from 'lucide-svelte';
-  import type { ID } from 'jazz-tools';
   import { FileStream } from 'jazz-tools';
   import { toast } from 'svelte-sonner';
   import { downloadFileBlob } from '$lib/utils';
 
   const fileId = $page.params.fileId;
 
-  const file = $derived(new CoState(SharedFile, fileId as ID<SharedFile>));
+  const file = $derived(new CoState(SharedFile, fileId ));
   const isAdmin = $derived(file.current?._owner?.myRole() === 'admin');
 
-  const fileStreamId = $derived(file.current?._refs.file?.id);
+  const fileStreamId = $derived(file.current?._refs?.file?.id);
 
   async function downloadFile() {
     if (!fileStreamId || !file.current) {

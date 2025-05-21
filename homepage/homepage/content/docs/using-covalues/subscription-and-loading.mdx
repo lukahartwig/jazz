@@ -1,6 +1,6 @@
 import { CodeGroup, ContentByFramework } from "@/components/forMdx";
 
-export const metadata = { 
+export const metadata = {
   description: "Learn how to subscribe to CoValues, specify loading depths, and handle loading states and inaccessible data."
 };
 
@@ -26,27 +26,26 @@ If you're using React in your project, check out our [React hooks](/docs/react/u
 
 <CodeGroup>
 ```ts twoslash
-import { ID, CoMap, coField } from "jazz-tools";
-const taskId = "co_123" as ID<Task>;
+import { co, z } from "jazz-tools";
+const taskId = "co_123";
 // ---cut-before---
-class Task extends CoMap {
-  title = coField.string;
-  description = coField.string;
-  status = coField.literal("todo", "in-progress", "completed");
-  assignedTo = coField.optional.string;
-}
+const Task = co.map({
+  title: z.string(),
+  description: z.string(),
+  status: z.literal(["todo", "in-progress", "completed"]),
+  assignedTo: z.optional(z.string()),
+});
 
 // ...
 
 // Subscribe to a Task by ID
-const unsubscribe = Task.subscribe(taskId, (updatedTask) => {
+const unsubscribe = Task.subscribe(taskId, {}, (updatedTask) => {
   console.log("Task updated:", updatedTask.title);
   console.log("New status:", updatedTask.status);
 });
 
 // Clean up when you're done
 unsubscribe();
-
 ```
 </CodeGroup>
 
@@ -54,14 +53,14 @@ If you already have a CoValue instance, you can subscribe to it by calling its `
 
 <CodeGroup>
 ```ts twoslash
-import { ID, CoMap, coField } from "jazz-tools";
+import { co, z } from "jazz-tools";
 
-class Task extends CoMap {
-  title = coField.string;
-  description = coField.string;
-  status = coField.literal("todo", "in-progress", "completed");
-  assignedTo = coField.optional.string;
-}
+const Task = co.map({
+  title: z.string(),
+  description: z.string(),
+  status: z.literal(["todo", "in-progress", "completed"]),
+  assignedTo: z.optional(z.string()),
+});
 const otherProps = {} as any;
 // ---cut-before---
 const task = Task.create({
@@ -88,22 +87,20 @@ Jazz provides a `useCoState` hook that provides a convenient way to subscribe to
 <CodeGroup>
 ```tsx twoslash
 import React from "react";
-import { ID, CoMap, coField, CoList } from "jazz-tools";
+import { co, z, ID, Loaded } from "jazz-tools";
 
-class Task extends CoMap {
-  title = coField.string;
-  status = coField.literal("todo", "in-progress", "completed");
-}
-class Project extends CoMap {
-  name = coField.string;
-  tasks = coField.ref(ListOfTasks);
-}
-class ListOfTasks extends CoList.Of(coField.ref(Task)) {}
-
+const Task = co.map({
+  title: z.string(),
+  status: z.literal(["todo", "in-progress", "completed"]),
+});
+const Project = co.map({
+  name: z.string(),
+  tasks: co.list(Task),
+});
 // ---cut-before---
 import { useCoState } from "jazz-react";
 
-function GardenPlanner({ projectId }: { projectId: ID<Project> }) {
+function GardenPlanner({ projectId }: { projectId: string }) {
   // Subscribe to a project and its tasks
   const project = useCoState(Project, projectId, {
     resolve: {
@@ -125,7 +122,7 @@ function GardenPlanner({ projectId }: { projectId: ID<Project> }) {
   );
 }
 
-function TaskList({ tasks }: { tasks: Task[] }) {
+function TaskList({ tasks }: { tasks: Loaded<typeof Task>[] }) {
   return (
     <ul>
       {tasks.map((task) => (
@@ -152,37 +149,38 @@ Like `useCoState`, you can specify a resolve query to also subscribe to CoValues
 <CodeGroup>
 ```tsx twoslash
 import React from "react";
-import { ID, CoMap, coField, CoList, Account } from "jazz-tools";
-class Task extends CoMap {
-  title = coField.string;
-}
-class ListOfTasks extends CoList.Of(coField.ref(Task)) {}
-class Project extends CoMap {
-  name = coField.string;
-  tasks = coField.ref(ListOfTasks);
-}
-class ListOfProjects extends CoList.Of(coField.ref(Project)) {}
+import { co, z } from "jazz-tools";
+const Task = co.map({
+  title: z.string(),
+});
 
-class AccountRoot extends CoMap {
-  myProjects = coField.ref(ListOfProjects);
-}
-class MyAppAccount extends Account {
-  root = coField.ref(AccountRoot);
-}
-declare module "jazz-react" { interface Register { Account: MyAppAccount; } }
+const Project = co.map({
+  name: z.string(),
+  tasks: co.list(Task),
+});
+
+const AccountRoot = co.map({
+  myProjects: co.list(Project),
+});
+
+const MyAppAccount = co.account({
+  root: AccountRoot,
+  profile: co.profile(),
+});
+
 // ---cut-before---
 import { useAccount } from "jazz-react";
 
 function ProjectList() {
-  const { me } = useAccount({
+  const { me } = useAccount(MyAppAccount, {
     resolve: {
       profile: true,
       root: {
         myProjects: {
           $each: {
-            tasks: true
-          }
-        }
+            tasks: true,
+          },
+        },
       },
     },
   });
@@ -191,17 +189,20 @@ function ProjectList() {
     return <div>Loading...</div>;
   }
 
-  return <div>
-    <h1>{me.profile.name}'s projects</h1>
-    <ul>
-      {me.root.myProjects.map(project => (
-        <li key={project.id}>
-          {project.name} ({project.tasks.length} tasks)
-        </li>
-      ))}
-    </ul>
-  </div>
+  return (
+    <div>
+      <h1>{me.profile.name}'s projects</h1>
+      <ul>
+        {me.root.myProjects.map((project) => (
+          <li key={project.id}>
+            {project.name} ({project.tasks.length} tasks)
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
 }
+
 ```
 </CodeGroup>
 
@@ -219,14 +220,14 @@ This allows you to handle loading, error, and success states in your application
 
 <CodeGroup>
 ```ts twoslash
-import { ID, CoMap, coField } from "jazz-tools";
-class Task extends CoMap {
-  title = coField.string;
-}
+import { co, z, Loaded } from "jazz-tools";
+const Task = co.map({
+  title: z.string(),
+});
 
-const taskId = "co_123" as ID<Task>;
+const taskId = "co_123";
 // ---cut-before---
-Task.subscribe(taskId, (task) => {
+Task.subscribe(taskId, {}, (task: Loaded<typeof Task>) => {
   if (task === undefined) {
     console.log("Task is loading...");
   } else if (task === null) {
@@ -248,27 +249,25 @@ Resolve queries let you declare exactly which references to load and how deep to
 
 <CodeGroup>
 ```ts twoslash
-import { ID, CoMap, coField, CoList } from "jazz-tools";
-const projectId = "co_123" as ID<Project>;
+import { co, z, CoListSchema } from "jazz-tools";
+const projectId = "co_123";
 
 // ---cut-before---
-class Project extends CoMap {
-  name = coField.string;
-  tasks = coField.ref(ListOfTasks);
-  owner = coField.ref(TeamMember);
-}
+const TeamMember = co.map({
+  name: z.string(),
+});
 
-class Task extends CoMap {
-  title = coField.string;
-  subtasks = coField.ref(ListOfTasks);
-  assignee = coField.optional.ref(TeamMember);
-}
+const Task = co.map({
+  title: z.string(),
+  assignee: z.optional(TeamMember),
+  get subtasks(): CoListSchema<typeof Task> { return co.list(Task) },
+});
 
-class TeamMember extends CoMap {
-  name = coField.string;
-}
-
-class ListOfTasks extends CoList.Of(coField.ref(Task)) {}
+const Project = co.map({
+  name: z.string(),
+  tasks: co.list(Task),
+  owner: TeamMember,
+});
 
 // Load just the project, not its references
 const project = await Project.load(projectId);
@@ -349,28 +348,26 @@ When loading data with references, the load operation will fail if one of the re
 When a user tries to load a reference they don't have access to:
 
 <CodeGroup>
-```typescript twoslash
-import { ID, CoMap, coField, CoList } from "jazz-tools";
+```ts twoslash
+import { co, z, CoListSchema } from "jazz-tools";
 
-class Project extends CoMap {
-  name = coField.string;
-  tasks = coField.ref(ListOfTasks);
-  owner = coField.ref(TeamMember);
-}
+const TeamMember = co.map({
+  name: z.string(),
+});
 
-class Task extends CoMap {
-  title = coField.string;
-  subtasks = coField.ref(ListOfTasks);
-  assignee = coField.optional.ref(TeamMember);
-}
+const Task = co.map({
+  title: z.string(),
+  assignee: z.optional(TeamMember),
+  get subtasks(): CoListSchema<typeof Task> { return co.list(Task) },
+});
 
-class TeamMember extends CoMap {
-  name = coField.string;
-}
+const Project = co.map({
+  name: z.string(),
+  tasks: co.list(Task),
+  owner: TeamMember,
+});
 
-class ListOfTasks extends CoList.Of(coField.ref(Task)) {}
-
-const taskId = "co_123" as ID<Task>;
+const taskId = "co_123";
 
 // ---cut-before---
 // If assignee is not accessible to the user:
@@ -390,28 +387,26 @@ The behavior is the same for optional and required references.
 When a list contains references to items the user can't access:
 
 <CodeGroup>
-```typescript twoslash
-import { ID, CoMap, coField, CoList } from "jazz-tools";
+```ts twoslash
+import { co, z, CoListSchema } from "jazz-tools";
 
-class Project extends CoMap {
-  name = coField.string;
-  tasks = coField.ref(ListOfTasks);
-  owner = coField.ref(TeamMember);
-}
+const TeamMember = co.map({
+  name: z.string(),
+});
 
-class Task extends CoMap {
-  title = coField.string;
-  subtasks = coField.ref(ListOfTasks);
-  assignee = coField.optional.ref(TeamMember);
-}
+const Task = co.map({
+  title: z.string(),
+  assignee: z.optional(TeamMember),
+  get subtasks(): CoListSchema<typeof Task> { return co.list(Task) },
+});
 
-class TeamMember extends CoMap {
-  name = coField.string;
-}
+const Project = co.map({
+  name: z.string(),
+  tasks: co.list(Task),
+  owner: TeamMember,
+});
 
-class ListOfTasks extends CoList.Of(coField.ref(Task)) {}
-
-const projectId = "co_123" as ID<Project>;
+const projectId = "co_123";
 // ---cut-before---
 // If any item in the list is not accessible:
 const project = await Project.load(projectId, {
@@ -428,28 +423,26 @@ If any item in a list is inaccessible to the user, the entire load operation wil
 When trying to load an object with an inaccessible reference without directly resolving it:
 
 <CodeGroup>
-```typescript twoslash
-import { ID, CoMap, coField, CoList } from "jazz-tools";
+```ts twoslash
+import { co, z, CoListSchema } from "jazz-tools";
 
-class Project extends CoMap {
-  name = coField.string;
-  tasks = coField.ref(ListOfTasks);
-  owner = coField.ref(TeamMember);
-}
+const TeamMember = co.map({
+  name: z.string(),
+});
 
-class Task extends CoMap {
-  title = coField.string;
-  subtasks = coField.ref(ListOfTasks);
-  assignee = coField.optional.ref(TeamMember);
-}
+const Task = co.map({
+  title: z.string(),
+  assignee: z.optional(TeamMember),
+  get subtasks(): CoListSchema<typeof Task> { return co.list(Task) },
+});
 
-class TeamMember extends CoMap {
-  name = coField.string;
-}
+const Project = co.map({
+  name: z.string(),
+  tasks: co.list(Task),
+  owner: TeamMember,
+});
 
-class ListOfTasks extends CoList.Of(coField.ref(Task)) {}
-
-const projectId = "co_123" as ID<Project>;
+const projectId = "co_123";
 // ---cut-before---
 const project = await Project.load(projectId, {
   resolve: true
@@ -474,21 +467,24 @@ This is especially useful when in your app access to these items might be revoke
 This way the inaccessible items are replaced with `null` in the returned list.
 
 <CodeGroup>
-```typescript twoslash
-import { ID, CoMap, CoList, co, Group, Account } from "jazz-tools";
-import { assert } from "vitest";
+```ts twoslash
+import { co, z, CoListSchema, Group } from "jazz-tools";
+import { createJazzTestAccount } from "jazz-tools/testing";
 
-class Person extends CoMap {
-  name = co.string;
-}
-class Friends extends CoList.Of(co.ref(Person)) {}
+const me = await createJazzTestAccount();
+const account2 = await createJazzTestAccount();
 
-const privateGroup = Group.create();
-const publicGroup = Group.create();
-const me = {} as unknown as Account;
+const Person = co.map({
+  name: z.string(),
+});
+
+const Friends = co.list(Person);
+
+const privateGroup = Group.create({ owner: account2 });
+const publicGroup = Group.create({ owner: me });
 
 // ---cut-before---
-const source = Friends.create(
+const source = co.list(Person).create(
   [
     Person.create(
       {
@@ -506,7 +502,7 @@ const source = Friends.create(
   publicGroup,
 );
 
-const friends = await Friends.load(source.id, {
+const friends = await co.list(Person).load(source.id, {
   resolve: {
     $each: { $onError: null }
   },
@@ -515,47 +511,47 @@ const friends = await Friends.load(source.id, {
 
 // Thanks to $onError catching the errors, the list is loaded
 // because we have access to friends
-friends // => Friends
-
-assert(friends);
+console.log(friends); // Person[]
 
 // Jane is null because we lack access rights
 // and we have used $onError to catch the error on the list items
-friends[0] // => null
+console.log(friends?.[0]); // null
 
 // Alice is not null because we have access
 // the type is nullable because we have used $onError
-friends[1] // => Person
+console.log(friends?.[1]); // Person
 ```
 </CodeGroup>
 
-The `$onError` works as a "catch" clause option to block any error in the resolved childs.
+The `$onError` works as a "catch" clause option to block any error in the resolved children.
 
 <CodeGroup>
-```typescript twoslash
-import { ID, CoMap, CoList, co, Group, Account } from "jazz-tools";
-import { assert } from "vitest";
+```ts twoslash
+import { createJazzTestAccount } from "jazz-tools/testing";
+const me = await createJazzTestAccount();
+const account2 = await createJazzTestAccount();
 
-class Person extends CoMap {
-  name = co.string;
-  dog = co.ref(Dog);
-}
-class Dog extends CoMap {
-  name = co.string;
-}
-class Friends extends CoList.Of(co.ref(Person)) {}
+import { Group, co, z } from "jazz-tools";
 
-class User extends CoMap {
-  name = co.string;
-  friends = co.ref(Friends);
-}
+const Dog = co.map({
+  name: z.string(),
+});
 
-const privateGroup = Group.create();
-const publicGroup = Group.create();
-const me = {} as unknown as Account;
+const Person = co.map({
+  name: z.string(),
+  dog: Dog,
+});
+
+const User = co.map({
+  name: z.string(),
+  friends: co.list(Person),
+});
+
+const privateGroup = Group.create({ owner: account2 });
+const publicGroup = Group.create({ owner: me });
 
 // ---cut-before---
-const source = Friends.create(
+const source = co.list(Person).create(
   [
     Person.create(
       {
@@ -571,47 +567,47 @@ const source = Friends.create(
   publicGroup,
 );
 
-const friends = await Friends.load(source.id, {
+const friends = await co.list(Person).load(source.id, {
   resolve: {
     $each: { dog: true, $onError: null }
   },
   loadAs: me,
 });
 
-assert(friends);
-
 // Jane is null because we don't have access to Rex
 // and we have used $onError to catch the error on the list items
-friends[0] // => null
+console.log(friends?.[0]); // null
 ```
 </CodeGroup>
 
 We can actually use `$onError` everywhere in the resolve query, so we can use it to catch the error on dog:
 
 <CodeGroup>
-```typescript twoslash
-import { ID, CoMap, CoList, co, Group, Account } from "jazz-tools";
-import { assert } from "vitest";
+```ts twoslash
+import { createJazzTestAccount } from "jazz-tools/testing";
+const me = await createJazzTestAccount();
+const account2 = await createJazzTestAccount();
 
-class Person extends CoMap {
-  name = co.string;
-  dog = co.ref(Dog);
-}
-class Dog extends CoMap {
-  name = co.string;
-}
-class Friends extends CoList.Of(co.ref(Person)) {}
+import { co, z, Group } from "jazz-tools";
 
-class User extends CoMap {
-  name = co.string;
-  friends = co.ref(Friends);
-}
+const Dog = co.map({
+  name: z.string(),
+});
 
-const privateGroup = Group.create();
-const publicGroup = Group.create();
-const me = {} as unknown as Account;
+const Person = co.map({
+  name: z.string(),
+  dog: Dog,
+});
 
-const source = Friends.create(
+const User = co.map({
+  name: z.string(),
+  friends: co.list(Person),
+});
+
+const privateGroup = Group.create({ owner: account2 });
+const publicGroup = Group.create({ owner: me });
+
+const source = co.list(Person).create(
   [
     Person.create(
       {
@@ -628,71 +624,71 @@ const source = Friends.create(
 );
 
 // ---cut-before---
-const friends = await Friends.load(source.id, {
+const friends = await co.list(Person).load(source.id, {
   resolve: {
     $each: { dog: { $onError: null } }
   },
   loadAs: me,
 });
 
-assert(friends);
-
 // Jane now is not-nullable at type level because
 // we have moved $onError down to the dog field
 //
 // This also means that if we don't have access to Jane
 // the entire friends list will be null
-friends[0] // => Person
+console.log(friends?.[0]); // => Person
 
 // Jane's dog is null because we don't have access to Rex
 // and we have used $onError to catch the error
-friends[0].dog // => null
+console.log(friends?.[0]?.dog); // => null
 ```
 </CodeGroup>
 
-## Type Safety with Resolved Type
+## Type Safety with Loaded Type
 
-Jazz provides the `Resolved` type to help you define and enforce the structure of deeply loaded data in your application. This makes it easier to ensure that components receive the data they expect with proper TypeScript validation.
+Jazz provides the `Loaded` type to help you define and enforce the structure of deeply loaded data in your application. This makes it easier to ensure that components receive the data they expect with proper TypeScript validation.
 
-The `Resolved` type is especially useful when passing data between components, as it guarantees that all necessary nested data has been loaded:
+The `Loaded` type is especially useful when passing data between components, as it guarantees that all necessary nested data has been loaded:
 
 <ContentByFramework framework="react">
 <CodeGroup>
 ```tsx twoslash
+import { CoListSchema, Loaded, co, z } from "jazz-tools";
 import React from "react";
-import { ID, CoMap, coField, CoList, Resolved } from "jazz-tools";
 
-class Project extends CoMap {
-  name = coField.string;
-  tasks = coField.ref(ListOfTasks);
-  owner = coField.ref(TeamMember);
-}
+const TeamMember = co.map({
+  name: z.string(),
+});
 
-class Task extends CoMap {
-  title = coField.string;
-  subtasks = coField.ref(ListOfTasks);
-  assignee = coField.optional.ref(TeamMember);
-}
+const Task = co.map({
+  title: z.string(),
+  assignee: z.optional(TeamMember),
+  get subtasks(): CoListSchema<typeof Task> {
+    return co.list(Task);
+  },
+});
 
-class TeamMember extends CoMap {
-  name = coField.string;
-}
-
-class ListOfTasks extends CoList.Of(coField.ref(Task)) {}
-
+const Project = co.map({
+  name: z.string(),
+  tasks: co.list(Task),
+  owner: TeamMember,
+});
 
 // ---cut-before---
-// Define a type that includes resolved nested data
-type ProjectWithTasks = Resolved<Project, {
-  tasks: { $each: true }
-}>;
+// Define a type that includes loaded nested data
+type ProjectWithTasks = Loaded<
+  typeof Project,
+  {
+    tasks: { $each: true };
+  }
+>;
 
-// Component that expects a fully resolved project
+// Component that expects a fully loaded project
 function TaskList({ project }: { project: ProjectWithTasks }) {
   // TypeScript knows tasks are loaded, so this is type-safe
   return (
     <ul>
-      {project.tasks.map(task => (
+      {project.tasks.map((task) => (
         <li key={task.id}>{task.title}</li>
       ))}
     </ul>
@@ -700,26 +696,30 @@ function TaskList({ project }: { project: ProjectWithTasks }) {
 }
 
 // For more complex resolutions
-type FullyLoadedProject = Resolved<Project, {
-  tasks: {
-    $each: {
-      subtasks: true,
-      assignee: true
-    }
-  },
-  owner: true
-}>;
+type FullyLoadedProject = Loaded<
+  typeof Project,
+  {
+    tasks: {
+      $each: {
+        subtasks: true;
+        assignee: true;
+      };
+    };
+    owner: true;
+  }
+>;
 
-// Function that requires deeply resolved data
+// Function that requires deeply loaded data
 function processProject(project: FullyLoadedProject) {
-  // Safe access to all resolved properties
+  // Safe access to all loaded properties
   console.log(`Project ${project.name} owned by ${project.owner.name}`);
 
-  project.tasks.forEach(task => {
+  project.tasks.forEach((task) => {
     console.log(`Task: ${task.title}, Assigned to: ${task.assignee?.name}`);
     console.log(`Subtasks: ${task.subtasks.length}`);
   });
 }
+
 ```
 </CodeGroup>
 </ContentByFramework>
@@ -727,59 +727,62 @@ function processProject(project: FullyLoadedProject) {
 <ContentByFramework framework="vanilla">
 <CodeGroup>
 ```ts twoslash
-import { ID, CoMap, coField, CoList, Resolved } from "jazz-tools";
+import { CoListSchema, Loaded, co, z } from "jazz-tools";
 
-class Project extends CoMap {
-  name = coField.string;
-  tasks = coField.ref(ListOfTasks);
-  owner = coField.ref(TeamMember);
-}
+const TeamMember = co.map({
+  name: z.string(),
+});
 
-class Task extends CoMap {
-  title = coField.string;
-  subtasks = coField.ref(ListOfTasks);
-  assignee = coField.optional.ref(TeamMember);
-}
+const Task = co.map({
+  title: z.string(),
+  assignee: z.optional(TeamMember),
+  get subtasks(): CoListSchema<typeof Task> {
+    return co.list(Task);
+  },
+});
 
-class TeamMember extends CoMap {
-  name = coField.string;
-}
-
-class ListOfTasks extends CoList.Of(coField.ref(Task)) {}
-
+const Project = co.map({
+  name: z.string(),
+  tasks: co.list(Task),
+  owner: TeamMember,
+});
 
 // ---cut-before---
-// Define a type that includes resolved nested data
-type ProjectWithTasks = Resolved<Project, {
-  tasks: { $each: true }
-}>;
+// Define a type that includes loaded nested data
+type ProjectWithTasks = Loaded<
+  typeof Project,
+  {
+    tasks: { $each: true };
+  }
+>;
 
-// Function that expects resolved data
-async function taskList({project}: {project: ProjectWithTasks}) {
+// Function that expects loaded data
+async function taskList({ project }: { project: ProjectWithTasks }) {
   // TypeScript knows tasks are loaded, so this is type-safe
-  return project.tasks
-    .map(task => task.title)
-    .join(`\n - `);
+  return project.tasks.map((task) => task.title).join(`\n - `);
 }
 
 // For more complex resolutions
-type FullyLoadedProject = Resolved<Project, {
-  tasks: {
-    $each: {
-      title: true,
-      subtasks: true,
-      assignee: true
-    }
-  },
-  owner: true
-}>;
+type FullyLoadedProject = Loaded<
+  typeof Project,
+  {
+    tasks: {
+      $each: {
+        title: true;
+        subtasks: true;
+        assignee: true;
+      };
+    };
+    owner: true;
+  }
+>;
 
-// Function that requires deeply resolved data
+// Function that requires deeply loaded data
 function processProject(project: FullyLoadedProject) {
-  // Safe access to all resolved properties
+  // Safe access to all loaded properties
   console.log(`Project ${project.name} owned by ${project.owner.name}`);
 
-  project.tasks.forEach(task => {
+  project.tasks.forEach((task) => {
     console.log(`Task: ${task.title}, Assigned to: ${task.assignee?.name}`);
     console.log(`Subtasks: ${task.subtasks.length}`);
   });
@@ -788,7 +791,7 @@ function processProject(project: FullyLoadedProject) {
 </CodeGroup>
 </ContentByFramework>
 
-Using the `Resolved` type helps catch errors at compile time rather than runtime, ensuring that your components and functions receive data with the proper resolution depth. This is especially useful for larger applications where data is passed between many components.
+Using the `Loaded` type helps catch errors at compile time rather than runtime, ensuring that your components and functions receive data with the proper resolution depth. This is especially useful for larger applications where data is passed between many components.
 
 ## Ensuring Data is Loaded
 
@@ -796,29 +799,29 @@ Sometimes you need to make sure data is loaded before proceeding with an operati
 
 <CodeGroup>
 ```ts twoslash
-import { ID, CoMap, coField, CoList, Resolved } from "jazz-tools";
+import { CoListSchema, Loaded, co, z } from "jazz-tools";
 
-class Project extends CoMap {
-  name = coField.string;
-  tasks = coField.ref(ListOfTasks);
-  owner = coField.ref(TeamMember);
-}
+const TeamMember = co.map({
+  name: z.string(),
+});
 
-class Task extends CoMap {
-  title = coField.string;
-  status = coField.literal("todo", "in-progress", "completed");
-  subtasks = coField.ref(ListOfTasks);
-  assignee = coField.optional.ref(TeamMember);
-}
+const Task = co.map({
+  title: z.string(),
+  status: z.literal(["todo", "in-progress", "completed"]),
+  assignee: z.string().optional(),
+  get subtasks(): CoListSchema<typeof Task> {
+    return co.list(Task);
+  },
+});
 
-class TeamMember extends CoMap {
-  name = coField.string;
-}
-
-class ListOfTasks extends CoList.Of(coField.ref(Task)) {}
+const Project = co.map({
+  name: z.string(),
+  tasks: co.list(Task),
+  owner: TeamMember,
+});
 
 // ---cut-before---
-async function completeAllTasks(projectId: ID<Project>) {
+async function completeAllTasks(projectId: string) {
   // Ensure the project is loaded
   const project = await Project.load(projectId, { resolve: true });
   if (!project) return;
@@ -827,13 +830,13 @@ async function completeAllTasks(projectId: ID<Project>) {
   const loadedProject = await project.ensureLoaded({
     resolve: {
       tasks: {
-        $each: true
-      }
-    }
+        $each: true,
+      },
+    },
   });
 
   // Now we can safely access and modify tasks
-  loadedProject.tasks.forEach(task => {
+  loadedProject.tasks.forEach((task) => {
     task.status = "completed";
   });
 }
@@ -848,7 +851,7 @@ async function completeAllTasks(projectId: ID<Project>) {
 2. **Use framework integrations**: They handle subscription lifecycle automatically
 3. **Clean up subscriptions**: Always store and call the unsubscribe function when you're done
 4. **Handle all loading states**: Check for undefined (loading), null (not found), and success states
-5. **Use the Resolved type**: Add compile-time type safety for components that require specific resolution patterns
+5. **Use the Loaded type**: Add compile-time type safety for components that require specific resolution patterns
 
 ### Finding Unique CoValues with findUnique
 

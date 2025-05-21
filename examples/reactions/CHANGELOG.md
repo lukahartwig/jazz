@@ -1,5 +1,14 @@
 # reactions
 
+## 0.0.98
+
+### Patch Changes
+
+- Updated dependencies [3d1027f]
+- Updated dependencies [c240eed]
+  - jazz-tools@0.14.2
+  - jazz-react@0.14.2
+
 ## 0.0.97
 
 ### Patch Changes

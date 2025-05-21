@@ -2177,10 +2177,10 @@ importers:
         specifier: workspace:0.14.1
         version: link:../cojson
       jazz-browser:
-        specifier: workspace:0.14.1
+        specifier: workspace:0.14.2
         version: link:../jazz-browser
       jazz-tools:
-        specifier: workspace:0.14.1
+        specifier: workspace:0.14.2
         version: link:../jazz-tools
     devDependencies:
       typescript:
@@ -2256,10 +2256,10 @@ importers:
         specifier: ^4.1.0
         version: 4.1.0
       jazz-browser:
-        specifier: workspace:0.14.1
+        specifier: workspace:0.14.2
         version: link:../jazz-browser
       jazz-tools:
-        specifier: workspace:0.14.1
+        specifier: workspace:0.14.2
         version: link:../jazz-tools
       pica:
         specifier: ^9.0.1
@@ -2417,16 +2417,16 @@ importers:
         specifier: workspace:0.14.1
         version: link:../cojson
       jazz-browser:
-        specifier: workspace:0.14.1
+        specifier: workspace:0.14.2
         version: link:../jazz-browser
       jazz-browser-media-images:
-        specifier: workspace:0.14.1
+        specifier: workspace:0.14.2
         version: link:../jazz-browser-media-images
       jazz-react-core:
-        specifier: workspace:0.14.1
+        specifier: workspace:0.14.2
         version: link:../jazz-react-core
       jazz-tools:
-        specifier: workspace:0.14.1
+        specifier: workspace:0.14.2
         version: link:../jazz-tools
     devDependencies:
       '@testing-library/dom':
@@ -2762,7 +2762,7 @@ importers:
         specifier: ^3.6.5
         version: 3.11.9
       jazz-tools:
-        specifier: workspace:0.14.1
+        specifier: workspace:0.14.2
         version: link:../jazz-tools
       ws:
         specifier: ^8.14.2
