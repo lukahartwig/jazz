@@ -1,5 +1,5 @@
 import { createImage, useAccount, useCoState } from "jazz-react";
-import { Account, Loaded, co } from "jazz-tools";
+import { Account, co } from "jazz-tools";
 import { useState } from "react";
 import { Chat, Message } from "./schema.ts";
 import {
@@ -91,7 +91,7 @@ export function ChatScreen(props: { chatID: string }) {
 
 function ChatBubble(props: {
   me: Account;
-  msg: Loaded<typeof Message, { text: true }>;
+  msg: co.loaded<typeof Message, { text: true }>;
 }) {
   if (!props.me.canRead(props.msg) || !props.msg.text?.toString()) {
     return (
