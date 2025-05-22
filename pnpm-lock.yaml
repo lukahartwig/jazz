@@ -23,6 +23,7 @@ overrides:
   react: 18.3.1
   react-dom: 18.3.1
   esbuild: 0.24.0
+  zod: npm:@garden-co/zod-v4-rn-patch@3.25.7
 
 patchedDependencies:
   expo-router:
@@ -200,8 +201,8 @@ importers:
         specifier: 18.3.1
         version: 18.3.1(react@18.3.1)
       zod:
-        specifier: 4.0.0-beta.20250505T012514
-        version: 4.0.0-beta.20250505T012514
+        specifier: npm:@garden-co/zod-v4-rn-patch@3.25.7
+        version: '@garden-co/zod-v4-rn-patch@3.25.7'
     devDependencies:
       '@playwright/test':
         specifier: ^1.50.1
@@ -2215,8 +2216,8 @@ importers:
         specifier: workspace:*
         version: link:../jazz-tools
       zod:
-        specifier: 3.25.0-beta.20250518T002810
-        version: 3.25.0-beta.20250518T002810
+        specifier: npm:@garden-co/zod-v4-rn-patch@3.25.7
+        version: '@garden-co/zod-v4-rn-patch@3.25.7'
     devDependencies:
       '@types/better-sqlite3':
         specifier: ^7.6.12
@@ -2863,8 +2864,8 @@ importers:
         specifier: ^3.2.0
         version: 3.2.0
       zod:
-        specifier: 3.25.0-beta.20250518T002810
-        version: 3.25.0-beta.20250518T002810
+        specifier: npm:@garden-co/zod-v4-rn-patch@3.25.7
+        version: '@garden-co/zod-v4-rn-patch@3.25.7'
     devDependencies:
       tsup:
         specifier: 8.3.5
@@ -4749,6 +4750,9 @@ packages:
 
   '@formkit/auto-animate@0.8.2':
     resolution: {integrity: sha512-SwPWfeRa5veb1hOIBMdzI+73te5puUBHmqqaF1Bu7FjvxlYSz/kJcZKSa9Cg60zL0uRNeJL2SbRxV6Jp6Q1nFQ==}
+
+  '@garden-co/zod-v4-rn-patch@3.25.7':
+    resolution: {integrity: sha512-GpV4YndJ8FGXt2TBf613O5xkW6cNVp001v0U6OR+sOdYZrr/EkV2GJiwtfcpDcQvn2UiTAARjXDtQqrxt/SmYQ==}
 
   '@hapi/hoek@9.3.0':
     resolution: {integrity: sha512-/c6rf4UJlmHlC9b5BaNvzAcFv7HZ2QHaV0D4/HNlBdvFnvQq8RI4kYdhyPCl7Xj+oWvTWQ8ujhqS53LIgAe6KQ==}
@@ -7551,9 +7555,6 @@ packages:
   '@zip.js/zip.js@2.7.54':
     resolution: {integrity: sha512-qMrJVg2hoEsZJjMJez9yI2+nZlBUxgYzGV3mqcb2B/6T1ihXp0fWBDYlVHlHquuorgNUQP5a8qSmX6HF5rFJNg==}
     engines: {bun: '>=0.7.0', deno: '>=1.0.0', node: '>=16.5.0'}
-
-  '@zod/core@0.11.4':
-    resolution: {integrity: sha512-ezfAaaxgjSXZw9sH5QJ4/uqFmg8PbwBFtdSlzz1OoXWcSUR4fj4meS491+lk9ZGxCymjJ/pbOSu7nzcxvHtG0g==}
 
   '@zxcvbn-ts/core@3.0.4':
     resolution: {integrity: sha512-aQeiT0F09FuJaAqNrxynlAwZ2mW/1MdXakKWNmGM1Qp/VaY6CnB/GfnMS2T8gB2231Esp1/maCWd8vTG4OuShw==}
@@ -14582,21 +14583,6 @@ packages:
     resolution: {integrity: sha512-RvEsa3W/NCqEBMtnoE09GRVelA3IqRcKaijEiM6CEGsD19qLurf0HjrYMHwOqImOszlLL0ja63DPJeeU4pm7oQ==}
     engines: {node: '>=20'}
 
-  zod@3.22.3:
-    resolution: {integrity: sha512-EjIevzuJRiRPbVH4mGc8nApb/lVLKVpmUhAaR5R5doKGfAnGJ6Gr3CViAVjP+4FWSxCsybeWQdcgCtbX+7oZug==}
-
-  zod@3.24.3:
-    resolution: {integrity: sha512-HhY1oqzWCQWuUqvBFnsyrtZRhyPeR7SUGv+C4+MsisMuVfSPx8HpwWqH8tRahSlt6M3PiFAcoeFhZAqIXTxoSg==}
-
-  zod@3.24.4:
-    resolution: {integrity: sha512-OdqJE9UDRPwWsrHjLN2F8bPxvwJBK22EHLWtanu0LSYr5YqzsaaW3RMgmjwr8Rypg5k+meEJdSPXJZXE/yqOMg==}
-
-  zod@3.25.0-beta.20250518T002810:
-    resolution: {integrity: sha512-3/aIqMbUXG9EjTelJkDcWd+izJP5MxFgQEMSYI8n41pwYhRDYYxy2dnbkgfNcnLbFZ9uByZn9XXqHTh05QHqSQ==}
-
-  zod@4.0.0-beta.20250505T012514:
-    resolution: {integrity: sha512-b9Oif/j2uIFuimTO3xqTZP71cfNcv49G7sSDF8wp4+MH2tSCDgRDy5RKEMbLtD0LTrmGznL/gYqqDW7U80PudA==}
-
 snapshots:
 
   '@0no-co/graphql.web@1.0.12(graphql@16.11.0)':
@@ -17182,6 +17168,8 @@ snapshots:
 
   '@formkit/auto-animate@0.8.2': {}
 
+  '@garden-co/zod-v4-rn-patch@3.25.7': {}
+
   '@hapi/hoek@9.3.0': {}
 
   '@hapi/topo@5.1.0':
@@ -19685,7 +19673,7 @@ snapshots:
       '@tanstack/virtual-file-routes': 1.115.0
       prettier: 3.5.3
       tsx: 4.19.3
-      zod: 3.24.4
+      zod: '@garden-co/zod-v4-rn-patch@3.25.7'
     optionalDependencies:
       '@tanstack/react-router': 1.116.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
 
@@ -19707,7 +19695,7 @@ snapshots:
       babel-dead-code-elimination: 1.0.10
       chokidar: 3.6.0
       unplugin: 2.3.2
-      zod: 3.24.4
+      zod: '@garden-co/zod-v4-rn-patch@3.25.7'
     optionalDependencies:
       '@tanstack/react-router': 1.116.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       vite: 6.0.11(@types/node@22.15.18)(jiti@2.4.2)(lightningcss@1.29.2)(terser@5.37.0)(tsx@4.19.3)(yaml@2.6.1)
@@ -20766,8 +20754,6 @@ snapshots:
 
   '@zip.js/zip.js@2.7.54': {}
 
-  '@zod/core@0.11.4': {}
-
   '@zxcvbn-ts/core@3.0.4':
     dependencies:
       fastest-levenshtein: 1.0.16
@@ -21343,7 +21329,7 @@ snapshots:
       jose: 5.10.0
       kysely: 0.27.6
       nanostores: 0.11.4
-      zod: 3.24.3
+      zod: '@garden-co/zod-v4-rn-patch@3.25.7'
 
   better-call@1.0.9:
     dependencies:
@@ -25272,7 +25258,7 @@ snapshots:
       workerd: 1.20250214.0
       ws: 8.18.0
       youch: 3.2.3
-      zod: 3.22.3
+      zod: '@garden-co/zod-v4-rn-patch@3.25.7'
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
@@ -26392,7 +26378,7 @@ snapshots:
       quick-lru: 7.0.0
       url-join: 5.0.0
       validate-npm-package-name: 5.0.1
-      zod: 3.24.4
+      zod: '@garden-co/zod-v4-rn-patch@3.25.7'
       zod-package-json: 1.1.0
 
   query-selector-shadow-dom@1.0.1: {}
@@ -29416,16 +29402,4 @@ snapshots:
 
   zod-package-json@1.1.0:
     dependencies:
-      zod: 3.24.4
-
-  zod@3.22.3: {}
-
-  zod@3.24.3: {}
-
-  zod@3.24.4: {}
-
-  zod@3.25.0-beta.20250518T002810: {}
-
-  zod@4.0.0-beta.20250505T012514:
-    dependencies:
-      '@zod/core': 0.11.4
+      zod: '@garden-co/zod-v4-rn-patch@3.25.7'
