@@ -1,4 +1,4 @@
-export const metadata = { 
+export const metadata = {
   description: "Share CoValues in Jazz through public sharing and invite links. Enable collaboration by granting access to everyone or specific users with different permission levels."
 };
 
@@ -101,7 +101,7 @@ Set up the request system with appropriate access controls.
 
 <CodeGroup>
 ```ts twoslash
-import { co, z, Account, Group, Loaded } from "jazz-tools";
+import { co, z, Group, Account } from "jazz-tools";
 import { createInviteLink } from "jazz-react";
 
 const JoinRequest = co.map({
@@ -120,7 +120,7 @@ function createRequestsToJoin() {
 }
 
 async function sendJoinRequest(
-  requestsList: Loaded<typeof RequestsList>,
+  requestsList: co.loaded<typeof RequestsList>,
   account: Account,
 ) {
   const request = JoinRequest.create(
@@ -142,7 +142,7 @@ Using the write-only access users can submit requests that only administrators c
 
 <CodeGroup>
 ```ts twoslash
-import { co, z, ID, Account, Group, Loaded } from "jazz-tools";
+import { co, z, ID, Account, Group, } from "jazz-tools";
 
 const JoinRequest = co.map({
   account: Account,
@@ -158,7 +158,7 @@ const RequestsToJoin = co.map({
 
 // ---cut-before---
 async function approveJoinRequest(
-  joinRequest: Loaded<typeof JoinRequest, { account: true }>,
+  joinRequest: co.loaded<typeof JoinRequest, { account: true }>,
   targetGroup: Group,
 ) {
   const account = await Account.load(joinRequest._refs.account.id);
