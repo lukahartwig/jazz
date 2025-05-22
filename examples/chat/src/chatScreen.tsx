@@ -90,10 +90,10 @@ export function ChatScreen(props: { chatID: string }) {
 }
 
 function ChatBubble(props: {
-  me: Account;
+  me: Account | null | undefined;
   msg: co.loaded<typeof Message, { text: true }>;
 }) {
-  if (!props.me.canRead(props.msg) || !props.msg.text?.toString()) {
+  if (!props.me?.canRead(props.msg) || !props.msg.text?.toString()) {
     return (
       <BubbleContainer fromMe={false}>
         <BubbleBody fromMe={false}>
