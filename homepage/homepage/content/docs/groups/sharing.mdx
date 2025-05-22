@@ -86,10 +86,10 @@ Create the data models.
 
 <CodeGroup>
 ```ts twoslash
-import { co, z, Account } from "jazz-tools";
+import { co, z } from "jazz-tools";
 // ---cut---
 const JoinRequest = co.map({
-  account: Account,
+  account: co.account,
   status: z.literal(["pending", "approved", "rejected"]),
 });
 
@@ -101,15 +101,16 @@ Set up the request system with appropriate access controls.
 
 <CodeGroup>
 ```ts twoslash
-import { co, z, Group, Account } from "jazz-tools";
-import { createInviteLink } from "jazz-react";
+import { co, z, Group } from "jazz-tools";
 
 const JoinRequest = co.map({
-  account: Account,
+  account: co.account(),
   status: z.literal(["pending", "approved", "rejected"]),
 });
 
 const RequestsList = co.list(JoinRequest);
+const Account = co.account();
+type Account = co.loaded<typeof Account>;
 
 // ---cut-before---
 function createRequestsToJoin() {
@@ -142,7 +143,10 @@ Using the write-only access users can submit requests that only administrators c
 
 <CodeGroup>
 ```ts twoslash
-import { co, z, ID, Account, Group, } from "jazz-tools";
+import { co, z, Group, } from "jazz-tools";
+
+const Account = co.account();
+type Account = co.loaded<typeof Account>;
 
 const JoinRequest = co.map({
   account: Account,
