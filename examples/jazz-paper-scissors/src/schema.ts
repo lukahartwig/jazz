@@ -1,65 +1,56 @@
-import { Account, CoMap, co } from "jazz-tools";
+import { co, z } from "jazz-tools";
 
-export class Game extends CoMap {
-  player1 = co.ref(Player);
-  player2? = co.ref(Player);
-  outcome? = co.literal("player1", "player2", "draw");
-  player1Score = co.number;
-  player2Score = co.number;
+export const Player = co.map({
+  account: co.account(),
+  playSelection: z.optional(z.literal(["rock", "paper", "scissors"])),
+});
+export type Player = co.loaded<typeof Player>;
 
-  /**
-   * Given a player, returns the opponent in the current game.
-   */
-  getOpponent(player: Player) {
-    // TODO: player may be unrelated to this game
-    const opponent =
-      player.account?.id === this.player1?.account?.id
-        ? this.player2
-        : this.player1;
+export const Game = co.map({
+  player1: Player,
+  player2: z.optional(Player),
+  outcome: z.optional(z.literal(["player1", "player2", "draw"])),
+  player1Score: z.number(),
+  player2Score: z.number(),
+});
+export type Game = co.loaded<typeof Game>;
 
-    if (!opponent) {
-      throw new Error("Opponent not found");
-    }
+export const WaitingRoom = co.map({
+  account1: co.account(),
+  account2: z.optional(co.account()),
+  game: z.optional(Game),
+});
+export type WaitingRoom = co.loaded<typeof WaitingRoom>;
 
-    return opponent.ensureLoaded({
-      // account: {},
-      resolve: {},
-    });
-  }
-}
+export const PlayIntent = co.map({
+  type: z.literal("play"),
+  gameId: z.string(),
+  player: z.literal(["player1", "player2"]),
+  playSelection: z.literal(["rock", "paper", "scissors"]),
+});
+export type PlayIntent = co.loaded<typeof PlayIntent>;
 
-export class Player extends CoMap {
-  account = co.ref(Account);
-  playSelection? = co.literal("rock", "paper", "scissors");
-}
+export const NewGameIntent = co.map({
+  type: z.literal("newGame"),
+  gameId: z.string(),
+});
+export type NewGameIntent = co.loaded<typeof NewGameIntent>;
 
-export class WaitingRoom extends CoMap {
-  account1 = co.ref(Account);
-  account2 = co.optional.ref(Account);
-  game = co.optional.ref(Game);
-}
+export const CreateGameRequest = co.map({
+  type: z.literal("createGame"),
+});
+export type CreateGameRequest = co.loaded<typeof CreateGameRequest>;
 
-export class InboxMessage extends CoMap {
-  type = co.literal("play", "createGame", "joinGame", "newGame");
-}
+export const JoinGameRequest = co.map({
+  type: z.literal("joinGame"),
+  waitingRoom: WaitingRoom,
+});
+export type JoinGameRequest = co.loaded<typeof JoinGameRequest>;
 
-export class PlayIntent extends InboxMessage {
-  type = co.literal("play");
-  gameId = co.string;
-  player = co.literal("player1", "player2");
-  playSelection = co.literal("rock", "paper", "scissors");
-}
-
-export class NewGameIntent extends InboxMessage {
-  type = co.literal("newGame");
-  gameId = co.string;
-}
-
-export class CreateGameRequest extends InboxMessage {
-  type = co.literal("createGame");
-}
-
-export class JoinGameRequest extends InboxMessage {
-  type = co.literal("joinGame");
-  waitingRoom = co.ref(WaitingRoom);
-}
+export const InboxMessage = z.discriminatedUnion("type", [
+  PlayIntent,
+  NewGameIntent,
+  CreateGameRequest,
+  JoinGameRequest,
+]);
+export type InboxMessage = co.loaded<typeof InboxMessage>;

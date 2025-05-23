@@ -1,40 +1,41 @@
-import { Account, CoList, CoMap, Group, Profile, co } from "jazz-tools";
+import { CoListSchema, Group, co, z } from "jazz-tools";
 
-export class PasswordItem extends CoMap {
-  name = co.string;
-  username = co.optional.string;
-  username_input_selector = co.optional.string;
-  password = co.string;
-  password_input_selector = co.optional.string;
-  uri = co.optional.string;
-  folder = co.ref(Folder);
-  deleted = co.boolean;
-}
+export const PasswordItem = co.map({
+  name: z.string(),
+  username: z.optional(z.string()),
+  username_input_selector: z.optional(z.string()),
+  password: z.string(),
+  password_input_selector: z.optional(z.string()),
+  uri: z.optional(z.string()),
+  get folder() {
+    return Folder;
+  },
+  deleted: z.boolean(),
+});
 
-export class PasswordList extends CoList.Of(co.ref(PasswordItem)) {}
+export const Folder = co.map({
+  name: z.string(),
+  get items(): CoListSchema<typeof PasswordItem> {
+    return co.list(PasswordItem);
+  },
+});
 
-export class Folder extends CoMap {
-  name = co.string;
-  items = co.ref(PasswordList);
-}
+export const PasswordManagerAccountRoot = co.map({
+  folders: co.list(Folder),
+});
 
-export class FolderList extends CoList.Of(co.ref(Folder)) {}
-
-export class PasswordManagerAccountRoot extends CoMap {
-  folders = co.ref(FolderList);
-}
-
-export class PasswordManagerAccount extends Account {
-  profile = co.ref(Profile);
-  root = co.ref(PasswordManagerAccountRoot);
-
-  migrate() {
-    if (!this._refs.root) {
-      const group = Group.create({ owner: this });
+export const PasswordManagerAccount = co
+  .account({
+    profile: co.profile(),
+    root: PasswordManagerAccountRoot,
+  })
+  .withMigration(async (account) => {
+    if (!account.root) {
+      const group = Group.create({ owner: account });
       const firstFolder = Folder.create(
         {
           name: "Default",
-          items: PasswordList.create([], { owner: group }),
+          items: co.list(PasswordItem).create([], { owner: group }),
         },
         { owner: group },
       );
@@ -67,14 +68,13 @@ export class PasswordManagerAccount extends Account {
         ),
       );
 
-      this.root = PasswordManagerAccountRoot.create(
+      account.root = PasswordManagerAccountRoot.create(
         {
-          folders: FolderList.create([firstFolder], {
-            owner: this,
+          folders: co.list(Folder).create([firstFolder], {
+            owner: account,
           }),
         },
-        { owner: this },
+        { owner: account },
       );
     }
-  }
-}
+  });

@@ -10,7 +10,6 @@ import { WORKER_ID } from "@/constants";
 import { Game, NewGameIntent, PlayIntent } from "@/schema";
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { experimental_useInboxSender, useCoState } from "jazz-react";
-import { type ID } from "jazz-tools";
 import { Badge, CircleHelp, Scissors, ScrollText } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -30,7 +29,7 @@ const playIcon = (selection: "rock" | "paper" | "scissors" | undefined) => {
 export const Route = createFileRoute("/_authenticated/game/$gameId")({
   component: RouteComponent,
   loader: async ({ context: { me }, params: { gameId } }) => {
-    const game = await Game.load(gameId as ID<Game>, {
+    const game = await Game.load(gameId, {
       resolve: {
         player1: true,
         player2: true,
@@ -55,7 +54,7 @@ function RouteComponent() {
   >(loaderGame[player]?.playSelection);
   const sendInboxMessage = experimental_useInboxSender(WORKER_ID);
 
-  const game = useCoState(Game, gameId as ID<Game>);
+  const game = useCoState(Game, gameId);
 
   useEffect(() => {
     let gameCompleted = Boolean(loaderGame.outcome);

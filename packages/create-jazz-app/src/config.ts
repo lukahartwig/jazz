@@ -2,7 +2,7 @@ export type Environment = "browser" | "mobile";
 export type Engine = "browser" | "mobile" | "nodejs" | "deno" | "bun";
 export type Framework = "react" | "vue" | "svelte" | "rn";
 export type AuthMethod =
-  | "demo"
+  | "minimal"
   | "passkey"
   | "passphrase"
   | "clerk"
@@ -58,14 +58,14 @@ export type ValidAuth<
 export const configMap: ConfigStructure = {
   browser: {
     browser: {
-      react: { auth: ["demo", "passkey", "passphrase", "clerk"] },
-      vue: { auth: ["demo"] },
+      react: { auth: ["minimal", "passkey", "passphrase", "clerk"] },
+      vue: { auth: ["minimal"] },
       svelte: { auth: ["passkey"] },
     },
   },
   mobile: {
     mobile: {
-      rn: { auth: ["demo", "clerk"] },
+      rn: { auth: ["minimal"] },
     },
   },
 };
@@ -98,8 +98,8 @@ export const frameworkToAuthExamples: Partial<
     repo: "garden-co/jazz/examples/clerk",
     platform: PLATFORM.WEB,
   },
-  "vue-demo-auth": {
-    name: "Demo auth",
+  "vue-minimal-auth": {
+    name: "Anonymous auth",
     repo: "garden-co/jazz/examples/todo-vue",
     platform: PLATFORM.WEB,
   },
@@ -108,9 +108,9 @@ export const frameworkToAuthExamples: Partial<
     repo: "garden-co/jazz/examples/passkey-svelte",
     platform: PLATFORM.WEB,
   },
-  "rn-clerk-auth": {
-    name: "Clerk auth",
-    repo: "garden-co/jazz/examples/chat-rn-expo-clerk",
+  "rn-minimal-auth": {
+    name: "Anonymous auth",
+    repo: "garden-co/jazz/examples/chat-rn-expo",
     platform: PLATFORM.REACT_NATIVE,
   },
 };

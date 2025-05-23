@@ -4,8 +4,6 @@ import { clsx } from "clsx";
 import { useEffect, useRef, useState } from "react";
 import { Icon } from "../atoms/Icon";
 
-// TODO: add tabs feature, and remove CodeExampleTabs
-
 export function CopyButton({
   code,
   size,

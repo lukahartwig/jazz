@@ -1,6 +1,8 @@
 import { CodeGroup, ContentByFramework } from "@/components/forMdx";
 
-export const metadata = { title: "CoMaps" };
+export const metadata = {
+  description: "CoMaps are key-value objects that work like JavaScript objects. Best for structured data that needs type validation."
+};
 
 # CoMaps
 
@@ -8,31 +10,53 @@ CoMaps are key-value objects that work like JavaScript objects. You can access p
 
 ## Creating CoMaps
 
-CoMaps are typically defined by extending the `CoMap` class and specifying primitive fields using the `co` declarer (see [Defining schemas: CoValues](/docs/schemas/covalues) for more details on primitive fields):
+CoMaps are typically defined with `co.map()` and specifying primitive fields using `z` (see [Defining schemas: CoValues](/docs/schemas/covalues) for more details on primitive fields):
 
 <CodeGroup>
-```ts
-class Project extends CoMap {
-  name = co.string;
-  startDate = co.Date;
-  status = co.literal("planning", "active", "completed");
-  coordinator = co.optional.ref(Member);
-}
+```ts twoslash
+const Member = co.map({
+  name: z.string(),
+});
+// ---cut---
+import { co, z } from "jazz-tools";
+
+const Project = co.map({
+  name: z.string(),
+  startDate: z.date(),
+  status: z.literal(["planning", "active", "completed"]),
+  coordinator: z.optional(Member),
+});
 ```
 </CodeGroup>
 
 You can create either struct-like CoMaps with fixed fields (as above) or record-like CoMaps for key-value pairs:
 
 <CodeGroup>
-```ts
-class Inventory extends CoMap.Record(co.number) {}
+```ts twoslash
+import { co, z } from "jazz-tools";
+// ---cut---
+const Inventory = co.record(z.string(), z.number());
 ```
 </CodeGroup>
 
 To instantiate a CoMap:
 
 <CodeGroup>
-```ts
+```ts twoslash
+import { co, z } from "jazz-tools";
+import { createJazzTestAccount } from 'jazz-tools/testing';
+const me = await createJazzTestAccount();
+const Member = co.map({
+  name: z.string(),
+});
+const Project = co.map({
+  name: z.string(),
+  startDate: z.date(),
+  status: z.literal(["planning", "active", "completed"]),
+  coordinator: z.optional(Member),
+});
+const Inventory = co.record(z.string(), z.number());
+// ---cut---
 const project = Project.create({
   name: "Spring Planting",
   startDate: new Date("2025-03-15"),
@@ -43,7 +67,6 @@ const inventory = Inventory.create({
   tomatoes: 48,
   basil: 12,
 });
-
 ```
 </CodeGroup>
 
@@ -53,21 +76,21 @@ When creating CoMaps, you can specify ownership to control access:
 
 <CodeGroup>
 ```ts twoslash
-import { Group, co, CoMap } from "jazz-tools";
+import { Group, co, z } from "jazz-tools";
 import { createJazzTestAccount } from 'jazz-tools/testing';
 const me = await createJazzTestAccount();
 const memberAccount = await createJazzTestAccount();
 
-class Member extends CoMap {
-  name = co.string;
-}
+const Member = co.map({
+  name: z.string(),
+});
 
-class Project extends CoMap {
-  name = co.string;
-  startDate = co.Date;
-  status = co.literal("planning", "active", "completed");
-  coordinator = co.optional.ref(Member);
-}
+const Project = co.map({
+  name: z.string(),
+  startDate: z.date(),
+  status: z.literal(["planning", "active", "completed"]),
+  coordinator: z.optional(Member),
+});
 
 // ---cut---
 // Create with default owner (current user)
@@ -99,7 +122,27 @@ See [Groups as permission scopes](/docs/groups/intro) for more information on ho
 CoMaps can be accessed using familiar JavaScript object notation:
 
 <CodeGroup>
-```ts
+```ts twoslash
+import { co, z } from "jazz-tools";
+import { createJazzTestAccount } from 'jazz-tools/testing';
+const me = await createJazzTestAccount();
+const Member = co.map({
+  name: z.string(),
+});
+const Project = co.map({
+  name: z.string(),
+  startDate: z.date(),
+  status: z.literal(["planning", "active", "completed"]),
+  coordinator: z.optional(Member),
+});
+const project = Project.create(
+  {
+    name: "Spring Planting",
+    startDate: new Date("2025-03-20"),
+    status: "planning",
+  },
+);
+// ---cut---
 console.log(project.name);      // "Spring Planting"
 console.log(project.status);    // "planning"
 ```
@@ -110,7 +153,27 @@ console.log(project.status);    // "planning"
 Optional fields require checks before access:
 
 <CodeGroup>
-```ts
+```ts twoslash
+import { co, z } from "jazz-tools";
+import { createJazzTestAccount } from 'jazz-tools/testing';
+const me = await createJazzTestAccount();
+const Member = co.map({
+  name: z.string(),
+});
+const Project = co.map({
+  name: z.string(),
+  startDate: z.date(),
+  status: z.literal(["planning", "active", "completed"]),
+  coordinator: z.optional(Member),
+});
+const project = Project.create(
+  {
+    name: "Spring Planting",
+    startDate: new Date("2025-03-20"),
+    status: "planning"
+  },
+);
+// ---cut---
 if (project.coordinator) {
   console.log(project.coordinator.name);  // Safe access
 }
@@ -122,7 +185,12 @@ if (project.coordinator) {
 For record-type CoMaps, you can access values using bracket notation:
 
 <CodeGroup>
-```ts
+```ts twoslash
+import { co, z } from "jazz-tools";
+import { createJazzTestAccount } from 'jazz-tools/testing';
+const me = await createJazzTestAccount();
+const Inventory = co.record(z.string(), z.number());
+// ---cut---
 const inventory = Inventory.create({
   tomatoes: 48,
   peppers: 24,
@@ -138,7 +206,28 @@ console.log(inventory["tomatoes"]);  // 48
 Updating CoMap properties uses standard JavaScript assignment:
 
 <CodeGroup>
-```ts
+```ts twoslash
+import { co, z } from "jazz-tools";
+import { createJazzTestAccount } from 'jazz-tools/testing';
+const me = await createJazzTestAccount();
+const Member = co.map({
+  name: z.string(),
+});
+const Project = co.map({
+  name: z.string(),
+  startDate: z.date(),
+  status: z.literal(["planning", "active", "completed"]),
+  coordinator: z.optional(Member),
+});
+const Inventory = co.record(z.string(), z.number());
+const project = Project.create(
+  {
+    name: "Spring Planting",
+    startDate: new Date("2025-03-20"),
+    status: "planning"
+  },
+);
+// ---cut---
 project.name = "Spring Vegetable Garden";    // Update name
 project.startDate = new Date("2025-03-20");  // Update date
 ```
@@ -149,9 +238,31 @@ project.startDate = new Date("2025-03-20");  // Update date
 CoMaps are fully typed in TypeScript, giving you autocomplete and error checking:
 
 <CodeGroup>
-```ts
+```ts twoslash
+import { co, z } from "jazz-tools";
+import { createJazzTestAccount } from 'jazz-tools/testing';
+const me = await createJazzTestAccount();
+const Member = co.map({
+  name: z.string(),
+});
+const Project = co.map({
+  name: z.string(),
+  startDate: z.date(),
+  status: z.literal(["planning", "active", "completed"]),
+  coordinator: z.optional(Member),
+});
+const Inventory = co.record(z.string(), z.number());
+const project = Project.create(
+  {
+    name: "Spring Planting",
+    startDate: new Date("2025-03-20"),
+    status: "planning"
+  },
+);
+// ---cut---
 project.name = "Spring Vegetable Planting";  // ✓ Valid string
-project.startDate = "2025-03-15";  // ✗ Type error: expected Date
+// @errors: 2322
+project.startDate = "2025-03-15"; // ✗ Type error: expected Date
 ```
 </CodeGroup>
 
@@ -161,11 +272,37 @@ project.startDate = "2025-03-15";  // ✗ Type error: expected Date
 You can delete properties from CoMaps:
 
 <CodeGroup>
-```ts
+```ts twoslash
+import { co, z } from "jazz-tools";
+import { createJazzTestAccount } from 'jazz-tools/testing';
+const me = await createJazzTestAccount();
+const Member = co.map({
+  name: z.string(),
+});
+const Project = co.map({
+  name: z.string(),
+  startDate: z.date(),
+  status: z.literal(["planning", "active", "completed"]),
+  coordinator: z.optional(Member),
+});
+const Inventory = co.record(z.string(), z.number());
+const project = Project.create(
+  {
+    name: "Spring Planting",
+    startDate: new Date("2025-03-20"),
+    status: "planning"
+  },
+);
+const inventory = Inventory.create({
+  tomatoes: 48,
+  peppers: 24,
+  basil: 12
+});
+// ---cut---
 delete inventory["basil"];  // Remove a key-value pair
 
 // For optional fields in struct-like CoMaps
-project.coordinator = null;  // Remove the reference
+project.coordinator = undefined;  // Remove the reference
 ```
 </CodeGroup>
 
@@ -179,40 +316,50 @@ project.coordinator = null;  // Remove the reference
 
 ### Common Patterns
 
-#### Using Computed Properties
+#### Helper methods
 
-CoMaps support computed properties and methods:
+You should define helper methods of CoValue schemas separately, in standalone functions:
 
 <CodeGroup>
-```ts
-class ComputedProject extends CoMap {
-  name = co.string;
-  startDate = co.Date;
-  endDate = co.optional.Date;
+```ts twoslash
+import { createJazzTestAccount } from 'jazz-tools/testing';
+const me = await createJazzTestAccount();
+// ---cut---
+import { co, z, Loaded } from "jazz-tools";
 
-  get isActive() {
-    const now = new Date();
-    return now >= this.startDate && (!this.endDate || now <= this.endDate);
-  }
+const Project = co.map({
+  name: z.string(),
+  startDate: z.date(),
+  endDate: z.optional(z.date()),
+});
+type Project = co.loaded<typeof Project>;
 
-  formatDuration(format: "short" | "full") {
-    const start = this.startDate.toLocaleDateString();
-    if (!this.endDate) {
-      return format === "full"
-        ? `Started on ${start}, ongoing`
-        : `From ${start}`;
-    }
-
-    const end = this.endDate.toLocaleDateString();
-    return format === "full"
-      ? `From ${start} to ${end}`
-      : `${(this.endDate.getTime() - this.startDate.getTime()) / 86400000} days`;
-  }
+export function isProjectActive(project: Project) {
+  const now = new Date();
+  return now >= project.startDate && (!project.endDate || now <= project.endDate);
 }
 
-// ...
+export function formatProjectDuration(project: Project, format: "short" | "full") {
+  const start = project.startDate.toLocaleDateString();
+  if (!project.endDate) {
+    return format === "full"
+        ? `Started on ${start}, ongoing`
+        : `From ${start}`;
+  }
 
-console.log(computedProject.isActive); // false
-console.log(computedProject.formatDuration("short")); // "3 days"
+  const end = project.endDate.toLocaleDateString();
+  return format === "full"
+    ? `From ${start} to ${end}`
+    : `${(project.endDate.getTime() - project.startDate.getTime()) / 86400000} days`;
+}
+
+const project = Project.create({
+  name: "My project",
+  startDate: new Date("2025-04-01"),
+  endDate: new Date("2025-04-04"),
+});
+
+console.log(isProjectActive(project)); // false
+console.log(formatProjectDuration(project, "short")); // "3 days"
 ```
 </CodeGroup>

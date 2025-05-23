@@ -14,9 +14,9 @@ import type {
   SessionID,
   SyncMessage,
 } from "cojson";
-import { SyncManager } from "../syncManager.js";
+import { StorageManagerAsync as SyncManager } from "../managerAsync.js";
 import { getDependedOnCoValues } from "../syncUtils.js";
-import type { DBClientInterface } from "../types.js";
+import type { DBClientInterfaceAsync as DBClientInterface } from "../types.js";
 import { fixtures } from "./fixtureMessages.js";
 
 type RawCoID = CojsonInternalTypes.RawCoID;
@@ -98,13 +98,7 @@ describe("DB sync manager", () => {
 
       await syncManager.handleSyncMessage(loadMsg);
 
-      expect(syncManager.sendStateMessage).toBeCalledTimes(2);
-      expect(syncManager.sendStateMessage).toBeCalledWith({
-        action: "known",
-        header: true,
-        id: coValueIdToLoad,
-        sessions: {},
-      });
+      expect(syncManager.sendStateMessage).toBeCalledTimes(1);
       expect(syncManager.sendStateMessage).toBeCalledWith({
         action: "content",
         header: expect.objectContaining({
@@ -113,78 +107,6 @@ describe("DB sync manager", () => {
         }),
         id: coValueIdToLoad,
         new: {},
-        priority: 0,
-      });
-    });
-
-    test("Sends both known and content messages when we have new sessions info for the requested coValue ", async () => {
-      const loadMsg = createEmptyLoadMsg(coValueIdToLoad);
-
-      DBClient.prototype.getCoValue.mockResolvedValueOnce({
-        id: coValueIdToLoad,
-        header: coValueHeader,
-        rowID: 3,
-      });
-      DBClient.prototype.getCoValueSessions.mockResolvedValueOnce(sessionsData);
-
-      const newTxData = {
-        newTransactions: [
-          {
-            privacy: "trusting",
-            madeAt: 1732368535089,
-            changes: "",
-          } as CojsonInternalTypes.Transaction,
-        ],
-        after: 0,
-        lastSignature: "signature_z111",
-      } satisfies CojsonInternalTypes.SessionNewContent;
-
-      // mock content data combined with session updates
-      syncManager.handleSessionUpdate = vi.fn(
-        async ({ sessionRow, newContentMessages }) => {
-          newContentMessages[0]!.new[sessionRow.sessionID] = newTxData;
-        },
-      );
-
-      await syncManager.handleSyncMessage(loadMsg);
-
-      expect(syncManager.sendStateMessage).toBeCalledTimes(2);
-
-      expect(syncManager.sendStateMessage).toHaveBeenNthCalledWith(1, {
-        action: "known",
-        header: true,
-        id: coValueIdToLoad,
-        sessions: sessionsData.reduce(
-          (acc, sessionRow) => {
-            acc[sessionRow.sessionID] = sessionRow.lastIdx;
-            return acc;
-          },
-          {} as Record<string, number>,
-        ),
-      });
-
-      expect(syncManager.sendStateMessage).toHaveBeenNthCalledWith(2, {
-        action: "content",
-        header: coValueHeader,
-        id: coValueIdToLoad,
-        new: sessionsData.reduce(
-          (acc, sessionRow) => {
-            acc[sessionRow.sessionID] = {
-              after: expect.any(Number),
-              lastSignature: expect.any(String),
-              newTransactions: expect.any(Array),
-            };
-            return acc;
-          },
-          {} as Record<
-            string,
-            {
-              after: number;
-              lastSignature: string;
-              newTransactions: Transaction[];
-            }
-          >,
-        ),
         priority: 0,
       });
     });
@@ -220,13 +142,7 @@ describe("DB sync manager", () => {
 
       // We send out pairs (known + content) messages only FOUR times - as many as the coValues number
       // and less than amount of interconnected dependencies to loop through in dependenciesTreeWithLoop
-      expect(syncManager.sendStateMessage).toBeCalledTimes(4 * 2);
-
-      const knownExpected = {
-        action: "known",
-        header: true,
-        sessions: {},
-      };
+      expect(syncManager.sendStateMessage).toBeCalledTimes(4);
 
       const contentExpected = {
         action: "content",
@@ -236,37 +152,18 @@ describe("DB sync manager", () => {
       };
 
       expect(syncManager.sendStateMessage).toHaveBeenNthCalledWith(1, {
-        ...knownExpected,
-        id: dependency3,
-        asDependencyOf: coValueIdToLoad,
+        ...contentExpected,
+        id: dependency1,
       });
       expect(syncManager.sendStateMessage).toHaveBeenNthCalledWith(2, {
         ...contentExpected,
         id: dependency3,
       });
       expect(syncManager.sendStateMessage).toHaveBeenNthCalledWith(3, {
-        ...knownExpected,
+        ...contentExpected,
         id: dependency2,
-        asDependencyOf: coValueIdToLoad,
       });
       expect(syncManager.sendStateMessage).toHaveBeenNthCalledWith(4, {
-        ...contentExpected,
-        id: dependency2,
-      });
-      expect(syncManager.sendStateMessage).toHaveBeenNthCalledWith(5, {
-        ...knownExpected,
-        id: dependency1,
-        asDependencyOf: coValueIdToLoad,
-      });
-      expect(syncManager.sendStateMessage).toHaveBeenNthCalledWith(6, {
-        ...contentExpected,
-        id: dependency1,
-      });
-      expect(syncManager.sendStateMessage).toHaveBeenNthCalledWith(7, {
-        ...knownExpected,
-        id: coValueIdToLoad,
-      });
-      expect(syncManager.sendStateMessage).toHaveBeenNthCalledWith(8, {
         ...contentExpected,
         id: coValueIdToLoad,
       });

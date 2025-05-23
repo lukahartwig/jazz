@@ -78,6 +78,7 @@ export function Cursor({
 
   return (
     <>
+      {/* @ts-expect-error - TODO: invalid after the React 19 upgrade */}
       <animated.g
         transform={to(
           [springs.x, springs.y],
@@ -113,6 +114,7 @@ export function Cursor({
             isOutOfBounds={isStrictlyOutOfBounds}
           />
           {isStrictlyOutOfBounds ? (
+            // @ts-expect-error - TODO: invalid after the React 19 upgrade
             <animated.g
               transform={to(
                 [intersectionSprings.x, intersectionSprings.y],

@@ -1,9 +1,5 @@
-import {
-  JazzClerkAuth,
-  type MinimalClerkClient,
-  isClerkCredentials,
-} from "jazz-auth-clerk";
-import { AuthSecretStorage, KvStoreContext } from "jazz-tools";
+import { JazzClerkAuth, type MinimalClerkClient } from "jazz-auth-clerk";
+import { KvStoreContext } from "jazz-tools";
 import { useEffect, useMemo, useState } from "react";
 import {
   ExpoSecureStoreAdapter,
@@ -40,7 +36,7 @@ function RegisterClerkAuth(props: {
 
 export const JazzProviderWithClerk = (
   props: { clerk: MinimalClerkClient } & JazzProviderProps,
-): JSX.Element | null => {
+) => {
   const [isLoaded, setIsLoaded] = useState(false);
 
   /**

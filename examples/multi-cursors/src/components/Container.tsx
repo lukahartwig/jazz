@@ -1,5 +1,4 @@
 import { useAccount, useCoState } from "jazz-react";
-import { ID } from "jazz-tools";
 import { CursorFeed } from "../schema";
 import { getColor } from "../utils/getColor.ts";
 import { getName } from "../utils/getName";
@@ -29,7 +28,7 @@ function Avatar({
 }
 
 /** A higher order component that wraps the canvas. */
-function Container({ cursorFeedID }: { cursorFeedID: ID<CursorFeed> }) {
+function Container({ cursorFeedID }: { cursorFeedID: string }) {
   const { me } = useAccount();
   const cursors = useCoState(CursorFeed, cursorFeedID, { resolve: true });
 

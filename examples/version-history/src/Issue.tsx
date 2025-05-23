@@ -1,6 +1,7 @@
-import { CoPlainText } from "jazz-tools";
+import { CoPlainText, Loaded } from "jazz-tools";
 import { Issue } from "./schema";
-export function IssueComponent({ issue }: { issue: Issue }) {
+
+export function IssueComponent({ issue }: { issue: Loaded<typeof Issue> }) {
   return (
     <div className="flex flex-col gap-5">
       <label className="flex flex-col gap-2">

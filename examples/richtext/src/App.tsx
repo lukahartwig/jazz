@@ -2,9 +2,12 @@ import { useAccount, useIsAuthenticated } from "jazz-react";
 import { AuthButton } from "./AuthButton.tsx";
 import { Editor } from "./Editor.tsx";
 import { Logo } from "./Logo.tsx";
+import { JazzAccount } from "./schema.ts";
 
 function App() {
-  const { me } = useAccount({ resolve: { profile: true, root: true } });
+  const { me } = useAccount(JazzAccount, {
+    resolve: { profile: true, root: true },
+  });
 
   const isAuthenticated = useIsAuthenticated();
 

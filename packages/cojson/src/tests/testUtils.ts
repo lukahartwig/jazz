@@ -8,12 +8,12 @@ import {
 import { expect, onTestFinished, vi } from "vitest";
 import { ControlledAccount, ControlledAgent } from "../coValues/account.js";
 import { WasmCrypto } from "../crypto/WasmCrypto.js";
-import type {
-  AgentSecret,
-  CoID,
-  CoValueCore,
-  RawAccount,
-  RawCoValue,
+import {
+  type AgentSecret,
+  type CoID,
+  type CoValueCore,
+  type RawAccount,
+  type RawCoValue,
 } from "../exports.js";
 import type { SessionID } from "../ids.js";
 import { LocalNode } from "../localNode.js";
@@ -464,6 +464,7 @@ export function createMockStoragePeer(opts: {
     },
   });
 
+  peer1.role = "storage";
   peer1.priority = 100;
 
   storage.syncManager.addPeer(peer2);

@@ -2,10 +2,17 @@ import { useAccount } from "jazz-react";
 import { Layout } from "./Layout.tsx";
 import { CreateOrganization } from "./components/CreateOrganization.tsx";
 import { Heading } from "./components/Heading.tsx";
+import { JazzAccount } from "./schema";
 
 export function HomePage() {
-  const { me } = useAccount({
-    resolve: { root: { organizations: true } },
+  const { me } = useAccount(JazzAccount, {
+    resolve: {
+      root: {
+        organizations: {
+          $each: { $onError: null },
+        },
+      },
+    },
   });
 
   if (!me?.root.organizations) return;

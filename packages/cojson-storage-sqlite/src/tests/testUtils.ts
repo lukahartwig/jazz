@@ -1,5 +1,5 @@
 import type { LocalNode, SyncMessage } from "cojson";
-import { SyncManager } from "cojson-storage";
+import { StorageManagerSync } from "cojson-storage";
 import { onTestFinished } from "vitest";
 
 export function trackMessages(node: LocalNode) {
@@ -8,10 +8,11 @@ export function trackMessages(node: LocalNode) {
     msg: SyncMessage;
   }[] = [];
 
-  const originalHandleSyncMessage = SyncManager.prototype.handleSyncMessage;
+  const originalHandleSyncMessage =
+    StorageManagerSync.prototype.handleSyncMessage;
   const originalNodeSyncMessage = node.syncManager.handleSyncMessage;
 
-  SyncManager.prototype.handleSyncMessage = async function (msg) {
+  StorageManagerSync.prototype.handleSyncMessage = async function (msg) {
     messages.push({
       from: "client",
       msg,
@@ -28,7 +29,7 @@ export function trackMessages(node: LocalNode) {
   };
 
   const restore = () => {
-    SyncManager.prototype.handleSyncMessage = originalHandleSyncMessage;
+    StorageManagerSync.prototype.handleSyncMessage = originalHandleSyncMessage;
     node.syncManager.handleSyncMessage = originalNodeSyncMessage;
   };
 
@@ -40,4 +41,33 @@ export function trackMessages(node: LocalNode) {
     messages,
     restore,
   };
+}
+export function waitFor(
+  callback: () => boolean | undefined | Promise<boolean | undefined>,
+) {
+  return new Promise<void>((resolve, reject) => {
+    const checkPassed = async () => {
+      try {
+        return { ok: await callback(), error: null };
+      } catch (error) {
+        return { ok: false, error };
+      }
+    };
+
+    let retries = 0;
+
+    const interval = setInterval(async () => {
+      const { ok, error } = await checkPassed();
+
+      if (ok !== false) {
+        clearInterval(interval);
+        resolve();
+      }
+
+      if (++retries > 10) {
+        clearInterval(interval);
+        reject(error);
+      }
+    }, 100);
+  });
 }

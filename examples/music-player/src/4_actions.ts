@@ -1,7 +1,6 @@
 import { getAudioFileData } from "@/lib/audio/getAudioFileData";
-import { FileStream, Group } from "jazz-tools";
+import { FileStream, Group, co } from "jazz-tools";
 import {
-  ListOfTracks,
   MusicTrack,
   MusicTrackWaveform,
   MusicaAccount,
@@ -82,7 +81,7 @@ export async function createNewPlaylist() {
   const playlist = Playlist.create(
     {
       title: "New Playlist",
-      tracks: ListOfTracks.create([], playlistGroup),
+      tracks: co.list(MusicTrack).create([], playlistGroup),
     },
     playlistGroup,
   );

@@ -1,19 +1,18 @@
-import { CoID } from "cojson";
-import { CoValueClass, co } from "../internal.js";
-import { Account } from "./account.js";
-import { CoMap, CoMapInit, Simplify } from "./coMap.js";
-import { Group } from "./group.js";
-import { InboxInvite, InboxRoot } from "./inbox.js";
+import {
+  Account,
+  CoMap,
+  CoMapInit,
+  CoValueClass,
+  Group,
+  Simplify,
+  coField,
+} from "../internal.js";
 
 /** @category Identity & Permissions */
 export class Profile extends CoMap {
-  name = co.string;
-  inbox = co.optional.json<CoID<InboxRoot>>();
-  inboxInvite = co.optional.json<InboxInvite>();
-
-  override get _owner(): Group {
-    return super._owner as Group;
-  }
+  name = coField.string;
+  inbox? = coField.optional.string;
+  inboxInvite? = coField.optional.string;
 
   /**
    * Creates a new profile with the given initial values and owner.

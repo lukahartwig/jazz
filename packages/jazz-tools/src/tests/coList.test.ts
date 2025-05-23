@@ -1,4 +1,3 @@
-import { cojsonInternals } from "cojson";
 import { WasmCrypto } from "cojson/crypto/WasmCrypto";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import {
@@ -6,17 +5,13 @@ import {
   CoList,
   CoMap,
   Group,
-  Resolved,
-  co,
-  createJazzContextFromExistingCredentials,
-  isControlledAccount,
+  coField,
   subscribeToCoValue,
+  z,
 } from "../index.js";
-import { randomSessionProvider } from "../internal.js";
+import { Loaded, co, zodSchemaToCoSchema } from "../internal.js";
 import { createJazzTestAccount, setupJazzTestSync } from "../testing.js";
 import { waitFor } from "./utils.js";
-
-const connectedPeers = cojsonInternals.connectedPeers;
 
 const Crypto = await WasmCrypto.create();
 
@@ -35,7 +30,7 @@ beforeEach(async () => {
 });
 
 describe("Simple CoList operations", async () => {
-  class TestList extends CoList.Of(co.string) {}
+  const TestList = co.list(z.string());
 
   const list = TestList.create(["bread", "butter", "onion"], { owner: me });
 
@@ -50,6 +45,15 @@ describe("Simple CoList operations", async () => {
       "BUTTER",
       "ONION",
     ]);
+  });
+
+  test("list with enum type", () => {
+    const List = co.list(z.enum(["a", "b", "c"]));
+    const list = List.create(["a", "b", "c"]);
+    expect(list.length).toBe(3);
+    expect(list[0]).toBe("a");
+    expect(list[1]).toBe("b");
+    expect(list[2]).toBe("c");
   });
 
   test("Construction with an Account", () => {
@@ -76,11 +80,11 @@ describe("Simple CoList operations", async () => {
     });
 
     test("assignment with ref", () => {
-      class Ingredient extends CoMap {
-        name = co.string;
-      }
+      const Ingredient = co.map({
+        name: z.string(),
+      });
 
-      class Recipe extends CoList.Of(co.ref(Ingredient)) {}
+      const Recipe = co.list(Ingredient);
 
       const recipe = Recipe.create(
         [
@@ -95,12 +99,12 @@ describe("Simple CoList operations", async () => {
       expect(recipe[1]?.name).toBe("margarine");
     });
 
-    test("assign null on a required ref", () => {
-      class Ingredient extends CoMap {
-        name = co.string;
-      }
+    test("assign undefined on a required ref", () => {
+      const Ingredient = co.map({
+        name: z.string(),
+      });
 
-      class Recipe extends CoList.Of(co.ref(Ingredient)) {}
+      const Recipe = co.list(Ingredient);
 
       const recipe = Recipe.create(
         [
@@ -112,18 +116,18 @@ describe("Simple CoList operations", async () => {
       );
 
       expect(() => {
-        recipe[1] = null;
-      }).toThrow("Cannot set required reference 1 to null");
+        recipe[1] = undefined as unknown as Loaded<typeof Ingredient>;
+      }).toThrow("Cannot set required reference 1 to undefined");
 
       expect(recipe[1]?.name).toBe("butter");
     });
 
-    test("assign null on an optional ref", () => {
-      class Ingredient extends CoMap {
-        name = co.string;
-      }
+    test("assign undefined on an optional ref", () => {
+      const Ingredient = co.map({
+        name: z.string(),
+      });
 
-      class Recipe extends CoList.Of(co.optional.ref(Ingredient)) {}
+      const Recipe = co.list(z.optional(Ingredient));
 
       const recipe = Recipe.create(
         [
@@ -134,8 +138,8 @@ describe("Simple CoList operations", async () => {
         { owner: me },
       );
 
-      recipe[1] = null;
-      expect(recipe[1]).toBe(null);
+      recipe[1] = undefined;
+      expect(recipe[1]).toBe(undefined);
     });
 
     test("push", () => {
@@ -269,11 +273,11 @@ describe("Simple CoList operations", async () => {
     });
 
     test("sort list of refs", async () => {
-      class Message extends CoMap {
-        text = co.string;
-      }
+      const Message = co.map({
+        text: z.string(),
+      });
 
-      class Chat extends CoList.Of(co.ref(Message)) {}
+      const Chat = co.list(Message);
 
       const chat = Chat.create(
         [
@@ -316,9 +320,9 @@ describe("Simple CoList operations", async () => {
     });
 
     test("filter + assign to coMap", () => {
-      class TestMap extends CoMap {
-        list = co.ref(TestList);
-      }
+      const TestMap = co.map({
+        list: TestList,
+      });
 
       const map = TestMap.create(
         {
@@ -338,7 +342,7 @@ describe("Simple CoList operations", async () => {
     });
 
     test("filter + assign to CoList", () => {
-      class TestListOfLists extends CoList.Of(co.ref(TestList)) {}
+      const TestListOfLists = co.list(TestList);
 
       const list = TestListOfLists.create(
         [
@@ -361,7 +365,7 @@ describe("Simple CoList operations", async () => {
 
 describe("CoList applyDiff operations", async () => {
   test("applyDiff with primitive values", () => {
-    class StringList extends CoList.Of(co.string) {}
+    const StringList = co.list(z.string());
     const list = StringList.create(["a", "b", "c"], { owner: me });
 
     // Test adding items
@@ -382,12 +386,8 @@ describe("CoList applyDiff operations", async () => {
   });
 
   test("applyDiff with reference values", () => {
-    class NestedItem extends CoList.Of(co.string) {
-      get value() {
-        return this[0];
-      }
-    }
-    class RefList extends CoList.Of(co.ref(NestedItem)) {}
+    const NestedItem = co.list(z.string());
+    const RefList = co.list(NestedItem);
 
     const item1 = NestedItem.create(["item1"], { owner: me });
     const item2 = NestedItem.create(["item2"], { owner: me });
@@ -399,18 +399,18 @@ describe("CoList applyDiff operations", async () => {
     // Test adding reference items
     list.applyDiff([item1, item2, item3]);
     expect(list.length).toBe(3);
-    expect(list[2]?.value).toBe("item3");
+    expect(list[2]?.[0]).toBe("item3");
 
     // Test removing reference items
     list.applyDiff([item1, item3]);
     expect(list.length).toBe(2);
-    expect(list[0]?.value).toBe("item1");
-    expect(list[1]?.value).toBe("item3");
+    expect(list[0]?.[0]).toBe("item1");
+    expect(list[1]?.[0]).toBe("item3");
 
     // Test replacing reference items
     list.applyDiff([item4]);
     expect(list.length).toBe(1);
-    expect(list[0]?.value).toBe("item4");
+    expect(list[0]?.[0]).toBe("item4");
 
     // Test empty list
     list.applyDiff([]);
@@ -418,11 +418,11 @@ describe("CoList applyDiff operations", async () => {
   });
 
   test("applyDiff with refs + filter", () => {
-    class TestMap extends CoMap {
-      type = co.string;
-    }
+    const TestMap = co.map({
+      type: z.string(),
+    });
 
-    class TestList extends CoList.Of(co.ref(TestMap)) {}
+    const TestList = co.list(TestMap);
 
     const bread = TestMap.create({ type: "bread" }, me);
     const butter = TestMap.create({ type: "butter" }, me);
@@ -436,7 +436,7 @@ describe("CoList applyDiff operations", async () => {
   });
 
   test("applyDiff with mixed operations", () => {
-    class StringList extends CoList.Of(co.string) {}
+    const StringList = co.list(z.string());
     const list = StringList.create(["a", "b", "c", "d", "e"], { owner: me });
 
     // Test multiple operations at once
@@ -454,15 +454,11 @@ describe("CoList applyDiff operations", async () => {
 });
 
 describe("CoList resolution", async () => {
-  class TwiceNestedList extends CoList.Of(co.string) {
-    joined() {
-      return this.join(",");
-    }
-  }
+  const TwiceNestedList = co.list(z.string());
 
-  class NestedList extends CoList.Of(co.ref(TwiceNestedList)) {}
+  const NestedList = co.list(TwiceNestedList);
 
-  class TestList extends CoList.Of(co.ref(NestedList)) {}
+  const TestList = co.list(NestedList);
 
   const initNodeAndList = async () => {
     const me = await Account.create({
@@ -489,7 +485,7 @@ describe("CoList resolution", async () => {
     const { list } = await initNodeAndList();
 
     expect(list[0]?.[0]?.[0]).toBe("a");
-    expect(list[0]?.[0]?.joined()).toBe("a,b");
+    expect(list[0]?.[0]?.join(",")).toBe("a,b");
     expect(list[0]?.[0]?.id).toBeDefined();
     expect(list[1]?.[0]?.[0]).toBe("c");
   });
@@ -497,18 +493,18 @@ describe("CoList resolution", async () => {
 
 describe("CoList subscription", async () => {
   test("subscription on a locally available list with deep resolve", async () => {
-    class Item extends CoMap {
-      name = co.string;
-    }
+    const Item = co.map({
+      name: z.string(),
+    });
 
-    class TestList extends CoList.Of(co.ref(Item)) {}
+    const TestList = co.list(Item);
 
     const list = TestList.create(
       [Item.create({ name: "Item 1" }), Item.create({ name: "Item 2" })],
       { owner: me },
     );
 
-    const updates: Resolved<TestList, { $each: true }>[] = [];
+    const updates: Loaded<typeof TestList, { $each: true }>[] = [];
     const spy = vi.fn((list) => updates.push(list));
 
     TestList.subscribe(
@@ -541,18 +537,18 @@ describe("CoList subscription", async () => {
   });
 
   test("subscription on a locally available list with autoload", async () => {
-    class Item extends CoMap {
-      name = co.string;
-    }
+    const Item = co.map({
+      name: z.string(),
+    });
 
-    class TestList extends CoList.Of(co.ref(Item)) {}
+    const TestList = co.list(Item);
 
     const list = TestList.create(
       [Item.create({ name: "Item 1" }), Item.create({ name: "Item 2" })],
       { owner: me },
     );
 
-    const updates: TestList[] = [];
+    const updates: Loaded<typeof TestList>[] = [];
     const spy = vi.fn((list) => updates.push(list));
 
     TestList.subscribe(list.id, {}, spy);
@@ -577,22 +573,22 @@ describe("CoList subscription", async () => {
   });
 
   test("subscription on a locally available list with syncResolution", async () => {
-    class Item extends CoMap {
-      name = co.string;
-    }
+    const Item = co.map({
+      name: z.string(),
+    });
 
-    class TestList extends CoList.Of(co.ref(Item)) {}
+    const TestList = co.list(Item);
 
     const list = TestList.create(
       [Item.create({ name: "Item 1" }), Item.create({ name: "Item 2" })],
       { owner: me },
     );
 
-    const updates: TestList[] = [];
+    const updates: Loaded<typeof TestList>[] = [];
     const spy = vi.fn((list) => updates.push(list));
 
     subscribeToCoValue(
-      TestList,
+      zodSchemaToCoSchema(TestList),
       list.id,
       {
         syncResolution: true,
@@ -620,11 +616,11 @@ describe("CoList subscription", async () => {
   });
 
   test("subscription on a remotely available list with deep resolve", async () => {
-    class Item extends CoMap {
-      name = co.string;
-    }
+    const Item = co.map({
+      name: z.string(),
+    });
 
-    class TestList extends CoList.Of(co.ref(Item)) {}
+    const TestList = co.list(Item);
 
     const group = Group.create();
     group.addMember("everyone", "writer");
@@ -639,7 +635,7 @@ describe("CoList subscription", async () => {
 
     const userB = await createJazzTestAccount();
 
-    const updates: Resolved<TestList, { $each: true }>[] = [];
+    const updates: Loaded<typeof TestList, { $each: true }>[] = [];
     const spy = vi.fn((list) => updates.push(list));
 
     TestList.subscribe(
@@ -673,11 +669,11 @@ describe("CoList subscription", async () => {
   });
 
   test("subscription on a remotely available list with autoload", async () => {
-    class Item extends CoMap {
-      name = co.string;
-    }
+    const Item = co.map({
+      name: z.string(),
+    });
 
-    class TestList extends CoList.Of(co.ref(Item)) {}
+    const TestList = co.list(Item);
 
     const group = Group.create();
     group.addMember("everyone", "writer");
@@ -690,7 +686,7 @@ describe("CoList subscription", async () => {
       group,
     );
 
-    const updates: TestList[] = [];
+    const updates: Loaded<typeof TestList>[] = [];
     const spy = vi.fn((list) => updates.push(list));
 
     const userB = await createJazzTestAccount();
@@ -723,18 +719,18 @@ describe("CoList subscription", async () => {
   });
 
   test("replacing list items triggers updates", async () => {
-    class Item extends CoMap {
-      name = co.string;
-    }
+    const Item = co.map({
+      name: z.string(),
+    });
 
-    class TestList extends CoList.Of(co.ref(Item)) {}
+    const TestList = co.list(Item);
 
     const list = TestList.create(
       [Item.create({ name: "Item 1" }), Item.create({ name: "Item 2" })],
       { owner: me },
     );
 
-    const updates: Resolved<TestList, { $each: true }>[] = [];
+    const updates: Loaded<typeof TestList, { $each: true }>[] = [];
     const spy = vi.fn((list) => updates.push(list));
 
     TestList.subscribe(
@@ -767,11 +763,11 @@ describe("CoList subscription", async () => {
   });
 
   test("pushing a new item triggers updates correctly", async () => {
-    class Item extends CoMap {
-      name = co.string;
-    }
+    const Item = co.map({
+      name: z.string(),
+    });
 
-    class TestList extends CoList.Of(co.ref(Item)) {}
+    const TestList = co.list(Item);
 
     const group = Group.create();
     group.addMember("everyone", "writer");
@@ -784,7 +780,7 @@ describe("CoList subscription", async () => {
       group,
     );
 
-    const updates: TestList[] = [];
+    const updates: Loaded<typeof TestList, { $each: true }>[] = [];
     const spy = vi.fn((list) => updates.push(list));
 
     const userB = await createJazzTestAccount();

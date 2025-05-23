@@ -1,7 +1,7 @@
 import type { CojsonInternalTypes, RawCoID, SessionID } from "cojson";
 import type {
   CoValueRow,
-  DBClientInterface,
+  DBClientInterfaceAsync,
   SessionRow,
   SignatureAfterRow,
   StoredCoValueRow,
@@ -10,7 +10,7 @@ import type {
 } from "cojson-storage";
 import { CoJsonIDBTransaction } from "./CoJsonIDBTransaction.js";
 
-export class IDBClient implements DBClientInterface {
+export class IDBClient implements DBClientInterfaceAsync {
   private db;
 
   activeTransaction: CoJsonIDBTransaction | undefined;
@@ -67,16 +67,14 @@ export class IDBClient implements DBClientInterface {
 
   async getNewTransactionInSession(
     sessionRowId: number,
-    firstNewTxIdx: number,
+    fromIdx: number,
+    toIdx: number,
   ): Promise<TransactionRow[]> {
     return this.makeRequest<TransactionRow[]>((tx) =>
       tx
         .getObjectStore("transactions")
         .getAll(
-          IDBKeyRange.bound(
-            [sessionRowId, firstNewTxIdx],
-            [sessionRowId, Number.POSITIVE_INFINITY],
-          ),
+          IDBKeyRange.bound([sessionRowId, fromIdx], [sessionRowId, toIdx]),
         ),
     );
   }
@@ -161,7 +159,7 @@ export class IDBClient implements DBClientInterface {
         ses: sessionRowID,
         idx,
         signature,
-      } satisfies SignatureAfterRow),
+      }),
     );
   }
 

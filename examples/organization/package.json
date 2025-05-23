@@ -1,29 +1,32 @@
 {
   "name": "organization",
   "private": true,
-  "version": "0.0.83",
+  "version": "0.0.103",
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "format-and-lint": "biome check .",
-    "format-and-lint:fix": "biome check . --write"
+    "format-and-lint:fix": "biome check . --write",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui"
   },
   "dependencies": {
     "jazz-react": "workspace:*",
     "jazz-tools": "workspace:*",
     "lucide-react": "^0.274.0",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
+    "react": "19.0.0",
+    "react-dom": "19.0.0",
     "react-router": "^6.16.0",
     "react-router-dom": "^6.16.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.50.1",
     "@biomejs/biome": "1.9.4",
     "@tailwindcss/forms": "^0.5.9",
-    "@types/react": "^18.3.12",
-    "@types/react-dom": "^18.3.1",
+    "@types/react": "19.0.0",
+    "@types/react-dom": "19.0.0",
     "@vitejs/plugin-react": "^4.3.3",
     "autoprefixer": "^10.4.20",
     "globals": "^15.11.0",

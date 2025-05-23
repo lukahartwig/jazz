@@ -6,11 +6,11 @@ import {
   cojsonInternals,
   logger,
 } from "cojson";
-import { SyncManager, type TransactionRow } from "cojson-storage";
+import { StorageManagerSync, type TransactionRow } from "cojson-storage";
 import { SQLiteClient } from "./sqliteClient.js";
 
 export class SQLiteNode {
-  private readonly syncManager: SyncManager;
+  private readonly syncManager: StorageManagerSync;
   private readonly dbClient: SQLiteClient;
 
   constructor(
@@ -19,20 +19,30 @@ export class SQLiteNode {
     toLocalNode: OutgoingSyncQueue,
   ) {
     this.dbClient = new SQLiteClient(db, toLocalNode);
-    this.syncManager = new SyncManager(this.dbClient, toLocalNode);
+    this.syncManager = new StorageManagerSync(this.dbClient, toLocalNode);
 
     const processMessages = async () => {
       let lastTimer = performance.now();
+      let runningTimer = false;
 
       for await (const msg of fromLocalNode) {
         try {
           if (msg === "Disconnected" || msg === "PingTimeout") {
             throw new Error("Unexpected Disconnected message");
           }
-          await this.syncManager.handleSyncMessage(msg);
 
-          // Since better-sqlite3 is synchronous there may be the case
-          // where a bulk of messages are processed using only microtasks
+          if (!runningTimer) {
+            runningTimer = true;
+            lastTimer = performance.now();
+            setTimeout(() => {
+              runningTimer = false;
+            }, 10);
+          }
+
+          this.syncManager.handleSyncMessage(msg);
+
+          // Since the DB APIs are synchronous there may be the case
+          // where a bulk of messages are processed without interruptions
           // which may block other peers from sending messages.
 
           // To avoid this we schedule a timer to downgrade the priority of the storage peer work

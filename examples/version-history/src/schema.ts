@@ -3,18 +3,16 @@
  * https://jazz.tools/docs/react/schemas/covalues
  */
 
-import { CoList, CoMap, CoPlainText, co } from "jazz-tools";
+import { co, z } from "jazz-tools";
 
-export class Issue extends CoMap {
-  title = co.string;
-  description = co.ref(CoPlainText);
-  estimate = co.number;
-  status? = co.literal("backlog", "in progress", "done");
-}
+export const Issue = co.map({
+  title: z.string(),
+  description: co.plainText(),
+  estimate: z.number(),
+  status: z.literal(["backlog", "in progress", "done"]),
+});
 
-export class ListOfIssues extends CoList.Of(co.ref(Issue)) {}
-
-export class Project extends CoMap {
-  name = co.string;
-  issues = co.ref(ListOfIssues);
-}
+export const Project = co.map({
+  name: z.string(),
+  issues: co.list(Issue),
+});

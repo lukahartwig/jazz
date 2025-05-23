@@ -33,33 +33,30 @@ export type SignatureAfterRow = {
   signature: CojsonInternalTypes.Signature;
 };
 
-export interface DBClientInterface {
+export interface DBClientInterfaceAsync {
   getCoValue(
     coValueId: RawCoID,
-  ): Promise<StoredCoValueRow | undefined> | StoredCoValueRow | undefined;
+  ): Promise<StoredCoValueRow | undefined> | undefined;
 
-  getCoValueSessions(
-    coValueRowId: number,
-  ): Promise<StoredSessionRow[]> | StoredSessionRow[];
+  getCoValueSessions(coValueRowId: number): Promise<StoredSessionRow[]>;
 
   getSingleCoValueSession(
     coValueRowId: number,
     sessionID: SessionID,
-  ): Promise<StoredSessionRow | undefined> | StoredSessionRow | undefined;
+  ): Promise<StoredSessionRow | undefined>;
 
   getNewTransactionInSession(
     sessionRowId: number,
-    firstNewTxIdx: number,
-  ): Promise<TransactionRow[]> | TransactionRow[];
+    fromIdx: number,
+    toIdx: number,
+  ): Promise<TransactionRow[]>;
 
   getSignatures(
     sessionRowId: number,
     firstNewTxIdx: number,
-  ): Promise<SignatureAfterRow[]> | SignatureAfterRow[];
+  ): Promise<SignatureAfterRow[]>;
 
-  addCoValue(
-    msg: CojsonInternalTypes.NewContentMessage,
-  ): Promise<number> | number;
+  addCoValue(msg: CojsonInternalTypes.NewContentMessage): Promise<number>;
 
   addSessionUpdate({
     sessionUpdate,
@@ -67,7 +64,7 @@ export interface DBClientInterface {
   }: {
     sessionUpdate: SessionRow;
     sessionRow?: StoredSessionRow;
-  }): Promise<number> | number;
+  }): Promise<number>;
 
   addTransaction(
     sessionRowID: number,
@@ -83,7 +80,57 @@ export interface DBClientInterface {
     sessionRowID: number;
     idx: number;
     signature: Signature;
-  }): Promise<number> | undefined | unknown;
+  }): Promise<unknown>;
 
-  transaction(callback: () => unknown): Promise<unknown> | undefined;
+  transaction(callback: () => unknown): Promise<unknown>;
+}
+
+export interface DBClientInterfaceSync {
+  getCoValue(coValueId: RawCoID): StoredCoValueRow | undefined;
+
+  getCoValueSessions(coValueRowId: number): StoredSessionRow[];
+
+  getSingleCoValueSession(
+    coValueRowId: number,
+    sessionID: SessionID,
+  ): StoredSessionRow | undefined;
+
+  getNewTransactionInSession(
+    sessionRowId: number,
+    fromIdx: number,
+    toIdx: number,
+  ): TransactionRow[];
+
+  getSignatures(
+    sessionRowId: number,
+    firstNewTxIdx: number,
+  ): Pick<SignatureAfterRow, "idx" | "signature">[];
+
+  addCoValue(msg: CojsonInternalTypes.NewContentMessage): number;
+
+  addSessionUpdate({
+    sessionUpdate,
+    sessionRow,
+  }: {
+    sessionUpdate: SessionRow;
+    sessionRow?: StoredSessionRow;
+  }): number;
+
+  addTransaction(
+    sessionRowID: number,
+    idx: number,
+    newTransaction: Transaction,
+  ): number | undefined | unknown;
+
+  addSignatureAfter({
+    sessionRowID,
+    idx,
+    signature,
+  }: {
+    sessionRowID: number;
+    idx: number;
+    signature: Signature;
+  }): number | undefined | unknown;
+
+  transaction(callback: () => unknown): unknown;
 }

@@ -257,7 +257,7 @@ describe("SyncStateManager", () => {
     const group = client.node.createGroup();
     const map = group.createMap();
 
-    await expect(map.core.waitForSync()).resolves.toBeUndefined();
+    await map.core.waitForSync();
   });
 
   test("should skip client peers that are not subscribed to the coValue", async () => {

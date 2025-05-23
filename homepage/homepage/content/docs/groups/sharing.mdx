@@ -1,10 +1,10 @@
-export const metadata = { title: "Public sharing and invites" };
+export const metadata = { 
+  description: "Share CoValues in Jazz through public sharing and invite links. Enable collaboration by granting access to everyone or specific users with different permission levels."
+};
 
 import { ContentByFramework, CodeGroup } from '@/components/forMdx'
 
 # Public sharing and invites
-
-...more docs coming soon
 
 ## Public sharing
 
@@ -12,10 +12,12 @@ You can share CoValues publicly by setting the `owner` to a `Group`, and grantin
 access to "everyone".
 
 <CodeGroup>
-  ```ts
-  const group = Group.create();
-  group.addMember("everyone", "writer"); // *highlight*
-  ```
+```ts twoslash
+import { Group } from "jazz-tools";
+// ---cut---
+const group = Group.create();
+group.addMember("everyone", "writer");
+```
 </CodeGroup>
 
 This is done in the [chat example](https://github.com/garden-co/jazz/tree/main/examples/chat) where anyone can join the chat, and send messages.
@@ -29,52 +31,19 @@ You can grant users access to a CoValue by sending them an invite link.
 This is used in the [pet example](https://github.com/garden-co/jazz/tree/main/examples/pets)
 and the [todo example](https://github.com/garden-co/jazz/tree/main/examples/todo).
 
-<ContentByFramework  framework="react">
+<ContentByFramework framework={["react", "react-native", "react-native-expo", "vue", "svelte"]}>
 <CodeGroup>
-```ts
+```ts twoslash
+import { co, z } from "jazz-tools";
+
+const Organization = co.map({
+  name: z.string(),
+});
+const organization = Organization.create({ name: "Garden Computing" });
+// ---cut---
 import { createInviteLink } from "jazz-react";
 
-createInviteLink(organization, "writer"); // or reader, or admin
-```
-</CodeGroup>
-</ContentByFramework>
-
-<ContentByFramework  framework="react-native">
-<CodeGroup>
-```ts
-import { createInviteLink } from "jazz-react-native";
-
-createInviteLink(organization, "writer"); // or reader, or admin
-```
-</CodeGroup>
-</ContentByFramework>
-
-<ContentByFramework  framework="react-native-expo">
-<CodeGroup>
-```ts
-import { createInviteLink } from "jazz-expo";
-
-createInviteLink(organization, "writer"); // or reader, or admin
-```
-</CodeGroup>
-</ContentByFramework>
-
-<ContentByFramework  framework="vue">
-<CodeGroup>
-```ts
-import { createInviteLink } from "jazz-vue";
-
-createInviteLink(organization, "writer"); // or reader, or admin
-```
-</CodeGroup>
-</ContentByFramework>
-
-<ContentByFramework  framework="svelte">
-<CodeGroup>
-```ts
-import { createInviteLink } from "jazz-browser";
-
-createInviteLink(organization, "writer"); // or reader, or admin
+createInviteLink(organization, "writer"); // or reader, admin, writeOnly
 ```
 </CodeGroup>
 </ContentByFramework>
@@ -85,10 +54,124 @@ In your app, you need to handle this route, and let the user accept the invitati
 as done [here](https://github.com/garden-co/jazz/tree/main/examples/pets/src/2_main.tsx).
 
 <CodeGroup>
-```ts
+```ts twoslash
+import { co, z } from "jazz-tools";
+
+const Organization = co.map({
+  name: z.string(),
+});
+const organization = Organization.create({ name: "Garden Computing" });
+const organizationID = organization.id;
+// ---cut---
+import { useAcceptInvite } from "jazz-react";
+
 useAcceptInvite({
-  invitedObjectSchema: PetPost,
-  onAccept: (petPostID) => navigate("/pet/" + petPostID),
+  invitedObjectSchema: Organization,
+  onAccept: (organizationID) => {
+    console.log("Accepted invite!")
+    // navigate to the organization page
+  },
 });
 ```
 </CodeGroup>
+
+
+### Requesting Invites
+
+To allow a non-group member to request an invitation to a group you can use the `writeOnly` role.
+This means that users only have write access to a specific requests list (they can't read other requests). 
+However, Administrators can review and approve these requests.
+
+Create the data models.
+
+<CodeGroup>
+```ts twoslash
+import { co, z, Account } from "jazz-tools";
+// ---cut---
+const JoinRequest = co.map({
+  account: Account,
+  status: z.literal(["pending", "approved", "rejected"]),
+});
+
+const RequestsList = co.list(JoinRequest);
+```
+</CodeGroup>
+
+Set up the request system with appropriate access controls.
+
+<CodeGroup>
+```ts twoslash
+import { co, z, Account, Group, Loaded } from "jazz-tools";
+import { createInviteLink } from "jazz-react";
+
+const JoinRequest = co.map({
+  account: Account,
+  status: z.literal(["pending", "approved", "rejected"]),
+});
+
+const RequestsList = co.list(JoinRequest);
+
+// ---cut-before---
+function createRequestsToJoin() {
+  const requestsGroup = Group.create();
+  requestsGroup.addMember("everyone", "writeOnly");
+
+  return RequestsList.create([], requestsGroup);
+}
+
+async function sendJoinRequest(
+  requestsList: Loaded<typeof RequestsList>,
+  account: Account,
+) {
+  const request = JoinRequest.create(
+    {
+      account,
+      status: "pending",
+    },
+    requestsList._owner // Inherit the access controls of the requestsList
+  );
+
+  requestsList.push(request);
+
+  return request;
+}
+```
+</CodeGroup>
+
+Using the write-only access users can submit requests that only administrators can review and approve.
+
+<CodeGroup>
+```ts twoslash
+import { co, z, ID, Account, Group, Loaded } from "jazz-tools";
+
+const JoinRequest = co.map({
+  account: Account,
+  status: z.literal(["pending", "approved", "rejected"]),
+});
+
+const RequestsList = co.list(JoinRequest);
+
+const RequestsToJoin = co.map({
+  writeOnlyInvite: z.string(),
+  requests: RequestsList,
+});
+
+// ---cut-before---
+async function approveJoinRequest(
+  joinRequest: Loaded<typeof JoinRequest, { account: true }>,
+  targetGroup: Group,
+) {
+  const account = await Account.load(joinRequest._refs.account.id);
+
+  if (account) {
+    targetGroup.addMember(account, "reader");
+    joinRequest.status = "approved";
+
+    return true;
+  } else {
+    return false;
+  }
+}
+```
+</CodeGroup>
+

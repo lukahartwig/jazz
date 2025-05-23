@@ -1,34 +1,32 @@
 {
   "expo": {
-    "name": "jazz-chat-rn-expo",
-    "scheme": "jazz-chat-rn-expo",
-    "slug": "jazz-chat-rn-expo",
+    "name": "chat-rn-expo",
+    "slug": "chat-rn-expo",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
+    "newArchEnabled": true,
     "splash": {
-      "image": "./assets/splash.png",
+      "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.jazz.chatrn"
+      "bundleIdentifier": "com.anonymous.chatrnexpo"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.jazz.chatrn"
+      "edgeToEdgeEnabled": true,
+      "package": "com.anonymous.chatrnexpo"
     },
-    "plugins": ["expo-secure-store", "expo-sqlite", "expo-build-properties"],
-    "extra": {
-      "eas": {
-        "projectId": "e0e61872-1906-4c84-b9d8-9be77355cad0"
-      }
+    "web": {
+      "favicon": "./assets/favicon.png"
     },
-    "owner": "paxx"
+    "plugins": ["expo-secure-store", "expo-sqlite"]
   }
 }

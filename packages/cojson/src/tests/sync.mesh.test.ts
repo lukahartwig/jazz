@@ -4,6 +4,7 @@ import { expectMap } from "../coValue";
 import {
   SyncMessagesLog,
   blockMessageTypeOnOutgoingPeer,
+  connectedPeersWithMessagesTracking,
   loadCoValueOrFail,
   setupTestNode,
   waitFor,
@@ -76,8 +77,8 @@ describe("multiple clients syncing with the a cloud-like server mesh", () => {
         "core -> storage | CONTENT Group header: true new: After: 0 New: 3",
         "storage -> core | KNOWN Group sessions: header/3",
         "core -> storage | CONTENT Map header: true new: After: 0 New: 1",
-        "storage -> core | KNOWN Map sessions: header/1",
         "client -> edge-italy | LOAD Map sessions: empty",
+        "storage -> core | KNOWN Map sessions: header/1",
         "edge-italy -> core | LOAD Map sessions: empty",
         "core -> edge-italy | CONTENT Group header: true new: After: 0 New: 3",
         "edge-italy -> core | KNOWN Group sessions: header/3",
@@ -138,8 +139,8 @@ describe("multiple clients syncing with the a cloud-like server mesh", () => {
         "core -> storage | CONTENT Group header: true new: After: 0 New: 5",
         "storage -> core | KNOWN Group sessions: header/5",
         "core -> storage | CONTENT Map header: true new: After: 0 New: 1",
-        "storage -> core | KNOWN Map sessions: header/1",
         "client -> edge-italy | LOAD Map sessions: empty",
+        "storage -> core | KNOWN Map sessions: header/1",
         "edge-italy -> core | LOAD Map sessions: empty",
         "core -> edge-italy | CONTENT ParentGroup header: true new: After: 0 New: 6",
         "edge-italy -> core | KNOWN ParentGroup sessions: header/6",
@@ -355,6 +356,7 @@ describe("multiple clients syncing with the a cloud-like server mesh", () => {
       syncServer: storage.node,
     });
 
+    storagePeer.role = "storage";
     storagePeer.priority = 100;
 
     const group = coreServer.node.createGroup();
@@ -397,6 +399,62 @@ describe("multiple clients syncing with the a cloud-like server mesh", () => {
         "core -> client | KNOWN Group sessions: header/3",
         "client -> storage | KNOWN Map sessions: header/1",
         "client -> core | LOAD Map sessions: header/1",
+      ]
+    `);
+
+    expect(mapOnClient.get("hello")).toEqual("world");
+  });
+
+  test("a stuck server peer should not block the load from other server peers", async () => {
+    const client = setupTestNode();
+    const coreServer = setupTestNode({
+      isSyncServer: true,
+    });
+
+    const anotherServer = setupTestNode({});
+
+    const { peer: peerToCoreServer } = client.connectToSyncServer({
+      syncServerName: "core",
+      syncServer: coreServer.node,
+    });
+
+    const { peer1, peer2 } = connectedPeersWithMessagesTracking({
+      peer1: {
+        id: anotherServer.node.getCurrentAgent().id,
+        role: "server",
+        name: "another-server",
+      },
+      peer2: {
+        id: client.node.getCurrentAgent().id,
+        role: "client",
+        name: "client",
+      },
+    });
+
+    blockMessageTypeOnOutgoingPeer(peerToCoreServer, "load");
+
+    client.node.syncManager.addPeer(peer1);
+    anotherServer.node.syncManager.addPeer(peer2);
+
+    const group = anotherServer.node.createGroup();
+    const map = group.createMap();
+
+    map.set("hello", "world", "trusting");
+
+    const mapOnClient = await loadCoValueOrFail(client.node, map.id);
+
+    expect(
+      SyncMessagesLog.getMessages({
+        Group: group.core,
+        Map: map.core,
+      }),
+    ).toMatchInlineSnapshot(`
+      [
+        "client -> another-server | LOAD Map sessions: empty",
+        "another-server -> client | CONTENT Group header: true new: After: 0 New: 3",
+        "client -> another-server | KNOWN Group sessions: header/3",
+        "another-server -> client | CONTENT Map header: true new: After: 0 New: 1",
+        "client -> another-server | KNOWN Map sessions: header/1",
       ]
     `);
 

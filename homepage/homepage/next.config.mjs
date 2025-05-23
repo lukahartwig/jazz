@@ -75,7 +75,7 @@ function highlightPlugin() {
         transformers: [
           transformerTwoslash({
             explicitTrigger: true,
-            throws: process.env.NODE_ENV === "production",
+            throws: false, //process.env.NODE_ENV === "production",
             onTwoslashError:
               process.env.NODE_ENV !== "production"
                 ? (e) => {

@@ -52,6 +52,7 @@ export function CursorLabel({
 
   return (
     <>
+      {/* @ts-expect-error - TODO: invalid after the React 19 upgrade */}
       <animated.text
         ref={textRef}
         x={to([labelSprings.x], (x) => x)}

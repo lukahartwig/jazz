@@ -1,5 +1,80 @@
 # cojson-storage-indexeddb
 
+## 0.14.1
+
+### Patch Changes
+
+- Updated dependencies [c8b33ad]
+  - cojson@0.14.1
+  - cojson-storage@0.14.1
+
+## 0.14.0
+
+### Patch Changes
+
+- Updated dependencies [5835ed1]
+  - cojson@0.14.0
+  - cojson-storage@0.14.0
+
+## 0.13.32
+
+### Patch Changes
+
+- Updated dependencies [2bf9743]
+  - cojson-storage@0.13.32
+
+## 0.13.31
+
+### Patch Changes
+
+- Updated dependencies [d63716a]
+- Updated dependencies [d5edad7]
+  - cojson@0.13.31
+  - cojson-storage@0.13.31
+
+## 0.13.30
+
+### Patch Changes
+
+- Updated dependencies [07dd2c5]
+  - cojson@0.13.30
+  - cojson-storage@0.13.30
+
+## 0.13.29
+
+### Patch Changes
+
+- Updated dependencies [e2d6ba3]
+- Updated dependencies [eef1a5d]
+- Updated dependencies [191ae38]
+- Updated dependencies [daee7b9]
+  - cojson-storage@0.13.29
+  - cojson@0.13.29
+
+## 0.13.28
+
+### Patch Changes
+
+- Updated dependencies [e7ccb2c]
+  - cojson@0.13.28
+  - cojson-storage@0.13.28
+
+## 0.13.27
+
+### Patch Changes
+
+- Updated dependencies [6357052]
+  - cojson@0.13.27
+  - cojson-storage@0.13.27
+
+## 0.13.25
+
+### Patch Changes
+
+- Updated dependencies [a846e07]
+  - cojson@0.13.25
+  - cojson-storage@0.13.25
+
 ## 0.13.23
 
 ### Patch Changes

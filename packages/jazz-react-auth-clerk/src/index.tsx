@@ -6,7 +6,14 @@ import {
   useAuthSecretStorage,
   useJazzContext,
 } from "jazz-react";
-import { InMemoryKVStore, KvStoreContext } from "jazz-tools";
+import {
+  Account,
+  AccountClass,
+  AnyAccountSchema,
+  CoValueFromRaw,
+  InMemoryKVStore,
+  KvStoreContext,
+} from "jazz-tools";
 import { useEffect, useMemo, useState } from "react";
 
 function useJazzClerkAuth(clerk: MinimalClerkClient) {
@@ -35,8 +42,12 @@ function RegisterClerkAuth(props: {
   return props.children;
 }
 
-export const JazzProviderWithClerk = (
-  props: { clerk: MinimalClerkClient } & JazzProviderProps,
+export const JazzProviderWithClerk = <
+  S extends
+    | (AccountClass<Account> & CoValueFromRaw<Account>)
+    | AnyAccountSchema,
+>(
+  props: { clerk: MinimalClerkClient } & JazzProviderProps<S>,
 ) => {
   const [isLoaded, setIsLoaded] = useState(false);
 

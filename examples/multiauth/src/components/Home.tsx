@@ -1,7 +1,8 @@
 import { useAccount, useIsAuthenticated } from "jazz-react";
+import { Account } from "jazz-tools";
 
 export function Home() {
-  const { me, logOut } = useAccount({ resolve: { root: true } });
+  const { me, logOut } = useAccount(Account, { resolve: { root: true } });
   const isAuthenticated = useIsAuthenticated();
 
   if (!me) return;

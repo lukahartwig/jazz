@@ -32,7 +32,7 @@ export default function ChatScreen() {
     });
   }, [navigation]);
 
-  const loadChat = async (chatId: ID<Chat> | "new") => {
+  const loadChat = async (chatId: string | "new") => {
     router.navigate(`/chat/${chatId}`);
   };
 
@@ -49,7 +49,7 @@ export default function ChatScreen() {
           text: "Join",
           onPress: (chatId) => {
             if (chatId) {
-              loadChat(chatId as ID<Chat>);
+              loadChat(chatId);
             } else {
               Alert.alert("Error", "Chat ID cannot be empty.");
             }

@@ -1,5 +1,147 @@
 # jazz-richtext-prosemirror
 
+## 0.1.29
+
+### Patch Changes
+
+- Updated dependencies [dc746a2]
+- Updated dependencies [f869d9a]
+- Updated dependencies [3fe6832]
+  - jazz-tools@0.14.10
+  - jazz-browser@0.14.10
+
+## 0.1.28
+
+### Patch Changes
+
+- Updated dependencies [22c2600]
+  - jazz-tools@0.14.9
+  - jazz-browser@0.14.9
+
+## 0.1.27
+
+### Patch Changes
+
+- Updated dependencies [637ae13]
+  - jazz-tools@0.14.8
+  - jazz-browser@0.14.8
+
+## 0.1.26
+
+### Patch Changes
+
+- Updated dependencies [365b0ea]
+  - jazz-tools@0.14.7
+  - jazz-browser@0.14.7
+
+## 0.1.25
+
+### Patch Changes
+
+- Updated dependencies [9d6d9fe]
+- Updated dependencies [9d6d9fe]
+  - jazz-tools@0.14.6
+  - jazz-browser@0.14.6
+
+## 0.1.24
+
+### Patch Changes
+
+- Updated dependencies [91cbb2f]
+- Updated dependencies [20b3d88]
+  - jazz-tools@0.14.5
+  - jazz-browser@0.14.5
+
+## 0.1.23
+
+### Patch Changes
+
+- Updated dependencies [011af55]
+  - jazz-tools@0.14.4
+  - jazz-browser@0.14.4
+
+## 0.1.22
+
+### Patch Changes
+
+- Updated dependencies [3d1027f]
+- Updated dependencies [c240eed]
+  - jazz-tools@0.14.2
+  - jazz-browser@0.14.2
+
+## 0.1.21
+
+### Patch Changes
+
+- Updated dependencies [cdfc105]
+  - jazz-tools@0.14.1
+  - jazz-browser@0.14.1
+
+## 0.1.20
+
+### Patch Changes
+
+- Updated dependencies [5835ed1]
+  - jazz-tools@0.14.0
+  - jazz-browser@0.14.0
+
+## 0.1.19
+
+### Patch Changes
+
+- jazz-browser@0.13.32
+
+## 0.1.18
+
+### Patch Changes
+
+- Updated dependencies [e5b170f]
+  - jazz-tools@0.13.31
+  - jazz-browser@0.13.31
+
+## 0.1.17
+
+### Patch Changes
+
+- jazz-browser@0.13.30
+- jazz-tools@0.13.30
+
+## 0.1.16
+
+### Patch Changes
+
+- jazz-browser@0.13.29
+- jazz-tools@0.13.29
+
+## 0.1.15
+
+### Patch Changes
+
+- jazz-browser@0.13.28
+- jazz-tools@0.13.28
+
+## 0.1.14
+
+### Patch Changes
+
+- jazz-browser@0.13.27
+- jazz-tools@0.13.27
+
+## 0.1.13
+
+### Patch Changes
+
+- Updated dependencies [ff846d9]
+  - jazz-tools@0.13.26
+  - jazz-browser@0.13.26
+
+## 0.1.12
+
+### Patch Changes
+
+- jazz-browser@0.13.25
+- jazz-tools@0.13.25
+
 ## 0.1.11
 
 ### Patch Changes

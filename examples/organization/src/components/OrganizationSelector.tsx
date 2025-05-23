@@ -1,18 +1,17 @@
 import { useAccount } from "jazz-react";
-import { ID } from "jazz-tools";
 import { UsersIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router";
-import { Organization } from "../schema.ts";
+import { JazzAccount } from "../schema.ts";
 
 export function OrganizationSelector({ className }: { className?: string }) {
-  const { me } = useAccount({
-    resolve: { root: { organizations: { $each: true } } },
+  const { me } = useAccount(JazzAccount, {
+    resolve: { root: { organizations: { $each: { $onError: null } } } },
   });
 
   const navigate = useNavigate();
 
-  const paramOrganizationId = useParams<{ organizationId: ID<Organization> }>()
+  const paramOrganizationId = useParams<{ organizationId: string }>()
     .organizationId;
 
   const [organizationId, setOrganizationId] = useState<string | undefined>();
@@ -48,6 +47,10 @@ export function OrganizationSelector({ className }: { className?: string }) {
         className="rounded-md shadow-sm dark:bg-transparent w-full"
       >
         {me?.root.organizations.map((organization) => {
+          if (!organization) {
+            return null;
+          }
+
           return (
             <option key={organization.id} value={organization.id}>
               {organization.name}

@@ -1,6 +1,6 @@
 import { useIframeHashRouter } from "hash-slash";
 import { useAccount } from "jazz-react";
-import { Group, ID } from "jazz-tools";
+import { Group } from "jazz-tools";
 import { ReactionsScreen } from "./ReactionsScreen.tsx";
 import { Reactions } from "./schema.ts";
 
@@ -31,9 +31,7 @@ function App() {
       <main className="container">
         {router.route({
           "/": () => createReactions() as never,
-          "/reactions/:id": (id) => (
-            <ReactionsScreen id={id as ID<Reactions>} />
-          ),
+          "/reactions/:id": (id) => <ReactionsScreen id={id} />,
         })}
       </main>
     </>

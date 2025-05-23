@@ -1,6 +1,6 @@
 {
   "name": "jazz-inspector",
-  "version": "0.13.23",
+  "version": "0.14.13",
   "type": "module",
   "main": "./dist/app.js",
   "types": "./dist/app.d.ts",
@@ -23,7 +23,7 @@
     "jazz-tools": "workspace:*"
   },
   "peerDependencies": {
-    "react": "^17.0.0 || ^18.0.0 || ^19.0.0"
+    "react": "*"
   },
   "devDependencies": {
     "@types/react": "^18.3.12",

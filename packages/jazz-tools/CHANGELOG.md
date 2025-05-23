@@ -1,5 +1,129 @@
 # jazz-tools
 
+## 0.14.10
+
+### Patch Changes
+
+- dc746a2: Make the react peerDependency definition more relaxed
+- f869d9a: Deprecated the withHelpers method in favor of standalone functions
+- 3fe6832: Add support for z.catch/default. We ignore them for the moment and flag a warning.
+
+## 0.14.9
+
+### Patch Changes
+
+- 22c2600: Move back to zod as dependency and clean up zod re-export
+
+## 0.14.8
+
+### Patch Changes
+
+- 637ae13: Use our Zod v4 fork with the React Native fixes
+
+## 0.14.7
+
+### Patch Changes
+
+- 365b0ea: reduce the z exported APIs to the ones we support and fix compatible types
+
+## 0.14.6
+
+### Patch Changes
+
+- 9d6d9fe: Fixes co.fileStream create and createFromBlob types
+- 9d6d9fe: Fixes init type for CoList, CoFeed and CoRecord to accept optional partially loaded values
+
+## 0.14.5
+
+### Patch Changes
+
+- 91cbb2f: Fix CoMap.create with optional types
+- 20b3d88: Add co.loaded utility
+
+## 0.14.4
+
+### Patch Changes
+
+- 011af55: Support z.enum in the schema definitions
+
+## 0.14.2
+
+### Patch Changes
+
+- 3d1027f: Make possible to extend a group without having access to it
+- c240eed: Fix custom AccountSchema support in testing utils
+
+## 0.14.1
+
+### Patch Changes
+
+- cdfc105: Make the profile access on Group members trigger updates correctly
+- Updated dependencies [c8b33ad]
+  - cojson@0.14.1
+
+## 0.14.0
+
+### Minor Changes
+
+- 5835ed1: Switch to using Zod to define CoValue schemas
+
+### Patch Changes
+
+- Updated dependencies [5835ed1]
+  - cojson@0.14.0
+
+## 0.13.31
+
+### Patch Changes
+
+- e5b170f: Add $onError option to resolve, to be able to catch errors inside of the deep loading
+- Updated dependencies [d63716a]
+- Updated dependencies [d5edad7]
+  - cojson@0.13.31
+
+## 0.13.30
+
+### Patch Changes
+
+- Updated dependencies [07dd2c5]
+  - cojson@0.13.30
+
+## 0.13.29
+
+### Patch Changes
+
+- Updated dependencies [eef1a5d]
+- Updated dependencies [191ae38]
+- Updated dependencies [daee7b9]
+  - cojson@0.13.29
+
+## 0.13.28
+
+### Patch Changes
+
+- Updated dependencies [e7ccb2c]
+  - cojson@0.13.28
+
+## 0.13.27
+
+### Patch Changes
+
+- Updated dependencies [6357052]
+  - cojson@0.13.27
+
+## 0.13.26
+
+### Patch Changes
+
+- ff846d9: Fix loading accounts with the new subscription engine
+
+## 0.13.25
+
+### Patch Changes
+
+- Updated dependencies [a846e07]
+  - cojson@0.13.25
+
 ## 0.13.23
 
 ### Patch Changes
@@ -336,7 +460,7 @@
 
 ### Patch Changes
 
-- d8582fc: Fixes co.optional.Date throwing when assigned undefined
+- d8582fc: Fixes coField.optional.Date throwing when assigned undefined
 
 ## 0.10.2
 
@@ -728,7 +852,7 @@
 ### Patch Changes
 
 - c3f4e6b: Fix order of exports fields in package.json
-- d9152ed: Allow interface types as generic argument in co.json
+- d9152ed: Allow interface types as generic argument in coField.json
 - Updated dependencies [c3f4e6b]
 - Updated dependencies [d9152ed]
   - cojson@0.8.5
@@ -779,7 +903,7 @@
 ### Patch Changes
 
 - 49a8b54: Fix on CoMapInit to not allow null values on required refs
-- 6f80282: fix: handle null values for co.refs
+- 6f80282: fix: handle null values for coField.refs
 - 35bbcd9: Fix loadAsBlob resolving too early
 - f350e90: Added a priority system for the sync messages
 - Updated dependencies [35bbcd9]

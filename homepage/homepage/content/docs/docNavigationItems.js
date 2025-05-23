@@ -1,3 +1,4 @@
+/** @satisfies {DocNavigationSection[]} */
 export const docNavigationItems = [
   {
     // welcome to jazz
@@ -8,18 +9,20 @@ export const docNavigationItems = [
         name: "Introduction",
         href: "/docs",
         done: 100,
+        excludeFromNavigation: true,
       },
-      {
-        name: "Guide",
-        href: "/docs/guide",
-        done: {
-          react: 100,
-        },
-      },
+      // {
+      //   name: "Guide",
+      //   href: "/docs/guide",
+      //   done: {
+      //     react: 100,
+      //   },
+      // },
       {
         name: "Example apps",
         href: "/examples",
         done: 30,
+        excludeFromNavigation: true,
       },
       { name: "FAQs", href: "/docs/faq", done: 100 },
     ],
@@ -56,6 +59,7 @@ export const docNavigationItems = [
           react: 100,
           "react-native": 100,
           "react-native-expo": 100,
+          svelte: 100,
         },
       },
     ],
@@ -82,26 +86,34 @@ export const docNavigationItems = [
   },
   {
     name: "Upgrade guides",
-    collapse: true,
+    // collapse: true,
     prefix: "/docs/upgrade",
     items: [
       {
-        name: "0.13.0 - React Native Split",
-        href: "/docs/upgrade/0-13-0",
+        name: "0.14.0 - Zod-based schemas",
+        href: "/docs/upgrade/0-14-0",
         done: 100,
       },
-      {
-        // upgrade guides
-        name: "0.12.0 - Deeply Resolved Data",
-        href: "/docs/upgrade/0-12-0",
-        done: 100,
-      },
-      {
-        // upgrade guides
-        name: "0.11.0 - Roles and permissions",
-        href: "/docs/upgrade/0-11-0",
-        done: 100,
-      },
+      // {
+      //   name: "0.13.0 - React Native Split",
+      //   href: "/docs/upgrade/0-13-0",
+      //   done: 100,
+      //   excludeFromNavigation: true,
+      // },
+      // {
+      //   // upgrade guides
+      //   name: "0.12.0 - Deeply Resolved Data",
+      //   href: "/docs/upgrade/0-12-0",
+      //   done: 100,
+      //   excludeFromNavigation: true,
+      // },
+      // {
+      //   // upgrade guides
+      //   name: "0.11.0 - Roles and permissions",
+      //   href: "/docs/upgrade/0-11-0",
+      //   done: 100,
+      //   excludeFromNavigation: true,
+      // },
       // {
       //   // upgrade guides
       //   name: "0.10.0 - New authentication flow",
@@ -121,13 +133,14 @@ export const docNavigationItems = [
       //   done: 100,
       //   framework: "react-native",
       // },
-      {
-        // upgrade guides
-        name: "0.9.2 - Local persistence on React Native Expo",
-        href: "/docs/upgrade/react-native-local-persistence",
-        done: 100,
-        framework: "react-native-expo",
-      },
+      // {
+      //   // upgrade guides
+      //   name: "0.9.2 - Local persistence on React Native Expo",
+      //   href: "/docs/upgrade/react-native-local-persistence",
+      //   done: 100,
+      //   framework: "react-native-expo",
+      //   excludeFromNavigation: true,
+      // },
       // {
       //   // upgrade guides
       //   name: "0.9.0 - Top level imports",
@@ -239,6 +252,15 @@ export const docNavigationItems = [
         href: "/docs/authentication/authentication-states",
         done: 100,
       },
+      // {
+      //   name: "Jazz Cloud",
+      //   href: "/docs/authentication/jazz-cloud",
+      //   done: {
+      //     react: 100,
+      //     vanilla: 100,
+      //     "react-native-expo": 100,
+      //   },
+      // },
       {
         name: "Passkey",
         href: "/docs/authentication/passkey",
@@ -270,7 +292,7 @@ export const docNavigationItems = [
     name: "Design patterns",
     items: [
       {
-        name: "Form",
+        name: "Autosaving forms",
         href: "/docs/design-patterns/form",
         done: 100,
       },
@@ -292,3 +314,15 @@ export const docNavigationItems = [
     ],
   },
 ];
+
+const flatItems = docNavigationItems
+  .flatMap((section) => section.items)
+  .filter((item) => !item.excludeFromNavigation);
+
+export const flatItemsWithNavLinks = flatItems.map((item, index) => {
+  return {
+    ...item,
+    next: item.next === null ? null : flatItems[index + 1],
+    previous: item.previous === null ? null : flatItems[index - 1],
+  };
+});

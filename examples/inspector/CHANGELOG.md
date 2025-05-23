@@ -1,5 +1,150 @@
 # jazz-example-inspector
 
+## 0.0.160
+
+### Patch Changes
+
+- jazz-inspector@0.14.13
+
+## 0.0.159
+
+### Patch Changes
+
+- jazz-inspector@0.14.12
+
+## 0.0.158
+
+### Patch Changes
+
+- Updated dependencies [dc746a2]
+  - jazz-inspector@0.14.10
+  - hash-slash@0.2.3
+
+## 0.0.157
+
+### Patch Changes
+
+- jazz-inspector@0.14.9
+
+## 0.0.156
+
+### Patch Changes
+
+- jazz-inspector@0.14.8
+
+## 0.0.155
+
+### Patch Changes
+
+- jazz-inspector@0.14.7
+
+## 0.0.154
+
+### Patch Changes
+
+- jazz-inspector@0.14.6
+
+## 0.0.153
+
+### Patch Changes
+
+- jazz-inspector@0.14.5
+
+## 0.0.152
+
+### Patch Changes
+
+- jazz-inspector@0.14.4
+
+## 0.0.151
+
+### Patch Changes
+
+- jazz-inspector@0.14.2
+
+## 0.0.150
+
+### Patch Changes
+
+- Updated dependencies [c8b33ad]
+  - cojson@0.14.1
+  - cojson-transport-ws@0.14.1
+  - jazz-inspector@0.14.1
+
+## 0.0.149
+
+### Patch Changes
+
+- Updated dependencies [5835ed1]
+  - cojson@0.14.0
+  - cojson-transport-ws@0.14.0
+  - jazz-inspector@0.14.0
+
+## 0.0.148
+
+### Patch Changes
+
+- Updated dependencies [d63716a]
+- Updated dependencies [d5edad7]
+  - cojson@0.13.31
+  - jazz-inspector@0.13.31
+  - cojson-transport-ws@0.13.31
+
+## 0.0.147
+
+### Patch Changes
+
+- Updated dependencies [07dd2c5]
+  - cojson@0.13.30
+  - cojson-transport-ws@0.13.30
+  - jazz-inspector@0.13.30
+
+## 0.0.146
+
+### Patch Changes
+
+- Updated dependencies [eef1a5d]
+- Updated dependencies [8e5ff13]
+- Updated dependencies [191ae38]
+- Updated dependencies [daee7b9]
+  - cojson@0.13.29
+  - jazz-inspector@0.13.29
+  - cojson-transport-ws@0.13.29
+
+## 0.0.145
+
+### Patch Changes
+
+- Updated dependencies [e7ccb2c]
+- Updated dependencies [422dbc4]
+  - cojson@0.13.28
+  - cojson-transport-ws@0.13.28
+  - jazz-inspector@0.13.28
+
+## 0.0.144
+
+### Patch Changes
+
+- Updated dependencies [6357052]
+  - cojson@0.13.27
+  - cojson-transport-ws@0.13.27
+  - jazz-inspector@0.13.27
+
+## 0.0.143
+
+### Patch Changes
+
+- jazz-inspector@0.13.26
+
+## 0.0.142
+
+### Patch Changes
+
+- Updated dependencies [a846e07]
+  - cojson@0.13.25
+  - cojson-transport-ws@0.13.25
+  - jazz-inspector@0.13.25
+
 ## 0.0.141
 
 ### Patch Changes

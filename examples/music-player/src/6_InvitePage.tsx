@@ -1,5 +1,4 @@
 import { useAcceptInvite, useIsAuthenticated } from "jazz-react";
-import { ID } from "jazz-tools";
 import { useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { MusicaAccount, Playlist } from "./1_schema";
@@ -12,7 +11,7 @@ export function InvitePage() {
   useAcceptInvite({
     invitedObjectSchema: Playlist,
     onAccept: useCallback(
-      async (playlistId: ID<Playlist>) => {
+      async (playlistId: string) => {
         const playlist = await Playlist.load(playlistId, {});
 
         const me = await MusicaAccount.getMe().ensureLoaded({

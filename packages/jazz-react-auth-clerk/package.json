@@ -1,6 +1,6 @@
 {
   "name": "jazz-react-auth-clerk",
-  "version": "0.13.23",
+  "version": "0.14.13",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -13,7 +13,7 @@
     "jazz-tools": "workspace:*"
   },
   "peerDependencies": {
-    "react": "^17.0.0 || ^18.0.0 || ^19.0.0"
+    "react": "*"
   },
   "scripts": {
     "format-and-lint": "biome check .",
@@ -23,8 +23,8 @@
   },
   "devDependencies": {
     "@testing-library/react": "16.2.0",
-    "@types/react": "18.3.12",
-    "@types/react-dom": "18.3.1",
+    "@types/react": "19.0.0",
+    "@types/react-dom": "19.0.0",
     "typescript": "catalog:"
   }
 }

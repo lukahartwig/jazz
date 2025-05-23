@@ -1,4 +1,4 @@
-import { CoMap } from "jazz-tools";
+import { CoMap, Loaded } from "jazz-tools";
 import React, { useEffect } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { Folder } from "../1_schema";
@@ -12,8 +12,8 @@ interface NewItemModalProps {
   onClose: () => void;
   initialValues?: PasswordItemFormValues;
   onSave: (item: PasswordItemFormValues) => void;
-  folders: Folder[];
-  selectedFolder: Folder | undefined;
+  folders: Loaded<typeof Folder>[];
+  selectedFolder: Loaded<typeof Folder> | undefined;
 }
 
 const NewItemModal: React.FC<NewItemModalProps> = ({

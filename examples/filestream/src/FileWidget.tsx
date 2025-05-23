@@ -1,7 +1,8 @@
 "use client";
 import { useAccount } from "jazz-react";
-import { FileStream } from "jazz-tools";
+import { co } from "jazz-tools";
 import { useRef, useState } from "react";
+import { JazzAccount } from "./schema";
 
 export function FileWidget() {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -9,7 +10,7 @@ export function FileWidget() {
   const [isUploading, setIsUploading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
-  const { me } = useAccount();
+  const { me } = useAccount(JazzAccount, { resolve: { profile: true } });
 
   async function handleUpload(event: React.FormEvent) {
     event.preventDefault();
@@ -29,7 +30,7 @@ export function FileWidget() {
 
     try {
       setIsUploading(true);
-      me.profile.file = await FileStream.createFromBlob(file, {
+      me.profile.file = await co.fileStream().createFromBlob(file, {
         onProgress: (p) => setProgress(Math.round(p * 100)),
       });
     } catch (error) {
@@ -124,7 +125,7 @@ export function FileWidget() {
 
     try {
       setIsUploading(true);
-      me.profile.file = await FileStream.createFromBlob(file, {
+      me.profile.file = await co.fileStream().createFromBlob(file, {
         onProgress: (p) => setProgress(Math.round(p * 100)),
       });
     } catch (error) {

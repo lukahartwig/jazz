@@ -1,13 +1,12 @@
 import { MusicTrack } from "@/1_schema";
 import { updateMusicTrackTitle } from "@/4_actions";
 import { useCoState } from "jazz-react";
-import { ID } from "jazz-tools";
 import { ChangeEvent, useState } from "react";
 
 export function MusicTrackTitleInput({
   trackId,
 }: {
-  trackId: ID<MusicTrack> | undefined;
+  trackId: string | undefined;
 }) {
   const track = useCoState(MusicTrack, trackId);
   const [isEditing, setIsEditing] = useState(false);

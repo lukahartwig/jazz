@@ -1,33 +1,33 @@
-import { MusicTrack, Playlist } from "@/1_schema";
+import { MusicTrack, MusicaAccount, Playlist } from "@/1_schema";
 import { usePlayMedia } from "@/lib/audio/usePlayMedia";
 import { usePlayState } from "@/lib/audio/usePlayState";
 import { useAccount } from "jazz-react";
-import { FileStream, ID } from "jazz-tools";
+import { FileStream } from "jazz-tools";
 import { useRef, useState } from "react";
 import { updateActivePlaylist, updateActiveTrack } from "./4_actions";
 import { getNextTrack, getPrevTrack } from "./lib/getters";
 
 export function useMediaPlayer() {
-  const { me } = useAccount({
+  const { me } = useAccount(MusicaAccount, {
     resolve: { root: true },
   });
 
   const playState = usePlayState();
   const playMedia = usePlayMedia();
 
-  const [loading, setLoading] = useState<ID<MusicTrack> | null>(null);
+  const [loading, setLoading] = useState<string | null>(null);
 
   const activeTrackId = me?.root._refs.activeTrack?.id;
 
   // Reference used to avoid out-of-order track loads
-  const lastLoadedTrackId = useRef<ID<MusicTrack> | null>(null);
+  const lastLoadedTrackId = useRef<string | null>(null);
 
   async function loadTrack(track: MusicTrack) {
     lastLoadedTrackId.current = track.id;
 
     setLoading(track.id);
 
-    const file = await FileStream.loadAsBlob(track._refs.file.id);
+    const file = await FileStream.loadAsBlob(track._refs.file!.id); // TODO: see if we can avoid !
 
     if (!file) {
       setLoading(null);

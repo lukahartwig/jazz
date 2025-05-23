@@ -1,7 +1,7 @@
 {
   "name": "jazz-inspector-app",
   "private": true,
-  "version": "0.0.141",
+  "version": "0.0.160",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -17,15 +17,15 @@
     "cojson-transport-ws": "workspace:*",
     "hash-slash": "workspace:*",
     "lucide-react": "^0.274.0",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
+    "react": "19.0.0",
+    "react-dom": "19.0.0",
     "react-router": "^6.16.0",
     "react-router-dom": "^6.16.0",
     "react-use": "^17.4.0"
   },
   "devDependencies": {
-    "@types/react": "^18.3.12",
-    "@types/react-dom": "^18.3.1",
+    "@types/react": "19.0.0",
+    "@types/react-dom": "19.0.0",
     "@vitejs/plugin-react-swc": "^3.3.2",
     "autoprefixer": "^10.4.20",
     "postcss": "^8.4.27",

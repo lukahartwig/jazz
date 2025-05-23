@@ -1,3 +1,4 @@
+import { MusicaAccount } from "@/1_schema";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -21,7 +22,7 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
   const [isSignUp, setIsSignUp] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const { me } = useAccount({
+  const { me } = useAccount(MusicaAccount, {
     resolve: {
       root: {
         rootPlaylist: {

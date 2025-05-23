@@ -2,9 +2,12 @@ import { useAccount, useIsAuthenticated } from "jazz-react";
 import { AuthButton } from "./AuthButton.tsx";
 import { Form } from "./Form.tsx";
 import { Logo } from "./Logo.tsx";
+import { AccountRoot, JazzAccount } from "./schema.ts";
 
 function App() {
-  const { me } = useAccount({ resolve: { profile: true, root: true } });
+  const { me } = useAccount(JazzAccount, {
+    resolve: { profile: true, root: true },
+  });
 
   const isAuthenticated = useIsAuthenticated();
 
@@ -28,8 +31,8 @@ function App() {
             Welcome{me?.profile.firstName ? <>, {me?.profile.firstName}</> : ""}
             !
           </h1>
-          {!!me?.root.age && (
-            <p>As of today, you are {me.root.age} years old.</p>
+          {!!me?.root && (
+            <p>As of today, you are {AccountRoot.age(me.root)} years old.</p>
           )}
         </div>
 
@@ -54,13 +57,10 @@ function App() {
 
         <p className="text-center my-16">
           Go to{" "}
-          <a
-            className="font-semibold underline"
-            href="https://jazz.tools/docs/react/guide"
-          >
-            jazz.tools/docs/react/guide
+          <a className="font-semibold underline" href="https://jazz.tools/docs">
+            jazz.tools/docs
           </a>{" "}
-          for a full tutorial.
+          for our docs.
         </p>
       </main>
     </>

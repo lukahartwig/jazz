@@ -1,4 +1,4 @@
-import { MusicTrack, Playlist } from "@/1_schema";
+import { MusicTrack, MusicaAccount, Playlist } from "@/1_schema";
 import { addTrackToPlaylist, removeTrackFromPlaylist } from "@/4_actions";
 import {
   DropdownMenu,
@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { useAccount, useCoState } from "jazz-react";
-import { ID } from "jazz-tools";
+import { Loaded } from "jazz-tools";
 import { MoreHorizontal } from "lucide-react";
 import { Fragment } from "react/jsx-runtime";
 import { MusicTrackTitleInput } from "./MusicTrackTitleInput";
@@ -21,15 +21,15 @@ export function MusicTrackRow({
   onClick,
   showAddToPlaylist,
 }: {
-  trackId: ID<MusicTrack>;
+  trackId: string;
   isLoading: boolean;
   isPlaying: boolean;
-  onClick: (track: MusicTrack) => void;
+  onClick: (track: Loaded<typeof MusicTrack>) => void;
   showAddToPlaylist: boolean;
 }) {
   const track = useCoState(MusicTrack, trackId);
 
-  const { me } = useAccount({
+  const { me } = useAccount(MusicaAccount, {
     resolve: { root: { playlists: { $each: true } } },
   });
 
@@ -40,12 +40,12 @@ export function MusicTrackRow({
     onClick(track);
   }
 
-  function handleAddToPlaylist(playlist: Playlist) {
+  function handleAddToPlaylist(playlist: Loaded<typeof Playlist>) {
     if (!track) return;
     addTrackToPlaylist(playlist, track);
   }
 
-  function handleRemoveFromPlaylist(playlist: Playlist) {
+  function handleRemoveFromPlaylist(playlist: Loaded<typeof Playlist>) {
     if (!track) return;
     removeTrackFromPlaylist(playlist, track);
   }

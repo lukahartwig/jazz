@@ -3,6 +3,7 @@ import { CoID } from "./coValue.js";
 import { RawCoValue } from "./coValue.js";
 import {
   AvailableCoValueCore,
+  CO_VALUE_LOADING_CONFIG,
   CoValueCore,
   idforHeader,
 } from "./coValueCore/coValueCore.js";
@@ -103,8 +104,12 @@ export class LocalNode {
     this.coValues.delete(id);
   }
 
+  getCurrentAccountOrAgentID(): RawAccountID | AgentID {
+    return accountOrAgentIDfromSessionID(this.currentSessionID);
+  }
+
   getCurrentAgent(): ControlledAccountOrAgent {
-    const accountOrAgent = accountOrAgentIDfromSessionID(this.currentSessionID);
+    const accountOrAgent = this.getCurrentAccountOrAgentID();
     if (isAgentID(accountOrAgent)) {
       return new ControlledAgent(this.agentSecret, this.crypto);
     }
@@ -117,7 +122,7 @@ export class LocalNode {
   }
 
   expectCurrentAccountID(reason: string): RawAccountID {
-    const accountOrAgent = accountOrAgentIDfromSessionID(this.currentSessionID);
+    const accountOrAgent = this.getCurrentAccountOrAgentID();
     if (isAgentID(accountOrAgent)) {
       throw new Error(
         "Current account is an agent, but expected an account: " + reason,
@@ -321,6 +326,14 @@ export class LocalNode {
     id: RawCoID,
     skipLoadingFromPeer?: PeerID,
   ): Promise<CoValueCore> {
+    if (!id) {
+      throw new Error("Trying to load CoValue with undefined id");
+    }
+
+    if (!id.startsWith("co_z")) {
+      throw new Error(`Trying to load CoValue with invalid id ${id}`);
+    }
+
     if (this.crashed) {
       throw new Error("Trying to load CoValue after node has crashed", {
         cause: this.crashed,
@@ -331,6 +344,10 @@ export class LocalNode {
 
     while (true) {
       const coValue = this.getCoValue(id);
+
+      if (coValue.isAvailable()) {
+        return coValue;
+      }
 
       if (
         coValue.loadingState === "unknown" ||
@@ -352,11 +369,20 @@ export class LocalNode {
       }
 
       const result = await coValue.waitForAvailableOrUnavailable();
-      if (result.isAvailable() || retries >= 1) {
+
+      if (
+        result.isAvailable() ||
+        retries >= CO_VALUE_LOADING_CONFIG.MAX_RETRIES
+      ) {
         return result;
       }
 
-      await new Promise((resolve) => setTimeout(resolve, 300));
+      await Promise.race([
+        new Promise((resolve) =>
+          setTimeout(resolve, CO_VALUE_LOADING_CONFIG.RETRY_DELAY),
+        ),
+        coValue.waitForAvailable(), // Stop waiting if the coValue becomes available
+      ]);
 
       retries++;
     }
@@ -370,14 +396,6 @@ export class LocalNode {
    * @category 3. Low-level
    */
   async load<T extends RawCoValue>(id: CoID<T>): Promise<T | "unavailable"> {
-    if (!id) {
-      throw new Error("Trying to load CoValue with undefined id");
-    }
-
-    if (!id.startsWith("co_z")) {
-      throw new Error(`Trying to load CoValue with invalid id ${id}`);
-    }
-
     const core = await this.loadCoValueCore(id);
 
     if (!core.isAvailable()) {
@@ -526,9 +544,11 @@ export class LocalNode {
       groupAsInvite.core.verified,
       { forceOverwrite: true },
     );
-    group.core.internalShamefullyResetCachedContent();
+
+    group.processNewTransactions();
 
     group.core.notifyUpdate("immediate");
+    this.syncManager.requestCoValueSync(group.core);
   }
 
   /** @internal */

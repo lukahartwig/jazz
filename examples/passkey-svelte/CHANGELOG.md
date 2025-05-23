@@ -1,5 +1,154 @@
 # passkey-svelte
 
+## 0.0.97
+
+### Patch Changes
+
+- Updated dependencies [dc746a2]
+- Updated dependencies [f869d9a]
+- Updated dependencies [3fe6832]
+  - jazz-tools@0.14.10
+  - jazz-svelte@0.14.10
+
+## 0.0.96
+
+### Patch Changes
+
+- Updated dependencies [22c2600]
+  - jazz-tools@0.14.9
+  - jazz-svelte@0.14.9
+
+## 0.0.95
+
+### Patch Changes
+
+- Updated dependencies [637ae13]
+  - jazz-tools@0.14.8
+  - jazz-svelte@0.14.8
+
+## 0.0.94
+
+### Patch Changes
+
+- Updated dependencies [365b0ea]
+  - jazz-tools@0.14.7
+  - jazz-svelte@0.14.7
+
+## 0.0.93
+
+### Patch Changes
+
+- Updated dependencies [9d6d9fe]
+- Updated dependencies [9d6d9fe]
+  - jazz-tools@0.14.6
+  - jazz-svelte@0.14.6
+
+## 0.0.92
+
+### Patch Changes
+
+- Updated dependencies [91cbb2f]
+- Updated dependencies [20b3d88]
+  - jazz-tools@0.14.5
+  - jazz-svelte@0.14.5
+
+## 0.0.91
+
+### Patch Changes
+
+- Updated dependencies [011af55]
+  - jazz-tools@0.14.4
+  - jazz-svelte@0.14.4
+
+## 0.0.90
+
+### Patch Changes
+
+- Updated dependencies [b2ee306]
+  - jazz-svelte@0.14.3
+
+## 0.0.89
+
+### Patch Changes
+
+- Updated dependencies [3d1027f]
+- Updated dependencies [c240eed]
+  - jazz-tools@0.14.2
+  - jazz-svelte@0.14.2
+
+## 0.0.88
+
+### Patch Changes
+
+- Updated dependencies [cdfc105]
+  - jazz-tools@0.14.1
+  - jazz-svelte@0.14.1
+
+## 0.0.87
+
+### Patch Changes
+
+- Updated dependencies [5835ed1]
+  - jazz-tools@0.14.0
+  - jazz-svelte@0.14.0
+
+## 0.0.86
+
+### Patch Changes
+
+- jazz-svelte@0.13.32
+
+## 0.0.85
+
+### Patch Changes
+
+- Updated dependencies [e5b170f]
+  - jazz-tools@0.13.31
+  - jazz-svelte@0.13.31
+
+## 0.0.84
+
+### Patch Changes
+
+- jazz-svelte@0.13.30
+- jazz-tools@0.13.30
+
+## 0.0.83
+
+### Patch Changes
+
+- jazz-svelte@0.13.29
+- jazz-tools@0.13.29
+
+## 0.0.82
+
+### Patch Changes
+
+- jazz-svelte@0.13.28
+- jazz-tools@0.13.28
+
+## 0.0.81
+
+### Patch Changes
+
+- jazz-svelte@0.13.27
+- jazz-tools@0.13.27
+
+## 0.0.80
+
+### Patch Changes
+
+- Updated dependencies [ff846d9]
+  - jazz-tools@0.13.26
+  - jazz-svelte@0.13.26
+
+## 0.0.79
+
+### Patch Changes
+
+- jazz-svelte@0.13.25
+- jazz-tools@0.13.25
+
 ## 0.0.78
 
 ### Patch Changes

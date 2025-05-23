@@ -1,80 +1,86 @@
-import { Account, CoList, CoMap, Group, co } from "jazz-tools";
+import { Group, Loaded, co, z } from "jazz-tools";
+import { getRandomUsername } from "./util";
 
-export class Project extends CoMap {
-  name = co.string;
-}
+export const Project = co.map({
+  name: z.string(),
+});
 
-export class ListOfProjects extends CoList.Of(co.ref(Project)) {}
+export const Organization = co.map({
+  name: z.string(),
+  projects: co.list(Project),
+});
 
-export class Organization extends CoMap {
-  name = co.string;
-  projects = co.ref(ListOfProjects);
-}
+export const DraftOrganization = co
+  .map({
+    name: z.optional(z.string()),
+    projects: co.list(Project),
+  })
+  .withHelpers((Self) => ({
+    validate(org: Loaded<typeof Self>) {
+      const errors: string[] = [];
 
-export class DraftOrganization extends CoMap {
-  name = co.optional.string;
-  projects = co.ref(ListOfProjects);
+      if (!org.name) {
+        errors.push("Please enter a name.");
+      }
 
-  validate() {
-    const errors: string[] = [];
+      return {
+        errors,
+      };
+    },
+  }));
 
-    if (!this.name) {
-      errors.push("Please enter a name.");
+export const JazzAccountRoot = co.map({
+  organizations: co.list(Organization),
+  draftOrganization: DraftOrganization,
+});
+
+export const JazzAccount = co
+  .account({
+    profile: co.profile(),
+    root: JazzAccountRoot,
+  })
+  .withMigration(async (account) => {
+    if (account.profile === undefined) {
+      const group = Group.create();
+      account.profile = co.profile().create(
+        {
+          name: getRandomUsername(),
+        },
+        group,
+      );
+      group.addMember("everyone", "reader");
     }
 
-    return {
-      errors,
-    };
-  }
-}
-
-export class ListOfOrganizations extends CoList.Of(co.ref(Organization)) {}
-
-export class JazzAccountRoot extends CoMap {
-  organizations = co.ref(ListOfOrganizations);
-  draftOrganization = co.ref(DraftOrganization);
-}
-
-export class JazzAccount extends Account {
-  root = co.ref(JazzAccountRoot);
-
-  async migrate() {
-    if (!this._refs.root) {
-      const draftOrganizationOwnership = {
-        owner: Group.create({ owner: this }),
-      };
+    if (account.root === undefined) {
+      const draftOrgGroup = Group.create();
       const draftOrganization = DraftOrganization.create(
         {
-          projects: ListOfProjects.create([], draftOrganizationOwnership),
+          projects: co.list(Project).create([], draftOrgGroup),
         },
-        draftOrganizationOwnership,
+        draftOrgGroup,
       );
 
-      const initialOrganizationOwnership = {
-        owner: Group.create({ owner: this }),
-      };
-      const organizations = ListOfOrganizations.create(
-        [
-          Organization.create(
-            {
-              name: this.profile?.name
-                ? `${this.profile.name}'s projects`
-                : "Your projects",
-              projects: ListOfProjects.create([], initialOrganizationOwnership),
-            },
-            initialOrganizationOwnership,
-          ),
-        ],
-        { owner: this },
-      );
+      const defaultOrgGroup = Group.create();
 
-      this.root = JazzAccountRoot.create(
-        {
-          draftOrganization,
-          organizations,
+      const { profile } = await account.ensureLoaded({
+        resolve: {
+          profile: true,
         },
-        { owner: this },
-      );
+      });
+
+      const organizations = co.list(Organization).create([
+        Organization.create(
+          {
+            name: profile.name ? `${profile.name}'s projects` : "Your projects",
+            projects: co.list(Project).create([], defaultOrgGroup),
+          },
+          defaultOrgGroup,
+        ),
+      ]);
+
+      account.root = JazzAccountRoot.create({
+        draftOrganization,
+        organizations,
+      });
     }
-  }
-}
+  });

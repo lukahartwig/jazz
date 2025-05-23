@@ -4,7 +4,7 @@ import {
   type Peer,
   cojsonInternals,
 } from "cojson";
-import { SyncManager } from "cojson-storage";
+import { StorageManagerAsync } from "cojson-storage";
 import { SQLiteClient } from "./client.js";
 import type { SQLiteAdapter } from "./sqlite-adapter.js";
 
@@ -13,7 +13,7 @@ export interface SQLiteConfig {
 }
 
 export class SQLiteReactNative {
-  private syncManager!: SyncManager;
+  private syncManager!: StorageManagerAsync;
   private dbClient!: SQLiteClient;
   private initialized: Promise<void>;
   private isInitialized = false;
@@ -40,7 +40,7 @@ export class SQLiteReactNative {
       await this.dbClient.ensureInitialized();
 
       // 3. Create the sync manager
-      this.syncManager = new SyncManager(this.dbClient, toLocalNode);
+      this.syncManager = new StorageManagerAsync(this.dbClient, toLocalNode);
 
       // 4. Start message processing
       this.isInitialized = true;

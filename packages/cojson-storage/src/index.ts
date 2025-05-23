@@ -1,2 +1,3 @@
 export * from "./types.js";
-export { SyncManager } from "./syncManager.js";
+export { StorageManagerSync } from "./managerSync.js";
+export { StorageManagerAsync } from "./managerAsync.js";

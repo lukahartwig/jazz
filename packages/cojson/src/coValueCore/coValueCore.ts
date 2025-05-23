@@ -65,8 +65,9 @@ const readKeyCache = new WeakMap<CoValueCore, { [id: KeyID]: KeySecret }>();
 export type AvailableCoValueCore = CoValueCore & { verified: VerifiedState };
 
 export const CO_VALUE_LOADING_CONFIG = {
-  MAX_RETRIES: 2,
+  MAX_RETRIES: 1,
   TIMEOUT: 30_000,
+  RETRY_DELAY: 3000,
 };
 
 export class CoValueCore {
@@ -108,7 +109,7 @@ export class CoValueCore {
   private readonly _decryptionCache: {
     [key: Encrypted<JsonValue[], JsonValue>]: JsonValue[] | undefined;
   } = {};
-  private _cachedDependentOn?: RawCoID[];
+  private _cachedDependentOn?: Set<RawCoID>;
   private counter: UpDownCounter;
 
   private constructor(
@@ -182,6 +183,20 @@ export class CoValueCore {
     return new Promise<CoValueCore>((resolve) => {
       const listener = (core: CoValueCore) => {
         if (core.isAvailable() || core.loadingState === "unavailable") {
+          resolve(core);
+          this.listeners.delete(listener);
+        }
+      };
+
+      this.listeners.add(listener);
+      listener(this);
+    });
+  }
+
+  waitForAvailable(): Promise<CoValueCore> {
+    return new Promise<CoValueCore>((resolve) => {
+      const listener = (core: CoValueCore) => {
+        if (core.isAvailable()) {
           resolve(core);
           this.listeners.delete(listener);
         }
@@ -896,39 +911,57 @@ export class CoValueCore {
     ];
   }
 
-  getDependedOnCoValues(): RawCoID[] {
+  getDependedOnCoValues(): Set<RawCoID> {
     if (this._cachedDependentOn) {
       return this._cachedDependentOn;
     } else {
-      const dependentOn = this.getDependedOnCoValuesUncached();
+      if (!this.verified) {
+        return new Set();
+      }
+
+      const dependentOn = this.getDependedOnCoValuesFromHeaderAndSessions(
+        this.verified.header,
+        this.verified.sessions.keys(),
+      );
       this._cachedDependentOn = dependentOn;
       return dependentOn;
     }
   }
 
   /** @internal */
-  getDependedOnCoValuesUncached(): RawCoID[] {
-    if (!this.verified) {
-      return [];
+  getDependedOnCoValuesFromHeaderAndSessions(
+    header: CoValueHeader,
+    sessions: Iterable<SessionID>,
+  ): Set<RawCoID> {
+    const deps = new Set<RawCoID>();
+
+    for (const session of sessions) {
+      const accountId = accountOrAgentIDfromSessionID(session);
+
+      if (isAccountID(accountId) && accountId !== this.id) {
+        deps.add(accountId);
+      }
     }
 
-    return this.verified.header.ruleset.type === "group"
-      ? getGroupDependentKeyList(expectGroup(this.getCurrentContent()).keys())
-      : this.verified.header.ruleset.type === "ownedByGroup"
-        ? [
-            this.verified.header.ruleset.group,
-            ...new Set(
-              [...this.verified.sessions.keys()]
-                .map((sessionID) =>
-                  accountOrAgentIDfromSessionID(sessionID as SessionID),
-                )
-                .filter(
-                  (session): session is RawAccountID =>
-                    isAccountID(session) && session !== this.id,
-                ),
-            ),
-          ]
-        : [];
+    if (header.ruleset.type === "group") {
+      if (isAccountID(header.ruleset.initialAdmin)) {
+        deps.add(header.ruleset.initialAdmin);
+      }
+
+      if (this.verified) {
+        for (const id of getGroupDependentKeyList(
+          expectGroup(this.getCurrentContent()).keys(),
+        )) {
+          deps.add(id);
+        }
+      }
+    }
+
+    if (header.ruleset.type === "ownedByGroup") {
+      deps.add(header.ruleset.group);
+    }
+
+    return deps;
   }
 
   waitForSync(options?: {
@@ -942,7 +975,11 @@ export class CoValueCore {
       return;
     }
 
-    const peersToActuallyLoadFrom = [];
+    const peersToActuallyLoadFrom = {
+      storage: [] as PeerState[],
+      server: [] as PeerState[],
+    };
+
     for (const peer of peers) {
       const currentState = this.peers.get(peer.id);
 
@@ -958,78 +995,87 @@ export class CoValueCore {
       }
 
       if (currentState?.type === "unavailable") {
-        if (peer.shouldRetryUnavailableCoValues()) {
+        if (peer.role === "server") {
+          peersToActuallyLoadFrom.server.push(peer);
           this.markPending(peer.id);
-          peersToActuallyLoadFrom.push(peer);
         }
 
         continue;
       }
 
       if (!currentState || currentState?.type === "unknown") {
+        if (peer.role === "storage") {
+          peersToActuallyLoadFrom.storage.push(peer);
+        } else {
+          peersToActuallyLoadFrom.server.push(peer);
+        }
+
         this.markPending(peer.id);
-        peersToActuallyLoadFrom.push(peer);
       }
     }
 
-    for (const peer of peersToActuallyLoadFrom) {
-      if (peer.closed) {
-        this.markNotFoundInPeer(peer.id);
-        continue;
-      }
-
-      peer.pushOutgoingMessage({
-        action: "load",
-        ...this.knownState(),
-      });
-      peer.trackLoadRequestSent(this.id);
-
-      /**
-       * Use a very long timeout for storage peers, because under pressure
-       * they may take a long time to consume the messages queue
-       *
-       * TODO: Track errors on storage and do not rely on timeout
-       */
-      const timeoutDuration =
-        peer.role === "storage"
-          ? CO_VALUE_LOADING_CONFIG.TIMEOUT * 10
-          : CO_VALUE_LOADING_CONFIG.TIMEOUT;
-
-      const waitingForPeer = new Promise<void>((resolve) => {
-        const markNotFound = () => {
-          if (this.peers.get(peer.id)?.type === "pending") {
-            logger.warn("Timeout waiting for peer to load coValue", {
-              id: this.id,
-              peerID: peer.id,
-            });
-            this.markNotFoundInPeer(peer.id);
-          }
-        };
-
-        const timeout = setTimeout(markNotFound, timeoutDuration);
-        const removeCloseListener = peer.addCloseListener(markNotFound);
-
-        const listener = (state: CoValueCore) => {
-          const peerState = state.peers.get(peer.id);
-          if (
-            state.isAvailable() || // might have become available from another peer e.g. through handleNewContent
-            peerState?.type === "available" ||
-            peerState?.type === "errored" ||
-            peerState?.type === "unavailable"
-          ) {
-            this.listeners.delete(listener);
-            removeCloseListener();
-            clearTimeout(timeout);
-            resolve();
-          }
-        };
-
-        this.listeners.add(listener);
-        listener(this);
-      });
-
-      await waitingForPeer;
+    // Load from storage peers first, then from server peers
+    if (peersToActuallyLoadFrom.storage.length > 0) {
+      await Promise.all(
+        peersToActuallyLoadFrom.storage.map((peer) =>
+          this.internalLoadFromPeer(peer),
+        ),
+      );
     }
+
+    if (peersToActuallyLoadFrom.server.length > 0) {
+      await Promise.all(
+        peersToActuallyLoadFrom.server.map((peer) =>
+          this.internalLoadFromPeer(peer),
+        ),
+      );
+    }
+  }
+
+  internalLoadFromPeer(peer: PeerState) {
+    if (peer.closed) {
+      this.markNotFoundInPeer(peer.id);
+      return;
+    }
+
+    peer.pushOutgoingMessage({
+      action: "load",
+      ...this.knownState(),
+    });
+    peer.trackLoadRequestSent(this.id);
+
+    return new Promise<void>((resolve) => {
+      const markNotFound = () => {
+        if (this.peers.get(peer.id)?.type === "pending") {
+          logger.warn("Timeout waiting for peer to load coValue", {
+            id: this.id,
+            peerID: peer.id,
+          });
+          this.markNotFoundInPeer(peer.id);
+        }
+      };
+
+      const timeout = setTimeout(markNotFound, CO_VALUE_LOADING_CONFIG.TIMEOUT);
+      const removeCloseListener = peer.addCloseListener(markNotFound);
+
+      const listener = (state: CoValueCore) => {
+        const peerState = state.peers.get(peer.id);
+        if (
+          state.isAvailable() || // might have become available from another peer e.g. through handleNewContent
+          peerState?.type === "available" ||
+          peerState?.type === "errored" ||
+          peerState?.type === "unavailable"
+        ) {
+          this.listeners.delete(listener);
+          removeCloseListener();
+          clearTimeout(timeout);
+          resolve();
+        }
+      };
+
+      this.listeners.add(listener);
+      listener(this);
+    });
   }
 }
 

@@ -1,14 +1,14 @@
 import { useAccount, useCoState } from "jazz-react";
-import { CoPlainText, Group, ID } from "jazz-tools";
+import { CoPlainText, Group } from "jazz-tools";
 import { useState } from "react";
 import { IssueComponent } from "./Issue.tsx";
 import { IssueVersionHistory } from "./IssueVersionHistory.tsx";
 import { Issue } from "./schema";
 function App() {
   const { me, logOut } = useAccount();
-  const [issueID, setIssueID] = useState<ID<Issue> | undefined>(
+  const [issueID, setIssueID] = useState<string | undefined>(
     (window.location.search?.replace("?issue=", "") || undefined) as
-      | ID<Issue>
+      | string
       | undefined,
   );
 

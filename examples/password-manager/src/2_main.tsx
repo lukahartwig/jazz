@@ -21,12 +21,6 @@ function JazzAndAuth({ children }: { children: React.ReactNode }) {
   );
 }
 
-declare module "jazz-react" {
-  interface Register {
-    Account: PasswordManagerAccount;
-  }
-}
-
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <JazzAndAuth>

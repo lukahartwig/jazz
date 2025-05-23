@@ -5,6 +5,12 @@ import { useState } from "react";
 import "../index.css";
 import { useClerk } from "@clerk/clerk-react";
 import { JazzProviderWithClerk } from "jazz-react-auth-clerk";
+import {
+  Account,
+  AccountClass,
+  AnyAccountSchema,
+  CoValueFromRaw,
+} from "jazz-tools";
 import { wordlist } from "../wordlist.ts";
 
 export function OmniAuthContainer(props: {
@@ -158,13 +164,17 @@ export function OmniAuthContainer(props: {
   );
 }
 
-export function OmniAuth({
+export function OmniAuth<
+  S extends
+    | (AccountClass<Account> & CoValueFromRaw<Account>)
+    | AnyAccountSchema,
+>({
   children,
   AccountSchema,
   sync,
 }: {
   children: React.ReactNode;
-} & JazzProviderProps) {
+} & JazzProviderProps<S>) {
   const clerk = useClerk();
 
   return (

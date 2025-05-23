@@ -6,7 +6,7 @@ import {
   logger,
 } from "cojson";
 import type {
-  DBClientInterface,
+  DBClientInterfaceSync,
   SessionRow,
   SignatureAfterRow,
   StoredCoValueRow,
@@ -33,7 +33,7 @@ export function getErrorMessage(error: unknown) {
   return error instanceof Error ? error.message : "Unknown error";
 }
 
-export class SQLiteClient implements DBClientInterface {
+export class SQLiteClient implements DBClientInterfaceSync {
   private readonly db: DatabaseT;
   private readonly toLocalNode: OutgoingSyncQueue;
 
@@ -86,13 +86,14 @@ export class SQLiteClient implements DBClientInterface {
 
   getNewTransactionInSession(
     sessionRowId: number,
-    firstNewTxIdx: number,
+    fromIdx: number,
+    toIdx: number,
   ): TransactionRow[] {
     const txs = this.db
-      .prepare<[number, number]>(
-        "SELECT * FROM transactions WHERE ses = ? AND idx >= ?",
+      .prepare<[number, number, number]>(
+        "SELECT * FROM transactions WHERE ses = ? AND idx >= ? AND idx <= ?",
       )
-      .all(sessionRowId, firstNewTxIdx) as RawTransactionRow[];
+      .all(sessionRowId, fromIdx, toIdx) as RawTransactionRow[];
 
     try {
       return txs.map((transactionRow) => ({

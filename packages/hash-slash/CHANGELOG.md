@@ -1,5 +1,11 @@
 # hash-slash
 
+## 0.2.3
+
+### Patch Changes
+
+- dc746a2: Make the react peerDependency definition more relaxed
+
 ## 0.2.2
 
 ### Patch Changes

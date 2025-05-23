@@ -1,6 +1,8 @@
 import { CodeGroup } from "@/components/forMdx";
 
-export const metadata = { title: "FileStreams" };
+export const metadata = {
+  description: "FileStreams handle binary data in Jazz applications - think documents, audio files, and other non-text content."
+};
 
 # FileStreams
 
@@ -20,12 +22,12 @@ In your schema, reference FileStreams like any other CoValue:
 <CodeGroup>
 ```ts twoslash
 // schema.ts
-import { CoMap, FileStream, co } from "jazz-tools";
+import { co, z } from "jazz-tools";
 
-class Document extends CoMap {
-  title = co.string;
-  file = co.ref(FileStream);  // Store a document file
-}
+const Document = co.map({
+  title: z.string(),
+  file: co.fileStream(),  // Store a document file
+});
 ```
 </CodeGroup>
 
@@ -39,7 +41,7 @@ For files from input elements or drag-and-drop interfaces, use `createFromBlob`:
 
 <CodeGroup>
 ```ts twoslash
-import { FileStream, Group } from "jazz-tools";
+import { co, Group } from "jazz-tools";
 const myGroup = Group.create();
 const progressBar: HTMLElement = document.querySelector('.progress-bar')!;
 
@@ -50,12 +52,12 @@ const fileInput = document.querySelector('input[type="file"]') as HTMLInputEleme
 fileInput.addEventListener('change', async () => {
   const file = fileInput.files?.[0];
   if (!file) return;
-  
+
   // Create FileStream from user-selected file
-  const fileStream = await FileStream.createFromBlob(file, { owner: myGroup });
-  
+  const fileStream = await co.fileStream().createFromBlob(file, { owner: myGroup });
+
   // Or with progress tracking for better UX
-  const fileWithProgress = await FileStream.createFromBlob(file, {
+  const fileWithProgress = await co.fileStream().createFromBlob(file, {
     onProgress: (progress) => {
       // progress is a value between 0 and 1
       const percent = Math.round(progress * 100);
@@ -126,7 +128,7 @@ if (fileData) {
   console.log(`Total size: ${fileData.totalSizeBytes} bytes`);
   console.log(`File name: ${fileData.fileName}`);
   console.log(`Is complete: ${fileData.finished}`);
-  
+
   // Access raw binary chunks
   for (const chunk of fileData.chunks) {
     // Each chunk is a Uint8Array
@@ -166,13 +168,13 @@ const filename = fileStream.getChunks()?.fileName;
 if (blob) {
   // Use with URL.createObjectURL
   const url = URL.createObjectURL(blob);
-  
+
   // Create a download link
   const link = document.createElement('a');
   link.href = url;
   link.download = filename || 'document.pdf';
   link.click();
-  
+
   // Clean up when done
   URL.revokeObjectURL(url);
 }
@@ -194,7 +196,7 @@ const blob = await FileStream.loadAsBlob(fileStreamId);
 // By default, waits for complete uploads
 // For in-progress uploads:
 const partialBlob = await FileStream.loadAsBlob(fileStreamId, {
-  allowUnfinished: true 
+  allowUnfinished: true,
 });
 ```
 </CodeGroup>
@@ -255,7 +257,7 @@ Add binary data in chunks - this helps with large files and progress tracking:
 
 <CodeGroup>
 ```ts twoslash
-import { FileStream } from "jazz-tools";
+import { FileStream, Group } from "jazz-tools";
 const fileStream = FileStream.create();
 const file = [0x48, 0x65, 0x6C, 0x6C, 0x6F, 0x20, 0x57, 0x6F, 0x72, 0x6C, 0x64]; // "Hello World" in ASCII
 const bytes = new Uint8Array(file);
@@ -269,10 +271,10 @@ const chunkSize = 1024 * 100;
 for (let i = 0; i < data.length; i += chunkSize) {
   // Create a slice of the data
   const chunk = data.slice(i, i + chunkSize);
-  
+
   // Push chunk to the FileStream
   fileStream.push(chunk);
-  
+
   // Track progress
   const progress = Math.min(100, Math.round((i + chunk.length) * 100 / data.length));
   console.log(`Upload progress: ${progress}%`);
@@ -306,15 +308,15 @@ Load a `FileStream` when you have its ID:
 
 <CodeGroup>
 ```ts twoslash
-import { FileStream, type ID } from "jazz-tools";
-const fileStreamId = "co_z123" as ID<FileStream>;
+import { FileStream } from "jazz-tools";
+const fileStreamId = "co_z123";
 // ---cut---
 // Load a FileStream by ID
 const fileStream = await FileStream.load(fileStreamId);
 
 if (fileStream) {
   console.log('FileStream loaded successfully');
-  
+
   // Check if it's complete
   if (fileStream.isBinaryStreamEnded()) {
     // Process the completed file
@@ -330,36 +332,36 @@ Subscribe to a `FileStream` to be notified when chunks are added or when the upl
 
 <CodeGroup>
 ```ts twoslash
-import { FileStream, type ID } from "jazz-tools";
+import { FileStream } from "jazz-tools";
 import { createJazzTestAccount } from 'jazz-tools/testing';
-const fileStreamId = "co_z123" as ID<FileStream>;
+const fileStreamId = "co_z123";
 // ---cut---
 // Subscribe to a FileStream by ID
 const unsubscribe = FileStream.subscribe(fileStreamId, (fileStream: FileStream) => {
   // Called whenever the FileStream changes
   console.log('FileStream updated');
-  
+
   // Get current status
   const chunks = fileStream.getChunks({ allowUnfinished: true });
   if (chunks) {
     const uploadedBytes = chunks.chunks.reduce((sum: number, chunk: Uint8Array) => sum + chunk.length, 0);
     const totalBytes = chunks.totalSizeBytes || 1;
     const progress = Math.min(100, Math.round(uploadedBytes * 100 / totalBytes));
-    
+
     console.log(`Upload progress: ${progress}%`);
-    
+
     if (fileStream.isBinaryStreamEnded()) {
       console.log('Upload complete!');
       // Now safe to use the file
       const blob = fileStream.toBlob();
-      
+
       // Clean up the subscription if we're done
       unsubscribe();
     }
   }
 });
 ```
-</CodeGroup>  
+</CodeGroup>
 
 ### Waiting for Upload Completion
 

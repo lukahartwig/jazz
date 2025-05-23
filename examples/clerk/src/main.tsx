@@ -4,6 +4,7 @@ import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
 import { JazzProviderWithClerk } from "jazz-react-auth-clerk";
+import { ReactNode } from "react";
 import { apiKey } from "./apiKey";
 
 // Import your publishable key
@@ -13,7 +14,7 @@ if (!PUBLISHABLE_KEY) {
   throw new Error("Add your Clerk publishable key to the .env.local file");
 }
 
-function JazzProvider({ children }: { children: React.ReactNode }) {
+function JazzProvider({ children }: { children: ReactNode }) {
   const clerk = useClerk();
 
   return (

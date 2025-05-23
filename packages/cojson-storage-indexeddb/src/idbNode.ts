@@ -4,7 +4,7 @@ import {
   type Peer,
   cojsonInternals,
 } from "cojson";
-import { SyncManager } from "cojson-storage";
+import { StorageManagerAsync } from "cojson-storage";
 import { IDBClient } from "./idbClient.js";
 
 let DATABASE_NAME = "jazz-storage";
@@ -15,7 +15,7 @@ export function internal_setDatabaseName(name: string) {
 
 export class IDBNode {
   private readonly dbClient: IDBClient;
-  private readonly syncManager: SyncManager;
+  private readonly syncManager: StorageManagerAsync;
 
   constructor(
     db: IDBDatabase,
@@ -23,7 +23,7 @@ export class IDBNode {
     toLocalNode: OutgoingSyncQueue,
   ) {
     this.dbClient = new IDBClient(db);
-    this.syncManager = new SyncManager(this.dbClient, toLocalNode);
+    this.syncManager = new StorageManagerAsync(this.dbClient, toLocalNode);
 
     const processMessages = async () => {
       for await (const msg of fromLocalNode) {

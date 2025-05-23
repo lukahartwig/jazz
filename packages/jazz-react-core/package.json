@@ -1,6 +1,6 @@
 {
   "name": "jazz-react-core",
-  "version": "0.13.23",
+  "version": "0.14.13",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -24,15 +24,12 @@
     "@testing-library/dom": "^10.4.0",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "16.2.0",
-    "@types/react": "18.3.12",
-    "@types/react-dom": "18.3.1",
-    "react": "18.3.1",
-    "react-dom": "18.3.1",
+    "@types/react": "19.0.0",
+    "@types/react-dom": "19.0.0",
     "typescript": "catalog:"
   },
   "peerDependencies": {
-    "react": "^17.0.0 || ^18.0.0 || ^19.0.0",
-    "react-dom": "^17.0.0 || ^18.0.0 || ^19.0.0"
+    "react": "*"
   },
   "scripts": {
     "dev": "tsc --watch --sourceMap --outDir dist",

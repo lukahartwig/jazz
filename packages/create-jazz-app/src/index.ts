@@ -248,8 +248,13 @@ async function scaffoldProject({
     throw error;
   }
 
+  const metroConfigPath = `${projectName}/metro.config.js`;
+
   // Additional setup for React Native
-  if (starterConfig.platform === PLATFORM.REACT_NATIVE) {
+  if (
+    starterConfig.platform === PLATFORM.REACT_NATIVE &&
+    fs.existsSync(metroConfigPath)
+  ) {
     const rnSpinner = ora({
       text: chalk.blue("Setting up React Native project..."),
       spinner: "dots",
@@ -260,15 +265,14 @@ async function scaffoldProject({
       execSync(`cd "${projectName}" && npx pod-install`, { stdio: "pipe" });
 
       // Update metro.config.js
-      const metroConfigPath = `${projectName}/metro.config.js`;
       const metroConfig = `
-const { getDefaultConfig } = require("expo/metro-config");
-const { withNativeWind } = require("nativewind/metro");
+  const { getDefaultConfig } = require("expo/metro-config");
+  const { withNativeWind } = require("nativewind/metro");
 
-const config = getDefaultConfig(__dirname);
+  const config = getDefaultConfig(__dirname);
 
-module.exports = withNativeWind(config, { input: "./global.css" });
-`;
+  module.exports = withNativeWind(config, { input: "./global.css" });
+  `;
       fs.writeFileSync(metroConfigPath, metroConfig);
 
       rnSpinner.succeed(chalk.green("React Native setup completed"));

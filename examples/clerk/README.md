@@ -2,7 +2,7 @@
 
 This is an example of how to use clerk authentication with Jazz.
 
-Live version: https://clerk-demo.jazz.tools
+Live version: [https://clerk-demo.jazz.tools](https://clerk-demo.jazz.tools)
 
 ## Getting started
 

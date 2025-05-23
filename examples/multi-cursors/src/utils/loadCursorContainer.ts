@@ -40,8 +40,8 @@ export async function loadGroup(me: Account, groupID: ID<Group>) {
 export async function loadCursorContainer(
   me: Account,
   cursorFeedID = "cursor-feed",
-  groupID: ID<Group>,
-): Promise<ID<CursorFeed> | undefined> {
+  groupID: string,
+): Promise<string | undefined> {
   if (!me) return;
   console.log("Loading group...");
   const group = await loadGroup(me, groupID);

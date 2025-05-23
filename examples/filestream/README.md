@@ -2,7 +2,7 @@
 
 This is an example of how to upload and render images with Jazz.
 
-Live version: https://file-upload-demo.jazz.tools
+Live version: [https://file-upload-demo.jazz.tools](https://file-upload-demo.jazz.tools)
 
 ## Getting started
 

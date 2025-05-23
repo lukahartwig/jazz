@@ -1,6 +1,6 @@
 {
   "name": "jazz-react-native-media-images",
-  "version": "0.13.23",
+  "version": "0.14.10",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -12,13 +12,14 @@
     "@bam.tech/react-native-image-resizer": "^3.0.11",
     "expo-file-system": "^18.0.4",
     "react": "18.2.0",
-    "react-native": "0.76.7",
+    "react-native": "0.79.2",
     "typescript": "catalog:"
   },
   "peerDependencies": {
     "@bam.tech/react-native-image-resizer": "*",
     "expo-file-system": "*",
-    "react-native": "*"
+    "react-native": "*",
+    "react": "*"
   },
   "scripts": {
     "format-and-lint": "biome check .",

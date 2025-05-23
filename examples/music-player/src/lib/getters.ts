@@ -14,7 +14,7 @@ export async function getNextTrack() {
   const tracks = me.root.activePlaylist.tracks;
   const activeTrack = me.root._refs.activeTrack;
 
-  const currentIndex = tracks.findIndex((item) => item?.id === activeTrack.id);
+  const currentIndex = tracks.findIndex((item) => item?.id === activeTrack?.id);
 
   const nextIndex = (currentIndex + 1) % tracks.length;
 
@@ -35,7 +35,7 @@ export async function getPrevTrack() {
   const tracks = me.root.activePlaylist.tracks;
   const activeTrack = me.root._refs.activeTrack;
 
-  const currentIndex = tracks.findIndex((item) => item?.id === activeTrack.id);
+  const currentIndex = tracks.findIndex((item) => item?.id === activeTrack?.id);
 
   const previousIndex = (currentIndex - 1 + tracks.length) % tracks.length;
   return tracks[previousIndex];
