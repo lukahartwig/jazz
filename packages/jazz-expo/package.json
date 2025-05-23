@@ -1,6 +1,6 @@
 {
   "name": "jazz-expo",
-  "version": "0.13.34",
+  "version": "0.13.35",
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",

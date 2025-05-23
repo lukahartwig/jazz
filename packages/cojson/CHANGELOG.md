@@ -1,5 +1,11 @@
 # cojson
 
+## 0.13.35
+
+### Patch Changes
+
+- cea5434: Backport of ability to extend groups you don't control
+
 ## 0.13.34
 
 ### Patch Changes
